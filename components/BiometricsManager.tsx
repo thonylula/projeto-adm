@@ -139,6 +139,24 @@ export const BiometricsManager: React.FC = () => {
                 }
 
                 const genAI = new GoogleGenerativeAI(apiKey);
+
+                const filePart = await fileToGenerativePart(files[0]);
+
+                const prompt = `
+                    Extraia a tabela de dados de biometria de camarão.
+                    
+                    Retorne APENAS um Array JSON puro.
+                    Para cada linha:
+                    - viveiro (String)
+                    - diasCultivo (Number): DOC
+                    - pMedStr (String): Peso Atual. Mantenha pontuação original (ex: "3,91").
+                    - pAntStr (String): Peso Anterior. Mantenha pontuação original.
+                    - quat (Number): Quantidade.
+
+                    Formato:
+                    [ { "viveiro": "OC 001", "pMedStr": "3,91", "quat": 302, "pAntStr": "3,14", "diasCultivo": 35 }, ... ]
+                `;
+
                 const MODELS = [
                     "gemini-3-pro-preview",
                     "gemini-2.5-pro",
