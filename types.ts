@@ -1,0 +1,167 @@
+
+/**
+ * Global type definitions for the Payroll Calculator.
+ */
+
+export interface PayrollInput {
+  // Identificação (Campos de input do funcionário)
+  employeeName: string;
+
+  // Dados da Empresa (Opcionais no input pois vêm do contexto, mas mantidos para compatibilidade do histórico)
+  companyName: string;
+  companyLogo: string | null; 
+
+  // --- MODO DE CÁLCULO (NOVO) ---
+  calculationMode: 'MONTHLY' | '13TH'; 
+  
+  // 13º Salário Detalhado
+  thirteenthDetailedDays: Record<number, number>; // Mapa: Mês (1-12) -> Dias Trabalhados
+  thirteenthCalculationType: 'CLT' | 'DAILY_EXACT'; // Novo: CLT (Regra 15 dias) ou Avulso (Dias exatos)
+
+  // Configuração do Mês (Novo para DSR e Automação)
+  referenceMonth: number; // 1 = Janeiro, 12 = Dezembro
+  referenceYear: number;
+  selectedState: string; // UF (Ex: SP, RJ)
+  businessDays: number; // Dias úteis no mês (ex: 25)
+  nonBusinessDays: number; // Domingos e Feriados (ex: 5)
+
+  // --- Gestão de Escalas (NOVO) ---
+  workScale: 'STANDARD' | '12x36'; // Padrão ou 12x36
+  shiftScheduleType: 'ODD' | 'EVEN' | null; // 12x36: Dias Ímpares ou Pares
+  customDivisor: number; // Divisor de horas (220, 210, 180...)
+  calculateDsrOn12x36: boolean; // Calcular reflexo DSR no 12x36?
+  workedOnHoliday: boolean; // Trabalhou em feriado (12x36)?
+  holidayHours: number; // Qtd horas no feriado (Dobra)
+
+  // --- Calculadora de Jornada ---
+  shiftStartTime: string; // Ex: "22:00"
+  shiftEndTime: string;   // Ex: "05:00"
+  shiftBreakStart: string; // Ex: "02:00"
+  shiftBreakEnd: string;   // Ex: "03:00"
+  extendNightShift: boolean; // Prorrogação Súmula 60
+
+  // Financeiro
+  baseSalary: number; // Salário Base (Contratual)
+  daysWorked: number; // Dias Trabalhados (Padrão 30) ou Plantões (Padrão 15)
+  
+  // Cálculo de Domingos
+  startDate: string;
+  endDate: string;
+  sundaysAmount: number;
+
+  costAllowance: number; // Ajuda de Custo
+  hasHazardPay: boolean; // Periculosidade
+  nightHours: number; // Qtd Horas Noturnas (Relógio)
+  applyNightShiftReduction: boolean; // Aplicar fator 1.1428 (52m30s)?
+  nightShiftPercentage: number; // % Adicional Noturno
+  
+  // Hora Extra 1
+  overtimeHours: number; 
+  overtimePercentage: 50 | 100; 
+
+  // Hora Extra 2 (Novo)
+  overtimeHours2: number; 
+  overtimePercentage2: 50 | 100;
+
+  productionBonus: number; // Participação de Produção
+  visitsAmount: number; // Qtd Visitas
+  visitUnitValue: number; // Valor por Visita
+}
+
+export interface PayrollResult {
+  proportionalSalary: number; // Salário calculado com base nos dias trabalhados
+  hourlyRate: number;
+  hazardPayValue: number;
+  
+  effectiveNightHours: number; // Horas noturnas computadas (já com redução)
+  nightShiftValue: number; // Valor já com hora reduzida
+  dsrNightShiftValue: number; // Reflexo DSR s/ Noturno
+
+  overtimeValue: number; // Soma total de HE + Domingos + Feriados
+  overtime1Value: number; // Valor específico HE1
+  overtime2Value: number; // Valor específico HE2
+  holidayValue: number;   // Valor específico Feriados
+
+  dsrOvertimeValue: number; // Reflexo DSR s/ Hora Extra
+
+  sundayBonusValue: number; // Valor total dos Domingos (HE 50% ou similar)
+
+  visitsTotalValue: number;
+  // dsrProductionValue removido conforme nova regra de negócio
+
+  grossSalary: number;
+  
+  // 13º Salário Específico
+  thirteenthTotalAvos?: number; // Avos finais considerados (CLT)
+  thirteenthTotalDays?: number; // Dias totais considerados (Avulso)
+}
+
+export interface PayrollHistoryItem {
+  id: string;
+  timestamp: string; // Data formatada para exibição
+  rawDate: string;   // Data ISO para ordenação se necessário
+  input: PayrollInput;
+  result: PayrollResult;
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  logoUrl: string | null;
+  employees: PayrollHistoryItem[];
+}
+
+export type ViewMode = 'SELECTION' | 'CALCULATOR';
+
+// --- NOVOS TIPOS DE CADASTRO ---
+
+interface AddressData {
+  zipCode?: string;
+  address?: string; // Logradouro
+  number?: string;
+  district?: string; // Bairro
+  city?: string;
+  state?: string;
+}
+
+interface BankData {
+  bankName?: string;
+  agency?: string;
+  account?: string;
+  accountType?: string; // Corrente / Poupança
+  pixKey?: string;
+}
+
+export interface RegistryEmployee extends AddressData, BankData {
+  id: string;
+  name: string;
+  photoUrl?: string | null; // Foto 3x4
+  cpf: string;
+  role: string; // Cargo
+  admissionDate: string;
+  salary: number;
+  phone: string;
+  email: string;
+  active: boolean;
+}
+
+export interface RegistrySupplier extends AddressData, BankData {
+  id: string;
+  companyName: string; // Razão Social
+  tradeName: string; // Nome Fantasia
+  cnpj: string;
+  contactPerson: string;
+  phone: string;
+  email: string;
+  category: string; // Categoria do fornecimento
+}
+
+export interface RegistryClient extends AddressData, BankData {
+  id: string;
+  name: string; // Nome ou Razão Social
+  document: string; // CPF ou CNPJ
+  type: 'PF' | 'PJ';
+  phone: string;
+  email: string;
+  status: 'ACTIVE' | 'INACTIVE' | 'LEAD';
+}
