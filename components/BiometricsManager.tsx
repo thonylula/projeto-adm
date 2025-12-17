@@ -143,18 +143,26 @@ export const BiometricsManager: React.FC = () => {
                 const filePart = await fileToGenerativePart(files[0]);
 
                 const prompt = `
-                    Extraia a tabela de dados de biometria de camarão.
+                    ANALISE A IMAGEM FORNECIDA E EXTRAIA TODOS OS DADOS DA TABELA.
                     
-                    Retorne APENAS um Array JSON puro.
-                    Para cada linha:
-                    - viveiro (String)
-                    - diasCultivo (Number): DOC
-                    - pMedStr (String): Peso Atual. Mantenha pontuação original (ex: "3,91").
-                    - pAntStr (String): Peso Anterior. Mantenha pontuação original.
-                    - quat (Number): Quantidade.
+                    Instruções:
+                    1. Extraia TODAS as linhas de dados visíveis (do primeiro ao último viveiro).
+                    2. NÃO invente dados. Use exatamente o que está na imagem.
+                    3. Se um valor estiver vazio ou ilegível, use null ou "".
+                    4. Retorne APENAS um Array JSON válido. Sem markdown, sem texto extra.
 
-                    Formato:
-                    [ { "viveiro": "OC 001", "pMedStr": "3,91", "quat": 302, "pAntStr": "3,14", "diasCultivo": 35 }, ... ]
+                    Mapeamento de Colunas:
+                    - Viveiro -> viveiro
+                    - Dias / DOC -> diasCultivo (Número)
+                    - P. Med / Peso Médio -> pMedStr (String, manter vírgula ex: "5,25")
+                    - Quat. / População -> quat (Número)
+                    - P. Ant. / Peso Anterior -> pAntStr (String, manter vírgula)
+
+                    Exemplo de Formato de Saída (NÃO COPIE ESTES VALORES, USE OS DA IMAGEM):
+                    [ 
+                        { "viveiro": "OC 001", "pMedStr": "5,25", "quat": 470, "pAntStr": "4,25", "diasCultivo": 65 },
+                        { "viveiro": "NOME_DO_VIVEIRO", "pMedStr": "0,00", "quat": 0, "pAntStr": "0,00", "diasCultivo": 0 }
+                    ]
                 `;
 
                 const MODELS = [
