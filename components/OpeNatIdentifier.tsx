@@ -156,7 +156,7 @@ export const OpeNatIdentifier: React.FC = () => {
             }
 
             const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
             const invoicePart = await fileToGenerativePart(invoiceFile);
             const codeListParts = await Promise.all(codeListFiles.map(f => fileToGenerativePart(f)));

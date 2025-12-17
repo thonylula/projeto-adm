@@ -177,7 +177,7 @@ export const DeliveryOrder: React.FC = () => {
         try {
             const rawApiKey = process.env.GEMINI_API_KEY || '';
             const apiKey = rawApiKey.trim();
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
             const response = await fetch(apiUrl, {
                 method: 'POST',
