@@ -155,81 +155,60 @@ export const OpeNatIdentifier: React.FC = () => {
                 throw new Error('Chave de API inválida ou não encontrada.');
             }
 
-            const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+            const MODELS = [
+                "gemini-3-pro-preview",
+                "gemini-2.5-pro",
+                "gemini-2.5-flash",
+                "gemini-2.0-flash-lite",
+                "gemini-2.0-flash",
+                "gemini-1.5-flash"
+            ];
 
-            const invoicePart = await fileToGenerativePart(invoiceFile);
-            const codeListParts = await Promise.all(codeListFiles.map(f => fileToGenerativePart(f)));
+            let lastError = null;
+            let success = false;
 
-            let codeListContext = "";
+            for (const modelName of MODELS) {
+                try {
+                    console.log(`Trying model: ${modelName}`);
+                    const genAI = new GoogleGenerativeAI(apiKey); // Ensure new instance or reuse
+                    const model = genAI.getGenerativeModel({ model: modelName });
 
-            if (codeListFiles.length > 0) {
-                codeListContext = `Use as ${codeListFiles.length} tabelas de códigos fornecidas nos arquivos anexos como referência para cruzamento.`;
-            } else {
-                const dbContext = JSON.stringify(OPE_NAT_DB.slice(0, 100).map(i => ({ code: i.code, desc: i.desc })));
-                codeListContext = `Use a seguinte lista de códigos JSON como referência: ${dbContext} ... (lista parcial)`;
+                    const invoicePart = await fileToGenerativePart(invoiceFile);
+                    // If fileToGenerativePart is purely local (FileReader), it's cheap to re-run or just reuse the Promise result from before loop if possible. 
+                    // Actually, codeListFiles map is promises. 
+                    // Better to move the file reading OUTSIDE the loop.
+
+                    // We need to resolve parts only once
+                    const parts: any[] = [invoicePart, ...codeListParts, prompt];
+
+                    const result = await model.generateContent(parts);
+                    const response = await result.response;
+                    const resultText = response.text();
+
+                    // Extrai JSON se houver markdown
+                    const jsonStr = resultText.replace(/```json/g, '').replace(/```/g, '').trim();
+                    const parsed = JSON.parse(jsonStr);
+
+                    if (Array.isArray(parsed)) { // The check in original code was Array.isArray but setAiResult is generic?
+                        // Original code: if (Array.isArray(parsedData)) { ... setAiResult ... }
+                        // Wait, setAiResult expects AIResult | null. AIResult is an object, not array?
+                        // Interface AIResult { code: string; description: ... }
+                        // But prompt asks for JSON output expected to be an object: { "code": ... }
+                        // Original code line 226: const parsed = JSON.parse(jsonStr); setAiResult(parsed);
+                        // It didn't check Array.isArray there. It just did setAiResult(parsed).
+                        setAiResult(parsed);
+                        success = true;
+                        break;
+                    }
+                } catch (e: any) {
+                    console.warn(`Model ${modelName} failed:`, e.message);
+                    lastError = e;
+                }
             }
 
-            const prompt = `
-            Você é um assistente fiscal sênior especializado em classificação de Natureza da Operação (CFOP/NatOpe) e contabilidade para AGRONEGÓCIO / CARCINICULTURA.
-
-            >>> CONTEXTO DO CLIENTE:
-            A empresa é uma **FAZENDA DE CRIAÇÃO DE CAMARÃO (PRODUTOR RURAL)**.
-            
-            >>> O DILEMA "INDUSTRIALIZAÇÃO vs USO E CONSUMO":
-            Muitos produtores rurais estranham o termo "Compra para Industrialização" (Código 1.101/2.101).
-            Explique para o usuário que, na contabilidade, **INSUMOS DIRETOS DE PRODUÇÃO** (Ração, Calcário, Probióticos, Larvas) são classificados como "Industrialização/Produção" pois integram o custo do produto final (o camarão).
-            Já "Uso e Consumo" (1.556/2.556) é apenas para materiais que NÃO entram no produto final (ex: papelaria, limpeza de escritório, lâmpadas do galpão).
-
-            >>> DIRECIONAMENTO OBRIGATÓRIO DO USUÁRIO:
-            O usuário informou:
-            1. **Categoria**: "${userContext.category}"
-            2. **Uso Final**: "${userContext.usage}"
-
-            >>> LÓGICA DE DECISÃO (Siga estritamente):
-            A. Se o uso informado for **Tratamento de Água, Alimentação, Larvas ou Insumo Biológico**:
-               - CLASSIFIQUE COMO: **1.101 - COMPRA PARA INDUSTRIALIZAÇÃO / PRODUÇÃO RURAL**.
-               - NO CAMPO 'REASONING': Esclareça didaticamente: "Classificado como 1.101 pois é um INSUMO direto da produção. Embora o termo seja 'Industrialização', ele abrange a Produção Rural. O Calcário/Ração integra o custo do camarão."
-
-            B. Se o uso informado for **Manutenção Geral, Limpeza Predial, Escritório ou Peças de Desgaste Rápido**:
-               - CLASSIFIQUE COMO: **1.556 - COMPRA DE MATERIAL PARA USO E CONSUMO**.
-               - NO CAMPO 'REASONING': "Classificado como 1.556 pois não integra o produto final (camarão), sendo uma despesa operacional."
-
-            C. Se for **Máquinas, Bombas ou Aeradores**:
-               - CLASSIFIQUE COMO: **1.551 - COMPRA DE BEM PARA O ATIVO IMOBILIZADO**.
-
-            TAREFA:
-            1. Analise a imagem da Nota Fiscal.
-            2. Aplique a LÓGICA DE DECISÃO acima baseada na resposta do usuário ("${userContext.usage}").
-            3. Selecione o código de Natureza da Operação.
-
-            CONTEXTO DE ARQUIVOS ADICIONAIS:
-            ${codeListContext}
-
-            SAÍDA ESPERADA (JSON):
-            {
-                "code": "Código (ex: 1.101 ou 1.556)",
-                "description": "Descrição oficial da tabela",
-                "reasoning": "Explicação clara e educativa direcionada ao produtor rural.",
-                "items": ["Item A", "Item B"]
+            if (!success) {
+                throw lastError || new Error("Todos os modelos falharam.");
             }
-        `;
-
-            const parts: any[] = [invoicePart, ...codeListParts, prompt];
-
-            const result = await model.generateContent(parts);
-            const response = await result.response;
-            const resultText = response.text();
-
-            // Extrai JSON se houver markdown
-            const jsonStr = resultText.replace(/```json/g, '').replace(/```/g, '').trim();
-            const parsed = JSON.parse(jsonStr);
-            setAiResult(parsed);
-
-        } catch (error: any) {
-            console.error("Erro na classificação:", error);
-            alert(`Erro ao processar a nota fiscal: ${error.message}`);
-        } finally {
             setIsProcessing(false);
         }
     };

@@ -177,26 +177,54 @@ export const DeliveryOrder: React.FC = () => {
         try {
             const rawApiKey = process.env.GEMINI_API_KEY || '';
             const apiKey = rawApiKey.trim();
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            const models = [
+                "gemini-3-pro-preview",
+                "gemini-2.5-pro",
+                "gemini-2.5-flash",
+                "gemini-2.0-flash-lite",
+                "gemini-2.0-flash"
+            ];
 
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: userQuery }] }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] }
-                })
-            });
+            let lastError = null;
+            let generatedText = null;
 
-            if (!response.ok) throw new Error('API Error');
+            for (const model of models) {
+                try {
+                    console.log(`Trying model: ${model}`);
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-            const result = await response.json();
-            const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: userQuery }] }],
+                            systemInstruction: { parts: [{ text: systemPrompt }] }
+                        })
+                    });
 
-            if (text) {
-                setGeneratedEmail(text);
+                    if (!response.ok) {
+                        // Check for 404 or specific errors
+                        const errText = await response.text();
+                        throw new Error(`Model ${model} error: ${response.status} - ${errText}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (text) {
+                        generatedText = text;
+                        break; // Success!
+                    }
+                } catch (e: any) {
+                    console.warn(e.message);
+                    lastError = e;
+                }
+            }
+
+            if (generatedText) {
+                setGeneratedEmail(generatedText);
             } else {
-                throw new Error('No content');
+                throw lastError || new Error('All models failed');
             }
         } catch (e) {
             console.error(e);
