@@ -814,7 +814,7 @@ export const BiometricsManager: React.FC = () => {
                 </main>
             </div>
             <div className="text-center mt-4 text-[9px] text-orange-300 font-medium uppercase tracking-widest no-print">
-                Sistema Integrado de Gestão
+                Sistema Integrado de Gestão • v1.1 Beta • Conectado ao GitHub
             </div>
         </div>
     );
