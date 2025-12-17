@@ -143,26 +143,18 @@ export const BiometricsManager: React.FC = () => {
                 const filePart = await fileToGenerativePart(files[0]);
 
                 const prompt = `
-                    ANALISE A IMAGEM FORNECIDA E EXTRAIA TODOS OS DADOS DA TABELA.
+                    ANALISE A IMAGEM E EXTRAIA **TODOS** OS DADOS DA TABELA PARA CSV.
                     
-                    Instruções:
-                    1. Extraia TODAS as linhas de dados visíveis (do primeiro ao último viveiro).
-                    2. NÃO invente dados. Use exatamente o que está na imagem.
-                    3. Se um valor estiver vazio ou ilegível, use null ou "".
-                    4. Retorne APENAS um Array JSON válido. Sem markdown, sem texto extra.
-
-                    Mapeamento de Colunas:
-                    - Viveiro -> viveiro
-                    - Dias / DOC -> diasCultivo (Número)
-                    - P. Med / Peso Médio -> pMedStr (String, manter vírgula ex: "5,25")
-                    - Quat. / População -> quat (Número)
-                    - P. Ant. / Peso Anterior -> pAntStr (String, manter vírgula)
-
-                    Exemplo de Formato de Saída (NÃO COPIE ESTES VALORES, USE OS DA IMAGEM):
-                    [ 
-                        { "viveiro": "OC 001", "pMedStr": "5,25", "quat": 470, "pAntStr": "4,25", "diasCultivo": 65 },
-                        { "viveiro": "NOME_DO_VIVEIRO", "pMedStr": "0,00", "quat": 0, "pAntStr": "0,00", "diasCultivo": 0 }
-                    ]
+                    Instruções CRÍTICAS:
+                    1. Extraia linha por linha, sem pular nenhuma.
+                    2. Formato CSV simples: viveiro,diasCultivo,pMedStr,quat,pAntStr
+                    3. NÃO use markdown, NÃO use aspas, apenas texto cru separado por vírgula.
+                    4. Se valor nulo, deixe vazio entre vírgulas.
+                    
+                    Exemplo de Saída:
+                    OC 001,65,5.25,470,4.25
+                    OC 002,21,5.93,252,3.41
+                    ... (todas as linhas) ...
                 `;
 
                 const MODELS = [
@@ -186,14 +178,25 @@ export const BiometricsManager: React.FC = () => {
                         const response = await result.response;
                         const text = response.text();
 
-                        let jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-                        const parsedData = JSON.parse(jsonStr);
+                        let csvText = text.replace(/```csv/g, '').replace(/```/g, '').trim();
+                        const lines = csvText.split('\n').filter(l => l.includes(',') && !l.toLowerCase().includes('viveiro')); // Filtra header e linhas vazias
 
-                        if (Array.isArray(parsedData)) {
+                        const parsedData = lines.map(line => {
+                            const [viveiro, dias, pMed, quat, pAnt] = line.split(',').map(s => s.trim());
+                            return {
+                                viveiro,
+                                diasCultivo: Number(dias) || 0,
+                                pMedStr: pMed || "0",
+                                quat: Number(quat) || 0,
+                                pAntStr: pAnt || "0"
+                            };
+                        });
+
+                        if (parsedData.length > 0) {
                             setCurrentData(parsedData);
                             setTimeout(() => {
                                 setStep('DASHBOARD');
-                                showToast(`Sucesso com modelo: ${modelName}`);
+                                showToast(`Sucesso: ${parsedData.length} linhas extraídas.`);
                             }, 2000);
                             success = true;
                             break;
