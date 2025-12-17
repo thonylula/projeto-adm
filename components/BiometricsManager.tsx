@@ -193,7 +193,8 @@ export const BiometricsManager: React.FC = () => {
                     } catch (e: any) {
                         console.warn(`Model ${modelName} failed:`, e.message);
                         lastError = e;
-                        // Continue to next model
+                        // Wait 5 seconds before trying next model to avoid 429 Rate Limiting
+                        await new Promise(resolve => setTimeout(resolve, 5000));
                     }
                 }
 
