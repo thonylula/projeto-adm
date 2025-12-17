@@ -827,21 +827,22 @@ export const BiometricsManager: React.FC = () => {
                     </p>
                 </div>
             </div>
-            );
+        </div>
+    );
 
-            return (
-            <div className="w-full">
-                {step === 'UPLOAD' && renderUploadScreen()}
-                {step === 'PROCESSING' && renderProcessing()}
-                {step === 'DASHBOARD' && renderDashboard()}
+    return (
+        <div className="w-full">
+            {step === 'UPLOAD' && renderUploadScreen()}
+            {step === 'PROCESSING' && renderProcessing()}
+            {step === 'DASHBOARD' && renderDashboard()}
 
-                {/* Toast Notification */}
-                {toast.visible && (
-                    <div className="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl animate-in slide-in-from-bottom-4 z-50 flex items-center gap-3">
-                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                        {toast.msg}
-                    </div>
-                )}
-            </div>
-            );
+            {/* Toast Notification */}
+            {toast.visible && (
+                <div className="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl animate-in slide-in-from-bottom-4 z-50 flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    {toast.msg}
+                </div>
+            )}
+        </div>
+    );
 };
