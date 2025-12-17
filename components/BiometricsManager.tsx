@@ -802,7 +802,7 @@ export const BiometricsManager: React.FC = () => {
                                         <td className="px-2 py-3 text-center bg-orange-50/30">
                                             <input
                                                 type="date"
-                                                className="bg-white text-xs font-bold text-gray-900 border border-gray-300 rounded focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none w-28 px-1 py-0.5 text-center shadow-sm"
+                                                className="block mx-auto bg-white text-sm font-bold text-gray-900 border border-gray-400 rounded focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none w-32 px-1 py-1 text-center shadow-sm"
                                                 value={item.dataPovoamento || ''}
                                                 onChange={(e) => handleUpdateRow(item.viveiro, 'dataPovoamento', e.target.value)}
                                             />
@@ -937,7 +937,7 @@ export const BiometricsManager: React.FC = () => {
                 </main>
                 <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
                     <p className="text-[10px] text-gray-400 font-mono opacity-60">
-                        Sistema Integrado de Gestão • v1.6 (Fix Sort/UI) • Conectado ao GitHub
+                        Sistema Integrado de Gestão • v1.8 (Better UI) • Conectado ao GitHub
                     </p>
                 </div>
             </div>
