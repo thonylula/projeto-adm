@@ -28,7 +28,7 @@ const NEWS_HEADLINES_SOURCE = [
     "💰 Economia: Custo da ração apresenta leve queda no mercado internacional.",
     "🌱 Sustentabilidade: Fazendas com certificação ASC ganham prêmio na Europa.",
     "🤝 Evento: FENACAM confirma datas e promete trazer IA para o campo.",
-    "🤖 Inovação: O APP agora prevê biomassa com 98% de precisão via imagem.",
+    "🤖 Inovação: O APP gera a ordem correta dos viveiros e permite filtros.",
     "🌍 Europa: Aumenta a procura por camarão processado e descascado.",
     "📊 Relatório: Conversão alimentar média do setor melhora para 1.4.",
     "🧪 Nutrição: Uso de ácidos orgânicos melhora sobrevivência em 10%.",
@@ -55,6 +55,7 @@ export const BiometricsManager: React.FC = () => {
 
     // Estado para armazenar os dados que serão exibidos
     const [currentData, setCurrentData] = useState<any[]>(defaultRawData);
+    const [filterText, setFilterText] = useState('');
 
     const dashboardRef = useRef<HTMLDivElement>(null);
 
@@ -360,21 +361,33 @@ export const BiometricsManager: React.FC = () => {
 
 
     // Processamento e Classificação
+    // Processamento e Classificação
     const processedData = useMemo(() => {
+        // 1. Filtragem
+        const filtered = currentData.filter(item =>
+            item.viveiro?.toLowerCase().includes(filterText.toLowerCase())
+        );
+
+        // 2. Ordenação Robusta (Prefix + Number)
         const sortViveiros = (a: any, b: any) => {
-            try {
-                const partsA = a.viveiro.split(' ');
-                const partsB = b.viveiro.split(' ');
-                const numA = parseInt(partsA[1] || '0', 10);
-                const numB = parseInt(partsB[1] || '0', 10);
-                if (partsA[0] === partsB[0]) return numA - numB;
-                return a.viveiro.localeCompare(b.viveiro);
-            } catch (e) {
-                return a.viveiro.localeCompare(b.viveiro);
+            const getParts = (str: string) => {
+                const clean = str.toUpperCase().replace(/\s+/g, '');
+                const match = clean.match(/^([A-Z]+)-?(\d+)/);
+                if (match) {
+                    return { prefix: match[1], num: parseInt(match[2]) };
+                }
+                return { prefix: clean, num: 9999 };
+            };
+            const partA = getParts(a.viveiro || '');
+            const partB = getParts(b.viveiro || '');
+
+            if (partA.prefix !== partB.prefix) {
+                return partA.prefix.localeCompare(partB.prefix);
             }
+            return partA.num - partB.num;
         };
 
-        const sortedData = [...currentData].sort(sortViveiros);
+        const sortedData = [...filtered].sort(sortViveiros);
 
         const processed = sortedData.map(item => {
             let pMed = null;
@@ -757,7 +770,18 @@ export const BiometricsManager: React.FC = () => {
                         <table className="w-full text-xs text-left">
                             <thead className="bg-orange-50 text-orange-800 uppercase font-bold border-b border-orange-100">
                                 <tr>
-                                    <th className="px-4 py-3">VIV.</th>
+                                    <th className="px-4 py-3 min-w-[120px]">
+                                        <div className="flex flex-col gap-1">
+                                            <span>VIV.</span>
+                                            <input
+                                                type="text"
+                                                placeholder="Filtrar..."
+                                                className="w-full text-[10px] p-1 rounded border border-orange-200 focus:outline-none focus:border-orange-500 font-normal normal-case text-gray-600 placeholder-gray-400 print-hidden"
+                                                value={filterText}
+                                                onChange={(e) => setFilterText(e.target.value)}
+                                            />
+                                        </div>
+                                    </th>
                                     <th className="px-4 py-3 text-center bg-orange-100/50">D. POV</th>
                                     <th className="px-4 py-3 text-center">DIAS</th>
                                     <th className="px-4 py-3 text-right">P.M (g)</th>
