@@ -139,39 +139,48 @@ export const BiometricsManager: React.FC = () => {
                 }
 
                 const genAI = new GoogleGenerativeAI(apiKey);
-                const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+                const MODELS = [
+                    "gemini-3-pro-preview",
+                    "gemini-2.5-pro",
+                    "gemini-2.5-flash",
+                    "gemini-2.0-flash-lite",
+                    "gemini-2.0-flash",
+                    "gemini-1.5-flash",
+                    "gemini-1.5-pro"
+                ];
 
-                const filePart = await fileToGenerativePart(files[0]);
+                let lastError = null;
+                let success = false;
 
-                const prompt = `
-                    Extraia a tabela de dados de biometria de camarão.
-                    
-                    Retorne APENAS um Array JSON puro.
-                    Para cada linha:
-                    - viveiro (String)
-                    - diasCultivo (Number): DOC
-                    - pMedStr (String): Peso Atual. Mantenha pontuação original (ex: "3,91").
-                    - pAntStr (String): Peso Anterior. Mantenha pontuação original.
-                    - quat (Number): Quantidade.
+                for (const modelName of MODELS) {
+                    try {
+                        console.log(`Trying model: ${modelName}`);
+                        const model = genAI.getGenerativeModel({ model: modelName });
+                        const result = await model.generateContent([prompt, filePart]);
+                        const response = await result.response;
+                        const text = response.text();
 
-                    Formato:
-                    [ { "viveiro": "OC 001", "pMedStr": "3,91", "quat": 302, "pAntStr": "3,14", "diasCultivo": 35 }, ... ]
-                `;
+                        let jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                        const parsedData = JSON.parse(jsonStr);
 
-                const result = await model.generateContent([prompt, filePart]);
-                const response = await result.response;
-                const text = response.text();
+                        if (Array.isArray(parsedData)) {
+                            setCurrentData(parsedData);
+                            setTimeout(() => {
+                                setStep('DASHBOARD');
+                                showToast(`Sucesso com modelo: ${modelName}`);
+                            }, 2000);
+                            success = true;
+                            break;
+                        }
+                    } catch (e: any) {
+                        console.warn(`Model ${modelName} failed:`, e.message);
+                        lastError = e;
+                        // Continue to next model
+                    }
+                }
 
-                let jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-                const parsedData = JSON.parse(jsonStr);
-
-                if (Array.isArray(parsedData)) {
-                    setCurrentData(parsedData);
-                    setTimeout(() => {
-                        setStep('DASHBOARD');
-                        showToast('Dados extraídos com Sucesso!');
-                    }, 2000);
-                    return;
+                if (!success) {
+                    throw lastError || new Error("Todos os modelos de IA falharam.");
                 }
             } catch (error: any) {
                 console.error("Erro AI:", error);
