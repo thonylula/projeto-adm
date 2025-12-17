@@ -822,25 +822,26 @@ export const BiometricsManager: React.FC = () => {
 
                 </main>
             </div>
-            <div className="text-center mt-4 text-[9px] text-orange-300 font-medium uppercase tracking-widest no-print">
-                Sistema Integrado de Gestão • v1.1 Beta • Conectado ao GitHub
+            <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
+                <p className="text-[10px] text-gray-400 font-mono opacity-60">
+                    Sistema Integrado de Gestão • v1.2 (Fix Multi-Model) • Conectado ao GitHub
+                </p>
             </div>
-        </div>
-    );
+            );
 
-    return (
-        <div className="w-full">
-            {step === 'UPLOAD' && renderUploadScreen()}
-            {step === 'PROCESSING' && renderProcessing()}
-            {step === 'DASHBOARD' && renderDashboard()}
+            return (
+            <div className="w-full">
+                {step === 'UPLOAD' && renderUploadScreen()}
+                {step === 'PROCESSING' && renderProcessing()}
+                {step === 'DASHBOARD' && renderDashboard()}
 
-            {/* Toast Notification */}
-            {toast.visible && (
-                <div className="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl animate-in slide-in-from-bottom-4 z-50 flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    {toast.msg}
-                </div>
-            )}
-        </div>
-    );
+                {/* Toast Notification */}
+                {toast.visible && (
+                    <div className="fixed bottom-4 right-4 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-2xl animate-in slide-in-from-bottom-4 z-50 flex items-center gap-3">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        {toast.msg}
+                    </div>
+                )}
+            </div>
+            );
 };
