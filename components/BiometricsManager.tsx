@@ -239,11 +239,26 @@ export const BiometricsManager: React.FC = () => {
     // --- LÓGICA DE EDIÇÃO E CÁLCULOS ---
 
     // Helper de Ordenação (OC-01, OC-02...)
+    // Helper de Ordenação (OC-01, OC-02... VP-01...)
     const sortData = (data: any[]) => {
         return [...data].sort((a, b) => {
-            const numA = parseInt(a.viveiro.replace(/\D/g, '')) || 9999;
-            const numB = parseInt(b.viveiro.replace(/\D/g, '')) || 9999;
-            return numA - numB;
+            // Extrai prefixo (letras) e número
+            const getParts = (str: string) => {
+                const clean = str.toUpperCase().replace(/\s+/g, '');
+                const match = clean.match(/^([A-Z]+)-?(\d+)/);
+                if (match) {
+                    return { prefix: match[1], num: parseInt(match[2]) };
+                }
+                return { prefix: clean, num: 9999 };
+            };
+
+            const partA = getParts(a.viveiro);
+            const partB = getParts(b.viveiro);
+
+            if (partA.prefix !== partB.prefix) {
+                return partA.prefix.localeCompare(partB.prefix);
+            }
+            return partA.num - partB.num;
         });
     };
 
@@ -763,7 +778,7 @@ export const BiometricsManager: React.FC = () => {
                                         <td className="px-2 py-3 text-center bg-orange-50/30">
                                             <input
                                                 type="date"
-                                                className="bg-transparent text-[10px] font-mono text-gray-600 border-b border-dashed border-gray-300 focus:border-orange-500 outline-none w-24 text-center"
+                                                className="bg-white text-xs font-bold text-gray-900 border border-gray-300 rounded focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none w-28 px-1 py-0.5 text-center shadow-sm"
                                                 value={item.dataPovoamento || ''}
                                                 onChange={(e) => handleUpdateRow(item.viveiro, 'dataPovoamento', e.target.value)}
                                             />
@@ -898,7 +913,7 @@ export const BiometricsManager: React.FC = () => {
                 </main>
                 <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
                     <p className="text-[10px] text-gray-400 font-mono opacity-60">
-                        Sistema Integrado de Gestão • v1.4 (Real Data) • Conectado ao GitHub
+                        Sistema Integrado de Gestão • v1.6 (Fix Sort/UI) • Conectado ao GitHub
                     </p>
                 </div>
             </div>
