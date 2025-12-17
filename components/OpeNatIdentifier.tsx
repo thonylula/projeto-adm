@@ -209,6 +209,10 @@ export const OpeNatIdentifier: React.FC = () => {
             if (!success) {
                 throw lastError || new Error("Todos os modelos falharam.");
             }
+        } catch (error: any) {
+            console.error("Erro na classificação:", error);
+            alert(`Erro ao processar a nota fiscal: ${error.message}`);
+        } finally {
             setIsProcessing(false);
         }
     };
