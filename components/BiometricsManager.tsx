@@ -48,9 +48,8 @@ export const BiometricsManager: React.FC = () => {
     const [files, setFiles] = useState<File[]>([]);
     const [textInput, setTextInput] = useState('');
     const [showReferenceTable, setShowReferenceTable] = useState(false);
-
-    const [textInput, setTextInput] = useState('');
-    const [showReferenceTable, setShowReferenceTable] = useState(false);
+    const [isKeyConfigOpen, setIsKeyConfigOpen] = useState(false);
+    const [manualApiKey, setManualApiKey] = useState('');
 
     // Estado para notícias dinâmicas
     const [newsList, setNewsList] = useState<string[]>([]);
