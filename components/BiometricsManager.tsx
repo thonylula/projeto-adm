@@ -817,13 +817,12 @@ export const BiometricsManager: React.FC = () => {
 
                         {/* 3. Lado Direito: Assinaturas e Ações */}
                         <div className="w-full md:w-1/3 flex flex-col items-center md:items-end gap-4">
-                            <div className="flex items-center gap-6 bg-orange-50/50 px-5 py-3 rounded-xl border border-orange-100/50">
-                                <div className="text-right">
+                            <div className="flex flex-col gap-3 text-right">
+                                <div>
                                     <p className="text-[9px] text-orange-400 font-bold uppercase tracking-widest mb-0.5">Gerente</p>
                                     <p className="text-xs font-bold text-gray-700">Cleiton Manoel de Lima</p>
                                 </div>
-                                <div className="w-px h-8 bg-orange-200/50"></div>
-                                <div className="text-right">
+                                <div>
                                     <p className="text-[9px] text-orange-400 font-bold uppercase tracking-widest mb-0.5">Analista Adm</p>
                                     <p className="text-xs font-bold text-gray-700">Luanthony L. Oliveira</p>
                                 </div>
