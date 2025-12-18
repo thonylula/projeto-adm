@@ -142,7 +142,7 @@ export const RegistrationManager: React.FC = () => {
 
     // --- AI SMART UPLOAD ---
     const { processFile, isProcessing } = useGeminiParser({
-        apiKey: process.env.GEMINI_API_KEY || '',
+        apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY || '',
         onError: (err) => alert(`Erro na Inteligência Artificial: ${err.message}`)
     });
 
@@ -579,7 +579,7 @@ export const RegistrationManager: React.FC = () => {
                         <div className="pt-4 flex gap-3 justify-end">
                             <button type="button" onClick={toggleForm} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-bold">Cancelar</button>
                             <button type="submit" className={`px-6 py-2 text-white font-bold rounded-lg shadow-md ${activeType === 'EMPLOYEE' ? 'bg-indigo-600 hover:bg-indigo-700' :
-                                    activeType === 'SUPPLIER' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-emerald-600 hover:bg-emerald-700'
+                                activeType === 'SUPPLIER' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-emerald-600 hover:bg-emerald-700'
                                 }`}>
                                 Salvar Registro
                             </button>
@@ -693,7 +693,7 @@ export const RegistrationManager: React.FC = () => {
                                 <td className="px-6 py-4">
                                     <p className="font-bold text-gray-900">{cli.name}</p>
                                     <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${cli.status === 'ACTIVE' ? 'bg-green-100 text-green-700' :
-                                            cli.status === 'LEAD' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
+                                        cli.status === 'LEAD' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
                                         }`}>
                                         {cli.status === 'ACTIVE' ? 'Ativo' : cli.status === 'LEAD' ? 'Prospecto' : 'Inativo'}
                                     </span>
