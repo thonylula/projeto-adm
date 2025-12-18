@@ -1,0 +1,14 @@
+
+INSTRUÇÕES PARA CONFIGURAR GOOGLE_API_KEY NO VERCEL
+
+1. Acesse o Dashboard do seu projeto na Vercel (https://vercel.com/dashboard).
+2. Selecione o projeto "projeto-adm".
+3. Vá em "Settings" (Configurações) na aba superior.
+4. No menu lateral esquerdo, clique em "Environment Variables".
+5. Em "Key", digite: GOOGLE_API_KEY
+6. Em "Value", core sua chave de API iniciada em "AIza...".
+7. (Opcional) Selecione os ambientes (Production, Preview, Development) onde deseja que a chave funcione.
+8. Clique em "Save".
+9. IMPORTANTE: Para que a nova variável tenha efeito, você deve fazer um novo Deploy (Redeploy) ou promover o build atual.
+
+Para testar se funcionou, use os comandos curl fornecidos.

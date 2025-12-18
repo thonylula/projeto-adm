@@ -56,7 +56,7 @@ export const useGeminiParser = ({ onSuccess, onError }: UseGeminiParserProps = {
                 try {
                     console.log(`[Gemini Hook] Trying model: ${modelName}`);
 
-                    const response = await fetch('/api/generate', {
+                    const response = await fetch('/api/generative', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -67,15 +67,15 @@ export const useGeminiParser = ({ onSuccess, onError }: UseGeminiParserProps = {
                         })
                     });
 
-                    const data = await response.json();
+                    const payload = await response.json().catch(() => ({ ok: false, error: 'Invalid JSON' }));
 
-                    if (!response.ok) {
-                        const errorMsg = data.error?.message || data.error || 'Unknown error';
+                    if (!response.ok || !payload.ok) {
+                        const errorMsg = payload.error?.message || payload.error || 'Unknown error';
                         throw new Error(`Model ${modelName} error: ${response.status} - ${errorMsg}`);
                     }
 
-                    // Extract text from REST API response structure
-                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    // Extract text from REST API response structure (nested in payload.data)
+                    const text = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text;
                     if (!text) throw new Error('Empty response from AI');
 
                     // Clean JSON markdown
