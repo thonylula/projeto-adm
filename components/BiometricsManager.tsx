@@ -870,7 +870,7 @@ export const BiometricsManager: React.FC = () => {
                                             />
                                         </div>
                                     </th>
-                                    <th className="px-4 py-3 text-center bg-orange-100/50">D. POV</th>
+                                    <th className="px-4 py-3 text-center bg-orange-100/50 min-w-[110px]">D. POV</th>
                                     <th className="px-4 py-3 text-center">DIAS</th>
                                     <th className="px-4 py-3 text-right">P.M (g)</th>
                                     <th className="px-4 py-3 text-right">QUANT.</th>
