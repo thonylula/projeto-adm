@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useGeminiParser } from '../hooks/useGeminiParser';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 // --- Interfaces based on User Data ---
 interface HarvestData {
@@ -56,7 +58,21 @@ const COLORS = {
 export const DeliveryOrder: React.FC = () => {
     const [view, setView] = useState<'INPUT' | 'DASHBOARD'>('INPUT');
     const [inputText, setInputText] = useState('');
-    const [data, setData] = useState<HarvestData[]>(INITIAL_HARVEST_DATA);
+    const [data, setData] = useState<HarvestData[]>(() => {
+        try {
+            const saved = localStorage.getItem('delivery_order_db');
+            if (saved) return JSON.parse(saved);
+        } catch (e) {
+            console.error(e);
+        }
+        return []; // Start empty - no example data
+    });
+
+    useEffect(() => {
+        localStorage.setItem('delivery_order_db', JSON.stringify(data));
+    }, [data]);
+
+    const reportRef = useRef<HTMLDivElement>(null);
 
     // Derived state for summary logic
     const activeData = data.filter(d => d.visible);
@@ -317,6 +333,64 @@ export const DeliveryOrder: React.FC = () => {
         }
     };
 
+    // --- EXPORT & BACKUP ACTIONS ---
+    const handleBackup = () => {
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `backup_ordem_entrega_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handleRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const parsed = JSON.parse(ev.target?.result as string);
+                if (Array.isArray(parsed)) {
+                    setData(parsed);
+                    alert("Backup restaurado com sucesso!");
+                }
+            } catch (err) {
+                alert("Erro ao ler arquivo de backup.");
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    const handleExportPDF = async () => {
+        if (!reportRef.current) return;
+        const canvas = await html2canvas(reportRef.current, { scale: 2, backgroundColor: '#ffffff' });
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('l', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`Ordem_Entrega_${new Date().toLocaleDateString('pt-BR')}.pdf`);
+    };
+
+    const handleExportPNG = async () => {
+        if (!reportRef.current) return;
+        const canvas = await html2canvas(reportRef.current, { scale: 2, backgroundColor: '#ffffff' });
+        const link = document.createElement('a');
+        link.download = `Ordem_Entrega_${new Date().toLocaleDateString('pt-BR')}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    };
+
+    const handleExportHTML = () => {
+        if (!reportRef.current) return;
+        navigator.clipboard.writeText(reportRef.current.outerHTML).then(() => {
+            alert("HTML copiado para a área de transferência!");
+        });
+    };
+
     // --- Views ---
 
     if (view === 'INPUT') {
@@ -391,11 +465,11 @@ export const DeliveryOrder: React.FC = () => {
             </header>
 
             <section className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto" ref={reportRef}>
                     <table className="w-full">
                         <thead className="bg-[#f26522] text-white">
                             <tr>
-                                <th className="p-4 text-center w-16 first:rounded-tl-lg">Ocultar</th>
+                                <th className="p-4 text-center w-16 first:rounded-tl-lg" data-html2canvas-ignore>Ocultar</th>
                                 <th className="p-4 text-left">Data</th>
                                 <th className="p-4 text-left">Viveiro</th>
                                 <th className="p-4 text-left">Cliente</th>
@@ -413,7 +487,7 @@ export const DeliveryOrder: React.FC = () => {
                         <tbody className="divide-y divide-gray-100">
                             {data.map((row) => (
                                 <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="p-4 text-center">
+                                    <td className="p-4 text-center" data-html2canvas-ignore>
                                         <input
                                             type="checkbox"
                                             checked={row.visible}
@@ -531,7 +605,38 @@ export const DeliveryOrder: React.FC = () => {
                     </div>
                 </div>
             )}
-        </div>
+
+            {/* --- FOOTER ACTIONS --- */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40 border-t border-gray-200 print:hidden flex justify-center gap-4 flex-wrap">
+                <button onClick={handleExportPDF} className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow font-medium transition-all text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                    PDF
+                </button>
+                <button onClick={handleExportPNG} className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow font-medium transition-all text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    PNG
+                </button>
+                <button onClick={handleExportHTML} className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg shadow font-medium transition-all text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                    HTML
+                </button>
+
+                <div className="w-px h-8 bg-gray-300 mx-2"></div>
+
+                <button onClick={handleBackup} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow font-medium transition-all text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    Salvar Backup
+                </button>
+                <div className="relative">
+                    <input type="file" id="restore-backup" className="hidden" accept=".json" onChange={handleRestore} />
+                    <label htmlFor="restore-backup" className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg shadow font-medium transition-all text-sm cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                        Restaurar
+                    </label>
+                </div>
+            </div>
+            <div className="h-24"></div> {/* Spacer for fixed footer */}
+        </div >
     );
 };
 

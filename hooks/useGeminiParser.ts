@@ -74,7 +74,7 @@ export const useGeminiParser = ({ onSuccess, onError, apiKey }: UseGeminiParserP
                     console.warn(`[Gemini Hook] Model ${modelName} failed:`, e.message);
                     lastError = e;
                     // Short delay to avoid rate limits if looping fast
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise(resolve => setTimeout(resolve, 5000));
                 }
             }
 
