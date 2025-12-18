@@ -142,7 +142,6 @@ export const RegistrationManager: React.FC = () => {
 
     // --- AI SMART UPLOAD ---
     const { processFile, isProcessing } = useGeminiParser({
-        apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY || '',
         onError: (err) => alert(`Erro na Inteligência Artificial: ${err.message}`)
     });
 

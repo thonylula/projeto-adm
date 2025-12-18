@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useApiKey } from '../hooks/useApiKey';
 import { ApiKeyConfig } from './ApiKeyConfig';
 
@@ -160,17 +159,23 @@ export const OpeNatIdentifier: React.FC = () => {
             // 5 Seconds Delay (User Request)
             await new Promise(resolve => setTimeout(resolve, 5000));
 
-            // API KEY LOGIC: Manual > Env > Vite Env
-            const envKey = process.env.API_KEY || process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_API_KEY;
-            // Validar se envKey é placeholder ou inválida
-            const isEnvKeyValid = envKey && envKey !== 'undefined' && envKey !== 'YOUR_API_KEY_HERE';
+            // API KEY LOGIC: Now handled on server, but we can pass it if we want to override or authenticate the user
+            // For this implementation, we rely on the server-side env var as requested.
+            // If the user wants to support custom keys input in the UI, we would pass it in the header.
+            // efficient logic: if manualApiKey is set, pass it to the proxy via header x-custom-api-key (need to support in proxy)
+            // or just assume we use the server key. The user request says "secure the key on server".
+            // So we can largely ignore the client-side key logic *unless* the user wants to override it.
+            // Let's assume server key is primary.
 
-            const apiKey = manualApiKey || (isEnvKeyValid ? envKey : '');
+            // However, existing UI has key config. Let's send the key if it exists manually, 
+            // otherwise the proxy uses the env var. But we didn't implement that in proxy.
+            // Let's update proxy to accept valid key or use env.
+            // For now, I'll remove the client-side key requirement check since the server handles it.
 
-            if (!apiKey) {
-                setIsKeyConfigOpen(true);
-                throw new Error('Chave de API não configurada. Por favor, insira uma chave válida na engrenagem.');
-            }
+            // const apiKey = manualApiKey || (isEnvKeyValid ? envKey : ''); // Unused in this new flow request
+
+            // Client-side key check removed as we use Server-side key.
+            // if (!apiKey) { ... }
 
             // Prepare Parts
             const invoicePart = await fileToGenerativePart(invoiceFile);
@@ -218,14 +223,41 @@ export const OpeNatIdentifier: React.FC = () => {
             for (const modelName of MODELS) {
                 try {
                     console.log(`Trying model: ${modelName}`);
-                    const genAI = new GoogleGenerativeAI(apiKey);
-                    const model = genAI.getGenerativeModel({ model: modelName });
 
-                    const parts: any[] = [prompt, invoicePart, ...codeListParts];
+                    // Format parts for REST API (SDK does this automatically, but REST needs explicit structure)
+                    // Prompt string must be object { text: ... }
+                    const formattedParts = [
+                        { text: prompt },
+                        invoicePart,
+                        ...codeListParts
+                    ];
 
-                    const result = await model.generateContent(parts);
-                    const response = await result.response;
-                    const resultText = response.text();
+                    const response = await fetch('/api/generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model: modelName,
+                            contents: [{ role: 'user', parts: formattedParts }]
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        const errorMsg = data.error?.message || data.error || 'Unknown error';
+                        // Throw specific object to catch below
+                        throw { message: errorMsg, status: response.status };
+                    }
+
+                    // Extract text from REST API response structure
+                    // { candidates: [ { content: { parts: [ { text: "..." } ] } } ] }
+                    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (!resultText) {
+                        throw new Error('Empty response from AI');
+                    }
 
                     // Clean and Parse JSON
                     const jsonStr = resultText.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -235,10 +267,12 @@ export const OpeNatIdentifier: React.FC = () => {
                     success = true;
                     break;
                 } catch (e: any) {
-                    console.warn(`Model ${modelName} failed:`, e.message);
+                    console.warn(`Model ${modelName} failed:`, e.message || e);
                     lastError = e;
 
-                    if (e.message?.includes('403') || e.message?.includes('leaked') || e.message?.includes('API key')) {
+                    // Check for 403 (Keys) or 429 (Quota) - although Proxy handles 429 retry, if it persists it throws.
+                    const msg = e.message || '';
+                    if (msg.includes('403') || msg.includes('leaked') || msg.includes('API key') || e.status === 403) {
                         saw403Forbidden = true;
                     }
                 }

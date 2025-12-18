@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+
 
 // --- LOGO PADRÃO CARAPITANGA (SVG Data URI) ---
 const DEFAULT_LOGO = "data:image/svg+xml;charset=utf-8,%3Csvg%20viewBox%3D%270%200%20100%20100%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20fill%3D%27none%27%3E%3Cpath%20d%3D%27M78%2035C75%2025%2065%2018%2052%2018C35%2018%2022%2030%2022%2048C22%2062%2030%2072%2040%2078C45%2081%2052%2082%2058%2080%27%20stroke%3D%27%23f97316%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M25%2045C28%2042%2035%2040%2040%2042%27%20stroke%3D%27%23fdba74%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M26%2055C30%2052%2038%2050%2044%2052%27%20stroke%3D%27%23fdba74%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M32%2065C36%2062%2044%2060%2050%2062%27%20stroke%3D%27%23fdba74%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M78%2035C82%2038%2084%2045%2080%2052C76%2058%2070%2060%2065%2058%27%20stroke%3D%27%23f97316%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Ccircle%20cx%3D%2770%27%20cy%3D%2732%27%20r%3D%273%27%20fill%3D%27black%27%2F%3E%3Cpath%20d%3D%27M78%2035C85%2025%2095%2020%2098%2015%27%20stroke%3D%27%23ea580c%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M75%2035C85%2010%2060%205%2050%208%27%20stroke%3D%27%23ea580c%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M58%2080L62%2088M58%2080L54%2090M58%2080L66%2085%27%20stroke%3D%27%23f97316%27%20stroke-width%3D%274%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E";
@@ -191,12 +191,8 @@ export const BiometricsManager: React.FC = () => {
 
                 console.log("DEBUG: Using API Key:", apiKey ? `...${apiKey.slice(-4)}` : "UNDEFINED (Check .env or Manual Settings)");
 
-                if (!apiKey) {
-                    setIsKeyConfigOpen(true); // Abre modal de config se falhar
-                    throw new Error('Chave de API não configurada. Insira manualmente nas configurações (ícone de engrenagem).');
-                }
-
-                const genAI = new GoogleGenerativeAI(apiKey);
+                // Server-side authentication used.
+                // const genAI = new GoogleGenerativeAI(apiKey);
 
                 const filePart = await fileToGenerativePart(files[0]);
 
@@ -228,13 +224,37 @@ export const BiometricsManager: React.FC = () => {
                 let lastError = null;
                 let success = false;
 
+                // Format parts for REST API
+                const formattedParts = [
+                    { text: prompt },
+                    filePart
+                ];
+
                 for (const modelName of MODELS) {
                     try {
                         console.log(`Trying model: ${modelName}`);
-                        const model = genAI.getGenerativeModel({ model: modelName });
-                        const result = await model.generateContent([prompt, filePart]);
-                        const response = await result.response;
-                        const text = response.text();
+
+                        const response = await fetch('/api/generate', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                model: modelName,
+                                contents: [{ role: 'user', parts: formattedParts }]
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            const errorMsg = data.error?.message || data.error || 'Unknown error';
+                            throw { message: errorMsg, status: response.status };
+                        }
+
+                        // Extract text from REST API response structure
+                        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (!text) throw new Error('Empty response from AI');
 
                         let csvText = text.replace(/```csv/g, '').replace(/```/g, '').trim();
                         const lines = csvText.split('\n').filter(l => l.includes(',') && !l.toLowerCase().includes('viveiro')); // Filtra header e linhas vazias

@@ -1,14 +1,11 @@
-
 import { useState } from 'react';
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface UseGeminiParserProps {
     onSuccess?: (data: any) => void;
     onError?: (error: Error) => void;
-    apiKey: string;
 }
 
-export const useGeminiParser = ({ onSuccess, onError, apiKey }: UseGeminiParserProps) => {
+export const useGeminiParser = ({ onSuccess, onError }: UseGeminiParserProps = {}) => {
     const [isProcessing, setIsProcessing] = useState(false);
 
     const fileToGenerativePart = async (file: File) => {
@@ -31,8 +28,6 @@ export const useGeminiParser = ({ onSuccess, onError, apiKey }: UseGeminiParserP
     const processFile = async (file: File, prompt: string) => {
         setIsProcessing(true);
         try {
-            if (!apiKey) throw new Error("API Key inválida ou ausente.");
-
             const filePart = await fileToGenerativePart(file);
 
             const MODELS = [
@@ -46,15 +41,42 @@ export const useGeminiParser = ({ onSuccess, onError, apiKey }: UseGeminiParserP
             let success = false;
             let parsedResult = null;
 
+            // Prepare the payload for the REST API
+            // The filePart from fileToGenerativePart is strictly { inlineData: { data, mimeType } }
+            // The REST API expects parts: [{ text: ... }, { inlineData: ... }]
+            const contents = [{
+                role: 'user',
+                parts: [
+                    { text: prompt },
+                    filePart
+                ]
+            }];
+
             for (const modelName of MODELS) {
                 try {
                     console.log(`[Gemini Hook] Trying model: ${modelName}`);
-                    const genAI = new GoogleGenerativeAI(apiKey);
-                    const model = genAI.getGenerativeModel({ model: modelName });
 
-                    const result = await model.generateContent([prompt, filePart]);
-                    const response = await result.response;
-                    const text = response.text();
+                    const response = await fetch('/api/generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model: modelName,
+                            contents: contents
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        const errorMsg = data.error?.message || data.error || 'Unknown error';
+                        throw new Error(`Model ${modelName} error: ${response.status} - ${errorMsg}`);
+                    }
+
+                    // Extract text from REST API response structure
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!text) throw new Error('Empty response from AI');
 
                     // Clean JSON markdown
                     const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -65,16 +87,13 @@ export const useGeminiParser = ({ onSuccess, onError, apiKey }: UseGeminiParserP
                         break;
                     } catch (e) {
                         console.warn(`[Gemini Hook] JSON Parse failed for ${modelName}:`, e);
-                        // If plain text (not JSON) was requested, we might want to return text.
-                        // But for this hook we primarily target structured data.
-                        // If parse fails, we continue to next model hoping for better formatting.
                     }
 
                 } catch (e: any) {
                     console.warn(`[Gemini Hook] Model ${modelName} failed:`, e.message);
                     lastError = e;
                     // Short delay to avoid rate limits if looping fast
-                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
 

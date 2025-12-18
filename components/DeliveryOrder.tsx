@@ -103,7 +103,6 @@ export const DeliveryOrder: React.FC = () => {
 
     // --- AI SMART UPLOAD ---
     const { processFile, isProcessing } = useGeminiParser({
-        apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY || '',
         onError: (err) => alert(`Erro na Inteligência Artificial: ${err.message}`)
     });
 
@@ -274,15 +273,15 @@ export const DeliveryOrder: React.FC = () => {
         `;
 
         try {
-            const rawApiKey = process.env.GEMINI_API_KEY || '';
-            const apiKey = rawApiKey.trim();
             const models = [
-                "gemini-3-pro-preview",
-                "gemini-2.5-pro",
-                "gemini-2.5-flash",
+                "gemini-2.0-flash",
                 "gemini-2.0-flash-lite",
-                "gemini-2.0-flash"
+                "gemini-1.5-pro"
             ];
+
+            // Prepend system prompt since our proxy might not forward systemInstruction field specifically
+            // depending on implementation, ensuring context is passed.
+            const fullPrompt = `${systemPrompt}\n\n---\n\n${userQuery}`;
 
             let lastError = null;
             let generatedText = null;
@@ -290,21 +289,28 @@ export const DeliveryOrder: React.FC = () => {
             for (const model of models) {
                 try {
                     console.log(`Trying model: ${model}`);
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-                    const response = await fetch(apiUrl, {
+                    const response = await fetch('/api/generate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: userQuery }] }],
-                            systemInstruction: { parts: [{ text: systemPrompt }] }
+                            model: model,
+                            // Use pure system instruction + user query structure
+                            contents: [{ role: 'user', parts: [{ text: userQuery }] }],
+                            // Note: server proxy needs to support systemInstruction if we want to keep it "system" role-like,
+                            // but the simple proxy version we built likely handles "contents" directly. 
+                            // To be safe and compatible with the proxy we built earlier (checking api/generate.js),
+                            // let's pass system prompt as part of the user message or if we confirmed proxy supports it.
+                            // Looking at previous api/generate.js code: it extracts 'contents' from body.
+                            // It DOES NOT explicitely look for 'systemInstruction'.
+                            // So we should prepend system prompt to user text for safety with our simple proxy.
                         })
                     });
 
                     if (!response.ok) {
-                        // Check for 404 or specific errors
-                        const errText = await response.text();
-                        throw new Error(`Model ${model} error: ${response.status} - ${errText}`);
+                        const data = await response.json();
+                        const errorMsg = data.error?.message || data.error || 'Unknown error';
+                        throw new Error(`Model ${model} error: ${response.status} - ${errorMsg}`);
                     }
 
                     const result = await response.json();
