@@ -761,8 +761,39 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
     // Ganhos Adicionais
     if (result.hazardPayValue > 0) parts.push(`PERICULOSIDADE ${formatCurrency(result.hazardPayValue)}`);
-    if (result.nightShiftValue > 0) parts.push(`ADIC. NOTURNO ${formatCurrency(result.nightShiftValue)}`);
-    if (result.overtimeValue > 0) parts.push(`HORAS EXTRAS ${formatCurrency(result.overtimeValue)}`);
+
+    // Adicional Noturno com Horas
+    if (result.nightShiftValue > 0) {
+      const nightDetails = result.effectiveNightHours
+        ? `(${result.effectiveNightHours.toFixed(2).replace('.', ',')}h)`
+        : '';
+      parts.push(`ADIC. NOTURNO ${nightDetails} ${formatCurrency(result.nightShiftValue)}`);
+    }
+
+    // Horas Extras Detalhadas (Inclui HE, Domingos, Feriados)
+    if (result.overtimeValue > 0) {
+      const overtimeDetails = [];
+
+      // HE 1
+      if (input.overtimeHours > 0) {
+        overtimeDetails.push(`${input.overtimeHours}h A ${input.overtimePercentage}%`);
+      }
+      // HE 2
+      if (input.overtimeHours2 > 0) {
+        overtimeDetails.push(`${input.overtimeHours2}h A ${input.overtimePercentage2}%`);
+      }
+      // Domingos
+      if (input.sundaysAmount > 0) {
+        overtimeDetails.push(`${input.sundaysAmount} DOM`);
+      }
+      // Feriados
+      if (input.holidayHours > 0) {
+        overtimeDetails.push(`${input.holidayHours}h FER`);
+      }
+
+      const detailsStr = overtimeDetails.length > 0 ? `(${overtimeDetails.join(' + ')})` : '';
+      parts.push(`HORAS EXTRAS ${detailsStr} ${formatCurrency(result.overtimeValue)}`);
+    }
 
     // DSR (Reflexos)
     const totalDsr = result.dsrOvertimeValue + result.dsrNightShiftValue;
@@ -1125,6 +1156,14 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                 )}
               </div>
               <div className="flex items-center pt-1">
+                <input
+                  id="hasHazardPay"
+                  name="hasHazardPay"
+                  type="checkbox"
+                  checked={formState.hasHazardPay}
+                  onChange={handleInputChange}
+                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                />
                 <label htmlFor="hasHazardPay" className="ml-3 text-sm text-slate-700 font-medium">Periculosidade (30%)</label>
               </div>
             </div>
