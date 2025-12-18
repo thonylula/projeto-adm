@@ -1,3 +1,5 @@
+import React from 'react';
+
 export const useApiKey = (storageKey: string) => {
     const [apiKey, setApiKey] = React.useState(localStorage.getItem(storageKey) || '');
     const [isOpen, setIsOpen] = React.useState(false);
