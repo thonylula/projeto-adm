@@ -779,8 +779,9 @@ export const BiometricsManager: React.FC = () => {
 
                 {/* --- HEADER --- */}
                 <header className="bg-gradient-to-r from-orange-50/50 to-white px-8 py-6 border-b border-orange-100">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="flex items-center gap-5 w-full md:w-auto">
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-6 relative">
+                        {/* 1. Lado Esquerdo: Logo */}
+                        <div className="flex items-center gap-5 w-full md:w-auto justify-center md:justify-start">
                             {logo ? (
                                 <div className="relative group">
                                     <img src={logo} alt="Logo" className="h-16 w-auto object-contain mix-blend-multiply" />
@@ -794,31 +795,33 @@ export const BiometricsManager: React.FC = () => {
                                     <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />
                                 </div>
                             ) : null}
-
-                            <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="px-2 py-0.5 rounded text-[10px] font-black bg-orange-100 text-orange-700 uppercase tracking-widest">Relatório Técnico</span>
-                                    <span className="text-[10px] text-gray-400 font-medium">{new Date().toLocaleDateString()}</span>
-                                </div>
-                                <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight leading-none">
-                                    Análise de Performance
-                                </h1>
-                                <p className="text-sm text-gray-500 font-medium mt-1">
-                                    Acompanhamento Zootécnico (Peso x GPD)
-                                </p>
-                            </div>
                         </div>
 
-                        <div className="flex flex-col items-end gap-3 w-full md:w-auto">
+                        {/* 2. Centro: Título e Subtítulos (Centralizado) */}
+                        <div className="flex-1 text-center">
+                            <div className="flex items-center justify-center gap-2 mb-1">
+                                <span className="px-2 py-0.5 rounded text-[10px] font-black bg-orange-100 text-orange-700 uppercase tracking-widest">Relatório Técnico</span>
+                                <span className="text-[10px] text-gray-400 font-medium">{new Date().toLocaleDateString()}</span>
+                            </div>
+                            <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-none uppercase">
+                                Biometria
+                            </h1>
+                            <p className="text-sm text-gray-500 font-medium mt-1">
+                                Análise de Performance
+                            </p>
+                        </div>
+
+                        {/* 3. Lado Direito: Assinaturas e Ações */}
+                        <div className="flex flex-col items-center md:items-end gap-3 w-full md:w-auto">
                             <div className="flex items-center gap-6 bg-white px-4 py-3 rounded-xl border border-orange-100 shadow-sm">
                                 <div className="text-right">
                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Gerente</p>
-                                    <p className="text-sm font-bold text-gray-800">Cleiton Manoel</p>
+                                    <p className="text-xs font-bold text-gray-800">Cleiton Manoel de Lima</p>
                                 </div>
                                 <div className="w-px h-8 bg-orange-100"></div>
                                 <div className="text-right">
                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Analista Adm</p>
-                                    <p className="text-sm font-bold text-gray-800">Luanthony</p>
+                                    <p className="text-xs font-bold text-gray-800">Luanthony L. Oliveira</p>
                                 </div>
                             </div>
                             <div className="flex gap-2 no-print" data-html2canvas-ignore="true">
