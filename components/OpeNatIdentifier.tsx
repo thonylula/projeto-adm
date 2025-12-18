@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { useApiKey } from '../hooks/useApiKey';
+import { ApiKeyConfig } from './ApiKeyConfig';
 
 interface OpeNatItem {
     code: string;
@@ -45,6 +47,9 @@ export const OpeNatIdentifier: React.FC = () => {
     const [aiResult, setAiResult] = useState<AIResult | null>(null);
     const [isDragOver, setIsDragOver] = useState(false);
 
+    // API Key State (Reusable Hook via LocalStorage)
+    const { apiKey: manualApiKey, isOpen: isKeyConfigOpen, setIsOpen: setIsKeyConfigOpen, saveKey: saveApiKey } = useApiKey('FISCAL_GEMINI_KEY');
+
     // Context Form State
     const [showContextModal, setShowContextModal] = useState(false);
     const [userContext, setUserContext] = useState({
@@ -59,6 +64,7 @@ export const OpeNatIdentifier: React.FC = () => {
         let interval: any;
         if (isProcessing) {
             setNewsIndex(0);
+            // 5 Seconds News Rotation (synced with processing)
             interval = setInterval(() => {
                 setNewsIndex((prev: number) => (prev + 1) % NEWS_HEADLINES.length);
             }, 5000);
@@ -72,6 +78,7 @@ export const OpeNatIdentifier: React.FC = () => {
         setIsDragOver(false);
 
         let files: File[] = [];
+
 
         if ((e as React.DragEvent).dataTransfer) {
             files = Array.from((e as React.DragEvent).dataTransfer.files);
@@ -276,6 +283,23 @@ export const OpeNatIdentifier: React.FC = () => {
 
     return (
         <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
+            <ApiKeyConfig
+                isOpen={isKeyConfigOpen}
+                onClose={() => setIsKeyConfigOpen(false)}
+                apiKey={manualApiKey}
+                onSave={(key) => { saveApiKey(key); alert('Chave Salva!'); }}
+                title="Configuração de API Key (Fiscal)"
+            />
+
+            <div className="absolute top-0 right-0">
+                <button
+                    onClick={() => setIsKeyConfigOpen(true)}
+                    className="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
+                    title="Configurar Chave API Manualmente"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
+                </button>
+            </div>
             <div className="text-center space-y-2">
                 <h1 className="text-3xl font-bold text-gray-900">Identificador de OPE / NAT</h1>
                 <p className="text-gray-500">Ferramenta de classificação automática e identificação de Natureza de Operação.</p>
