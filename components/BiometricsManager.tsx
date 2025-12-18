@@ -778,84 +778,53 @@ export const BiometricsManager: React.FC = () => {
             <div id="dashboard-content" ref={dashboardRef} className="w-full max-w-5xl mx-auto bg-white rounded-3xl shadow-xl border border-orange-100 overflow-hidden relative">
 
                 {/* --- HEADER --- */}
-                <header className="bg-orange-50/30 px-10 py-8 border-b border-orange-100">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 relative">
-                        {/* 1. Lado Esquerdo: Logo */}
-                        <div className="w-full md:w-1/3 flex justify-center md:justify-start">
-                            {logo ? (
-                                <div className="relative group">
-                                    <img src={logo} alt="Logo" className="h-20 w-auto object-contain mix-blend-multiply" />
-                                    <label
-                                        htmlFor="logo-upload"
-                                        className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 cursor-pointer flex items-center justify-center rounded transition-opacity no-print"
-                                        data-html2canvas-ignore="true"
-                                    >
-                                        <span className="text-[9px] bg-white px-2 py-1 rounded shadow-sm text-gray-600 font-medium">Alterar Logo</span>
-                                    </label>
-                                    <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-                                </div>
-                            ) : null}
-                        </div>
+                {/* --- HEADER (SPEC COMPLIANT) --- */}
+                <header className="bg-[#FFF8F2] px-[12mm] py-[12mm] border-b border-orange-100 flex items-center justify-between h-[80mm] md:h-auto box-border gap-4">
 
-                        {/* 2. Centro: Título e Subtítulos (Centralizado) */}
-                        <div className="w-full md:w-1/3 text-center flex flex-col items-center">
-                            <div className="flex items-center gap-3 mb-2">
-                                <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-orange-100 text-orange-800 uppercase tracking-widest shadow-sm border border-orange-200">
-                                    Relatório Técnico
-                                </span>
-                                <span className="text-xs text-orange-400 font-semibold tracking-wide">
-                                    {new Date().toLocaleDateString('pt-BR')}
-                                </span>
+                    {/* 1. Coluna Esquerda: Logo (25%) */}
+                    <div className="flex-1 flex justify-start items-center min-w-0">
+                        {logo ? (
+                            <div className="relative group max-w-[90%]">
+                                <img src={logo} alt="Logo" className="h-20 w-auto object-contain mix-blend-multiply" />
+                                <label
+                                    htmlFor="logo-upload"
+                                    className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 cursor-pointer flex items-center justify-center rounded transition-opacity no-print"
+                                    data-html2canvas-ignore="true"
+                                >
+                                    <span className="text-[9px] bg-white px-2 py-1 rounded shadow-sm text-gray-600 font-medium whitespace-nowrap">Alterar Logo</span>
+                                </label>
+                                <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />
                             </div>
-                            <h1 className="text-4xl font-black text-gray-800 tracking-tight uppercase leading-none mb-1">
-                                Biometria
-                            </h1>
-                            <p className="text-sm text-orange-600/80 font-semibold tracking-wide uppercase">
-                                Análise de Performance
-                            </p>
-                        </div>
+                        ) : null}
+                    </div>
 
-                        {/* 3. Lado Direito: Assinaturas e Ações */}
-                        <div className="w-full md:w-1/3 flex flex-col items-center md:items-end gap-4">
-                            <div className="flex flex-col gap-3 text-right">
-                                <div>
-                                    <p className="text-[9px] text-orange-400 font-bold uppercase tracking-widest mb-0.5">Gerente</p>
-                                    <p className="text-xs font-bold text-gray-700">Cleiton Manoel de Lima</p>
-                                </div>
-                                <div>
-                                    <p className="text-[9px] text-orange-400 font-bold uppercase tracking-widest mb-0.5">Analista Adm</p>
-                                    <p className="text-xs font-bold text-gray-700">Luanthony L. Oliveira</p>
-                                </div>
-                            </div>
-                            <div className="flex gap-2 no-print" data-html2canvas-ignore="true">
-                                <button
-                                    onClick={saveBackup}
-                                    className="px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded text-xs font-bold hover:bg-blue-100 transition-colors flex items-center gap-1"
-                                    title="Salvar arquivo no computador"
-                                >
-                                    💾 Salvar
-                                </button>
-                                <button
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="px-3 py-1 bg-green-50 border border-green-200 text-green-700 rounded text-xs font-bold hover:bg-green-100 transition-colors flex items-center gap-1"
-                                    title="Carregar arquivo do computador"
-                                >
-                                    📂 Carregar
-                                </button>
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    className="hidden"
-                                    accept="application/json"
-                                    onChange={loadBackup}
-                                />
-                                <div className="w-px h-6 bg-gray-300 mx-1"></div>
-                                <button onClick={exportPDF} className="px-3 py-1 bg-white border border-gray-200 rounded text-xs font-bold hover:bg-gray-50 transition-colors">PDF</button>
-                                <button onClick={exportPNG} className="px-3 py-1 bg-white border border-gray-200 rounded text-xs font-bold hover:bg-gray-50 transition-colors">IMG</button>
-                                <button onClick={copyHTML} className="px-3 py-1 bg-white border border-gray-200 rounded text-xs font-bold hover:bg-gray-50 transition-colors">HTML</button>
-                            </div>
+                    {/* 2. Coluna Central: Título e Subtítulo (50%) */}
+                    <div className="flex-[2] flex flex-col items-center justify-center text-center min-w-0 px-4">
+                        <div className="flex items-center gap-2 mb-2 no-print opacity-50">
+                            <span className="text-[10px] uppercase font-bold text-gray-400">Relatório Técnico</span>
+                            <span className="text-[10px] text-gray-300">•</span>
+                            <span className="text-[10px] text-gray-400">{new Date().toLocaleDateString('pt-BR')}</span>
+                        </div>
+                        <h1 className="text-3xl md:text-4xl font-bold text-[#0F1B2D] tracking-tight leading-none mb-2" style={{ fontFamily: "'Poppins', 'Montserrat', sans-serif" }}>
+                            BIOMETRIA
+                        </h1>
+                        <p className="text-sm md:text-base font-semibold text-[#FF8A4B] uppercase tracking-wide" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                            Análise de Performance
+                        </p>
+                    </div>
+
+                    {/* 3. Coluna Direita: Nomes e Funções (25%) */}
+                    <div className="flex-1 flex flex-col items-end justify-center text-right gap-3 min-w-0" style={{ fontFamily: "'Inter', sans-serif" }}>
+                        <div>
+                            <p className="text-sm font-bold text-[#0F1B2D] leading-tight">Cleiton Manoel de Lima</p>
+                            <p className="text-xs font-normal text-gray-500 uppercase tracking-wide">Gerente</p>
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-[#0F1B2D] leading-tight">Luanthony L. Oliveira</p>
+                            <p className="text-xs font-normal text-gray-500 uppercase tracking-wide">Analista Adm</p>
                         </div>
                     </div>
+
                 </header>
 
                 {/* Tabela Principal */}
