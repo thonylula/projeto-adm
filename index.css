@@ -1,0 +1,9 @@
+/* CSS Reset and Variables */
+:root {
+  --primary: #4F46E5;
+  --secondary: #10B981;
+}
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}

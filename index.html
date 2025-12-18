@@ -1,26 +1,30 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Calculadora de Folha de Pagamento</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@400;600;700&family=Poppins:wght@700&display=swap" rel="stylesheet">
-    <style>
-      @media print {
-        @page {
-          margin: 0.5cm;
-          size: auto;
-        }
-        body {
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-          background-color: white !important;
-          color: black !important;
-        }
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Folha de Pagamento</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@400;600;700&family=Poppins:wght@700&display=swap"
+    rel="stylesheet">
+  <style>
+    @media print {
+      @page {
+        margin: 0.5cm;
+        size: auto;
       }
-    </style>
+
+      body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        background-color: white !important;
+        color: black !important;
+      }
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -29,15 +33,17 @@
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "html2canvas": "https://esm.sh/html2canvas@1.4.1",
     "jspdf": "https://esm.sh/jspdf@2.5.1",
-    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.3",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.3"
 
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-gray-50 text-slate-900 antialiased">
-    <div id="root"></div>
+
+<body class="bg-gray-50 text-slate-900 antialiased">
+  <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>

@@ -61,7 +61,7 @@ export const OpeNatIdentifier: React.FC = () => {
             setNewsIndex(0);
             interval = setInterval(() => {
                 setNewsIndex((prev: number) => (prev + 1) % NEWS_HEADLINES.length);
-            }, 3000);
+            }, 5000);
         }
         return () => clearInterval(interval);
     }, [isProcessing]);
@@ -150,18 +150,48 @@ export const OpeNatIdentifier: React.FC = () => {
         setAiResult(null);
 
         try {
-            const apiKey = process.env.API_KEY;
+            // 5 Seconds Delay (User Request)
+            await new Promise(resolve => setTimeout(resolve, 5000));
+
+            const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_API_KEY;
+
             if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
                 throw new Error('Chave de API inválida ou não encontrada.');
             }
 
+            // Prepare Parts
+            const invoicePart = await fileToGenerativePart(invoiceFile);
+
+            const codeListParts = await Promise.all(
+                codeListFiles.map(file => fileToGenerativePart(file))
+            );
+
+            const prompt = `
+            Você é um especialista em classificação fiscal e contábil, com foco em carcinicultura (criação de camarão).
+            Analise a Nota Fiscal fornecida (imagem/PDF) e consulte as Tabelas de Códigos fornecidas (se houver).
+
+            Contexto Adicional Fornecido pelo Usuário:
+            - Categoria do Produto: ${userContext.category}
+            - Uso Previsto: ${userContext.usage}
+
+            Tarefa:
+            1. Identifique os itens principais na Nota Fiscal.
+            2. Com base na natureza do produto e seu uso na carcinicultura, determine o código OPE/NAT mais adequado.
+            3. Se houver tabelas de códigos anexadas, tente encontrar uma correspondência exata ou aproximada.
+
+            Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos de código markdown) no seguinte formato:
+            {
+                "code": "CÓDIGO_ENCONTRADO",
+                "description": "DESCRIÇÃO_DO_CÓDIGO",
+                "reasoning": "Explique por que este código foi escolhido, citando o uso e a categoria.",
+                "items": ["Lista", "dos", "itens", "identificados"]
+            }
+            `;
+
             const MODELS = [
-                "gemini-3-pro-preview",
-                "gemini-2.5-pro",
-                "gemini-2.5-flash",
-                "gemini-2.0-flash-lite",
-                "gemini-2.0-flash",
-                "gemini-1.5-flash"
+                "gemini-1.5-pro",
+                "gemini-1.5-flash",
+                "gemini-2.0-flash"
             ];
 
             let lastError = null;
@@ -170,36 +200,22 @@ export const OpeNatIdentifier: React.FC = () => {
             for (const modelName of MODELS) {
                 try {
                     console.log(`Trying model: ${modelName}`);
-                    const genAI = new GoogleGenerativeAI(apiKey); // Ensure new instance or reuse
+                    const genAI = new GoogleGenerativeAI(apiKey);
                     const model = genAI.getGenerativeModel({ model: modelName });
 
-                    const invoicePart = await fileToGenerativePart(invoiceFile);
-                    // If fileToGenerativePart is purely local (FileReader), it's cheap to re-run or just reuse the Promise result from before loop if possible. 
-                    // Actually, codeListFiles map is promises. 
-                    // Better to move the file reading OUTSIDE the loop.
-
-                    // We need to resolve parts only once
-                    const parts: any[] = [invoicePart, ...codeListParts, prompt];
+                    const parts: any[] = [prompt, invoicePart, ...codeListParts];
 
                     const result = await model.generateContent(parts);
                     const response = await result.response;
                     const resultText = response.text();
 
-                    // Extrai JSON se houver markdown
+                    // Clean and Parse JSON
                     const jsonStr = resultText.replace(/```json/g, '').replace(/```/g, '').trim();
                     const parsed = JSON.parse(jsonStr);
 
-                    if (Array.isArray(parsed)) { // The check in original code was Array.isArray but setAiResult is generic?
-                        // Original code: if (Array.isArray(parsedData)) { ... setAiResult ... }
-                        // Wait, setAiResult expects AIResult | null. AIResult is an object, not array?
-                        // Interface AIResult { code: string; description: ... }
-                        // But prompt asks for JSON output expected to be an object: { "code": ... }
-                        // Original code line 226: const parsed = JSON.parse(jsonStr); setAiResult(parsed);
-                        // It didn't check Array.isArray there. It just did setAiResult(parsed).
-                        setAiResult(parsed);
-                        success = true;
-                        break;
-                    }
+                    setAiResult(parsed);
+                    success = true;
+                    break;
                 } catch (e: any) {
                     console.warn(`Model ${modelName} failed:`, e.message);
                     lastError = e;
@@ -207,7 +223,7 @@ export const OpeNatIdentifier: React.FC = () => {
             }
 
             if (!success) {
-                throw lastError || new Error("Todos os modelos falharam.");
+                throw lastError || new Error("Todos os modelos falharam. Verifique sua chave de API e conexão.");
             }
         } catch (error: any) {
             console.error("Erro na classificação:", error);
