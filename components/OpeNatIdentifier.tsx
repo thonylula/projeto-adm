@@ -207,6 +207,7 @@ export const OpeNatIdentifier: React.FC = () => {
 
             let lastError = null;
             let success = false;
+            let saw403Forbidden = false;
 
             for (const modelName of MODELS) {
                 try {
@@ -230,10 +231,19 @@ export const OpeNatIdentifier: React.FC = () => {
                 } catch (e: any) {
                     console.warn(`Model ${modelName} failed:`, e.message);
                     lastError = e;
+
+                    if (e.message?.includes('403') || e.message?.includes('leaked') || e.message?.includes('API key')) {
+                        saw403Forbidden = true;
+                    }
                 }
             }
 
             if (!success) {
+                // Prioritize the 403 error if it happened at any point
+                if (saw403Forbidden) {
+                    setIsKeyConfigOpen(true);
+                    throw new Error("Sua chave de API foi bloqueada ou vazou (Erro 403). Por favor, gere uma nova chave no Google AI Studio.");
+                }
                 throw lastError || new Error("Todos os modelos falharam. Verifique sua chave de API e conexão.");
             }
         } catch (error: any) {
