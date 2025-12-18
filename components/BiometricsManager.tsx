@@ -778,19 +778,19 @@ export const BiometricsManager: React.FC = () => {
             <div id="dashboard-content" ref={dashboardRef} className="w-full max-w-5xl mx-auto bg-white rounded-3xl shadow-xl border border-orange-100 overflow-hidden relative">
 
                 {/* --- HEADER --- */}
-                <header className="bg-gradient-to-r from-orange-50/50 to-white px-8 py-6 border-b border-orange-100">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6 relative">
+                <header className="bg-orange-50/30 px-10 py-8 border-b border-orange-100">
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 relative">
                         {/* 1. Lado Esquerdo: Logo */}
-                        <div className="flex items-center gap-5 w-full md:w-auto justify-center md:justify-start">
+                        <div className="w-full md:w-1/3 flex justify-center md:justify-start">
                             {logo ? (
                                 <div className="relative group">
-                                    <img src={logo} alt="Logo" className="h-16 w-auto object-contain mix-blend-multiply" />
+                                    <img src={logo} alt="Logo" className="h-20 w-auto object-contain mix-blend-multiply" />
                                     <label
                                         htmlFor="logo-upload"
                                         className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 cursor-pointer flex items-center justify-center rounded transition-opacity no-print"
                                         data-html2canvas-ignore="true"
                                     >
-                                        <span className="text-[9px] bg-white px-1 rounded shadow">Alterar</span>
+                                        <span className="text-[9px] bg-white px-2 py-1 rounded shadow-sm text-gray-600 font-medium">Alterar Logo</span>
                                     </label>
                                     <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />
                                 </div>
@@ -798,30 +798,34 @@ export const BiometricsManager: React.FC = () => {
                         </div>
 
                         {/* 2. Centro: Título e Subtítulos (Centralizado) */}
-                        <div className="flex-1 text-center">
-                            <div className="flex items-center justify-center gap-2 mb-1">
-                                <span className="px-2 py-0.5 rounded text-[10px] font-black bg-orange-100 text-orange-700 uppercase tracking-widest">Relatório Técnico</span>
-                                <span className="text-[10px] text-gray-400 font-medium">{new Date().toLocaleDateString()}</span>
+                        <div className="w-full md:w-1/3 text-center flex flex-col items-center">
+                            <div className="flex items-center gap-3 mb-2">
+                                <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-orange-100 text-orange-800 uppercase tracking-widest shadow-sm border border-orange-200">
+                                    Relatório Técnico
+                                </span>
+                                <span className="text-xs text-orange-400 font-semibold tracking-wide">
+                                    {new Date().toLocaleDateString('pt-BR')}
+                                </span>
                             </div>
-                            <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-none uppercase">
+                            <h1 className="text-4xl font-black text-gray-800 tracking-tight uppercase leading-none mb-1">
                                 Biometria
                             </h1>
-                            <p className="text-sm text-gray-500 font-medium mt-1">
+                            <p className="text-sm text-orange-600/80 font-semibold tracking-wide uppercase">
                                 Análise de Performance
                             </p>
                         </div>
 
                         {/* 3. Lado Direito: Assinaturas e Ações */}
-                        <div className="flex flex-col items-center md:items-end gap-3 w-full md:w-auto">
-                            <div className="flex items-center gap-6 bg-white px-4 py-3 rounded-xl border border-orange-100 shadow-sm">
+                        <div className="w-full md:w-1/3 flex flex-col items-center md:items-end gap-4">
+                            <div className="flex items-center gap-6 bg-orange-50/50 px-5 py-3 rounded-xl border border-orange-100/50">
                                 <div className="text-right">
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Gerente</p>
-                                    <p className="text-xs font-bold text-gray-800">Cleiton Manoel de Lima</p>
+                                    <p className="text-[9px] text-orange-400 font-bold uppercase tracking-widest mb-0.5">Gerente</p>
+                                    <p className="text-xs font-bold text-gray-700">Cleiton Manoel de Lima</p>
                                 </div>
-                                <div className="w-px h-8 bg-orange-100"></div>
+                                <div className="w-px h-8 bg-orange-200/50"></div>
                                 <div className="text-right">
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Analista Adm</p>
-                                    <p className="text-xs font-bold text-gray-800">Luanthony L. Oliveira</p>
+                                    <p className="text-[9px] text-orange-400 font-bold uppercase tracking-widest mb-0.5">Analista Adm</p>
+                                    <p className="text-xs font-bold text-gray-700">Luanthony L. Oliveira</p>
                                 </div>
                             </div>
                             <div className="flex gap-2 no-print" data-html2canvas-ignore="true">
