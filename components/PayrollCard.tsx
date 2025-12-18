@@ -739,29 +739,41 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     const { input, result } = item;
     const parts: string[] = [];
 
+    // TÍTULO / REFERÊNCIA
     if (input.calculationMode === '13TH') {
-      parts.push(`[13º SALÁRIO] Referente a ${input.referenceYear}.`);
+      parts.push(`PAGT 13º SALÁRIO REF A ${input.referenceYear}`);
       if (input.thirteenthCalculationType === 'CLT') {
-        parts.push(`Regra CLT: ${(result.thirteenthTotalAvos || 0)}/12 avos.`);
+        parts.push(`(${result.thirteenthTotalAvos}/12 AVOS).`);
       } else {
-        parts.push(`Cálculo Avulso: ${(result.thirteenthTotalDays || 0)} dias trabalhados.`);
+        parts.push(`(${result.thirteenthTotalDays} DIAS TRABALHADOS).`);
       }
-      parts.push(`Total Bruto: ${formatCurrency(result.grossSalary)}.`);
-      return parts.join(' ');
+    } else {
+      parts.push(`PAGT REF A ${input.referenceMonth}/${input.referenceYear}`);
+      if (input.workScale === '12x36') {
+        parts.push(`(${input.daysWorked} PLANTÕES).`);
+      } else {
+        parts.push(`(${input.daysWorked} DIAS TRABALHADOS).`);
+      }
     }
 
-    parts.push(`Referente a ${input.referenceMonth}/${input.referenceYear}.`);
-    if (input.workScale === '12x36') {
-      parts.push(`Escala 12x36 (${input.daysWorked} plantões).`);
-      if (input.workedOnHoliday) parts.push(`Trabalhou ${input.holidayHours}h em feriado.`);
-    } else {
-      parts.push(`Jornada padrão (${input.daysWorked} dias).`);
-    }
-    if (input.sundaysAmount > 0) parts.push(`${input.sundaysAmount} domingos trabalhou.`);
-    if (result.overtimeValue > 0) parts.push(`Horas Extras: ${formatCurrency(result.overtimeValue)}.`);
-    if (result.nightShiftValue > 0) parts.push(`Adic. Noturno: ${formatCurrency(result.nightShiftValue)}.`);
-    parts.push(`Total Bruto: ${formatCurrency(result.grossSalary)}.`);
-    return parts.join(' ');
+    // BASE
+    parts.push(`SALÁRIO BASE ${formatCurrency(input.baseSalary)}`);
+
+    // Ganhos Adicionais
+    if (result.hazardPayValue > 0) parts.push(`PERICULOSIDADE ${formatCurrency(result.hazardPayValue)}`);
+    if (result.nightShiftValue > 0) parts.push(`ADIC. NOTURNO ${formatCurrency(result.nightShiftValue)}`);
+    if (result.overtimeValue > 0) parts.push(`HORAS EXTRAS ${formatCurrency(result.overtimeValue)}`);
+
+    // Novos Campos
+    if (input.familyAllowance && input.familyAllowance > 0) parts.push(`SAL. FAMÍLIA ${formatCurrency(input.familyAllowance)}`);
+    if (input.costAllowance && input.costAllowance > 0) parts.push(`AJUDA DE CUSTO ${formatCurrency(input.costAllowance)}`);
+    if (result.visitsTotalValue > 0) parts.push(`VISITAS (${input.visitsAmount}) ${formatCurrency(result.visitsTotalValue)}`);
+    if (input.productionBonus && input.productionBonus > 0) parts.push(`PRODUÇÃO ${formatCurrency(input.productionBonus)}`);
+
+    // Final
+    parts.push(`TOTAL BRUTO ${formatCurrency(result.grossSalary)}.`);
+
+    return parts.join(', ').toUpperCase();
   };
 
   const handleCopySummary = (e: React.MouseEvent, summary: string, id: string) => {
@@ -1260,6 +1272,10 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                   <th className="px-2 py-2 text-right bg-indigo-50/50 print:bg-transparent">DSR</th>
                   <th className="px-2 py-2 text-right">Noturno</th>
                   <th className="px-2 py-2 text-right">Peric.</th>
+                  <th className="px-2 py-2 text-right bg-blue-50/50">Sal.Fam.</th>
+                  <th className="px-2 py-2 text-right bg-blue-50/50">Aj.Custo</th>
+                  <th className="px-2 py-2 text-right bg-orange-50/50">Prod.</th>
+                  <th className="px-2 py-2 text-right bg-orange-50/50">Visitas</th>
                   <th className="px-3 py-2 text-right bg-slate-200 text-slate-900 font-bold print:bg-slate-300">TOTAL</th>
                   <th className="px-2 py-2 text-center print:hidden export-ignore">Opções</th>
                 </tr>
@@ -1283,12 +1299,29 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                     <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-indigo-50/20">{formatCurrency(item.result.dsrOvertimeValue)}</td>
                     <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.nightShiftValue)}</td>
                     <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.hazardPayValue)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-blue-50/20">{formatCurrency(item.input.familyAllowance || 0)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-blue-50/20">{formatCurrency(item.input.costAllowance)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-orange-50/20">{formatCurrency(item.input.productionBonus)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-orange-50/20">{formatCurrency(item.result.visitsTotalValue)}</td>
 
                     <td className="px-3 py-2 text-right font-bold text-emerald-700 bg-slate-50 border-l border-slate-100 tabular-nums print:bg-slate-100 print:text-black">
                       {formatCurrency(item.result.grossSalary)}
                     </td>
                     <td className="px-2 py-2 text-center print:hidden export-ignore">
                       <div className="flex justify-center gap-1 items-center">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            const summary = generateSmartSummary(item);
+                            navigator.clipboard.writeText(summary);
+                            alert(`Copiado para área de transferência:\n\n${summary}`);
+                          }}
+                          className="p-1 text-slate-100 bg-slate-600 hover:bg-slate-800 rounded shadow-sm" title="Copiar Resumo"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                            <path fillRule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97zM6.75 8.25a.75.75 0 01.75-.75h9a.75.75 0 010 1.5h-9a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H7.5z" clipRule="evenodd" />
+                          </svg>
+                        </button>
                         <button type="button" onClick={(e) => handleEditClick(e, item)} className="p-1 text-amber-500 hover:bg-amber-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
                         <button type="button" onClick={(e) => handleDeleteClick(e, item.id)} className="p-1 text-red-400 hover:bg-red-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
                       </div>
@@ -1298,7 +1331,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
               </tbody>
               <tfoot className="bg-slate-900 text-white print:bg-slate-800">
                 <tr>
-                  <td colSpan={6} className="px-4 py-4 text-right font-bold uppercase text-xs">Total Geral</td>
+                  <td colSpan={10} className="px-4 py-4 text-right font-bold uppercase text-xs">Total Geral</td>
                   <td className="px-3 py-4 text-right font-bold text-base text-emerald-400 bg-slate-800 tabular-nums print:text-black print:bg-slate-300">
                     {formatCurrency(totalCompanyCost)}
                   </td>
