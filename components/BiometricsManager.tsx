@@ -58,6 +58,69 @@ export const BiometricsManager: React.FC = () => {
     const [filterText, setFilterText] = useState('');
 
     const dashboardRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // --- PERSISTÊNCIA AUTOMÁTICA (LOCALSTORAGE) ---
+    useEffect(() => {
+        // Carregar do LocalStorage ao iniciar
+        const saved = localStorage.getItem('biometrics_db');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    setCurrentData(parsed);
+                    setStep('DASHBOARD'); // Pula para o dashboard se tiver dados
+                }
+            } catch (e) {
+                console.error("Erro ao carregar backup automático", e);
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        // Salvar automaticamente a cada mudança
+        if (currentData.length > 0) {
+            localStorage.setItem('biometrics_db', JSON.stringify(currentData));
+        }
+    }, [currentData]);
+
+    // --- BACKUP MANUAL (ARQUIVO JSON) ---
+    const saveBackup = () => {
+        const json = JSON.stringify(currentData, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        const dateStr = new Date().toLocaleDateString('pt-BR').replace(/\//g, '_');
+        a.download = `backup_biometria_${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast("Backup salvo na pasta de Downloads!");
+    };
+
+    const loadBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const json = event.target?.result as string;
+                const parsed = JSON.parse(json);
+                if (Array.isArray(parsed)) {
+                    setCurrentData(parsed);
+                    setStep('DASHBOARD');
+                    showToast("Backup carregado com sucesso!");
+                } else {
+                    showToast("Erro: Arquivo inválido (não é uma lista).");
+                }
+            } catch (err) {
+                showToast("Erro: Arquivo corrompido ou inválido.");
+            }
+        };
+        reader.readAsText(file);
+    };
 
     // --- EFEITO DE NOTÍCIAS (Shuffle e Rotação) ---
     useEffect(() => {
@@ -273,12 +336,15 @@ export const BiometricsManager: React.FC = () => {
                     if (field === 'dataPovoamento' && value) {
                         try {
                             const pDate = new Date(value as string);
-                            const today = new Date();
-                            const diffTime = Math.abs(today.getTime() - pDate.getTime());
-                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                            newItem.diasCultivo = diffDays;
+                            // Validar se data é válida antes de calcular
+                            if (!isNaN(pDate.getTime())) {
+                                const today = new Date();
+                                const diffTime = Math.abs(today.getTime() - pDate.getTime());
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                newItem.diasCultivo = diffDays;
+                            }
                         } catch (e) {
-                            console.warn("Invalid date");
+                            console.warn("Data inválida para cálculo", value);
                         }
                     }
                     return newItem;
@@ -756,6 +822,28 @@ export const BiometricsManager: React.FC = () => {
                                 </div>
                             </div>
                             <div className="flex gap-2 no-print" data-html2canvas-ignore="true">
+                                <button
+                                    onClick={saveBackup}
+                                    className="px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded text-xs font-bold hover:bg-blue-100 transition-colors flex items-center gap-1"
+                                    title="Salvar arquivo no computador"
+                                >
+                                    💾 Salvar
+                                </button>
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="px-3 py-1 bg-green-50 border border-green-200 text-green-700 rounded text-xs font-bold hover:bg-green-100 transition-colors flex items-center gap-1"
+                                    title="Carregar arquivo do computador"
+                                >
+                                    📂 Carregar
+                                </button>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept="application/json"
+                                    onChange={loadBackup}
+                                />
+                                <div className="w-px h-6 bg-gray-300 mx-1"></div>
                                 <button onClick={exportPDF} className="px-3 py-1 bg-white border border-gray-200 rounded text-xs font-bold hover:bg-gray-50 transition-colors">PDF</button>
                                 <button onClick={exportPNG} className="px-3 py-1 bg-white border border-gray-200 rounded text-xs font-bold hover:bg-gray-50 transition-colors">IMG</button>
                                 <button onClick={copyHTML} className="px-3 py-1 bg-white border border-gray-200 rounded text-xs font-bold hover:bg-gray-50 transition-colors">HTML</button>
@@ -800,27 +888,30 @@ export const BiometricsManager: React.FC = () => {
 
                                         {/* DATA POVOAMENTO (Novo Input) */}
                                         <td className="px-2 py-3 text-center bg-orange-50/30">
-                                            <div className="relative w-32 h-10 mx-auto group">
-                                                {/* CAMADA VISUAL (Garante o formato DD/MM/AAAA) */}
-                                                <div className="absolute inset-0 flex items-center justify-center bg-white border border-gray-400 rounded group-hover:border-orange-500 shadow-sm pointer-events-none z-10">
-                                                    <span className={`text-sm font-bold ${item.dataPovoamento ? 'text-gray-900' : 'text-gray-400'}`}>
-                                                        {item.dataPovoamento
-                                                            ? (() => {
-                                                                const [y, m, d] = item.dataPovoamento.split('-');
-                                                                return `${d}/${m}/${y}`;
-                                                            })()
-                                                            : 'DD/MM/AAAA'}
-                                                    </span>
-                                                </div>
+                                            <input
+                                                type="text"
+                                                placeholder="DD/MM/AAAA"
+                                                maxLength={10}
+                                                className="w-full text-center bg-white text-sm font-bold text-gray-900 border border-gray-400 rounded focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none h-9 px-1 shadow-sm placeholder-gray-300"
+                                                value={item.dataPovoamento ? item.dataPovoamento.split('-').reverse().join('/') : ''}
+                                                onChange={(e) => {
+                                                    let val = e.target.value.replace(/\D/g, '');
+                                                    if (val.length > 2) val = val.slice(0, 2) + '/' + val.slice(2);
+                                                    if (val.length > 5) val = val.slice(0, 5) + '/' + val.slice(5);
 
-                                                {/* CAMADA DE INPUT (Invisível mas clicável para abrir calendário nativo) */}
-                                                <input
-                                                    type="date"
-                                                    className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer"
-                                                    value={item.dataPovoamento || ''}
-                                                    onChange={(e) => handleUpdateRow(item.viveiro, 'dataPovoamento', e.target.value)}
-                                                />
-                                            </div>
+                                                    if (val.length === 10) {
+                                                        const [d, m, y] = val.split('/');
+                                                        const iso = `${y}-${m}-${d}`;
+                                                        if (!isNaN(new Date(iso).getTime())) {
+                                                            handleUpdateRow(item.viveiro, 'dataPovoamento', iso);
+                                                        } else {
+                                                            handleUpdateRow(item.viveiro, 'dataPovoamento', val);
+                                                        }
+                                                    } else {
+                                                        handleUpdateRow(item.viveiro, 'dataPovoamento', val);
+                                                    }
+                                                }}
+                                            />
                                         </td>
 
                                         <td className="px-4 py-3 text-center font-mono font-bold text-gray-600 bg-gray-50">{item.diasCultivo}</td>
@@ -952,7 +1043,7 @@ export const BiometricsManager: React.FC = () => {
                 </main>
                 <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
                     <p className="text-[10px] text-gray-400 font-mono opacity-60">
-                        Sistema Integrado de Gestão • v1.9 (Masked Date UI) • Conectado ao GitHub
+                        Sistema Integrado de Gestão • v2.0 (Backup & Input) • Conectado ao GitHub
                     </p>
                 </div>
             </div>
