@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { useApiKey } from '../hooks/useApiKey';
-import { ApiKeyConfig } from './ApiKeyConfig';
+import React, { useState, useEffect } from 'react';
+import { safeIncludes } from '../utils';
 
 interface OpeNatItem {
     code: string;
@@ -46,8 +46,10 @@ export const OpeNatIdentifier: React.FC = () => {
     const [aiResult, setAiResult] = useState<AIResult | null>(null);
     const [isDragOver, setIsDragOver] = useState(false);
 
-    // API Key State (Reusable Hook via LocalStorage)
-    const { apiKey: manualApiKey, isOpen: isKeyConfigOpen, setIsOpen: setIsKeyConfigOpen, saveKey: saveApiKey } = useApiKey('FISCAL_GEMINI_KEY');
+    const [isDragOver, setIsDragOver] = useState(false);
+
+    // REMOVED: Manual Key State - relying on Server Proxy
+    const [availableModels, setAvailableModels] = useState<string[]>([]);
 
     // Context Form State
     const [showContextModal, setShowContextModal] = useState(false);
@@ -70,6 +72,21 @@ export const OpeNatIdentifier: React.FC = () => {
         }
         return () => clearInterval(interval);
     }, [isProcessing]);
+
+    // Fetch Models on mount
+    useEffect(() => {
+        fetch('/api/generative?list=true')
+            .then(res => res.json())
+            .then(data => {
+                if (data.ok && data.data && data.data.models) {
+                    const names = data.data.models.map((m: any) => m.name.replace('models/', ''));
+                    setAvailableModels(names);
+                } else {
+                    setAvailableModels(["gemini-2.0-flash", "gemini-1.5-flash"]);
+                }
+            })
+            .catch(() => setAvailableModels(["gemini-2.0-flash", "gemini-1.5-flash"]));
+    }, []);
 
     // --- SMART UPLOAD LOGIC ---
     const handleSmartUpload = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
@@ -206,54 +223,62 @@ export const OpeNatIdentifier: React.FC = () => {
             }
             `;
 
-            const MODELS = [
-                "gemini-3-pro-preview",
-                "gemini-2.5-pro",
-                "gemini-2.5-flash",
-                "gemini-2.0-flash-lite",
-                "gemini-2.0-flash",
-                "gemini-1.5-flash",
-                "gemini-1.5-pro"
-            ];
+            const MODELS = availableModels.length > 0
+                ? availableModels
+                : [
+                    "gemini-2.0-flash-lite",
+                    "gemini-2.0-flash",
+                    "gemini-1.5-flash",
+                    "gemini-1.5-pro"
+                ];
+
+            // Prioritize flash
+            MODELS.sort((a, b) => {
+                if (a.includes('flash') && !b.includes('flash')) return -1;
+                if (!a.includes('flash') && b.includes('flash')) return 1;
+                return 0;
+            });
 
             let lastError = null;
             let success = false;
             let saw403Forbidden = false;
 
+
+
             for (const modelName of MODELS) {
                 try {
                     console.log(`Trying model: ${modelName}`);
 
-                    // Format parts for REST API (SDK does this automatically, but REST needs explicit structure)
-                    // Prompt string must be object { text: ... }
+                    // Format parts for REST API
                     const formattedParts = [
                         { text: prompt },
                         invoicePart,
                         ...codeListParts
                     ];
 
-                    const response = await fetch('/api/generate', {
+                    const response = await fetch('/api/generative', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
                             model: modelName,
+                            prompt: prompt,
                             contents: [{ role: 'user', parts: formattedParts }]
                         })
                     });
 
-                    const data = await response.json();
+                    const payload = await response.json().catch(() => ({ ok: false, error: 'Invalid JSON response' }));
 
-                    if (!response.ok) {
-                        const errorMsg = data.error?.message || data.error || 'Unknown error';
+                    if (!response.ok || !payload.ok) {
+                        const errorMsg = payload.error?.message || payload.error || 'Unknown error';
                         // Throw specific object to catch below
                         throw { message: errorMsg, status: response.status };
                     }
 
-                    // Extract text from REST API response structure
-                    // { candidates: [ { content: { parts: [ { text: "..." } ] } } ] }
-                    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    // Extract text from REST API response structure (now nested in payload.data)
+                    // payload = { ok: true, data: { candidates: [...] } }
+                    const resultText = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
                     if (!resultText) {
                         throw new Error('Empty response from AI');
@@ -270,9 +295,12 @@ export const OpeNatIdentifier: React.FC = () => {
                     console.warn(`Model ${modelName} failed:`, e.message || e);
                     lastError = e;
 
-                    // Check for 403 (Keys) or 429 (Quota) - although Proxy handles 429 retry, if it persists it throws.
-                    const msg = e.message || '';
-                    if (msg.includes('403') || msg.includes('leaked') || msg.includes('API key') || e.status === 403) {
+                    // Check for 403 (Keys) or 429 (Quota) using safeIncludes
+                    // e might be an object or string
+                    if (safeIncludes(e.message, '403') || safeIncludes(e, '403') ||
+                        safeIncludes(e.message, 'leaked') || safeIncludes(e, 'leaked') ||
+                        safeIncludes(e.message, 'API key') || safeIncludes(e, 'API key') ||
+                        e.status === 403) {
                         saw403Forbidden = true;
                     }
                 }
@@ -281,320 +309,307 @@ export const OpeNatIdentifier: React.FC = () => {
             if (!success) {
                 // Prioritize the 403 error if it happened at any point
                 if (saw403Forbidden) {
-                    setIsKeyConfigOpen(true);
-                    throw new Error("Sua chave de API foi bloqueada ou vazou (Erro 403). Por favor, gere uma nova chave no Google AI Studio.");
+                    if (saw403Forbidden) {
+                        // Key issue handled on server logs mostly, but if header was used (it isn't), we'd prompt.
+                        // Just show generic error.
+                        throw new Error("Erro de permissão na API (403). Verifique a chave no servidor.");
+                    }
+                    throw lastError || new Error("Todos os modelos falharam. Verifique sua chave de API e conexão.");
                 }
-                throw lastError || new Error("Todos os modelos falharam. Verifique sua chave de API e conexão.");
+            } catch (error: any) {
+                console.error("Erro na classificação:", error);
+                alert(`Erro ao processar a nota fiscal: ${error.message}`);
+            } finally {
+                setIsProcessing(false);
             }
-        } catch (error: any) {
-            console.error("Erro na classificação:", error);
-            alert(`Erro ao processar a nota fiscal: ${error.message}`);
-        } finally {
-            setIsProcessing(false);
-        }
-    };
+        };
 
-    const renderProcessingScreen = () => (
-        <div className="flex flex-col items-center justify-center min-h-[300px] animate-in fade-in duration-500 py-8">
-            <div className="relative w-20 h-20 mb-6">
-                <div className="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
-                <div className="absolute inset-0 border-4 border-indigo-500 rounded-full border-t-transparent animate-spin"></div>
-                <div className="absolute inset-0 flex items-center justify-center text-2xl pb-1">
-                    🦐
-                </div>
-            </div>
-
-            <div className="max-w-xl text-center px-4">
-                <div className="mb-4 flex justify-center">
-                    <span className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-[10px] font-bold tracking-wider uppercase animate-pulse border border-indigo-200">
-                        Notícias do Setor
-                    </span>
+        const renderProcessingScreen = () => (
+            <div className="flex flex-col items-center justify-center min-h-[300px] animate-in fade-in duration-500 py-8">
+                <div className="relative w-20 h-20 mb-6">
+                    <div className="absolute inset-0 border-4 border-indigo-100 rounded-full"></div>
+                    <div className="absolute inset-0 border-4 border-indigo-500 rounded-full border-t-transparent animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center text-2xl pb-1">
+                        🦐
+                    </div>
                 </div>
 
-                <h2 className="text-lg md:text-xl font-bold text-gray-800 leading-relaxed transition-all duration-300 min-h-[80px] flex items-center justify-center">
-                    "{NEWS_HEADLINES[newsIndex]}"
-                </h2>
+                <div className="max-w-xl text-center px-4">
+                    <div className="mb-4 flex justify-center">
+                        <span className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-[10px] font-bold tracking-wider uppercase animate-pulse border border-indigo-200">
+                            Notícias do Setor
+                        </span>
+                    </div>
 
-                <div className="flex gap-2 justify-center mt-6">
-                    {NEWS_HEADLINES.map((_, idx) => (
-                        <div
-                            key={idx}
-                            className={`h-1.5 rounded-full transition-all duration-500 ${idx === newsIndex ? 'w-6 bg-indigo-500' : 'w-1.5 bg-gray-200'}`}
-                        />
-                    ))}
-                </div>
+                    <h2 className="text-lg md:text-xl font-bold text-gray-800 leading-relaxed transition-all duration-300 min-h-[80px] flex items-center justify-center">
+                        "{NEWS_HEADLINES[newsIndex]}"
+                    </h2>
 
-                <p className="text-gray-400 text-xs mt-6 font-medium uppercase tracking-wide">
-                    Analisando Nota Fiscal e Cruzando Dados...
-                </p>
-            </div>
-        </div>
-    );
-
-    return (
-        <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
-            <ApiKeyConfig
-                isOpen={isKeyConfigOpen}
-                onClose={() => setIsKeyConfigOpen(false)}
-                apiKey={manualApiKey}
-                onSave={(key) => { saveApiKey(key); alert('Chave Salva!'); }}
-                title="Configuração de API Key (Fiscal)"
-            />
-
-            <div className="absolute top-0 right-0">
-                <button
-                    onClick={() => setIsKeyConfigOpen(true)}
-                    className="p-2 text-gray-400 hover:text-indigo-600 transition-colors"
-                    title="Configurar Chave API Manualmente"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
-                </button>
-            </div>
-            <div className="text-center space-y-2">
-                <h1 className="text-3xl font-bold text-gray-900">Identificador de OPE / NAT</h1>
-                <p className="text-gray-500">Ferramenta de classificação automática e identificação de Natureza de Operação.</p>
-                <p className="text-xs text-indigo-600 font-bold bg-indigo-50 inline-block px-2 py-1 rounded border border-indigo-100">
-                    Modo: Carcinicultura (Camarão) Ativo
-                </p>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden p-8">
-                {isProcessing ? (
-                    renderProcessingScreen()
-                ) : (
-                    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in">
-
-                        {/* Header Section */}
-                        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6">
-                            <h2 className="text-lg font-bold text-indigo-900 mb-2 flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-indigo-600">
-                                    <path d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625zM7.5 15a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 017.5 15zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H8.25z" />
-                                    <path d="M12.971 1.816A5.23 5.23 0 0114.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 013.434 1.279 9.768 9.768 0 00-6.963-6.963z" />
-                                </svg>
-                                Análise Inteligente de Notas
-                            </h2>
-                            <p className="text-sm text-indigo-700">
-                                O sistema analisa os itens da nota fiscal considerando a cadeia produtiva do camarão.
-                            </p>
-                        </div>
-
-                        {/* --- UNIFIED UPLOAD ZONE --- */}
-                        <div
-                            className={`relative border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-300 ${isDragOver ? 'border-indigo-500 bg-indigo-50 scale-[1.01]' : 'border-gray-300 bg-gray-50/50 hover:bg-white hover:border-indigo-400'}`}
-                            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-                            onDragLeave={() => setIsDragOver(false)}
-                            onDrop={handleSmartUpload}
-                        >
-                            <input
-                                type="file"
-                                multiple
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                onChange={handleSmartUpload}
-                                accept=".pdf,.jpg,.jpeg,.png,.csv,.txt,.xls,.xlsx"
+                    <div className="flex gap-2 justify-center mt-6">
+                        {NEWS_HEADLINES.map((_, idx) => (
+                            <div
+                                key={idx}
+                                className={`h-1.5 rounded-full transition-all duration-500 ${idx === newsIndex ? 'w-6 bg-indigo-500' : 'w-1.5 bg-gray-200'}`}
                             />
+                        ))}
+                    </div>
 
-                            <div className="pointer-events-none relative z-0">
-                                <div className="w-16 h-16 bg-white rounded-full shadow-sm border border-gray-100 flex items-center justify-center mx-auto mb-4">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-indigo-600">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                    <p className="text-gray-400 text-xs mt-6 font-medium uppercase tracking-wide">
+                        Analisando Nota Fiscal e Cruzando Dados...
+                    </p>
+                </div>
+            </div>
+        );
+
+        return (
+            <div className="w-full max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
+                <div className="absolute top-0 right-0">
+                </div>
+                <div className="text-center space-y-2">
+                    <h1 className="text-3xl font-bold text-gray-900">Identificador de OPE / NAT</h1>
+                    <p className="text-gray-500">Ferramenta de classificação automática e identificação de Natureza de Operação.</p>
+                    <p className="text-xs text-indigo-600 font-bold bg-indigo-50 inline-block px-2 py-1 rounded border border-indigo-100">
+                        Modo: Carcinicultura (Camarão) Ativo
+                    </p>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden p-8">
+                    {isProcessing ? (
+                        renderProcessingScreen()
+                    ) : (
+                        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in">
+
+                            {/* Header Section */}
+                            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6">
+                                <h2 className="text-lg font-bold text-indigo-900 mb-2 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-indigo-600">
+                                        <path d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625zM7.5 15a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 017.5 15zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H8.25z" />
+                                        <path d="M12.971 1.816A5.23 5.23 0 0114.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 013.434 1.279 9.768 9.768 0 00-6.963-6.963z" />
+                                    </svg>
+                                    Análise Inteligente de Notas
+                                </h2>
+                                <p className="text-sm text-indigo-700">
+                                    O sistema analisa os itens da nota fiscal considerando a cadeia produtiva do camarão.
+                                </p>
+                            </div>
+
+                            {/* --- UNIFIED UPLOAD ZONE --- */}
+                            <div
+                                className={`relative border-2 border-dashed rounded-2xl p-10 text-center transition-all duration-300 ${isDragOver ? 'border-indigo-500 bg-indigo-50 scale-[1.01]' : 'border-gray-300 bg-gray-50/50 hover:bg-white hover:border-indigo-400'}`}
+                                onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                                onDragLeave={() => setIsDragOver(false)}
+                                onDrop={handleSmartUpload}
+                            >
+                                <input
+                                    type="file"
+                                    multiple
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                    onChange={handleSmartUpload}
+                                    accept=".pdf,.jpg,.jpeg,.png,.csv,.txt,.xls,.xlsx"
+                                />
+
+                                <div className="pointer-events-none relative z-0">
+                                    <div className="w-16 h-16 bg-white rounded-full shadow-sm border border-gray-100 flex items-center justify-center mx-auto mb-4">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-indigo-600">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-gray-800">Arraste seus arquivos aqui</h3>
+                                    <p className="text-gray-500 mt-2 text-sm">
+                                        Arraste 1 <span className="font-bold text-gray-700">Nota Fiscal (PDF/Img)</span> e múltiplas <span className="font-bold text-gray-700">Tabelas de Códigos</span>.
+                                    </p>
+                                    <button className="mt-6 px-6 py-2 bg-white border border-gray-200 shadow-sm rounded-lg text-sm font-semibold text-gray-700 hover:text-indigo-600">
+                                        Selecionar Arquivos
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* --- FILE SLOTS DISPLAY --- */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                                {/* Slot 1: Tabela de Códigos (Multiple) */}
+                                <div className={`p-4 rounded-xl border transition-all ${codeListFiles.length > 0 ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-100 border-dashed opacity-70'}`}>
+                                    <div className="flex flex-col gap-2">
+                                        <span className={`text-[10px] uppercase font-bold tracking-wider mb-1 block ${codeListFiles.length > 0 ? 'text-green-700' : 'text-gray-400'}`}>
+                                            1. Tabelas de Códigos (Opcional - Múltiplos)
+                                        </span>
+
+                                        {codeListFiles.length > 0 ? (
+                                            <div className="space-y-2">
+                                                {codeListFiles.map((file, idx) => (
+                                                    <div key={idx} className="flex items-center justify-between bg-white/50 p-2 rounded-lg border border-green-100">
+                                                        <div className="flex items-center gap-2">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-green-600 flex-shrink-0">
+                                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                                <polyline points="14 2 14 8 20 8"></polyline>
+                                                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                                                <polyline points="10 9 9 9 8 9"></polyline>
+                                                            </svg>
+                                                            <div>
+                                                                <p className="font-bold text-sm text-gray-800 truncate max-w-[150px]">{file.name}</p>
+                                                                <p className="text-[10px] text-gray-500">{(file.size / 1024).toFixed(0)} KB</p>
+                                                            </div>
+                                                        </div>
+                                                        <button onClick={() => removeFile('CODE_LIST', idx)} className="text-gray-400 hover:text-red-500 p-1">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" /></svg>
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm font-medium text-gray-400 italic">Nenhum arquivo de código</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Slot 2: Nota Fiscal */}
+                                <div className={`p-4 rounded-xl border transition-all ${invoiceFile ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-100 border-dashed'}`}>
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <span className={`text-[10px] uppercase font-bold tracking-wider mb-1 block ${invoiceFile ? 'text-green-700' : 'text-gray-400'}`}>
+                                                2. Nota Fiscal (Obrigatório)
+                                            </span>
+                                            {invoiceFile ? (
+                                                <div className="flex items-center gap-2">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-green-600">
+                                                        <path fillRule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625zM7.5 15a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 017.5 15zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H8.25z" clipRule="evenodd" />
+                                                        <path d="M12.971 1.816A5.23 5.23 0 0114.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 013.434 1.279 9.768 9.768 0 00-6.963-6.963z" />
+                                                    </svg>
+                                                    <div>
+                                                        <p className="font-bold text-sm text-gray-800 truncate max-w-[150px]">{invoiceFile.name}</p>
+                                                        <p className="text-[10px] text-gray-500">{(invoiceFile.size / 1024).toFixed(0)} KB</p>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm font-medium text-red-400 italic">* Aguardando Arquivo</p>
+                                            )}
+                                        </div>
+                                        {invoiceFile && (
+                                            <button onClick={() => removeFile('INVOICE')} className="text-gray-400 hover:text-red-500 p-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" /></svg>
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Action Button - NOW TRIGGERS MODAL */}
+                            <div className="text-center pt-4">
+                                <button
+                                    onClick={handleStartAnalysis}
+                                    disabled={!invoiceFile}
+                                    className={`px-8 py-3 rounded-xl font-bold text-white shadow-lg transition-all ${!invoiceFile ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-500/30'}`}
+                                >
+                                    Analisar Nota Fiscal
+                                </button>
+                            </div>
+
+                            {/* Results Area */}
+                            {aiResult && (
+                                <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-4">
+                                    <div className="bg-green-50 px-6 py-4 border-b border-green-100 flex justify-between items-center">
+                                        <h3 className="font-bold text-green-800">Resultado da Análise</h3>
+                                        <span className="text-xs font-mono bg-white px-2 py-1 rounded border border-green-200 text-green-700">
+                                            Classificação Automática
+                                        </span>
+                                    </div>
+                                    <div className="p-6 space-y-4">
+                                        <div className="flex flex-col md:flex-row gap-6">
+                                            <div className="flex-1">
+                                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Código Sugerido</label>
+                                                <div className="text-3xl font-black text-slate-800 font-mono">{aiResult.code}</div>
+                                                <div className="text-lg text-slate-600 font-medium">{aiResult.description}</div>
+                                            </div>
+                                            <div className="flex-1 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Itens Identificados</label>
+                                                <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
+                                                    {aiResult.items && aiResult.items.map((item, idx) => (
+                                                        <li key={idx}>{item}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Motivo da Classificação</label>
+                                            <p className="text-sm text-slate-600 bg-yellow-50 p-3 rounded-lg border border-yellow-100 leading-relaxed">
+                                                {aiResult.reasoning}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* --- CONTEXT MODAL --- */}
+                {showContextModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowContextModal(false)}></div>
+                        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-in zoom-in-95 duration-200">
+                            <div className="flex items-center gap-3 mb-4 text-indigo-900 border-b border-gray-100 pb-3">
+                                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-indigo-600">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
                                     </svg>
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-800">Arraste seus arquivos aqui</h3>
-                                <p className="text-gray-500 mt-2 text-sm">
-                                    Arraste 1 <span className="font-bold text-gray-700">Nota Fiscal (PDF/Img)</span> e múltiplas <span className="font-bold text-gray-700">Tabelas de Códigos</span>.
-                                </p>
-                                <button className="mt-6 px-6 py-2 bg-white border border-gray-200 shadow-sm rounded-lg text-sm font-semibold text-gray-700 hover:text-indigo-600">
-                                    Selecionar Arquivos
+                                <div>
+                                    <h3 className="text-lg font-bold">Direcionamento Técnico</h3>
+                                    <p className="text-xs text-gray-500">Ajude a IA a ser mais precisa.</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">
+                                        Que categoria é o produto?
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        placeholder="Ex: Ração, Equipamento, Material de Limpeza..."
+                                        value={userContext.category}
+                                        onChange={(e) => setUserContext({ ...userContext, category: e.target.value })}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-1">
+                                        Para que será usado?
+                                    </label>
+                                    <textarea
+                                        rows={3}
+                                        className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                        placeholder="Ex: Alimentação no viveiro, manutenção do aerador, uso no escritório..."
+                                        value={userContext.usage}
+                                        onChange={(e) => setUserContext({ ...userContext, usage: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 mt-6 pt-2 border-t border-gray-100">
+                                <button
+                                    onClick={() => setShowContextModal(false)}
+                                    className="flex-1 py-2.5 text-gray-600 font-bold hover:bg-gray-50 rounded-lg"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={classifyInvoice}
+                                    disabled={!userContext.category.trim() || !userContext.usage.trim()}
+                                    className={`flex-1 py-2.5 text-white font-bold rounded-lg shadow transition-colors ${!userContext.category.trim() || !userContext.usage.trim()
+                                        ? 'bg-indigo-300 cursor-not-allowed'
+                                        : 'bg-indigo-600 hover:bg-indigo-700'
+                                        }`}
+                                >
+                                    Confirmar e Analisar
                                 </button>
                             </div>
                         </div>
-
-                        {/* --- FILE SLOTS DISPLAY --- */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                            {/* Slot 1: Tabela de Códigos (Multiple) */}
-                            <div className={`p-4 rounded-xl border transition-all ${codeListFiles.length > 0 ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-100 border-dashed opacity-70'}`}>
-                                <div className="flex flex-col gap-2">
-                                    <span className={`text-[10px] uppercase font-bold tracking-wider mb-1 block ${codeListFiles.length > 0 ? 'text-green-700' : 'text-gray-400'}`}>
-                                        1. Tabelas de Códigos (Opcional - Múltiplos)
-                                    </span>
-
-                                    {codeListFiles.length > 0 ? (
-                                        <div className="space-y-2">
-                                            {codeListFiles.map((file, idx) => (
-                                                <div key={idx} className="flex items-center justify-between bg-white/50 p-2 rounded-lg border border-green-100">
-                                                    <div className="flex items-center gap-2">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-green-600 flex-shrink-0">
-                                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                                            <polyline points="14 2 14 8 20 8"></polyline>
-                                                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                                                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                                                            <polyline points="10 9 9 9 8 9"></polyline>
-                                                        </svg>
-                                                        <div>
-                                                            <p className="font-bold text-sm text-gray-800 truncate max-w-[150px]">{file.name}</p>
-                                                            <p className="text-[10px] text-gray-500">{(file.size / 1024).toFixed(0)} KB</p>
-                                                        </div>
-                                                    </div>
-                                                    <button onClick={() => removeFile('CODE_LIST', idx)} className="text-gray-400 hover:text-red-500 p-1">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" /></svg>
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm font-medium text-gray-400 italic">Nenhum arquivo de código</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Slot 2: Nota Fiscal */}
-                            <div className={`p-4 rounded-xl border transition-all ${invoiceFile ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-100 border-dashed'}`}>
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <span className={`text-[10px] uppercase font-bold tracking-wider mb-1 block ${invoiceFile ? 'text-green-700' : 'text-gray-400'}`}>
-                                            2. Nota Fiscal (Obrigatório)
-                                        </span>
-                                        {invoiceFile ? (
-                                            <div className="flex items-center gap-2">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-green-600">
-                                                    <path fillRule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0016.5 9h-1.875a1.875 1.875 0 01-1.875-1.875V5.25A3.75 3.75 0 009 1.5H5.625zM7.5 15a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5A.75.75 0 017.5 15zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H8.25z" clipRule="evenodd" />
-                                                    <path d="M12.971 1.816A5.23 5.23 0 0114.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 013.434 1.279 9.768 9.768 0 00-6.963-6.963z" />
-                                                </svg>
-                                                <div>
-                                                    <p className="font-bold text-sm text-gray-800 truncate max-w-[150px]">{invoiceFile.name}</p>
-                                                    <p className="text-[10px] text-gray-500">{(invoiceFile.size / 1024).toFixed(0)} KB</p>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <p className="text-sm font-medium text-red-400 italic">* Aguardando Arquivo</p>
-                                        )}
-                                    </div>
-                                    {invoiceFile && (
-                                        <button onClick={() => removeFile('INVOICE')} className="text-gray-400 hover:text-red-500 p-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" /></svg>
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Action Button - NOW TRIGGERS MODAL */}
-                        <div className="text-center pt-4">
-                            <button
-                                onClick={handleStartAnalysis}
-                                disabled={!invoiceFile}
-                                className={`px-8 py-3 rounded-xl font-bold text-white shadow-lg transition-all ${!invoiceFile ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-500/30'}`}
-                            >
-                                Analisar Nota Fiscal
-                            </button>
-                        </div>
-
-                        {/* Results Area */}
-                        {aiResult && (
-                            <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-4">
-                                <div className="bg-green-50 px-6 py-4 border-b border-green-100 flex justify-between items-center">
-                                    <h3 className="font-bold text-green-800">Resultado da Análise</h3>
-                                    <span className="text-xs font-mono bg-white px-2 py-1 rounded border border-green-200 text-green-700">
-                                        Classificação Automática
-                                    </span>
-                                </div>
-                                <div className="p-6 space-y-4">
-                                    <div className="flex flex-col md:flex-row gap-6">
-                                        <div className="flex-1">
-                                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Código Sugerido</label>
-                                            <div className="text-3xl font-black text-slate-800 font-mono">{aiResult.code}</div>
-                                            <div className="text-lg text-slate-600 font-medium">{aiResult.description}</div>
-                                        </div>
-                                        <div className="flex-1 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                                            <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Itens Identificados</label>
-                                            <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
-                                                {aiResult.items && aiResult.items.map((item, idx) => (
-                                                    <li key={idx}>{item}</li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Motivo da Classificação</label>
-                                        <p className="text-sm text-slate-600 bg-yellow-50 p-3 rounded-lg border border-yellow-100 leading-relaxed">
-                                            {aiResult.reasoning}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 )}
+
             </div>
-
-            {/* --- CONTEXT MODAL --- */}
-            {showContextModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowContextModal(false)}></div>
-                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-in zoom-in-95 duration-200">
-                        <div className="flex items-center gap-3 mb-4 text-indigo-900 border-b border-gray-100 pb-3">
-                            <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-indigo-600">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold">Direcionamento Técnico</h3>
-                                <p className="text-xs text-gray-500">Ajude a IA a ser mais precisa.</p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">
-                                    Que categoria é o produto?
-                                </label>
-                                <input
-                                    type="text"
-                                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                    placeholder="Ex: Ração, Equipamento, Material de Limpeza..."
-                                    value={userContext.category}
-                                    onChange={(e) => setUserContext({ ...userContext, category: e.target.value })}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">
-                                    Para que será usado?
-                                </label>
-                                <textarea
-                                    rows={3}
-                                    className="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                    placeholder="Ex: Alimentação no viveiro, manutenção do aerador, uso no escritório..."
-                                    value={userContext.usage}
-                                    onChange={(e) => setUserContext({ ...userContext, usage: e.target.value })}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 mt-6 pt-2 border-t border-gray-100">
-                            <button
-                                onClick={() => setShowContextModal(false)}
-                                className="flex-1 py-2.5 text-gray-600 font-bold hover:bg-gray-50 rounded-lg"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={classifyInvoice}
-                                disabled={!userContext.category.trim() || !userContext.usage.trim()}
-                                className={`flex-1 py-2.5 text-white font-bold rounded-lg shadow transition-colors ${!userContext.category.trim() || !userContext.usage.trim()
-                                    ? 'bg-indigo-300 cursor-not-allowed'
-                                    : 'bg-indigo-600 hover:bg-indigo-700'
-                                    }`}
-                            >
-                                Confirmar e Analisar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-        </div>
-    );
-};
+        );
+    };

@@ -1,7 +1,9 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
-
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
+import { safeIncludes } from '../utils';
 
 // --- LOGO PADRÃO CARAPITANGA (SVG Data URI) ---
 const DEFAULT_LOGO = "data:image/svg+xml;charset=utf-8,%3Csvg%20viewBox%3D%270%200%20100%20100%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20fill%3D%27none%27%3E%3Cpath%20d%3D%27M78%2035C75%2025%2065%2018%2052%2018C35%2018%2022%2030%2022%2048C22%2062%2030%2072%2040%2078C45%2081%2052%2082%2058%2080%27%20stroke%3D%27%23f97316%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M25%2045C28%2042%2035%2040%2040%2042%27%20stroke%3D%27%23fdba74%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M26%2055C30%2052%2038%2050%2044%2052%27%20stroke%3D%27%23fdba74%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M32%2065C36%2062%2044%2060%2050%2062%27%20stroke%3D%27%23fdba74%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M78%2035C82%2038%2084%2045%2080%2052C76%2058%2070%2060%2065%2058%27%20stroke%3D%27%23f97316%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Ccircle%20cx%3D%2770%27%20cy%3D%2732%27%20r%3D%273%27%20fill%3D%27black%27%2F%3E%3Cpath%20d%3D%27M78%2035C85%2025%2095%2020%2098%2015%27%20stroke%3D%27%23ea580c%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M75%2035C85%2010%2060%205%2050%208%27%20stroke%3D%27%23ea580c%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M58%2080L62%2088M58%2080L54%2090M58%2080L66%2085%27%20stroke%3D%27%23f97316%27%20stroke-width%3D%274%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E";
@@ -47,11 +49,14 @@ export const BiometricsManager: React.FC = () => {
     const [textInput, setTextInput] = useState('');
     const [showReferenceTable, setShowReferenceTable] = useState(false);
 
+    const [textInput, setTextInput] = useState('');
+    const [showReferenceTable, setShowReferenceTable] = useState(false);
+
     // Estado para notícias dinâmicas
     const [newsList, setNewsList] = useState<string[]>([]);
     const [newsIndex, setNewsIndex] = useState(0);
-    const [manualApiKey, setManualApiKey] = useState(localStorage.getItem('CUSTOM_GEMINI_KEY') || '');
-    const [isKeyConfigOpen, setIsKeyConfigOpen] = useState(false);
+    // REMOVED: Manual Key State - relying on Server Proxy
+    const [availableModels, setAvailableModels] = useState<string[]>([]);
 
     // Estado para armazenar os dados que serão exibidos
     const [currentData, setCurrentData] = useState<any[]>(defaultRawData);
@@ -140,6 +145,23 @@ export const BiometricsManager: React.FC = () => {
         return () => clearInterval(interval);
     }, [step, newsList]);
 
+    // Fetch Models on mount
+    useEffect(() => {
+        fetch('/api/generative?list=true')
+            .then(res => res.json())
+            .then(data => {
+                if (data.ok && data.data && data.data.models) {
+                    // Filter for 'generateContent' capable models if needed, or just take names
+                    const names = data.data.models.map((m: any) => m.name.replace('models/', ''));
+                    setAvailableModels(names);
+                } else {
+                    // Fallback defaults if listing fails
+                    setAvailableModels(["gemini-2.0-flash", "gemini-1.5-flash"]);
+                }
+            })
+            .catch(() => setAvailableModels(["gemini-2.0-flash", "gemini-1.5-flash"]));
+    }, []);
+
     // --- HELPER PARA GEMINI ---
     const fileToGenerativePart = async (file: File) => {
         return new Promise<{ inlineData: { data: string; mimeType: string } }>((resolve, reject) => {
@@ -180,22 +202,11 @@ export const BiometricsManager: React.FC = () => {
         setStep('PROCESSING');
 
         // --- 1. PROCESSAMENTO COM IA (Se houver arquivos) ---
+        // --- 1. PROCESSAMENTO COM IA (Se houver arquivos) ---
         if (files.length > 0) {
             try {
-                // Tenta pegar do .env (Vercel) ou do localStorage (Manual)
-                const envKey = process.env.API_KEY;
-                const validEnvKey = (envKey && envKey !== 'undefined' && envKey !== 'YOUR_API_KEY_HERE') ? envKey : null;
-
-                const finalApiKey = validEnvKey || manualApiKey;
-                const apiKey = finalApiKey ? finalApiKey.trim() : '';
-
-                console.log("DEBUG: Using API Key:", apiKey ? `...${apiKey.slice(-4)}` : "UNDEFINED (Check .env or Manual Settings)");
-
-                // Server-side authentication used.
-                // const genAI = new GoogleGenerativeAI(apiKey);
-
+                // Prepare API payload parts
                 const filePart = await fileToGenerativePart(files[0]);
-
                 const prompt = `
                     ANALISE A IMAGEM E EXTRAIA **TODOS** OS DADOS DA TABELA PARA CSV.
                     
@@ -208,56 +219,59 @@ export const BiometricsManager: React.FC = () => {
                     Exemplo de Saída:
                     OC 001,65,5.25,470,4.25
                     OC 002,21,5.93,252,3.41
-                    ... (todas as linhas) ...
                 `;
 
-                const MODELS = [
-                    "gemini-3-pro-preview",
-                    "gemini-2.5-pro",
-                    "gemini-2.5-flash",
-                    "gemini-2.0-flash-lite",
-                    "gemini-2.0-flash",
-                    "gemini-1.5-flash",
-                    "gemini-1.5-pro"
-                ];
+                // Use fetched models or defaults
+                const MODELS_TO_TRY = availableModels.length > 0
+                    ? availableModels
+                    : ["gemini-1.5-flash", "gemini-2.0-flash"];
+
+                // Prioritize flash models for speed if available
+                const sortedModels = [...MODELS_TO_TRY].sort((a, b) => {
+                    if (a.includes('flash') && !b.includes('flash')) return -1;
+                    if (!a.includes('flash') && b.includes('flash')) return 1;
+                    return 0;
+                });
 
                 let lastError = null;
                 let success = false;
 
-                // Format parts for REST API
+                // Format parts for REST API (Server Proxy)
                 const formattedParts = [
                     { text: prompt },
                     filePart
                 ];
 
-                for (const modelName of MODELS) {
+                for (const modelName of sortedModels) {
                     try {
                         console.log(`Trying model: ${modelName}`);
 
-                        const response = await fetch('/api/generate', {
+                        const response = await fetch('/api/generative', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
                             },
                             body: JSON.stringify({
                                 model: modelName,
+                                prompt: prompt,
                                 contents: [{ role: 'user', parts: formattedParts }]
                             })
                         });
 
                         const data = await response.json();
 
-                        if (!response.ok) {
+                        if (!response.ok || !data.ok) {
                             const errorMsg = data.error?.message || data.error || 'Unknown error';
+                            // If 404 (model found but maybe name issue) or 400, strictly throw
                             throw { message: errorMsg, status: response.status };
                         }
 
                         // Extract text from REST API response structure
-                        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        const text = data.data?.candidates?.[0]?.content?.parts?.[0]?.text;
                         if (!text) throw new Error('Empty response from AI');
 
                         let csvText = text.replace(/```csv/g, '').replace(/```/g, '').trim();
-                        const lines = csvText.split('\n').filter(l => l.includes(',') && !l.toLowerCase().includes('viveiro')); // Filtra header e linhas vazias
+                        const lines = csvText.split('\n').filter(l => safeIncludes(l, ',') && !safeIncludes(l.toLowerCase(), 'viveiro'));
 
                         const parsedData = lines.map(line => {
                             const [viveiro, dias, pMed, quat, pAnt] = line.split(',').map(s => s.trim());
@@ -271,10 +285,8 @@ export const BiometricsManager: React.FC = () => {
                         });
 
                         if (parsedData.length > 0) {
-                            // Ordena os dados extraídos antes de salvar
                             setCurrentData(sortData(parsedData));
                             success = true;
-
                             setTimeout(() => {
                                 setStep('DASHBOARD');
                                 showToast(`Sucesso: ${parsedData.length} linhas extraídas.`);
@@ -284,8 +296,8 @@ export const BiometricsManager: React.FC = () => {
                     } catch (e: any) {
                         console.warn(`Model ${modelName} failed:`, e.message);
                         lastError = e;
-                        // Wait 5 seconds before trying next model to avoid 429 Rate Limiting
-                        await new Promise(resolve => setTimeout(resolve, 5000));
+                        // Small backoff between model tries
+                        await new Promise(resolve => setTimeout(resolve, 1000));
                     }
                 }
 
@@ -451,7 +463,7 @@ export const BiometricsManager: React.FC = () => {
     const processedData = useMemo(() => {
         // 1. Filtragem
         const filtered = currentData.filter(item =>
-            item.viveiro?.toLowerCase().includes(filterText.toLowerCase())
+            safeIncludes((item.viveiro || '').toLowerCase(), filterText.toLowerCase())
         );
 
         // 2. Ordenação Robusta (Prefix + Number)
@@ -604,9 +616,9 @@ export const BiometricsManager: React.FC = () => {
         document.body.classList.add('printing');
 
         const opt = {
-            margin: [5, 5, 5, 5],
+            margin: [5, 5, 5, 5] as [number, number, number, number],
             filename: `Relatorio_Bio_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
+            image: { type: 'jpeg' as const, quality: 0.98 },
             html2canvas: {
                 scale: 2,
                 useCORS: true,
@@ -616,17 +628,14 @@ export const BiometricsManager: React.FC = () => {
                     return hasIgnoreClass;
                 }
             },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' as const }
         };
 
-        const html2pdfLib = (window as any).html2pdf;
-        if (html2pdfLib) {
-            html2pdfLib().set(opt).from(dashboardRef.current).save().then(() => {
-                dashboardRef.current?.classList.remove('printing');
-                document.body.classList.remove('printing');
-                showToast('PDF Gerado!');
-            });
-        }
+        html2pdf().set(opt).from(dashboardRef.current).save().then(() => {
+            dashboardRef.current?.classList.remove('printing');
+            document.body.classList.remove('printing');
+            showToast('PDF Gerado!');
+        });
     };
 
     const exportPNG = () => {
@@ -660,6 +669,7 @@ export const BiometricsManager: React.FC = () => {
     };
 
     // --- RENDERIZADORES ---
+
 
     const renderKeyConfig = () => (
         <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center ${isKeyConfigOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'} transition-all duration-300`}>
@@ -705,16 +715,9 @@ export const BiometricsManager: React.FC = () => {
 
     const renderUploadScreen = () => (
         <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
-            {renderKeyConfig()}
 
             <div className="absolute top-0 right-0">
-                <button
-                    onClick={() => setIsKeyConfigOpen(true)}
-                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                    title="Configurar API Key Manualmente"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
-                </button>
+                {/* Manual Key Config Removed for Security */}
             </div>
 
             <div className="text-center space-y-2">

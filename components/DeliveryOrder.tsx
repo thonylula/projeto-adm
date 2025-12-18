@@ -308,13 +308,17 @@ export const DeliveryOrder: React.FC = () => {
                     });
 
                     if (!response.ok) {
-                        const data = await response.json();
-                        const errorMsg = data.error?.message || data.error || 'Unknown error';
+                        const payload = await response.json().catch(() => null);
+                        const errorMsg = payload?.error?.message || payload?.error || 'Unknown error';
                         throw new Error(`Model ${model} error: ${response.status} - ${errorMsg}`);
                     }
 
-                    const result = await response.json();
-                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    const payload = await response.json();
+                    if (!payload.ok) {
+                        throw new Error(`Model ${model} error: ${payload.error}`);
+                    }
+
+                    const text = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
                     if (text) {
                         generatedText = text;
