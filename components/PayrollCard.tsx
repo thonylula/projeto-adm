@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { PayrollInput, PayrollResult, PayrollHistoryItem, Company, RegistryEmployee } from '../types';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { useGeminiParser } from '../hooks/useGeminiParser';
 
 interface PayrollCardProps {
   activeCompany: Company;
@@ -21,7 +22,7 @@ for (let i = 1; i <= 12; i++) INITIAL_DETAILED_DAYS[i] = 0;
 
 const INITIAL_INPUT_STATE: Omit<PayrollInput, 'companyName' | 'companyLogo'> = {
   employeeName: '',
-  
+
   // Modo e 13º
   calculationMode: 'MONTHLY',
   thirteenthDetailedDays: { ...INITIAL_DETAILED_DAYS },
@@ -32,7 +33,7 @@ const INITIAL_INPUT_STATE: Omit<PayrollInput, 'companyName' | 'companyLogo'> = {
   selectedState: 'SP', // Padrão inicial
   businessDays: 25, // Será calculado automaticamente
   nonBusinessDays: 5, // Será calculado automaticamente
-  
+
   startDate: '',
   endDate: '',
   sundaysAmount: 0,
@@ -59,10 +60,10 @@ const INITIAL_INPUT_STATE: Omit<PayrollInput, 'companyName' | 'companyLogo'> = {
   nightHours: 0,
   applyNightShiftReduction: true, // Padrão CLT: Verdadeiro
   nightShiftPercentage: 20, // Padrão CLT
-  
+
   overtimeHours: 0,
   overtimePercentage: 50,
-  
+
   overtimeHours2: 0, // Novo campo
   overtimePercentage2: 100, // Novo campo (padrão 100 para diferenciar)
 
@@ -118,9 +119,9 @@ const BRAZIL_STATES = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
 ];
 
-export const PayrollCard: React.FC<PayrollCardProps> = ({ 
-  activeCompany, 
-  onBack, 
+export const PayrollCard: React.FC<PayrollCardProps> = ({
+  activeCompany,
+  onBack,
   onAddEmployee,
   onUpdateEmployee,
   onDeleteEmployee
@@ -130,12 +131,12 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     companyName: activeCompany.name,
     companyLogo: activeCompany.logoUrl
   });
-  
+
   const [result, setResult] = useState<PayrollResult | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [copiedSummaryId, setCopiedSummaryId] = useState<string | null>(null);
-  
+
   // Lista de funcionários cadastrados para importação
   const [registeredEmployees, setRegisteredEmployees] = useState<RegistryEmployee[]>([]);
 
@@ -145,12 +146,12 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   // Carregar funcionários do "Cadastros Gerais"
   useEffect(() => {
     try {
-        const stored = localStorage.getItem('folha_registry_employees');
-        if (stored) {
-            setRegisteredEmployees(JSON.parse(stored));
-        }
+      const stored = localStorage.getItem('folha_registry_employees');
+      if (stored) {
+        setRegisteredEmployees(JSON.parse(stored));
+      }
     } catch (e) {
-        console.error("Erro ao carregar cadastros", e);
+      console.error("Erro ao carregar cadastros", e);
     }
   }, []);
 
@@ -179,7 +180,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     goodFriday.setDate(easter.getDate() - 2);
     const carnival = new Date(easter);
     carnival.setDate(easter.getDate() - 47);
-    
+
     const formatDate = (date: Date) => {
       const m = (date.getMonth() + 1).toString().padStart(2, '0');
       const d = date.getDate().toString().padStart(2, '0');
@@ -192,7 +193,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const calculateCalendarDays = useCallback((month: number, year: number, state: string) => {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0);
-    
+
     const mobileHolidays = getMobileHolidays(year);
     const stateSpecificHolidays = STATE_HOLIDAYS[state] || [];
     const allHolidays = new Set([...FIXED_HOLIDAYS, ...mobileHolidays, ...stateSpecificHolidays]);
@@ -221,9 +222,9 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   // --- Lógica de Contagem de Domingos ---
   const countSundays = (start: string, end: string, scale: string, scheduleType: string | null): number => {
     if (!start || !end) return 0;
-    const startDate = new Date(start + 'T00:00:00'); 
+    const startDate = new Date(start + 'T00:00:00');
     const endDate = new Date(end + 'T00:00:00');
-    
+
     if (startDate > endDate) return 0;
 
     let count = 0;
@@ -231,11 +232,11 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     while (current <= endDate) {
       if (current.getDay() === 0) { // 0 = Domingo
         if (scale === '12x36' && scheduleType) {
-            const dayOfMonth = current.getDate();
-            if (scheduleType === 'ODD' && dayOfMonth % 2 !== 0) count++;
-            else if (scheduleType === 'EVEN' && dayOfMonth % 2 === 0) count++;
+          const dayOfMonth = current.getDate();
+          if (scheduleType === 'ODD' && dayOfMonth % 2 !== 0) count++;
+          else if (scheduleType === 'EVEN' && dayOfMonth % 2 === 0) count++;
         } else {
-            count++;
+          count++;
         }
       }
       current.setDate(current.getDate() + 1);
@@ -245,13 +246,13 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
   useEffect(() => {
     if (formState.startDate && formState.endDate && !editingId) {
-        const sundays = countSundays(
-            formState.startDate, 
-            formState.endDate, 
-            formState.workScale, 
-            formState.shiftScheduleType
-        );
-        setFormState(prev => ({ ...prev, sundaysAmount: sundays }));
+      const sundays = countSundays(
+        formState.startDate,
+        formState.endDate,
+        formState.workScale,
+        formState.shiftScheduleType
+      );
+      setFormState(prev => ({ ...prev, sundaysAmount: sundays }));
     }
   }, [formState.startDate, formState.endDate, formState.workScale, formState.shiftScheduleType, editingId]);
 
@@ -271,7 +272,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     if (startMins === -1 || endMins === -1) return null;
 
     let effectiveEndMins = endMins;
-    if (endMins < startMins) effectiveEndMins += 1440; 
+    if (endMins < startMins) effectiveEndMins += 1440;
 
     const breakStartMins = timeToMinutes(breakStart);
     const breakEndMins = timeToMinutes(breakEnd);
@@ -279,14 +280,14 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     let breakEndAdjusted = -1;
 
     if (breakStartMins !== -1 && breakEndMins !== -1) {
-       let bStart = breakStartMins;
-       let bEnd = breakEndMins;
-       if (bStart < startMins && effectiveEndMins > 1440) bStart += 1440;
-       if (bEnd < bStart) bEnd += 1440;
-       if (bStart >= startMins && bEnd <= effectiveEndMins) {
-          breakStartAdjusted = bStart;
-          breakEndAdjusted = bEnd;
-       }
+      let bStart = breakStartMins;
+      let bEnd = breakEndMins;
+      if (bStart < startMins && effectiveEndMins > 1440) bStart += 1440;
+      if (bEnd < bStart) bEnd += 1440;
+      if (bStart >= startMins && bEnd <= effectiveEndMins) {
+        breakStartAdjusted = bStart;
+        breakEndAdjusted = bEnd;
+      }
     }
 
     let nightMinutes = 0;
@@ -298,9 +299,9 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       const isStandardNight = timeOfDay >= 1320 || timeOfDay < 300;
       let isExtendedNight = false;
       if (extendNight && !isStandardNight) {
-          if (timeOfDay >= 300 && startMins < (effectiveEndMins > 1440 ? 1740 : 300)) {
-             isExtendedNight = true;
-          }
+        if (timeOfDay >= 300 && startMins < (effectiveEndMins > 1440 ? 1740 : 300)) {
+          isExtendedNight = true;
+        }
       }
       if (isStandardNight || isExtendedNight) nightMinutes++;
       else dayMinutes++;
@@ -308,36 +309,36 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
     const totalWorkedMinutes = dayMinutes + nightMinutes;
     return {
-       dayHours: dayMinutes / 60,
-       nightHours: nightMinutes / 60,
-       totalHours: totalWorkedMinutes / 60
+      dayHours: dayMinutes / 60,
+      nightHours: nightMinutes / 60,
+      totalHours: totalWorkedMinutes / 60
     };
   }, []);
 
   useEffect(() => {
     if (!editingId && formState.shiftStartTime && formState.shiftEndTime) {
-       const stats = calculateShiftStats(
-         formState.shiftStartTime,
-         formState.shiftEndTime,
-         formState.shiftBreakStart,
-         formState.shiftBreakEnd,
-         formState.extendNightShift
-       );
+      const stats = calculateShiftStats(
+        formState.shiftStartTime,
+        formState.shiftEndTime,
+        formState.shiftBreakStart,
+        formState.shiftBreakEnd,
+        formState.extendNightShift
+      );
 
-       if (stats) {
-         const monthlyNightHours = stats.nightHours * formState.daysWorked;
-         let dailyOvertime = 0;
-         if (formState.workScale === 'STANDARD') {
-            dailyOvertime = Math.max(0, stats.totalHours - 8);
-         }
-         const monthlyOvertime = dailyOvertime * formState.daysWorked;
+      if (stats) {
+        const monthlyNightHours = stats.nightHours * formState.daysWorked;
+        let dailyOvertime = 0;
+        if (formState.workScale === 'STANDARD') {
+          dailyOvertime = Math.max(0, stats.totalHours - 8);
+        }
+        const monthlyOvertime = dailyOvertime * formState.daysWorked;
 
-         setFormState(prev => ({
-           ...prev,
-           nightHours: parseFloat(monthlyNightHours.toFixed(2)),
-           overtimeHours: parseFloat(monthlyOvertime.toFixed(2))
-         }));
-       }
+        setFormState(prev => ({
+          ...prev,
+          nightHours: parseFloat(monthlyNightHours.toFixed(2)),
+          overtimeHours: parseFloat(monthlyOvertime.toFixed(2))
+        }));
+      }
     }
   }, [formState.shiftStartTime, formState.shiftEndTime, formState.shiftBreakStart, formState.shiftBreakEnd, formState.extendNightShift, formState.daysWorked, formState.workScale, editingId, calculateShiftStats]);
 
@@ -345,14 +346,14 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   // --- Automação de Plantões 12x36 ---
   useEffect(() => {
     if (formState.workScale === '12x36' && formState.shiftScheduleType && !editingId) {
-        const daysInMonth = new Date(formState.referenceYear, formState.referenceMonth, 0).getDate();
-        let count = 0;
-        for (let d = 1; d <= daysInMonth; d++) {
-            const isEven = d % 2 === 0;
-            if (formState.shiftScheduleType === 'ODD' && !isEven) count++;
-            else if (formState.shiftScheduleType === 'EVEN' && isEven) count++;
-        }
-        setFormState(prev => ({ ...prev, daysWorked: count }));
+      const daysInMonth = new Date(formState.referenceYear, formState.referenceMonth, 0).getDate();
+      let count = 0;
+      for (let d = 1; d <= daysInMonth; d++) {
+        const isEven = d % 2 === 0;
+        if (formState.shiftScheduleType === 'ODD' && !isEven) count++;
+        else if (formState.shiftScheduleType === 'EVEN' && isEven) count++;
+      }
+      setFormState(prev => ({ ...prev, daysWorked: count }));
     }
   }, [formState.workScale, formState.shiftScheduleType, formState.referenceMonth, formState.referenceYear, editingId]);
 
@@ -360,19 +361,19 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   // --- Efeitos de Sistema ---
   useEffect(() => {
     if (!editingId) {
-        setFormState(prev => ({
-            ...prev,
-            companyName: activeCompany.name,
-            companyLogo: activeCompany.logoUrl
-        }));
+      setFormState(prev => ({
+        ...prev,
+        companyName: activeCompany.name,
+        companyLogo: activeCompany.logoUrl
+      }));
     }
   }, [activeCompany, editingId]);
 
   useEffect(() => {
     if (!editingId) {
       const { business, nonBusiness } = calculateCalendarDays(
-        formState.referenceMonth, 
-        formState.referenceYear, 
+        formState.referenceMonth,
+        formState.referenceYear,
         formState.selectedState
       );
       setFormState(prev => ({
@@ -385,9 +386,9 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-        if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
-            setShowExportMenu(false);
-        }
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+        setShowExportMenu(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => { document.removeEventListener("mousedown", handleClickOutside); };
@@ -399,22 +400,22 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
     if (type === 'checkbox') {
       newValue = (e.target as HTMLInputElement).checked;
-    } else if (type === 'number' || ['overtimePercentage','overtimePercentage2','referenceMonth','referenceYear','customDivisor','holidayHours','thirteenthMonths','fractionalMonthDays'].includes(name)) {
+    } else if (type === 'number' || ['overtimePercentage', 'overtimePercentage2', 'referenceMonth', 'referenceYear', 'customDivisor', 'holidayHours', 'thirteenthMonths', 'fractionalMonthDays'].includes(name)) {
       newValue = Number(value);
     }
-    
+
     if (name === 'workScale') {
-        if (value === '12x36') {
-            setFormState((prev) => ({
-                ...prev, workScale: '12x36', daysWorked: 15, customDivisor: 220, shiftScheduleType: null
-            }));
-            return;
-        } else {
-            setFormState((prev) => ({
-                ...prev, workScale: 'STANDARD', daysWorked: 30, customDivisor: 220, shiftScheduleType: null
-            }));
-            return;
-        }
+      if (value === '12x36') {
+        setFormState((prev) => ({
+          ...prev, workScale: '12x36', daysWorked: 15, customDivisor: 220, shiftScheduleType: null
+        }));
+        return;
+      } else {
+        setFormState((prev) => ({
+          ...prev, workScale: 'STANDARD', daysWorked: 30, customDivisor: 220, shiftScheduleType: null
+        }));
+        return;
+      }
     }
 
     setFormState((prev) => {
@@ -423,7 +424,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
       if (name === 'referenceMonth' || name === 'referenceYear' || name === 'selectedState') {
         const { business, nonBusiness } = calculateCalendarDays(
-          updatedState.referenceMonth, 
+          updatedState.referenceMonth,
           updatedState.referenceYear,
           updatedState.selectedState
         );
@@ -436,71 +437,119 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   };
 
   const handleThirteenthDayChange = (monthIndex: number, days: number) => {
-      setFormState(prev => ({
-          ...prev,
-          thirteenthDetailedDays: {
-              ...(prev.thirteenthDetailedDays || {}), // Safety for missing map
-              [monthIndex]: days
-          }
-      }));
+    setFormState(prev => ({
+      ...prev,
+      thirteenthDetailedDays: {
+        ...(prev.thirteenthDetailedDays || {}), // Safety for missing map
+        [monthIndex]: days
+      }
+    }));
   };
 
   const handleFillAllMonths = (days: number) => {
-       const newDetailed: Record<number, number> = {};
-       for (let i = 1; i <= 12; i++) newDetailed[i] = days;
-       setFormState(prev => ({
-           ...prev,
-           thirteenthDetailedDays: newDetailed
-       }));
+    const newDetailed: Record<number, number> = {};
+    for (let i = 1; i <= 12; i++) newDetailed[i] = days;
+    setFormState(prev => ({
+      ...prev,
+      thirteenthDetailedDays: newDetailed
+    }));
   };
 
   const handleImportEmployee = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const empId = e.target.value;
-      if (!empId) return;
-      const emp = registeredEmployees.find(r => r.id === empId);
-      if (emp) {
-          setFormState(prev => ({
-              ...prev, employeeName: emp.name, baseSalary: emp.salary,
-          }));
-      }
+    const empId = e.target.value;
+    if (!empId) return;
+    const emp = registeredEmployees.find(r => r.id === empId);
+    if (emp) {
+      setFormState(prev => ({
+        ...prev, employeeName: emp.name, baseSalary: emp.salary,
+      }));
+    }
   };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
 
+  // --- AI SMART UPLOAD ---
+  const { processFile, isProcessing } = useGeminiParser({
+    apiKey: process.env.GEMINI_API_KEY || '',
+    onError: (err) => alert(`Erro na Inteligência Artificial: ${err.message}`)
+  });
+
+  const handleSmartUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
+
+    try {
+      const prompt = `
+                Analise este documento (Holerite, Recibo de Pagamento, Ficha Financeira). 
+                Extraia a data de competência (Mês/Ano), Nome do Funcionário, Cargo e Salário Base.
+                
+                Retorne um JSON estrito com as chaves:
+                {
+                    "referenceMonth": number (1-12),
+                    "referenceYear": number (ex: 2024),
+                    "employeeName": "Nome Completo",
+                    "baseSalary": number (valor numérico puro, ex: 1518.00),
+                    "role": "Cargo"
+                }
+                Se não encontrar algum dado, ignore-o.
+            `;
+
+      const data = await processFile(file, prompt);
+
+      if (data) {
+        setFormState(prev => ({
+          ...prev,
+          referenceMonth: data.referenceMonth || prev.referenceMonth,
+          referenceYear: data.referenceYear || prev.referenceYear,
+          employeeName: data.employeeName || prev.employeeName,
+          baseSalary: data.baseSalary || prev.baseSalary,
+          // We don't have a 'role' field in the main input state visible to user directly 
+          // (it's mostly for print/record), but we can perhaps store it if we add it to 'notes' or similar?
+          // For now, let's just use what matches.
+        }));
+      }
+
+    } catch (error) {
+      console.error("Smart Upload Error", error);
+    } finally {
+      e.target.value = '';
+    }
+  };
+
   // --- FUNÇÃO DE CÁLCULO CENTRAL ---
   const performCalculation = (input: PayrollInput): PayrollResult => {
     const COMMERCIAL_MONTH_DAYS = 30;
-    const NIGHT_HOUR_REDUCTION_FACTOR = input.applyNightShiftReduction ? 1.14285714 : 1; 
+    const NIGHT_HOUR_REDUCTION_FACTOR = input.applyNightShiftReduction ? 1.14285714 : 1;
 
     // 1. Definição do Divisor
     let divisor = 220;
     if (input.workScale === '12x36') {
-        divisor = input.customDivisor > 0 ? input.customDivisor : 220;
+      divisor = input.customDivisor > 0 ? input.customDivisor : 220;
     }
 
     // 2. Fator DSR
     const safeBusinessDays = input.businessDays > 0 ? input.businessDays : 1;
     let dsrFactor = input.nonBusinessDays / safeBusinessDays;
     if (input.workScale === '12x36' && !input.calculateDsrOn12x36) {
-        dsrFactor = 0;
+      dsrFactor = 0;
     }
 
     // 3. Salário Proporcional (Base para Mensal) vs Integral (Base para 13º)
     let proportionalSalary = 0;
-    
+
     // Se for 13º, usamos o salário CHEIO como base de cálculo das médias e valor final
     // Se for Mensal, depende dos dias trabalhados
     const baseDays = input.calculationMode === '13TH' ? 30 : input.daysWorked;
 
     if (input.workScale === '12x36') {
-        // No 12x36, se for 13º, assumimos a média de 15 plantões (salário cheio)
-        const activeDays = input.calculationMode === '13TH' ? 15 : input.daysWorked;
-        proportionalSalary = (input.baseSalary / 15) * activeDays;
+      // No 12x36, se for 13º, assumimos a média de 15 plantões (salário cheio)
+      const activeDays = input.calculationMode === '13TH' ? 15 : input.daysWorked;
+      proportionalSalary = (input.baseSalary / 15) * activeDays;
     } else {
-        const days = baseDays > 30 ? 30 : (baseDays < 0 ? 0 : baseDays);
-        proportionalSalary = (input.baseSalary / COMMERCIAL_MONTH_DAYS) * days;
+      const days = baseDays > 30 ? 30 : (baseDays < 0 ? 0 : baseDays);
+      proportionalSalary = (input.baseSalary / COMMERCIAL_MONTH_DAYS) * days;
     }
 
     const hourlyRate = input.baseSalary / divisor;
@@ -537,27 +586,27 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     // Feriados 12x36
     let holidayValue = 0;
     if (input.workScale === '12x36' && input.workedOnHoliday) {
-        const holidayRate = hourlyRate * 2; 
-        holidayValue = holidayRate * input.holidayHours;
-        totalOvertimeValue += holidayValue;
+      const holidayRate = hourlyRate * 2;
+      holidayValue = holidayRate * input.holidayHours;
+      totalOvertimeValue += holidayValue;
     }
 
     const dsrOvertimeValue = totalOvertimeValue * dsrFactor;
 
     const visitsTotalValue = input.visitsAmount * input.visitUnitValue;
-    const totalProductionBase = visitsTotalValue + input.productionBonus; 
-    
+    const totalProductionBase = visitsTotalValue + input.productionBonus;
+
     // Ajuda de Custo (Geralmente não entra no 13º, mas deixamos opcional/manual. Aqui vamos somar)
     // Se o usuário inserir no modo 13º, assume-se que integra a base.
 
-    let grossSalary = 
+    let grossSalary =
       proportionalSalary +
       hazardPayValue +
       nightShiftValue +
       dsrNightShiftValue +
       totalOvertimeValue +
       dsrOvertimeValue +
-      totalProductionBase + 
+      totalProductionBase +
       input.costAllowance;
 
     // --- CÁLCULO ESPECÍFICO DE 13º SALÁRIO ---
@@ -565,38 +614,38 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     let thirteenthTotalDays = 0;
 
     if (input.calculationMode === '13TH') {
-        const detailedDays = input.thirteenthDetailedDays || {};
-        
-        // *Importante*: Ajuda de custo tipicamente é indenizatória e não entra no 13º.
-        // Vamos removê-la da base de cálculo do 13º para ficar mais correto.
-        const remunerationFor13th = grossSalary - input.costAllowance;
+      const detailedDays = input.thirteenthDetailedDays || {};
 
-        if (input.thirteenthCalculationType === 'CLT') {
-            // Lógica CLT: Mês com 15+ dias conta 1 avo
-            let detailedAvos = 0;
-            Object.values(detailedDays).forEach(days => {
-                if (days >= 15) detailedAvos++;
-            });
-            thirteenthTotalAvos = detailedAvos;
-            grossSalary = (remunerationFor13th / 12) * thirteenthTotalAvos;
-        } else {
-            // Lógica Avulsa (Daily Exact): Soma todos os dias e paga proporcional (Base 360)
-            let totalDays = 0;
-            Object.values(detailedDays).forEach(days => {
-                totalDays += (days || 0);
-            });
-            thirteenthTotalDays = totalDays;
-            
-            // Fórmula: Remuneração Integral dividida por 360 dias, multiplicada pelos dias trabalhados
-            // Isso equivale a (Base / 12) * (Dias / 30)
-            grossSalary = (remunerationFor13th / 360) * totalDays;
-        }
+      // *Importante*: Ajuda de custo tipicamente é indenizatória e não entra no 13º.
+      // Vamos removê-la da base de cálculo do 13º para ficar mais correto.
+      const remunerationFor13th = grossSalary - input.costAllowance;
+
+      if (input.thirteenthCalculationType === 'CLT') {
+        // Lógica CLT: Mês com 15+ dias conta 1 avo
+        let detailedAvos = 0;
+        Object.values(detailedDays).forEach(days => {
+          if (days >= 15) detailedAvos++;
+        });
+        thirteenthTotalAvos = detailedAvos;
+        grossSalary = (remunerationFor13th / 12) * thirteenthTotalAvos;
+      } else {
+        // Lógica Avulsa (Daily Exact): Soma todos os dias e paga proporcional (Base 360)
+        let totalDays = 0;
+        Object.values(detailedDays).forEach(days => {
+          totalDays += (days || 0);
+        });
+        thirteenthTotalDays = totalDays;
+
+        // Fórmula: Remuneração Integral dividida por 360 dias, multiplicada pelos dias trabalhados
+        // Isso equivale a (Base / 12) * (Dias / 30)
+        grossSalary = (remunerationFor13th / 360) * totalDays;
+      }
     }
 
     return {
       proportionalSalary, hourlyRate, hazardPayValue, effectiveNightHours, nightShiftValue,
       dsrNightShiftValue, overtimeValue: totalOvertimeValue, overtime1Value: overtimeValue1,
-      overtime2Value: overtimeValue2, holidayValue, dsrOvertimeValue, sundayBonusValue, 
+      overtime2Value: overtimeValue2, holidayValue, dsrOvertimeValue, sundayBonusValue,
       visitsTotalValue, grossSalary, thirteenthTotalAvos, thirteenthTotalDays
     };
   };
@@ -609,17 +658,17 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     const timestamp = new Date().toLocaleString('pt-BR');
     const rawDate = new Date().toISOString();
     const newItemData: PayrollHistoryItem = {
-        id: editingId || generateId(),
-        timestamp, rawDate,
-        input: { ...formState, companyName: activeCompany.name, companyLogo: activeCompany.logoUrl },
-        result: calculatedResult
+      id: editingId || generateId(),
+      timestamp, rawDate,
+      input: { ...formState, companyName: activeCompany.name, companyLogo: activeCompany.logoUrl },
+      result: calculatedResult
     };
 
     if (editingId) {
-        onUpdateEmployee(newItemData);
-        setEditingId(null);
+      onUpdateEmployee(newItemData);
+      setEditingId(null);
     } else {
-        onAddEmployee(newItemData);
+      onAddEmployee(newItemData);
     }
 
     // Reset, keeping the mode and detailed days structure clean
@@ -657,7 +706,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     const detailedDays = item.input.thirteenthDetailedDays || { ...INITIAL_DETAILED_DAYS };
     // Ensure type compatibility
     const calcType = item.input.thirteenthCalculationType || 'CLT';
-    
+
     setFormState({ ...item.input, thirteenthDetailedDays: detailedDays, thirteenthCalculationType: calcType });
     setEditingId(item.id);
     setResult(null);
@@ -667,14 +716,14 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const handleCancelEdit = () => {
     setEditingId(null);
     setFormState({
-        ...INITIAL_INPUT_STATE,
-        referenceMonth: formState.referenceMonth,
-        referenceYear: formState.referenceYear,
-        selectedState: formState.selectedState,
-        businessDays: formState.businessDays,
-        nonBusinessDays: formState.nonBusinessDays,
-        companyName: activeCompany.name,
-        companyLogo: activeCompany.logoUrl,
+      ...INITIAL_INPUT_STATE,
+      referenceMonth: formState.referenceMonth,
+      referenceYear: formState.referenceYear,
+      selectedState: formState.selectedState,
+      businessDays: formState.businessDays,
+      nonBusinessDays: formState.nonBusinessDays,
+      companyName: activeCompany.name,
+      companyLogo: activeCompany.logoUrl,
     });
   };
 
@@ -687,24 +736,24 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const generateSmartSummary = (item: PayrollHistoryItem) => {
     const { input, result } = item;
     const parts: string[] = [];
-    
+
     if (input.calculationMode === '13TH') {
-        parts.push(`[13º SALÁRIO] Referente a ${input.referenceYear}.`);
-        if (input.thirteenthCalculationType === 'CLT') {
-             parts.push(`Regra CLT: ${(result.thirteenthTotalAvos || 0)}/12 avos.`);
-        } else {
-             parts.push(`Cálculo Avulso: ${(result.thirteenthTotalDays || 0)} dias trabalhados.`);
-        }
-        parts.push(`Total Bruto: ${formatCurrency(result.grossSalary)}.`);
-        return parts.join(' ');
+      parts.push(`[13º SALÁRIO] Referente a ${input.referenceYear}.`);
+      if (input.thirteenthCalculationType === 'CLT') {
+        parts.push(`Regra CLT: ${(result.thirteenthTotalAvos || 0)}/12 avos.`);
+      } else {
+        parts.push(`Cálculo Avulso: ${(result.thirteenthTotalDays || 0)} dias trabalhados.`);
+      }
+      parts.push(`Total Bruto: ${formatCurrency(result.grossSalary)}.`);
+      return parts.join(' ');
     }
 
     parts.push(`Referente a ${input.referenceMonth}/${input.referenceYear}.`);
     if (input.workScale === '12x36') {
-        parts.push(`Escala 12x36 (${input.daysWorked} plantões).`);
-        if (input.workedOnHoliday) parts.push(`Trabalhou ${input.holidayHours}h em feriado.`);
+      parts.push(`Escala 12x36 (${input.daysWorked} plantões).`);
+      if (input.workedOnHoliday) parts.push(`Trabalhou ${input.holidayHours}h em feriado.`);
     } else {
-        parts.push(`Jornada padrão (${input.daysWorked} dias).`);
+      parts.push(`Jornada padrão (${input.daysWorked} dias).`);
     }
     if (input.sundaysAmount > 0) parts.push(`${input.sundaysAmount} domingos trabalhou.`);
     if (result.overtimeValue > 0) parts.push(`Horas Extras: ${formatCurrency(result.overtimeValue)}.`);
@@ -723,9 +772,9 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
   // --- EXPORT FUNCTIONS (Simplificadas para brevidade) ---
   const handlePrint = () => { setShowExportMenu(false); window.print(); };
-  const handleExportPDF = async () => { /* Mesma lógica anterior */ setShowExportMenu(false); if(!reportRef.current) return; try { const canvas = await html2canvas(reportRef.current, { scale: 2, backgroundColor: '#ffffff', ignoreElements: (node) => node.classList.contains('export-ignore') }); const imgData = canvas.toDataURL('image/png'); const pdf = new jsPDF('l', 'mm', 'a4'); pdf.addImage(imgData, 'PNG', 0, 0, 297, 210); pdf.save(`Folha.pdf`); } catch(e){} };
-  const handleExportPNG = async () => { /* Mesma lógica anterior */ setShowExportMenu(false); if(!reportRef.current) return; try { const canvas = await html2canvas(reportRef.current, { scale: 2, backgroundColor: '#ffffff', ignoreElements: (node) => node.classList.contains('export-ignore') }); const link = document.createElement('a'); link.download = `Folha.png`; link.href = canvas.toDataURL('image/png'); link.click(); } catch(e){} };
-  const handleExportHTML = () => { setShowExportMenu(false); if(reportRef.current) navigator.clipboard.writeText(reportRef.current.outerHTML); };
+  const handleExportPDF = async () => { /* Mesma lógica anterior */ setShowExportMenu(false); if (!reportRef.current) return; try { const canvas = await html2canvas(reportRef.current, { scale: 2, backgroundColor: '#ffffff', ignoreElements: (node) => node.classList.contains('export-ignore') }); const imgData = canvas.toDataURL('image/png'); const pdf = new jsPDF('l', 'mm', 'a4'); pdf.addImage(imgData, 'PNG', 0, 0, 297, 210); pdf.save(`Folha.pdf`); } catch (e) { } };
+  const handleExportPNG = async () => { /* Mesma lógica anterior */ setShowExportMenu(false); if (!reportRef.current) return; try { const canvas = await html2canvas(reportRef.current, { scale: 2, backgroundColor: '#ffffff', ignoreElements: (node) => node.classList.contains('export-ignore') }); const link = document.createElement('a'); link.download = `Folha.png`; link.href = canvas.toDataURL('image/png'); link.click(); } catch (e) { } };
+  const handleExportHTML = () => { setShowExportMenu(false); if (reportRef.current) navigator.clipboard.writeText(reportRef.current.outerHTML); };
 
   const exportToCSV = () => {
     const history = activeCompany.employees;
@@ -736,9 +785,9 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     const rows = history.map(item => {
       let ref13 = "0";
       if (item.input.calculationMode === '13TH') {
-          ref13 = item.input.thirteenthCalculationType === 'CLT' 
-            ? `${(item.result.thirteenthTotalAvos || 0)}/12 avos`
-            : `${(item.result.thirteenthTotalDays || 0)} dias`;
+        ref13 = item.input.thirteenthCalculationType === 'CLT'
+          ? `${(item.result.thirteenthTotalAvos || 0)}/12 avos`
+          : `${(item.result.thirteenthTotalDays || 0)} dias`;
       }
 
       return [
@@ -765,43 +814,43 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const history = activeCompany.employees || [];
   const totalCompanyCost = history.reduce((acc, item) => acc + item.result.grossSalary, 0);
 
-  const months = [ "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro" ];
-  const monthAbbr = [ "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez" ];
+  const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+  const monthAbbr = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
   const isThirteenthMode = formState.calculationMode === '13TH';
 
   // Calculate current stats in real-time for display
   const currentCalculatedAvos = isThirteenthMode && formState.thirteenthDetailedDays
-      ? Object.values(formState.thirteenthDetailedDays).filter((d: any) => d >= 15).length
-      : 0;
-  
+    ? Object.values(formState.thirteenthDetailedDays).filter((d: any) => d >= 15).length
+    : 0;
+
   const currentTotalDays = isThirteenthMode && formState.thirteenthDetailedDays
-      ? Object.values(formState.thirteenthDetailedDays).reduce((a: number, b: any) => a + (b || 0), 0)
-      : 0;
+    ? Object.values(formState.thirteenthDetailedDays).reduce((a: number, b: any) => a + (b || 0), 0)
+    : 0;
 
   return (
     <div className="w-full max-w-6xl mx-auto print:max-w-none print:w-full">
-      
+
       {/* INPUT CARD */}
       <div className={`w-full max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border transition-all duration-300 mb-12 print:hidden ${editingId ? 'border-amber-300 ring-4 ring-amber-50 shadow-amber-100' : 'border-gray-200/60 hover:shadow-2xl'}`}>
-        
+
         <header className={`px-6 py-6 text-center relative overflow-hidden ${editingId ? 'bg-amber-500' : isThirteenthMode ? 'bg-slate-900' : 'bg-slate-900'}`}>
           <div className="relative z-10">
-             <div className="flex justify-between items-center mb-2">
-                <button onClick={onBack} className="text-xs text-white/70 hover:text-white flex items-center gap-1 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                    </svg>
-                    Trocar Empresa
-                </button>
-                {editingId && <span className="text-xs font-bold text-white bg-black/20 px-2 py-1 rounded-full uppercase tracking-wide">Editando</span>}
-             </div>
+            <div className="flex justify-between items-center mb-2">
+              <button onClick={onBack} className="text-xs text-white/70 hover:text-white flex items-center gap-1 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                Trocar Empresa
+              </button>
+              {editingId && <span className="text-xs font-bold text-white bg-black/20 px-2 py-1 rounded-full uppercase tracking-wide">Editando</span>}
+            </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight uppercase">
-                {activeCompany.name} {isThirteenthMode ? '13º Proporcional' : ''}
+              {activeCompany.name} {isThirteenthMode ? '13º Proporcional' : ''}
             </h1>
             <p className="text-white/80 text-sm mt-2 font-medium">Folha de Pagamento Inteligente (Multi-Escala)</p>
           </div>
-          {isThirteenthMode 
+          {isThirteenthMode
             ? <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-200 via-orange-600 to-red-900" />
             : !editingId && <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-500 via-purple-500 to-pink-500" />
           }
@@ -809,219 +858,251 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
         {/* --- SELETOR DE MODO DE CÁLCULO --- */}
         <div className="bg-slate-50 border-b border-gray-200 p-2 flex justify-center gap-2">
-            <button
-                type="button"
-                onClick={() => setFormState(prev => ({ ...prev, calculationMode: 'MONTHLY' }))}
-                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${!isThirteenthMode ? 'bg-white text-indigo-700 shadow-sm border border-indigo-200' : 'text-gray-400 hover:text-gray-600'}`}
+          <button
+            type="button"
+            onClick={() => setFormState(prev => ({ ...prev, calculationMode: 'MONTHLY' }))}
+            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${!isThirteenthMode ? 'bg-white text-indigo-700 shadow-sm border border-indigo-200' : 'text-gray-400 hover:text-gray-600'}`}
+          >
+            Folha Mensal
+          </button>
+          <button
+            type="button"
+            onClick={() => setFormState(prev => ({ ...prev, calculationMode: '13TH' }))}
+            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${isThirteenthMode ? 'bg-white text-red-600 shadow-sm border border-red-200' : 'text-gray-400 hover:text-gray-600'}`}
+          >
+            13º Salário
+          </button>
+        </div>
+
+        {/* --- SMART UPLOAD BAR --- */}
+        <div className="bg-white border-b border-gray-100 p-3 flex justify-center items-center gap-4">
+          <div className="relative group w-full max-w-md">
+            <input
+              type="file"
+              id="smart-upload-payroll"
+              className="hidden"
+              onChange={handleSmartUpload}
+              accept="image/*,application/pdf"
+              disabled={isProcessing}
+            />
+            <label
+              htmlFor="smart-upload-payroll"
+              className={`flex items-center justify-center gap-2 w-full px-4 py-2 rounded-xl text-sm font-bold uppercase tracking-wider cursor-pointer border-2 border-dashed transition-all ${isProcessing ? 'bg-gray-50 border-gray-200 text-gray-400' : 'border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:border-indigo-300'}`}
             >
-                Folha Mensal
-            </button>
-            <button
-                type="button"
-                onClick={() => setFormState(prev => ({ ...prev, calculationMode: '13TH' }))}
-                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${isThirteenthMode ? 'bg-white text-red-600 shadow-sm border border-red-200' : 'text-gray-400 hover:text-gray-600'}`}
-            >
-                13º Salário
-            </button>
+              {isProcessing ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  Analisando Holerite...
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  Importar Dados via Holerite (IA)
+                </>
+              )}
+            </label>
+          </div>
         </div>
 
         <div className="p-6 sm:p-8">
-          
+
           {/* BANNER 13º */}
           {isThirteenthMode && (
-              <div className="mb-8 animate-in fade-in">
-                  <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-center mb-4">
-                      <h3 className="text-lg font-bold text-red-600 uppercase mb-1">CÁLCULO DETALHADO 13º PROPORCIONAL</h3>
-                      <p className="text-xs text-red-400">Insira as médias e os dias trabalhados no quadro abaixo.</p>
-                  </div>
-                  
-                  {/* SELETOR DE TIPO DE CÁLCULO 13º */}
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center items-center bg-gray-50 p-4 rounded-xl border border-gray-200">
-                      <label className="text-xs font-bold text-gray-500 uppercase">Regra de Pagamento:</label>
-                      <div className="flex gap-2">
-                          <button
-                              type="button"
-                              onClick={() => setFormState(prev => ({ ...prev, thirteenthCalculationType: 'CLT' }))}
-                              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${formState.thirteenthCalculationType === 'CLT' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300'}`}
-                          >
-                              Padrão CLT (15 Dias)
-                          </button>
-                          <button
-                              type="button"
-                              onClick={() => setFormState(prev => ({ ...prev, thirteenthCalculationType: 'DAILY_EXACT' }))}
-                              className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${formState.thirteenthCalculationType === 'DAILY_EXACT' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300'}`}
-                          >
-                              Cálculo Avulso (Por Dias)
-                          </button>
-                      </div>
-                  </div>
+            <div className="mb-8 animate-in fade-in">
+              <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-center mb-4">
+                <h3 className="text-lg font-bold text-red-600 uppercase mb-1">CÁLCULO DETALHADO 13º PROPORCIONAL</h3>
+                <p className="text-xs text-red-400">Insira as médias e os dias trabalhados no quadro abaixo.</p>
               </div>
+
+              {/* SELETOR DE TIPO DE CÁLCULO 13º */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <label className="text-xs font-bold text-gray-500 uppercase">Regra de Pagamento:</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormState(prev => ({ ...prev, thirteenthCalculationType: 'CLT' }))}
+                    className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${formState.thirteenthCalculationType === 'CLT' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300'}`}
+                  >
+                    Padrão CLT (15 Dias)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormState(prev => ({ ...prev, thirteenthCalculationType: 'DAILY_EXACT' }))}
+                    className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${formState.thirteenthCalculationType === 'DAILY_EXACT' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300'}`}
+                  >
+                    Cálculo Avulso (Por Dias)
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
 
           <form className="space-y-8" onSubmit={handleCalculate}>
-            
+
             {/* Seção: Escala de Trabalho */}
             <div className="flex flex-col sm:flex-row gap-6 pb-6 border-b border-slate-100">
-                 <div className="flex-1 space-y-4">
-                     <div>
-                        <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Selecione a Escala</span>
-                        <div className="flex gap-4">
-                            <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${formState.workScale === 'STANDARD' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold' : 'bg-white border-gray-200 text-slate-500 hover:bg-gray-50'}`}>
-                                <input type="radio" name="workScale" value="STANDARD" checked={formState.workScale === 'STANDARD'} onChange={handleInputChange} className="hidden" />
-                                <span className="text-sm">Padrão (8h/44h)</span>
-                            </label>
-                            <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${formState.workScale === '12x36' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold' : 'bg-white border-gray-200 text-slate-500 hover:bg-gray-50'}`}>
-                                <input type="radio" name="workScale" value="12x36" checked={formState.workScale === '12x36'} onChange={handleInputChange} className="hidden" />
-                                <span className="text-sm">Escala 12x36</span>
-                            </label>
-                        </div>
-                     </div>
-                 </div>
+              <div className="flex-1 space-y-4">
+                <div>
+                  <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Selecione a Escala</span>
+                  <div className="flex gap-4">
+                    <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${formState.workScale === 'STANDARD' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold' : 'bg-white border-gray-200 text-slate-500 hover:bg-gray-50'}`}>
+                      <input type="radio" name="workScale" value="STANDARD" checked={formState.workScale === 'STANDARD'} onChange={handleInputChange} className="hidden" />
+                      <span className="text-sm">Padrão (8h/44h)</span>
+                    </label>
+                    <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${formState.workScale === '12x36' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold' : 'bg-white border-gray-200 text-slate-500 hover:bg-gray-50'}`}>
+                      <input type="radio" name="workScale" value="12x36" checked={formState.workScale === '12x36'} onChange={handleInputChange} className="hidden" />
+                      <span className="text-sm">Escala 12x36</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
-            
+
             {/* Seção de Grade Mensal do 13º */}
             {isThirteenthMode && (
-                <div className="bg-red-50/50 rounded-xl p-6 border-2 border-red-100 animate-in slide-in-from-top-4">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-sm font-bold text-red-700 uppercase tracking-wider flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                            Detalhamento de Dias por Mês
-                        </h3>
-                        <div className="flex gap-2">
-                            <button type="button" onClick={() => handleFillAllMonths(30)} className="text-[10px] bg-white border border-red-200 text-red-600 px-2 py-1 rounded hover:bg-red-50 font-bold">Preencher Ano (30)</button>
-                            <button type="button" onClick={() => handleFillAllMonths(0)} className="text-[10px] bg-white border border-gray-200 text-gray-500 px-2 py-1 rounded hover:bg-gray-50">Limpar</button>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                        {monthAbbr.map((m, index) => {
-                            const monthKey = index + 1;
-                            const days = formState.thirteenthDetailedDays?.[monthKey] || 0;
-                            const isValidAvo = days >= 15;
-                            const isClt = formState.thirteenthCalculationType === 'CLT';
-                            
-                            // Visualização muda dependendo do modo
-                            let cellStyle = 'bg-red-50/50 border-red-100 opacity-80';
-                            if (isClt) {
-                                if (isValidAvo) cellStyle = 'bg-white border-green-300 shadow-sm';
-                            } else {
-                                if (days > 0) cellStyle = 'bg-white border-blue-300 shadow-sm';
-                            }
-                            
-                            return (
-                                <div key={monthKey} className={`relative border rounded-lg p-2 transition-all ${cellStyle}`}>
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase text-center mb-1">{m}</label>
-                                    <input 
-                                        type="number" 
-                                        min="0" 
-                                        max="31"
-                                        value={days || ''} 
-                                        onChange={(e) => handleThirteenthDayChange(monthKey, parseInt(e.target.value) || 0)}
-                                        className={`w-full text-center font-bold text-sm outline-none bg-transparent ${isClt ? (isValidAvo ? 'text-green-700' : 'text-red-400') : 'text-blue-700'}`}
-                                        placeholder="0"
-                                    />
-                                    {isClt && (
-                                        <div className={`absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full border border-white ${isValidAvo ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                    
-                    <div className="mt-4 pt-3 border-t border-red-100 flex justify-between items-center">
-                         <span className="text-xs text-red-400 font-medium">
-                             {formState.thirteenthCalculationType === 'CLT' 
-                                ? "Regra CLT: Mês com 15+ dias conta 1 avo." 
-                                : "Cálculo Avulso: Proporcional aos dias trabalhados."}
-                         </span>
-                         <div className="text-right">
-                             <span className="text-xs text-gray-500 uppercase font-bold mr-2">
-                                 {formState.thirteenthCalculationType === 'CLT' ? "Avos Conquistados:" : "Total Dias:"}
-                             </span>
-                             <span className="text-xl font-black text-red-600">
-                                 {formState.thirteenthCalculationType === 'CLT' 
-                                    ? `${currentCalculatedAvos}/12` 
-                                    : currentTotalDays
-                                 }
-                             </span>
-                         </div>
-                    </div>
+              <div className="bg-red-50/50 rounded-xl p-6 border-2 border-red-100 animate-in slide-in-from-top-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-sm font-bold text-red-700 uppercase tracking-wider flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    Detalhamento de Dias por Mês
+                  </h3>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => handleFillAllMonths(30)} className="text-[10px] bg-white border border-red-200 text-red-600 px-2 py-1 rounded hover:bg-red-50 font-bold">Preencher Ano (30)</button>
+                    <button type="button" onClick={() => handleFillAllMonths(0)} className="text-[10px] bg-white border border-gray-200 text-gray-500 px-2 py-1 rounded hover:bg-gray-50">Limpar</button>
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                  {monthAbbr.map((m, index) => {
+                    const monthKey = index + 1;
+                    const days = formState.thirteenthDetailedDays?.[monthKey] || 0;
+                    const isValidAvo = days >= 15;
+                    const isClt = formState.thirteenthCalculationType === 'CLT';
+
+                    // Visualização muda dependendo do modo
+                    let cellStyle = 'bg-red-50/50 border-red-100 opacity-80';
+                    if (isClt) {
+                      if (isValidAvo) cellStyle = 'bg-white border-green-300 shadow-sm';
+                    } else {
+                      if (days > 0) cellStyle = 'bg-white border-blue-300 shadow-sm';
+                    }
+
+                    return (
+                      <div key={monthKey} className={`relative border rounded-lg p-2 transition-all ${cellStyle}`}>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase text-center mb-1">{m}</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="31"
+                          value={days || ''}
+                          onChange={(e) => handleThirteenthDayChange(monthKey, parseInt(e.target.value) || 0)}
+                          className={`w-full text-center font-bold text-sm outline-none bg-transparent ${isClt ? (isValidAvo ? 'text-green-700' : 'text-red-400') : 'text-blue-700'}`}
+                          placeholder="0"
+                        />
+                        {isClt && (
+                          <div className={`absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full border border-white ${isValidAvo ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-red-100 flex justify-between items-center">
+                  <span className="text-xs text-red-400 font-medium">
+                    {formState.thirteenthCalculationType === 'CLT'
+                      ? "Regra CLT: Mês com 15+ dias conta 1 avo."
+                      : "Cálculo Avulso: Proporcional aos dias trabalhados."}
+                  </span>
+                  <div className="text-right">
+                    <span className="text-xs text-gray-500 uppercase font-bold mr-2">
+                      {formState.thirteenthCalculationType === 'CLT' ? "Avos Conquistados:" : "Total Dias:"}
+                    </span>
+                    <span className="text-xl font-black text-red-600">
+                      {formState.thirteenthCalculationType === 'CLT'
+                        ? `${currentCalculatedAvos}/12`
+                        : currentTotalDays
+                      }
+                    </span>
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Competência (Ocultar/Simplificar se for 13º?) - Mantemos para referência do ano */}
             <div className="bg-blue-50/50 rounded-xl p-5 border border-blue-100">
-                <h3 className="text-xs font-semibold text-blue-700 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    Competência & Calendário
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                    <div className="col-span-1">
-                         <label className="block text-xs font-medium text-slate-500 mb-1">Mês Ref.</label>
-                         <select name="referenceMonth" value={formState.referenceMonth} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900">
-                            {months.map((m, idx) => <option key={idx} value={idx + 1}>{m}</option>)}
-                         </select>
-                    </div>
-                    <div className="col-span-1">
-                        <label className="block text-xs font-medium text-slate-500 mb-1">Ano</label>
-                        <input type="number" name="referenceYear" value={formState.referenceYear} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900" min="2000" max="2100" />
-                    </div>
-                    {/* Oculta detalhes de dias úteis se for 13º, pois base é integral */}
-                    {!isThirteenthMode && (
-                        <>
-                            <div className="col-span-1">
-                                <label className="block text-xs font-medium text-slate-500 mb-1">Estado (UF)</label>
-                                <select name="selectedState" value={formState.selectedState} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900">
-                                {BRAZIL_STATES.map(state => <option key={state} value={state}>{state}</option>)}
-                                </select>
-                            </div>
-                            <div className="col-span-1">
-                                <label className="block text-xs font-medium text-slate-500 mb-1">Dias Úteis</label>
-                                <input type="number" name="businessDays" value={formState.businessDays} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900 font-bold text-center" />
-                            </div>
-                            <div className="col-span-1">
-                                <label className="block text-xs font-medium text-slate-500 mb-1">Dom/Feriados</label>
-                                <input type="number" name="nonBusinessDays" value={formState.nonBusinessDays} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900 font-bold text-center" />
-                            </div>
-                        </>
-                    )}
+              <h3 className="text-xs font-semibold text-blue-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                Competência & Calendário
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                <div className="col-span-1">
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Mês Ref.</label>
+                  <select name="referenceMonth" value={formState.referenceMonth} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900">
+                    {months.map((m, idx) => <option key={idx} value={idx + 1}>{m}</option>)}
+                  </select>
                 </div>
+                <div className="col-span-1">
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Ano</label>
+                  <input type="number" name="referenceYear" value={formState.referenceYear} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900" min="2000" max="2100" />
+                </div>
+                {/* Oculta detalhes de dias úteis se for 13º, pois base é integral */}
+                {!isThirteenthMode && (
+                  <>
+                    <div className="col-span-1">
+                      <label className="block text-xs font-medium text-slate-500 mb-1">Estado (UF)</label>
+                      <select name="selectedState" value={formState.selectedState} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900">
+                        {BRAZIL_STATES.map(state => <option key={state} value={state}>{state}</option>)}
+                      </select>
+                    </div>
+                    <div className="col-span-1">
+                      <label className="block text-xs font-medium text-slate-500 mb-1">Dias Úteis</label>
+                      <input type="number" name="businessDays" value={formState.businessDays} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900 font-bold text-center" />
+                    </div>
+                    <div className="col-span-1">
+                      <label className="block text-xs font-medium text-slate-500 mb-1">Dom/Feriados</label>
+                      <input type="number" name="nonBusinessDays" value={formState.nonBusinessDays} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900 font-bold text-center" />
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Dados do Funcionário */}
             <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Nome do Funcionário</label>
-                <div className="flex gap-2">
-                    <input type="text" name="employeeName" value={formState.employeeName} onChange={handleInputChange} className="block w-full px-3 py-2 sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-900 flex-1" required placeholder="Ex: João da Silva" />
-                    {registeredEmployees.length > 0 && (
-                        <div className="relative">
-                            <select onChange={handleImportEmployee} className="block w-40 px-3 py-2 text-xs border border-indigo-200 bg-indigo-50 text-indigo-700 font-bold rounded-lg cursor-pointer hover:bg-indigo-100" defaultValue="">
-                                <option value="" disabled>Importar</option>
-                                {registeredEmployees.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
-                            </select>
-                        </div>
-                    )}
-                </div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Nome do Funcionário</label>
+              <div className="flex gap-2">
+                <input type="text" name="employeeName" value={formState.employeeName} onChange={handleInputChange} className="block w-full px-3 py-2 sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-900 flex-1" required placeholder="Ex: João da Silva" />
+                {registeredEmployees.length > 0 && (
+                  <div className="relative">
+                    <select onChange={handleImportEmployee} className="block w-40 px-3 py-2 text-xs border border-indigo-200 bg-indigo-50 text-indigo-700 font-bold rounded-lg cursor-pointer hover:bg-indigo-100" defaultValue="">
+                      <option value="" disabled>Importar</option>
+                      {registeredEmployees.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
+                    </select>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Remuneração Fixa */}
             <div className="space-y-4">
               <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">Remuneração Base {isThirteenthMode ? '(Integral)' : ''}</h3>
               <div className="grid grid-cols-3 gap-4">
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Salário Contratual</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-sm">R$</span></div>
-                      <input type="number" name="baseSalary" value={formState.baseSalary || ''} onChange={handleInputChange} className="block w-full pl-10 px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0,00" step="0.01" required />
-                    </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Salário Contratual</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-sm">R$</span></div>
+                    <input type="number" name="baseSalary" value={formState.baseSalary || ''} onChange={handleInputChange} className="block w-full pl-10 px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0,00" step="0.01" required />
                   </div>
-                  {!isThirteenthMode && (
-                      <div className="col-span-1">
-                        <label className={`block text-sm font-medium mb-1 ${formState.workScale === '12x36' ? 'text-indigo-600 font-bold' : 'text-slate-700'}`}>
-                            {formState.workScale === '12x36' ? 'Plantões' : 'Dias Trab.'}
-                        </label>
-                        <input type="number" name="daysWorked" value={formState.daysWorked} onChange={handleInputChange} className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg text-center bg-white text-gray-900" min="0" max="31" required />
-                      </div>
-                  )}
+                </div>
+                {!isThirteenthMode && (
+                  <div className="col-span-1">
+                    <label className={`block text-sm font-medium mb-1 ${formState.workScale === '12x36' ? 'text-indigo-600 font-bold' : 'text-slate-700'}`}>
+                      {formState.workScale === '12x36' ? 'Plantões' : 'Dias Trab.'}
+                    </label>
+                    <input type="number" name="daysWorked" value={formState.daysWorked} onChange={handleInputChange} className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg text-center bg-white text-gray-900" min="0" max="31" required />
+                  </div>
+                )}
               </div>
               <div className="flex items-center pt-1">
                 <input id="hasHazardPay" name="hasHazardPay" type="checkbox" checked={formState.hasHazardPay} onChange={handleInputChange} className="h-4 w-4 text-indigo-600 border-gray-300 rounded bg-white focus:ring-indigo-500" />
@@ -1032,19 +1113,19 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
             {/* Médias e Variáveis */}
             <div className="space-y-4">
               <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">
-                  {isThirteenthMode ? 'Médias de Variáveis (Integral)' : 'Jornada & Variáveis'}
+                {isThirteenthMode ? 'Médias de Variáveis (Integral)' : 'Jornada & Variáveis'}
               </h3>
-              
+
               {/* Noturno */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-indigo-50/50 rounded-lg border border-indigo-100">
-                 <div>
-                    <label className="block text-xs font-medium text-indigo-900 mb-1">Noturno: Qtd. Horas {isThirteenthMode ? '(Média)' : 'Totais'}</label>
-                    <input type="number" name="nightHours" value={formState.nightHours || ''} onChange={handleInputChange} className="block w-full px-3 py-2 text-sm border border-indigo-200 rounded-md bg-white text-gray-900" placeholder="0.0" step="0.1" />
-                 </div>
-                 <div>
-                    <label className="block text-xs font-medium text-indigo-900 mb-1">% Adicional</label>
-                    <input type="number" name="nightShiftPercentage" value={formState.nightShiftPercentage || ''} onChange={handleInputChange} className="block w-full px-3 py-2 text-sm border border-indigo-200 rounded-md bg-white text-gray-900" placeholder="20" />
-                 </div>
+                <div>
+                  <label className="block text-xs font-medium text-indigo-900 mb-1">Noturno: Qtd. Horas {isThirteenthMode ? '(Média)' : 'Totais'}</label>
+                  <input type="number" name="nightHours" value={formState.nightHours || ''} onChange={handleInputChange} className="block w-full px-3 py-2 text-sm border border-indigo-200 rounded-md bg-white text-gray-900" placeholder="0.0" step="0.1" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-indigo-900 mb-1">% Adicional</label>
+                  <input type="number" name="nightShiftPercentage" value={formState.nightShiftPercentage || ''} onChange={handleInputChange} className="block w-full px-3 py-2 text-sm border border-indigo-200 rounded-md bg-white text-gray-900" placeholder="20" />
+                </div>
               </div>
 
               {/* Extras */}
@@ -1064,32 +1145,32 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
             </div>
 
             <div className="pt-6 flex gap-3">
-               {editingId && (
-                   <button type="button" onClick={handleCancelEdit} className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">Cancelar</button>
-               )}
-               <button type="submit" className={`flex-[2] py-4 px-6 text-lg font-bold rounded-xl shadow-lg text-white flex items-center justify-center gap-2 ${editingId ? 'bg-amber-500 hover:bg-amber-600' : isThirteenthMode ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}>
-                  {editingId ? 'Salvar Alterações' : 'Calcular e Adicionar'}
-               </button>
+              {editingId && (
+                <button type="button" onClick={handleCancelEdit} className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">Cancelar</button>
+              )}
+              <button type="submit" className={`flex-[2] py-4 px-6 text-lg font-bold rounded-xl shadow-lg text-white flex items-center justify-center gap-2 ${editingId ? 'bg-amber-500 hover:bg-amber-600' : isThirteenthMode ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}>
+                {editingId ? 'Salvar Alterações' : 'Calcular e Adicionar'}
+              </button>
             </div>
           </form>
 
           {/* Instant Feedback */}
           {result && !editingId && (
             <div className="mt-8 bg-emerald-50 rounded-lg p-4 border border-emerald-100 flex justify-between items-center print:hidden">
-                <div className="text-left">
-                    <span className="block text-emerald-800 font-medium">
-                        {isThirteenthMode ? '13º Salário Bruto' : 'Total Bruto'}
-                    </span>
-                    {isThirteenthMode && (
-                        <span className="text-xs text-emerald-600 block">
-                            {formState.thirteenthCalculationType === 'CLT'
-                                ? `Proporção: ${result.thirteenthTotalAvos}/12 avos`
-                                : `Base: ${result.thirteenthTotalDays} dias trabalhados`
-                            }
-                        </span>
-                    )}
-                </div>
-                <span className="text-2xl font-bold text-emerald-700">{formatCurrency(result.grossSalary)}</span>
+              <div className="text-left">
+                <span className="block text-emerald-800 font-medium">
+                  {isThirteenthMode ? '13º Salário Bruto' : 'Total Bruto'}
+                </span>
+                {isThirteenthMode && (
+                  <span className="text-xs text-emerald-600 block">
+                    {formState.thirteenthCalculationType === 'CLT'
+                      ? `Proporção: ${result.thirteenthTotalAvos}/12 avos`
+                      : `Base: ${result.thirteenthTotalDays} dias trabalhados`
+                    }
+                  </span>
+                )}
+              </div>
+              <span className="text-2xl font-bold text-emerald-700">{formatCurrency(result.grossSalary)}</span>
             </div>
           )}
         </div>
@@ -1098,82 +1179,82 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       {/* REPORT TABLE */}
       {history.length > 0 && (
         <div ref={reportRef} className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-16 print:shadow-none print:border-none print:rounded-none print:m-0 print:w-full">
-            <div className="relative p-8 border-b-2 border-gray-100 bg-white flex flex-row items-center justify-start gap-8 print:border-slate-800">
-                 {/* ... (Menu de exportação mantido, simplificado aqui) ... */}
-                 {activeCompany.logoUrl && (
-                    <div className="w-32 flex-shrink-0">
-                         <img src={activeCompany.logoUrl} alt="Logo" className="w-full object-contain" />
-                    </div>
-                 )}
-                 <div className="flex-1 text-left">
-                     <h2 className="text-xl font-bold text-slate-900 uppercase">{activeCompany.name}</h2>
-                     <p className="text-slate-500 text-[10px] mt-1 uppercase tracking-[0.2em]">Folha Analítica</p>
-                 </div>
+          <div className="relative p-8 border-b-2 border-gray-100 bg-white flex flex-row items-center justify-start gap-8 print:border-slate-800">
+            {/* ... (Menu de exportação mantido, simplificado aqui) ... */}
+            {activeCompany.logoUrl && (
+              <div className="w-32 flex-shrink-0">
+                <img src={activeCompany.logoUrl} alt="Logo" className="w-full object-contain" />
+              </div>
+            )}
+            <div className="flex-1 text-left">
+              <h2 className="text-xl font-bold text-slate-900 uppercase">{activeCompany.name}</h2>
+              <p className="text-slate-500 text-[10px] mt-1 uppercase tracking-[0.2em]">Folha Analítica</p>
             </div>
+          </div>
 
-            <div className="overflow-x-auto print:overflow-visible">
-                <table className="w-full text-xs text-left border-collapse">
-                    <thead className="bg-slate-100 text-slate-600 font-semibold uppercase tracking-wider border-b border-gray-200 print:bg-slate-200 print:text-black">
-                        <tr>
-                            <th className="px-3 py-2 min-w-[120px]">Nome/Ref</th>
-                            <th className="px-2 py-2 text-right">Base/Integral</th>
-                            <th className="px-2 py-2 text-right bg-indigo-50/50 print:bg-transparent">Extras</th>
-                            <th className="px-2 py-2 text-right bg-indigo-50/50 print:bg-transparent">DSR</th>
-                            <th className="px-2 py-2 text-right">Noturno</th>
-                            <th className="px-2 py-2 text-right">Peric.</th>
-                            <th className="px-3 py-2 text-right bg-slate-200 text-slate-900 font-bold print:bg-slate-300">TOTAL</th>
-                            <th className="px-2 py-2 text-center print:hidden export-ignore">Opções</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 bg-white">
-                        {history.map((item) => (
-                            <tr key={item.id} className={`hover:bg-blue-50 transition-colors group print:hover:bg-transparent ${item.input.calculationMode === '13TH' ? 'bg-red-50/30' : ''}`}>
-                                <td className="px-3 py-2 font-medium text-slate-900">
-                                  {item.input.employeeName}
-                                  <span className="block text-[10px] text-slate-400 font-normal">
-                                    {item.input.calculationMode === '13TH' 
-                                        ? (item.input.thirteenthCalculationType === 'CLT' 
-                                            ? <span className="text-red-600 font-bold">[13º CLT] {(item.result.thirteenthTotalAvos || 0)}/12</span>
-                                            : <span className="text-blue-600 font-bold">[13º Avulso] {(item.result.thirteenthTotalDays || 0)} dias</span>)
-                                        : `Ref: ${item.input.referenceMonth}/${item.input.referenceYear}`
-                                    }
-                                  </span>
-                                </td>
-                                <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.proportionalSalary)}</td>
-                                <td className="px-2 py-2 text-right tabular-nums text-slate-600 bg-indigo-50/20">{formatCurrency(item.result.overtimeValue)}</td>
-                                <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-indigo-50/20">{formatCurrency(item.result.dsrOvertimeValue)}</td>
-                                <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.nightShiftValue)}</td>
-                                <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.hazardPayValue)}</td>
-                                
-                                <td className="px-3 py-2 text-right font-bold text-emerald-700 bg-slate-50 border-l border-slate-100 tabular-nums print:bg-slate-100 print:text-black">
-                                    {formatCurrency(item.result.grossSalary)}
-                                </td>
-                                <td className="px-2 py-2 text-center print:hidden export-ignore">
-                                    <div className="flex justify-center gap-1 items-center">
-                                        <button type="button" onClick={(e) => handleEditClick(e, item)} className="p-1 text-amber-500 hover:bg-amber-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
-                                        <button type="button" onClick={(e) => handleDeleteClick(e, item.id)} className="p-1 text-red-400 hover:bg-red-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                    <tfoot className="bg-slate-900 text-white print:bg-slate-800">
-                        <tr>
-                            <td colSpan={6} className="px-4 py-4 text-right font-bold uppercase text-xs">Total Geral</td>
-                            <td className="px-3 py-4 text-right font-bold text-base text-emerald-400 bg-slate-800 tabular-nums print:text-black print:bg-slate-300">
-                                {formatCurrency(totalCompanyCost)}
-                            </td>
-                            <td></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
+          <div className="overflow-x-auto print:overflow-visible">
+            <table className="w-full text-xs text-left border-collapse">
+              <thead className="bg-slate-100 text-slate-600 font-semibold uppercase tracking-wider border-b border-gray-200 print:bg-slate-200 print:text-black">
+                <tr>
+                  <th className="px-3 py-2 min-w-[120px]">Nome/Ref</th>
+                  <th className="px-2 py-2 text-right">Base/Integral</th>
+                  <th className="px-2 py-2 text-right bg-indigo-50/50 print:bg-transparent">Extras</th>
+                  <th className="px-2 py-2 text-right bg-indigo-50/50 print:bg-transparent">DSR</th>
+                  <th className="px-2 py-2 text-right">Noturno</th>
+                  <th className="px-2 py-2 text-right">Peric.</th>
+                  <th className="px-3 py-2 text-right bg-slate-200 text-slate-900 font-bold print:bg-slate-300">TOTAL</th>
+                  <th className="px-2 py-2 text-center print:hidden export-ignore">Opções</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 bg-white">
+                {history.map((item) => (
+                  <tr key={item.id} className={`hover:bg-blue-50 transition-colors group print:hover:bg-transparent ${item.input.calculationMode === '13TH' ? 'bg-red-50/30' : ''}`}>
+                    <td className="px-3 py-2 font-medium text-slate-900">
+                      {item.input.employeeName}
+                      <span className="block text-[10px] text-slate-400 font-normal">
+                        {item.input.calculationMode === '13TH'
+                          ? (item.input.thirteenthCalculationType === 'CLT'
+                            ? <span className="text-red-600 font-bold">[13º CLT] {(item.result.thirteenthTotalAvos || 0)}/12</span>
+                            : <span className="text-blue-600 font-bold">[13º Avulso] {(item.result.thirteenthTotalDays || 0)} dias</span>)
+                          : `Ref: ${item.input.referenceMonth}/${item.input.referenceYear}`
+                        }
+                      </span>
+                    </td>
+                    <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.proportionalSalary)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums text-slate-600 bg-indigo-50/20">{formatCurrency(item.result.overtimeValue)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-indigo-50/20">{formatCurrency(item.result.dsrOvertimeValue)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.nightShiftValue)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.hazardPayValue)}</td>
 
-            <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end print:hidden export-ignore">
-                 <button type="button" onClick={exportToCSV} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-slate-700 rounded-lg text-sm font-semibold hover:bg-gray-50">
-                   Exportar CSV
-                 </button>
-            </div>
+                    <td className="px-3 py-2 text-right font-bold text-emerald-700 bg-slate-50 border-l border-slate-100 tabular-nums print:bg-slate-100 print:text-black">
+                      {formatCurrency(item.result.grossSalary)}
+                    </td>
+                    <td className="px-2 py-2 text-center print:hidden export-ignore">
+                      <div className="flex justify-center gap-1 items-center">
+                        <button type="button" onClick={(e) => handleEditClick(e, item)} className="p-1 text-amber-500 hover:bg-amber-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
+                        <button type="button" onClick={(e) => handleDeleteClick(e, item.id)} className="p-1 text-red-400 hover:bg-red-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-slate-900 text-white print:bg-slate-800">
+                <tr>
+                  <td colSpan={6} className="px-4 py-4 text-right font-bold uppercase text-xs">Total Geral</td>
+                  <td className="px-3 py-4 text-right font-bold text-base text-emerald-400 bg-slate-800 tabular-nums print:text-black print:bg-slate-300">
+                    {formatCurrency(totalCompanyCost)}
+                  </td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end print:hidden export-ignore">
+            <button type="button" onClick={exportToCSV} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-slate-700 rounded-lg text-sm font-semibold hover:bg-gray-50">
+              Exportar CSV
+            </button>
+          </div>
         </div>
       )}
     </div>
