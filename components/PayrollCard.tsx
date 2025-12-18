@@ -764,6 +764,12 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     if (result.nightShiftValue > 0) parts.push(`ADIC. NOTURNO ${formatCurrency(result.nightShiftValue)}`);
     if (result.overtimeValue > 0) parts.push(`HORAS EXTRAS ${formatCurrency(result.overtimeValue)}`);
 
+    // DSR (Reflexos)
+    const totalDsr = result.dsrOvertimeValue + result.dsrNightShiftValue;
+    if (totalDsr > 0) {
+      parts.push(`DSR (REFLEXOS) ${formatCurrency(totalDsr)}`);
+    }
+
     // Novos Campos
     if (input.familyAllowance && input.familyAllowance > 0) parts.push(`SAL. FAMÍLIA ${formatCurrency(input.familyAllowance)}`);
     if (input.costAllowance && input.costAllowance > 0) parts.push(`AJUDA DE CUSTO ${formatCurrency(input.costAllowance)}`);
@@ -1174,6 +1180,41 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                 {isThirteenthMode ? 'Médias de Variáveis (Integral)' : 'Jornada & Variáveis'}
               </h3>
 
+              {!isThirteenthMode && (
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl mb-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-xs font-bold text-slate-500 uppercase">Calculadora de Jornada (Opcional)</span>
+                    {formState.workScale === '12x36' && (
+                      <button
+                        type="button"
+                        onClick={() => setFormState(prev => ({ ...prev, shiftStartTime: '19:00', shiftEndTime: '07:00', shiftBreakStart: '00:00', shiftBreakEnd: '01:00' }))}
+                        className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-200 font-bold"
+                      >
+                        Preencher 12x36 Noturno (19h-07h)
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    <div>
+                      <label className="block text-[10px] uppercase text-slate-400 font-bold mb-1">Entrada</label>
+                      <input type="time" name="shiftStartTime" value={formState.shiftStartTime} onChange={handleInputChange} className="block w-full px-2 py-1 text-sm border border-slate-300 rounded bg-white text-center" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase text-slate-400 font-bold mb-1">Saída</label>
+                      <input type="time" name="shiftEndTime" value={formState.shiftEndTime} onChange={handleInputChange} className="block w-full px-2 py-1 text-sm border border-slate-300 rounded bg-white text-center" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase text-slate-400 font-bold mb-1">Início Int.</label>
+                      <input type="time" name="shiftBreakStart" value={formState.shiftBreakStart} onChange={handleInputChange} className="block w-full px-2 py-1 text-sm border border-slate-300 rounded bg-white text-center" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase text-slate-400 font-bold mb-1">Fim Int.</label>
+                      <input type="time" name="shiftBreakEnd" value={formState.shiftBreakEnd} onChange={handleInputChange} className="block w-full px-2 py-1 text-sm border border-slate-300 rounded bg-white text-center" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Noturno */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-indigo-50/50 rounded-lg border border-indigo-100">
                 <div>
@@ -1296,7 +1337,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                     </td>
                     <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.proportionalSalary)}</td>
                     <td className="px-2 py-2 text-right tabular-nums text-slate-600 bg-indigo-50/20">{formatCurrency(item.result.overtimeValue)}</td>
-                    <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-indigo-50/20">{formatCurrency(item.result.dsrOvertimeValue)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-indigo-50/20">{formatCurrency(item.result.dsrOvertimeValue + item.result.dsrNightShiftValue)}</td>
                     <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.nightShiftValue)}</td>
                     <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.hazardPayValue)}</td>
                     <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-blue-50/20">{formatCurrency(item.input.familyAllowance || 0)}</td>
