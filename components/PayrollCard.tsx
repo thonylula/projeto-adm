@@ -61,6 +61,8 @@ const INITIAL_INPUT_STATE: Omit<PayrollInput, 'companyName' | 'companyLogo'> = {
   applyNightShiftReduction: true, // Padrão CLT: Verdadeiro
   nightShiftPercentage: 20, // Padrão CLT
 
+  familyAllowance: 0, // Novo campo
+
   overtimeHours: 0,
   overtimePercentage: 50,
 
@@ -606,7 +608,8 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       totalOvertimeValue +
       dsrOvertimeValue +
       totalProductionBase +
-      input.costAllowance;
+      input.costAllowance +
+      (input.familyAllowance || 0);
 
     // --- CÁLCULO ESPECÍFICO DE 13º SALÁRIO ---
     let thirteenthTotalAvos = 0;
@@ -1104,8 +1107,52 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                 )}
               </div>
               <div className="flex items-center pt-1">
-                <input id="hasHazardPay" name="hasHazardPay" type="checkbox" checked={formState.hasHazardPay} onChange={handleInputChange} className="h-4 w-4 text-indigo-600 border-gray-300 rounded bg-white focus:ring-indigo-500" />
                 <label htmlFor="hasHazardPay" className="ml-3 text-sm text-slate-700 font-medium">Periculosidade (30%)</label>
+              </div>
+            </div>
+
+            {/* Nova Seção: Benefícios e Produção */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">
+                Benefícios & Produção
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Salário Família</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-xs">R$</span></div>
+                    <input type="number" name="familyAllowance" value={formState.familyAllowance || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0,00" step="0.01" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Ajuda de Custo</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-xs">R$</span></div>
+                    <input type="number" name="costAllowance" value={formState.costAllowance || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0,00" step="0.01" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Produção</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-xs">R$</span></div>
+                    <input type="number" name="productionBonus" value={formState.productionBonus || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0,00" step="0.01" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Visitas */}
+              <div className="grid grid-cols-2 gap-4 bg-orange-50/50 p-3 rounded-lg border border-orange-100">
+                <div>
+                  <label className="block text-xs font-medium text-orange-900 mb-1">Qtd. Visitas</label>
+                  <input type="number" name="visitsAmount" value={formState.visitsAmount || ''} onChange={handleInputChange} className="block w-full px-3 py-2 border border-orange-200 rounded-md bg-white text-gray-900" placeholder="0" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-orange-900 mb-1">Valor por Visita</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-xs">R$</span></div>
+                    <input type="number" name="visitUnitValue" value={formState.visitUnitValue || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-orange-200 rounded-md bg-white text-gray-900" placeholder="0,00" step="0.01" />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1136,6 +1183,18 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">% H. Extra</label>
                   <select name="overtimePercentage" value={formState.overtimePercentage} onChange={handleInputChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900">
+                    <option value="50">50%</option>
+                    <option value="100">100%</option>
+                  </select>
+                </div>
+                {/* Hora Extra Tipo 2 */}
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Qtd. H. Extra (Tipo 2)</label>
+                  <input type="number" name="overtimeHours2" value={formState.overtimeHours2 || ''} onChange={handleInputChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0.0" step="0.1" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">% H. Extra (Tipo 2)</label>
+                  <select name="overtimePercentage2" value={formState.overtimePercentage2} onChange={handleInputChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900">
                     <option value="50">50%</option>
                     <option value="100">100%</option>
                   </select>

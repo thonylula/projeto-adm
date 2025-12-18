@@ -9,11 +9,11 @@ export interface PayrollInput {
 
   // Dados da Empresa (Opcionais no input pois vêm do contexto, mas mantidos para compatibilidade do histórico)
   companyName: string;
-  companyLogo: string | null; 
+  companyLogo: string | null;
 
   // --- MODO DE CÁLCULO (NOVO) ---
-  calculationMode: 'MONTHLY' | '13TH'; 
-  
+  calculationMode: 'MONTHLY' | '13TH';
+
   // 13º Salário Detalhado
   thirteenthDetailedDays: Record<number, number>; // Mapa: Mês (1-12) -> Dias Trabalhados
   thirteenthCalculationType: 'CLT' | 'DAILY_EXACT'; // Novo: CLT (Regra 15 dias) ou Avulso (Dias exatos)
@@ -43,7 +43,7 @@ export interface PayrollInput {
   // Financeiro
   baseSalary: number; // Salário Base (Contratual)
   daysWorked: number; // Dias Trabalhados (Padrão 30) ou Plantões (Padrão 15)
-  
+
   // Cálculo de Domingos
   startDate: string;
   endDate: string;
@@ -54,13 +54,15 @@ export interface PayrollInput {
   nightHours: number; // Qtd Horas Noturnas (Relógio)
   applyNightShiftReduction: boolean; // Aplicar fator 1.1428 (52m30s)?
   nightShiftPercentage: number; // % Adicional Noturno
-  
+
   // Hora Extra 1
-  overtimeHours: number; 
-  overtimePercentage: 50 | 100; 
+  overtimeHours: number;
+  overtimePercentage: 50 | 100;
+
+  familyAllowance: number; // Salário Família 
 
   // Hora Extra 2 (Novo)
-  overtimeHours2: number; 
+  overtimeHours2: number;
   overtimePercentage2: 50 | 100;
 
   productionBonus: number; // Participação de Produção
@@ -72,7 +74,7 @@ export interface PayrollResult {
   proportionalSalary: number; // Salário calculado com base nos dias trabalhados
   hourlyRate: number;
   hazardPayValue: number;
-  
+
   effectiveNightHours: number; // Horas noturnas computadas (já com redução)
   nightShiftValue: number; // Valor já com hora reduzida
   dsrNightShiftValue: number; // Reflexo DSR s/ Noturno
@@ -90,7 +92,7 @@ export interface PayrollResult {
   // dsrProductionValue removido conforme nova regra de negócio
 
   grossSalary: number;
-  
+
   // 13º Salário Específico
   thirteenthTotalAvos?: number; // Avos finais considerados (CLT)
   thirteenthTotalDays?: number; // Dias totais considerados (Avulso)
