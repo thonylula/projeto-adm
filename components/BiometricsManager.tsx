@@ -814,15 +814,16 @@ export const BiometricsManager: React.FC = () => {
                     </div>
 
                     {/* 3. Coluna Direita: Nomes e Funções (25%) */}
-                    <div className="flex-1 flex flex-col items-end justify-center text-right gap-3 min-w-0" style={{ fontFamily: "'Inter', sans-serif" }}>
-                        <div>
-                            <p className="text-sm font-bold text-[#0F1B2D] leading-tight">Cleiton Manoel de Lima</p>
-                            <p className="text-xs font-normal text-gray-500 uppercase tracking-wide">Gerente</p>
-                        </div>
-                        <div>
-                            <p className="text-sm font-bold text-[#0F1B2D] leading-tight">Luanthony L. Oliveira</p>
-                            <p className="text-xs font-normal text-gray-500 uppercase tracking-wide">Analista Adm</p>
-                        </div>
+                    {/* 3. Coluna Direita: Nomes e Funções (25%) */}
+                    <div className="flex-1 flex flex-col items-end justify-center text-right gap-[8px] min-w-0" style={{ fontFamily: "'Inter', sans-serif" }}>
+                        <p className="text-right leading-none">
+                            <span className="text-[11px] text-[#7A7A7A] font-normal">Gerente: </span>
+                            <span className="text-[13px] text-[#0F1B2D] font-bold ml-1">Cleiton Manoel de Lima</span>
+                        </p>
+                        <p className="text-right leading-none">
+                            <span className="text-[11px] text-[#7A7A7A] font-normal">Analista Adm: </span>
+                            <span className="text-[13px] text-[#0F1B2D] font-bold ml-1">Luanthony L. Oliveira</span>
+                        </p>
                     </div>
 
                 </header>
