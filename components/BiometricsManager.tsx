@@ -800,12 +800,27 @@ export const BiometricsManager: React.FC = () => {
 
                                         {/* DATA POVOAMENTO (Novo Input) */}
                                         <td className="px-2 py-3 text-center bg-orange-50/30">
-                                            <input
-                                                type="date"
-                                                className="block mx-auto bg-white text-sm font-bold text-gray-900 border border-gray-400 rounded focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none w-32 px-1 py-1 text-center shadow-sm"
-                                                value={item.dataPovoamento || ''}
-                                                onChange={(e) => handleUpdateRow(item.viveiro, 'dataPovoamento', e.target.value)}
-                                            />
+                                            <div className="relative w-32 h-10 mx-auto group">
+                                                {/* CAMADA VISUAL (Garante o formato DD/MM/AAAA) */}
+                                                <div className="absolute inset-0 flex items-center justify-center bg-white border border-gray-400 rounded group-hover:border-orange-500 shadow-sm pointer-events-none z-10">
+                                                    <span className={`text-sm font-bold ${item.dataPovoamento ? 'text-gray-900' : 'text-gray-400'}`}>
+                                                        {item.dataPovoamento
+                                                            ? (() => {
+                                                                const [y, m, d] = item.dataPovoamento.split('-');
+                                                                return `${d}/${m}/${y}`;
+                                                            })()
+                                                            : 'DD/MM/AAAA'}
+                                                    </span>
+                                                </div>
+
+                                                {/* CAMADA DE INPUT (Invisível mas clicável para abrir calendário nativo) */}
+                                                <input
+                                                    type="date"
+                                                    className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer"
+                                                    value={item.dataPovoamento || ''}
+                                                    onChange={(e) => handleUpdateRow(item.viveiro, 'dataPovoamento', e.target.value)}
+                                                />
+                                            </div>
                                         </td>
 
                                         <td className="px-4 py-3 text-center font-mono font-bold text-gray-600 bg-gray-50">{item.diasCultivo}</td>
@@ -937,7 +952,7 @@ export const BiometricsManager: React.FC = () => {
                 </main>
                 <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
                     <p className="text-[10px] text-gray-400 font-mono opacity-60">
-                        Sistema Integrado de Gestão • v1.8 (Better UI) • Conectado ao GitHub
+                        Sistema Integrado de Gestão • v1.9 (Masked Date UI) • Conectado ao GitHub
                     </p>
                 </div>
             </div>
