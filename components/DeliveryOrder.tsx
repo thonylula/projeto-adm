@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useGeminiParser } from '../hooks/useGeminiParser';
 
 // --- Interfaces based on User Data ---
 interface HarvestData {
@@ -82,6 +83,88 @@ export const DeliveryOrder: React.FC = () => {
         setData(prev => prev.map(item =>
             item.id === id ? { ...item, visible: !item.visible } : item
         ));
+    };
+
+    // --- AI SMART UPLOAD ---
+    const { processFile, isProcessing } = useGeminiParser({
+        apiKey: process.env.GEMINI_API_KEY || '',
+        onError: (err) => alert(`Erro na Inteligência Artificial: ${err.message}`)
+    });
+
+    const handleSmartUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !e.target.files[0]) return;
+        const file = e.target.files[0];
+
+        try {
+            const prompt = `
+                Analise este documento (Recibo de Despesca, Planilha ou Anotação Manual).
+                Extraia a lista de despescas realizadas.
+                Retorne um JSON estrito contendo APENAS uma lista (array) de objetos.
+                Cada objeto deve ter as chaves (se disponíveis, senão null/0/"" conforme tipo):
+                {
+                    "data": "DD/MM/AAAA",
+                    "viveiro": "Nome do Viveiro",
+                    "cliente": "Nome do Cliente",
+                    "producao": number (kg),
+                    "preco": number (R$),
+                    "pesoMedio": number (g),
+                    "sobrevivencia": "string com %",
+                    "fca": "string",
+                    "diasCultivo": number,
+                    "laboratorio": "Nome",
+                    "notas": "Obs"
+                }
+            `;
+
+            const results = await processFile(file, prompt);
+
+            if (Array.isArray(results)) {
+                // Map results to HarvestData strucutre with new IDs
+                const newItems: HarvestData[] = results.map((item: any) => ({
+                    id: Date.now() + Math.random(),
+                    data: item.data || new Date().toLocaleDateString(),
+                    viveiro: item.viveiro || "---",
+                    cliente: item.cliente || "Desconhecido",
+                    producao: Number(item.producao) || 0,
+                    preco: Number(item.preco) || 0,
+                    pesoMedio: Number(item.pesoMedio) || 0,
+                    sobrevivencia: item.sobrevivencia || "---",
+                    fca: item.fca || "---",
+                    diasCultivo: Number(item.diasCultivo) || 0,
+                    laboratorio: item.laboratorio || "---",
+                    notas: item.notas || "",
+                    visible: true
+                }));
+
+                setData(prev => [...newItems, ...prev]);
+                setView('DASHBOARD'); // Auto switch to view results
+            } else if (results && typeof results === 'object') {
+                // Single object returned maybe? Wrap in array
+                const item = results;
+                const newItem: HarvestData = {
+                    id: Date.now() + Math.random(),
+                    data: item.data || new Date().toLocaleDateString(),
+                    viveiro: item.viveiro || "---",
+                    cliente: item.cliente || "Desconhecido",
+                    producao: Number(item.producao) || 0,
+                    preco: Number(item.preco) || 0,
+                    pesoMedio: Number(item.pesoMedio) || 0,
+                    sobrevivencia: item.sobrevivencia || "---",
+                    fca: item.fca || "---",
+                    diasCultivo: Number(item.diasCultivo) || 0,
+                    laboratorio: item.laboratorio || "---",
+                    notas: item.notas || "",
+                    visible: true
+                };
+                setData(prev => [newItem, ...prev]);
+                setView('DASHBOARD');
+            }
+
+        } catch (error) {
+            console.error("Smart Upload Error", error);
+        } finally {
+            e.target.value = '';
+        }
     };
 
     // --- Calculation for Totals (Footer) ---
@@ -265,9 +348,18 @@ export const DeliveryOrder: React.FC = () => {
                                         <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
                                     </svg>
                                     <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Clique para enviar</span> ou arraste e solte</p>
-                                    <p className="text-xs text-gray-500">TXT, CSV ou JSON (Máx. 10MB)</p>
+                                    <p className="text-xs text-gray-500">
+                                        {isProcessing ? 'PROCESSANDO COM IA...' : 'Imagem ou PDF (IA Integrada)'}
+                                    </p>
                                 </div>
-                                <input id="file-upload" type="file" className="hidden" />
+                                <input
+                                    id="file-upload"
+                                    type="file"
+                                    className="hidden"
+                                    onChange={handleSmartUpload}
+                                    accept="image/*,application/pdf"
+                                    disabled={isProcessing}
+                                />
                             </label>
                         </div>
 
