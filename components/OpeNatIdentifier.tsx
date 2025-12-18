@@ -160,10 +160,16 @@ export const OpeNatIdentifier: React.FC = () => {
             // 5 Seconds Delay (User Request)
             await new Promise(resolve => setTimeout(resolve, 5000));
 
-            const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_API_KEY;
+            // API KEY LOGIC: Manual > Env > Vite Env
+            const envKey = process.env.API_KEY || process.env.GEMINI_API_KEY || (import.meta as any).env?.VITE_API_KEY;
+            // Validar se envKey é placeholder ou inválida
+            const isEnvKeyValid = envKey && envKey !== 'undefined' && envKey !== 'YOUR_API_KEY_HERE';
 
-            if (!apiKey || apiKey === 'YOUR_API_KEY_HERE') {
-                throw new Error('Chave de API inválida ou não encontrada.');
+            const apiKey = manualApiKey || (isEnvKeyValid ? envKey : '');
+
+            if (!apiKey) {
+                setIsKeyConfigOpen(true);
+                throw new Error('Chave de API não configurada. Por favor, insira uma chave válida na engrenagem.');
             }
 
             // Prepare Parts
