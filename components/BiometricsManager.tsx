@@ -858,7 +858,7 @@ export const BiometricsManager: React.FC = () => {
                         <table className="w-full text-xs text-left">
                             <thead className="bg-orange-50 text-orange-800 uppercase font-bold border-b border-orange-100">
                                 <tr>
-                                    <th className="px-4 py-3 min-w-[120px]">
+                                    <th className="px-4 py-3 min-w-[80px]">
                                         <div className="flex flex-col gap-1">
                                             <span>VIV.</span>
                                             <input
@@ -872,7 +872,7 @@ export const BiometricsManager: React.FC = () => {
                                     </th>
                                     <th className="px-4 py-3 text-center bg-orange-100/50 min-w-[110px]">D. POV</th>
                                     <th className="px-4 py-3 text-center">DIAS</th>
-                                    <th className="px-4 py-3 text-right">P.M (g)</th>
+                                    <th className="px-4 py-3 text-right min-w-[100px]">P.M (g)</th>
                                     <th className="px-4 py-3 text-right">QUANT.</th>
                                     <th className="px-4 py-3 text-right text-gray-600 bg-gray-50">PESO TOTAL</th>
                                     <th className="px-4 py-3 text-right text-gray-400">P.M ANT</th>
