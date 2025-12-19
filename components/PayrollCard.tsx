@@ -66,6 +66,9 @@ const INITIAL_INPUT_STATE: Omit<PayrollInput, 'companyName' | 'companyLogo'> = {
   // Empréstimo
   loanTotalValue: 0,
   loanDiscountValue: 0,
+  loanTotalInstallments: 0,
+  loanCurrentInstallment: 0,
+
 
 
   overtimeHours: 0,
@@ -528,6 +531,13 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
   // --- FUNÇÃO DE CÁLCULO CENTRAL ---
   const performCalculation = (input: PayrollInput): PayrollResult => {
+    // Cálculo Automático de Empréstimo se houver parcelas
+    let calculatedLoanDiscount = input.loanDiscountValue;
+    if (input.loanTotalValue > 0 && input.loanTotalInstallments > 0) {
+      calculatedLoanDiscount = input.loanTotalValue / input.loanTotalInstallments;
+    }
+
+
     const COMMERCIAL_MONTH_DAYS = 30;
     const NIGHT_HOUR_REDUCTION_FACTOR = input.applyNightShiftReduction ? 1.14285714 : 1;
 
@@ -618,6 +628,14 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       input.costAllowance +
       (input.familyAllowance || 0);
 
+    // Subtrair o empréstimo do total final se houver valor calculado
+    // NOTA: Para manter o conceito de "Bruto", poderíamos não subtrair, 
+    // mas o usuário pediu "automaticamente descontado do salario base".
+    // Vou subtrair do GrossSalary para que o valor final reflita o a receber.
+    grossSalary = grossSalary - calculatedLoanDiscount;
+
+
+
     // Descontos de Empréstimo não abatem do "Bruto" contábil normalmente, mas para "Valor a Receber" sim.
     // Como a UI foca no "Total Bruto" como "Total Gerado", vamos manter no bruto se o usuário quiser ver o "Total da Folha"
     // Mas talvez seja melhor subtrair apenas num "Líquido".
@@ -670,8 +688,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       dsrNightShiftValue, overtimeValue: totalOvertimeValue, overtime1Value: overtimeValue1,
       overtime2Value: overtimeValue2, holidayValue, dsrOvertimeValue, sundayBonusValue,
       visitsTotalValue, grossSalary, thirteenthTotalAvos, thirteenthTotalDays,
-      loanDiscountValue: input.loanDiscountValue // Passa o valor do desconto para o resultado
-
+      loanDiscountValue: calculatedLoanDiscount
     };
   };
 
@@ -831,9 +848,16 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     if (input.productionBonus && input.productionBonus > 0) parts.push(`PRODUÇÃO ${formatCurrency(input.productionBonus)}`);
 
     // Empréstimo
-    if (input.loanTotalValue > 0 || input.loanDiscountValue > 0) {
-      parts.push(`EMPRÉSTIMO (TOTAL: ${formatCurrency(input.loanTotalValue)} / DESC. ATUAL: ${formatCurrency(input.loanDiscountValue)})`);
+    if (input.loanTotalValue > 0 || result.loanDiscountValue > 0) {
+      const installmentsStr = (input.loanTotalInstallments > 0)
+        ? `${input.loanCurrentInstallment}/${input.loanTotalInstallments}`
+        : '';
+      const partsLoan = [];
+      if (installmentsStr) partsLoan.push(installmentsStr);
+      partsLoan.push(formatCurrency(result.loanDiscountValue));
+      parts.push(`EMPRÉSTIMO (${partsLoan.join(' ')})`);
     }
+
 
 
     // Final
@@ -1097,7 +1121,9 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                   </span>
                   <div className="text-right">
                     <span className="text-xs text-gray-500 uppercase font-bold mr-2">
-                      {formState.thirteenthCalculationType === 'CLT' ? "Avos Conquistados:" : "Total Dias:"}
+                      {formState.thirteenthCalculationType === 'CLT'
+                        ? "Avos Conquistados:"
+                        : "Total Dias:"}
                     </span>
                     <span className="text-xl font-black text-red-600">
                       {formState.thirteenthCalculationType === 'CLT'
@@ -1241,6 +1267,31 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                     <input type="number" name="visitUnitValue" value={formState.visitUnitValue || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-orange-200 rounded-md bg-white text-gray-900" placeholder="0,00" step="0.01" />
                   </div>
                 </div>
+              </div>
+
+              {/* Empréstimo */}
+              <div className="grid grid-cols-2 gap-4 bg-red-50/50 p-3 rounded-lg border border-red-100">
+                <div className="col-span-2">
+                  <label className="block text-xs font-medium text-red-900 mb-1 font-bold">VALOR TOTAL DO EMPRÉSTIMO</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-xs">R$</span></div>
+                    <input type="number" name="loanTotalValue" value={formState.loanTotalValue || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-red-200 rounded-md bg-white text-gray-900 font-bold" placeholder="0,00" step="0.01" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-red-800 mb-1">QTD PARCELAS</label>
+                  <input type="number" name="loanTotalInstallments" value={formState.loanTotalInstallments || ''} onChange={handleInputChange} className="block w-full px-3 py-2 border border-red-200 rounded-md bg-white text-gray-900 text-center" placeholder="Ex: 5" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-red-800 mb-1">PARCELA ATUAL</label>
+                  <input type="number" name="loanCurrentInstallment" value={formState.loanCurrentInstallment || ''} onChange={handleInputChange} className="block w-full px-3 py-2 border border-red-200 rounded-md bg-white text-gray-900 text-center" placeholder="Ex: 3" />
+                </div>
+                {formState.loanTotalValue > 0 && formState.loanTotalInstallments > 0 && (
+                  <div className="col-span-2 pt-2 border-t border-red-100 flex justify-between items-center">
+                    <span className="text-[10px] text-red-600 font-bold uppercase">Desconto Automático:</span>
+                    <span className="text-sm font-black text-red-700">{formatCurrency(formState.loanTotalValue / formState.loanTotalInstallments)}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1407,7 +1458,13 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                               : <span className="text-blue-600 font-bold">[13º Avulso] {(item.result.thirteenthTotalDays || 0)} dias</span>)
                             : `Ref: ${item.input.referenceMonth}/${item.input.referenceYear}`
                           }
+                          {item.input.loanTotalInstallments > 0 && (
+                            <span className="block text-[9px] font-bold text-red-500 mt-1 italic">
+                              Emp: {item.input.loanCurrentInstallment}/{item.input.loanTotalInstallments}
+                            </span>
+                          )}
                         </span>
+
                       </td>
                       <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.proportionalSalary)}</td>
                       <td className="px-2 py-2 text-right tabular-nums text-slate-600 bg-indigo-50/20">{formatCurrency(item.result.overtimeValue)}</td>
@@ -1419,8 +1476,9 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                       <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-orange-50/20">{formatCurrency(item.input.productionBonus)}</td>
                       <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-orange-50/20">{formatCurrency(item.result.visitsTotalValue)}</td>
                       <td className="px-2 py-2 text-right tabular-nums text-red-500 bg-red-50/20">
-                        {item.input.loanDiscountValue > 0 ? `-${formatCurrency(item.input.loanDiscountValue)}` : '-'}
+                        {item.result.loanDiscountValue > 0 ? `-${formatCurrency(item.result.loanDiscountValue)}` : '-'}
                       </td>
+
 
 
                       <td className="px-3 py-2 text-right font-bold text-emerald-700 bg-slate-50 border-l border-slate-100 tabular-nums print:bg-slate-100 print:text-black">
