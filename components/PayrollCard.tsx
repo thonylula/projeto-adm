@@ -99,6 +99,24 @@ const generateId = () => {
 const FIXED_HOLIDAYS = [
   '01-01', '04-21', '05-01', '09-07', '10-12', '11-02', '11-15', '11-20', '12-25',
 ];
+
+// Helper robusto para garantir números válidos em toda a aplicação
+const safeNum = (v: any): number => {
+  if (v === null || v === undefined) return 0;
+  if (typeof v === 'number') return isNaN(v) ? 0 : v;
+  if (typeof v === 'string') {
+    let clean = v.replace(/\s/g, '');
+    // Trata formato brasileiro: milhar com ponto e decimal com vírgula
+    if (clean.includes(',') && clean.includes('.')) {
+      clean = clean.replace(/\./g, '').replace(',', '.');
+    } else if (clean.includes(',')) {
+      clean = clean.replace(',', '.');
+    }
+    const n = parseFloat(clean);
+    return isNaN(n) ? 0 : n;
+  }
+  return 0;
+};
 const STATE_HOLIDAYS: Record<string, string[]> = {
   'AC': ['01-23', '03-08', '06-15', '08-06', '09-05', '11-17'],
   'AL': ['06-24', '09-16'],
@@ -414,8 +432,9 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
     if (type === 'checkbox') {
       newValue = (e.target as HTMLInputElement).checked;
-    } else if (type === 'number' || ['overtimePercentage', 'overtimePercentage2', 'referenceMonth', 'referenceYear', 'customDivisor', 'holidayHours', 'thirteenthMonths', 'fractionalMonthDays'].includes(name)) {
-      newValue = Number(value);
+    } else if (type === 'number' || ['overtimePercentage', 'overtimePercentage2', 'referenceMonth', 'referenceYear', 'customDivisor', 'holidayHours', 'thirteenthMonths', 'fractionalMonthDays', 'baseSalary', 'daysWorked', 'familyAllowance', 'costAllowance', 'productionBonus', 'visitsAmount', 'visitUnitValue', 'loanTotalValue', 'loanDiscountValue', 'loanTotalInstallments', 'loanCurrentInstallment', 'overtimeHours', 'overtimeHours2', 'nightHours', 'nightShiftPercentage', 'sundaysAmount'].includes(name)) {
+      // Forçar conversão numérica e tratar vírgula brasileira de forma robusta
+      newValue = safeNum(value);
     }
 
     if (name === 'workScale') {
@@ -533,11 +552,28 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
   // --- FUNÇÃO DE CÁLCULO CENTRAL ---
   const performCalculation = (input: PayrollInput): PayrollResult => {
+    const baseSalary = safeNum(input.baseSalary);
+    const daysWorked = safeNum(input.daysWorked);
+    const overtimeHours = safeNum(input.overtimeHours);
+    const overtimeHours2 = safeNum(input.overtimeHours2);
+    const nightHours = safeNum(input.nightHours);
+    const productionBonus = safeNum(input.productionBonus);
+    const visitsAmount = safeNum(input.visitsAmount);
+    const visitUnitValue = safeNum(input.visitUnitValue);
+    const familyAllowance = safeNum(input.familyAllowance);
+    const costAllowance = safeNum(input.costAllowance);
+    const loanTotalValue = safeNum(input.loanTotalValue);
+    const loanTotalInstallments = safeNum(input.loanTotalInstallments);
+    const loanDiscountValue = safeNum(input.loanDiscountValue);
+    const businessDays = safeNum(input.businessDays);
+    const nonBusinessDays = safeNum(input.nonBusinessDays);
+
     // Cálculo Automático de Empréstimo se houver parcelas
-    let calculatedLoanDiscount = input.loanDiscountValue;
-    if (input.loanTotalValue > 0 && input.loanTotalInstallments > 0) {
-      calculatedLoanDiscount = input.loanTotalValue / input.loanTotalInstallments;
+    let calculatedLoanDiscount = loanDiscountValue;
+    if (loanTotalValue > 0 && loanTotalInstallments > 0) {
+      calculatedLoanDiscount = loanTotalValue / loanTotalInstallments;
     }
+    if (isNaN(calculatedLoanDiscount)) calculatedLoanDiscount = 0;
 
 
     const COMMERCIAL_MONTH_DAYS = 30;
@@ -546,59 +582,60 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     // 1. Definição do Divisor
     let divisor = 220;
     if (input.workScale === '12x36') {
-      divisor = input.customDivisor > 0 ? input.customDivisor : 220;
+      divisor = safeNum(input.customDivisor) > 0 ? safeNum(input.customDivisor) : 220;
     }
 
     // 2. Fator DSR
-    const safeBusinessDays = input.businessDays > 0 ? input.businessDays : 1;
-    let dsrFactor = input.nonBusinessDays / safeBusinessDays;
+    const safeBusinessDays = businessDays > 0 ? businessDays : 1;
+    let dsrFactor = nonBusinessDays / safeBusinessDays;
     if (input.workScale === '12x36' && !input.calculateDsrOn12x36) {
       dsrFactor = 0;
     }
+    if (isNaN(dsrFactor)) dsrFactor = 0;
 
     // 3. Salário Proporcional (Base para Mensal) vs Integral (Base para 13º)
     let proportionalSalary = 0;
 
     // Se for 13º, usamos o salário CHEIO como base de cálculo das médias e valor final
     // Se for Mensal, depende dos dias trabalhados
-    const baseDays = input.calculationMode === '13TH' ? 30 : input.daysWorked;
+    const baseDays = input.calculationMode === '13TH' ? 30 : daysWorked;
 
     if (input.workScale === '12x36') {
       // No 12x36, se for 13º, assumimos a média de 15 plantões (salário cheio)
-      const activeDays = input.calculationMode === '13TH' ? 15 : input.daysWorked;
-      proportionalSalary = (input.baseSalary / 15) * activeDays;
+      const activeDays = input.calculationMode === '13TH' ? 15 : daysWorked;
+      proportionalSalary = (baseSalary / 15) * activeDays;
     } else {
       const days = baseDays > 30 ? 30 : (baseDays < 0 ? 0 : baseDays);
-      proportionalSalary = (input.baseSalary / COMMERCIAL_MONTH_DAYS) * days;
+      proportionalSalary = (baseSalary / COMMERCIAL_MONTH_DAYS) * days;
     }
 
-    const hourlyRate = input.baseSalary / divisor;
+    const hourlyRate = baseSalary / divisor;
     const hazardPayValue = input.hasHazardPay ? proportionalSalary * 0.30 : 0;
 
     // Adicional Noturno
-    const nightShiftPercentageDecimal = input.nightShiftPercentage / 100;
-    const effectiveNightHours = input.nightHours * NIGHT_HOUR_REDUCTION_FACTOR;
+    const nightShiftPercentageDecimal = safeNum(input.nightShiftPercentage) / 100;
+    const effectiveNightHours = nightHours * NIGHT_HOUR_REDUCTION_FACTOR;
     const nightRate = hourlyRate * nightShiftPercentageDecimal;
     const nightShiftValue = nightRate * effectiveNightHours;
     const dsrNightShiftValue = nightShiftValue * dsrFactor;
 
     // Horas Extras
-    const overtimeMultiplier1 = 1 + (input.overtimePercentage / 100);
+    const overtimeMultiplier1 = 1 + (safeNum(input.overtimePercentage) / 100);
     const overtimeRate1 = hourlyRate * overtimeMultiplier1;
-    const overtimeValue1 = overtimeRate1 * input.overtimeHours;
+    const overtimeValue1 = overtimeRate1 * overtimeHours;
 
-    const overtimeMultiplier2 = 1 + ((input.overtimePercentage2 || 0) / 100);
+    const overtimeMultiplier2 = 1 + (safeNum(input.overtimePercentage2) / 100);
     const overtimeRate2 = hourlyRate * overtimeMultiplier2;
-    const overtimeValue2 = overtimeRate2 * (input.overtimeHours2 || 0);
+    const overtimeValue2 = overtimeRate2 * overtimeHours2;
 
     let totalOvertimeValue = overtimeValue1 + overtimeValue2;
 
     // Domingos
     let sundayBonusValue = 0;
-    if (input.sundaysAmount > 0) {
+    if (safeNum(input.sundaysAmount) > 0) {
       const dailyHours = input.workScale === '12x36' ? 12 : 8;
       const sundayRate = hourlyRate * 1.5;
-      const sundayHoursTotal = dailyHours * input.sundaysAmount;
+      const sundayHoursTotal = dailyHours * safeNum(input.sundaysAmount);
       sundayBonusValue = sundayRate * sundayHoursTotal;
       totalOvertimeValue += sundayBonusValue;
     }
@@ -607,34 +644,33 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     let holidayValue = 0;
     if (input.workScale === '12x36' && input.workedOnHoliday) {
       const holidayRate = hourlyRate * 2;
-      holidayValue = holidayRate * input.holidayHours;
+      holidayValue = holidayRate * safeNum(input.holidayHours);
       totalOvertimeValue += holidayValue;
     }
 
     const dsrOvertimeValue = totalOvertimeValue * dsrFactor;
 
-    const visitsTotalValue = input.visitsAmount * input.visitUnitValue;
-    const totalProductionBase = visitsTotalValue + input.productionBonus;
+    const visitsTotalValue = visitsAmount * visitUnitValue;
+    const totalProductionBase = visitsTotalValue + productionBonus;
 
     // Ajuda de Custo (Geralmente não entra no 13º, mas deixamos opcional/manual. Aqui vamos somar)
     // Se o usuário inserir no modo 13º, assume-se que integra a base.
 
     let grossSalary =
-      proportionalSalary +
-      hazardPayValue +
-      nightShiftValue +
-      dsrNightShiftValue +
-      totalOvertimeValue +
-      dsrOvertimeValue +
-      totalProductionBase +
-      input.costAllowance +
-      (input.familyAllowance || 0);
+      (proportionalSalary || 0) +
+      (hazardPayValue || 0) +
+      (nightShiftValue || 0) +
+      (dsrNightShiftValue || 0) +
+      (totalOvertimeValue || 0) +
+      (dsrOvertimeValue || 0) +
+      (totalProductionBase || 0) +
+      (costAllowance || 0) +
+      (familyAllowance || 0);
 
     // Subtrair o empréstimo do total final se houver valor calculado
-    // NOTA: Para manter o conceito de "Bruto", poderíamos não subtrair, 
-    // mas o usuário pediu "automaticamente descontado do salario base".
-    // Vou subtrair do GrossSalary para que o valor final reflita o a receber.
-    grossSalary = grossSalary - calculatedLoanDiscount;
+    grossSalary = (grossSalary || 0) - (calculatedLoanDiscount || 0);
+
+    if (isNaN(grossSalary)) grossSalary = 0;
 
 
 
@@ -996,7 +1032,10 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
   // Safe access to history
   const history = activeCompany.employees || [];
-  const totalCompanyCost = history.reduce((acc, item) => acc + item.result.grossSalary, 0);
+  const totalCompanyCost = history.reduce((acc, item) => {
+    const val = safeNum(item.result?.grossSalary);
+    return acc + val;
+  }, 0);
 
   const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
   const monthAbbr = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
