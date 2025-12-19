@@ -44,18 +44,21 @@ const COLORS = {
 export const DeliveryOrder: React.FC = () => {
     const [view, setView] = useState<'INPUT' | 'DASHBOARD'>('INPUT');
     const [inputText, setInputText] = useState('');
-    const [data, setData] = useState<HarvestData[]>(() => {
+    const [data, setData] = useState<HarvestData[]>(INITIAL_HARVEST_DATA);
+
+    useEffect(() => {
         try {
             const saved = localStorage.getItem('delivery_order_db');
-            if (saved) return JSON.parse(saved);
+            if (saved) setData(JSON.parse(saved));
         } catch (e) {
             console.error(e);
         }
-        return INITIAL_HARVEST_DATA; // Use processed data as initial state
-    });
+    }, []);
 
     useEffect(() => {
-        localStorage.setItem('delivery_order_db', JSON.stringify(data));
+        if (data.length > 0) {
+            localStorage.setItem('delivery_order_db', JSON.stringify(data));
+        }
     }, [data]);
 
     const reportRef = useRef<HTMLDivElement>(null);
@@ -241,6 +244,26 @@ export const DeliveryOrder: React.FC = () => {
 
         const mediaPreco = clientSummary.value / clientSummary.biomass;
         const mediaGramatura = clientSummary.gramaturas.reduce((a, b) => a + b, 0) / clientSummary.count;
+
+        const systemPrompt = "Você é um assistente de faturamento da Carapitanga, uma empresa de aquicultura (criação de camarão). Seu tom é profissional, amigável e conciso. Gere apenas o corpo do e-mail, sem a saudação ('Prezado...') e sem a assinatura final (como 'Atenciosamente'). O e-mail deve ser em Português do Brasil.";
+
+        const userQuery = `
+            Gere um breve e-mail de faturamento para o cliente ${cliente}.
+            
+            Detalhes da Fatura:
+            - Cliente: ${cliente}
+            - Biomassa Total (Faturada): ${formatNumber(clientSummary.biomass, ' kg')}
+            - Valor Total: ${formatCurrency(clientSummary.value)}
+            - Preço Médio Ponderado: ${formatCurrency(mediaPreco)}/kg
+            - Gramatura Média: ${formatGrams(mediaGramatura)}
+            - Prazo de Pagamento: ${info.prazo}
+            
+            O e-mail deve:
+            1. Informar o fechamento do faturamento referente às últimas entregas.
+            2. Listar os totais de forma clara (Biomassa Total e Valor Total).
+            3. Mencionar que o prazo de pagamento é de ${info.prazo}.
+            4. Manter um tom cordial e profissional.
+        `;
 
         try {
             const fullPrompt = `${systemPrompt}\n\n---\n\n${userQuery}`;

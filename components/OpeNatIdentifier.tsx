@@ -171,7 +171,6 @@ export const OpeNatIdentifier: React.FC = () => {
                 throw new Error("Falha ao classificar nota fiscal. Resposta inválida.");
             }
         } catch (error: any) {
-        } catch (error: any) {
             console.error("Erro na classificação:", error);
             alert(`Erro ao processar a nota fiscal: ${error.message}`);
         } finally {
