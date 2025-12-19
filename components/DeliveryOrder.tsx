@@ -242,88 +242,16 @@ export const DeliveryOrder: React.FC = () => {
         const mediaPreco = clientSummary.value / clientSummary.biomass;
         const mediaGramatura = clientSummary.gramaturas.reduce((a, b) => a + b, 0) / clientSummary.count;
 
-        const systemPrompt = "Você é um assistente de faturamento da Carapitanga, uma empresa de aquicultura (criação de camarão). Seu tom é profissional, amigável e conciso. Gere apenas o corpo do e-mail, sem a saudação ('Prezado...') e sem a assinatura final (como 'Atenciosamente'). O e-mail deve ser em Português do Brasil.";
-
-        const userQuery = `
-            Gere um breve e-mail de faturamento para o cliente ${cliente}.
-            
-            Detalhes da Fatura:
-            - Cliente: ${cliente}
-            - Biomassa Total (Faturada): ${formatNumber(clientSummary.biomass, ' kg')}
-            - Valor Total: ${formatCurrency(clientSummary.value)}
-            - Preço Médio Ponderado: ${formatCurrency(mediaPreco)}/kg
-            - Gramatura Média: ${formatGrams(mediaGramatura)}
-            - Prazo de Pagamento: ${info.prazo}
-            
-            O e-mail deve:
-            1. Informar o fechamento do faturamento referente às últimas entregas.
-            2. Listar os totais de forma clara (Biomassa Total e Valor Total).
-            3. Mencionar que o prazo de pagamento é de ${info.prazo}.
-            4. Manter um tom cordial e profissional.
-        `;
-
         try {
-            const models = [
-                "gemini-2.0-flash",
-                "gemini-2.0-flash-lite",
-                "gemini-1.5-pro"
-            ];
-
-            // Prepend system prompt since our proxy might not forward systemInstruction field specifically
-            // depending on implementation, ensuring context is passed.
             const fullPrompt = `${systemPrompt}\n\n---\n\n${userQuery}`;
+            const result = await processText(fullPrompt, ""); // processText(prompt, userText)
 
-            let lastError = null;
-            let generatedText = null;
-
-            for (const model of models) {
-                try {
-                    console.log(`Trying model: ${model}`);
-
-                    const response = await fetch('/api/generate', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            model: model,
-                            // Use pure system instruction + user query structure
-                            contents: [{ role: 'user', parts: [{ text: userQuery }] }],
-                            // Note: server proxy needs to support systemInstruction if we want to keep it "system" role-like,
-                            // but the simple proxy version we built likely handles "contents" directly. 
-                            // To be safe and compatible with the proxy we built earlier (checking api/generate.js),
-                            // let's pass system prompt as part of the user message or if we confirmed proxy supports it.
-                            // Looking at previous api/generate.js code: it extracts 'contents' from body.
-                            // It DOES NOT explicitely look for 'systemInstruction'.
-                            // So we should prepend system prompt to user text for safety with our simple proxy.
-                        })
-                    });
-
-                    if (!response.ok) {
-                        const payload = await response.json().catch(() => null);
-                        const errorMsg = payload?.error?.message || payload?.error || 'Unknown error';
-                        throw new Error(`Model ${model} error: ${response.status} - ${errorMsg}`);
-                    }
-
-                    const payload = await response.json();
-                    if (!payload.ok) {
-                        throw new Error(`Model ${model} error: ${payload.error}`);
-                    }
-
-                    const text = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                    if (text) {
-                        generatedText = text;
-                        break; // Success!
-                    }
-                } catch (e: any) {
-                    console.warn(e.message);
-                    lastError = e;
-                }
-            }
-
-            if (generatedText) {
-                setGeneratedEmail(generatedText);
+            if (typeof result === 'string') {
+                setGeneratedEmail(result);
+            } else if (result && result.text) {
+                setGeneratedEmail(result.text);
             } else {
-                throw lastError || new Error('All models failed');
+                throw new Error("Resposta da IA inválida.");
             }
         } catch (e) {
             console.error(e);

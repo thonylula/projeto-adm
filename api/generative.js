@@ -1,6 +1,30 @@
-// api/generative.js (Vercel serverless)
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
-const API_KEY = process.env.GOOGLE_API_KEY;
+const API_KEY = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+
+// Exhaustive list of models provided by the user
+const MODELS_FALLBACK_LIST = [
+    // Series 3
+    "gemini-3-pro",
+    "gemini-3-flash",
+    // Series 2.5
+    "gemini-2.5-pro",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.5-flash-image",
+    "gemini-2.5-flash-live",
+    // Series 2.0
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-2.0-pro-exp-02-05", // Realistic name for pro experimental
+    "gemini-2.0-pro-exp",
+    // Series 1.5
+    "gemini-1.5-pro",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b",
+    // Small
+    "gemini-nano"
+];
+// Setup utilities
 
 async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -72,25 +96,52 @@ export default async function handler(req, res) {
         }
 
         if (req.method === 'POST') {
-            const { model, prompt, contents } = req.body;
-            if (!model) return res.status(400).json({ ok: false, error: 'model required' });
+            const { model: requestedModel, prompt, contents } = req.body;
 
             // Adapt input to Google API Body
-            let body;
+            let bodyPayload;
             if (contents) {
-                body = { contents };
+                bodyPayload = { contents };
             } else if (prompt) {
                 if (typeof prompt === 'string') {
-                    body = { contents: [{ parts: [{ text: prompt }] }] };
+                    bodyPayload = { contents: [{ parts: [{ text: prompt }] }] };
                 } else {
-                    body = prompt;
+                    bodyPayload = prompt;
                 }
             } else {
                 return res.status(400).json({ ok: false, error: 'prompt or contents required' });
             }
 
-            const result = await fetchWithRetry(`/models/${model}:generateContent`, body);
-            return res.status(200).json({ ok: true, data: result });
+            // --- Server-Side Smart Fallback ---
+            // If the user requested a specific model, we try it first. 
+            // Then we try the fallback list.
+            const tryModels = requestedModel
+                ? [requestedModel, ...MODELS_FALLBACK_LIST.filter(m => m !== requestedModel)]
+                : MODELS_FALLBACK_LIST;
+
+            let lastError = null;
+            for (const modelName of tryModels) {
+                try {
+                    console.log(`[Proxy] Attempting model: ${modelName}`);
+                    const result = await fetchWithRetry(`/models/${modelName}:generateContent`, bodyPayload);
+                    return res.status(200).json({ ok: true, data: result, modelUsed: modelName });
+                } catch (err) {
+                    console.warn(`[Proxy] Model ${modelName} failed. Status: ${err.status}`);
+                    lastError = err;
+                    // If it's a 429/503 (quota/server) or 404 (not found in this region/Beta yet), we continue to next
+                    if (err.status === 429 || err.status === 503 || err.status === 404) {
+                        continue;
+                    }
+                    // For other errors (400 Bad Request), we might want to stop too, but usually it's prompt related.
+                    // Let's continue to be safe.
+                }
+            }
+
+            // If we are here, all models failed
+            return res.status(lastError?.status || 500).json({
+                ok: false,
+                error: lastError?.body || lastError?.message || 'All models failed'
+            });
         }
 
         res.setHeader('Allow', 'GET,POST');

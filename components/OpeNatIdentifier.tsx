@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { safeIncludes } from '../utils';
+import { useGeminiParser } from '../hooks/useGeminiParser';
 
 interface OpeNatItem {
     code: string;
@@ -42,14 +43,10 @@ export const OpeNatIdentifier: React.FC = () => {
     // AI State
     const [invoiceFile, setInvoiceFile] = useState<File | null>(null);
     const [codeListFiles, setCodeListFiles] = useState<File[]>([]);
-    const [isProcessing, setIsProcessing] = useState(false);
     const [aiResult, setAiResult] = useState<AIResult | null>(null);
     const [isDragOver, setIsDragOver] = useState(false);
 
-
-
-    // REMOVED: Manual Key State - relying on Server Proxy
-    const [availableModels, setAvailableModels] = useState<string[]>([]);
+    const { processFiles, isProcessing } = useGeminiParser();
 
     // Context Form State
     const [showContextModal, setShowContextModal] = useState(false);
@@ -73,20 +70,6 @@ export const OpeNatIdentifier: React.FC = () => {
         return () => clearInterval(interval);
     }, [isProcessing]);
 
-    // Fetch Models on mount
-    useEffect(() => {
-        fetch('/api/generative?list=true')
-            .then(res => res.json())
-            .then(data => {
-                if (data.ok && data.data && data.data.models) {
-                    const names = data.data.models.map((m: any) => m.name.replace('models/', ''));
-                    setAvailableModels(names);
-                } else {
-                    setAvailableModels(["gemini-2.0-flash", "gemini-1.5-flash"]);
-                }
-            })
-            .catch(() => setAvailableModels(["gemini-2.0-flash", "gemini-1.5-flash"]));
-    }, []);
 
     // --- SMART UPLOAD LOGIC ---
     const handleSmartUpload = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
@@ -141,22 +124,6 @@ export const OpeNatIdentifier: React.FC = () => {
         }
     }
 
-    const fileToGenerativePart = async (file: File) => {
-        return new Promise<{ inlineData: { data: string; mimeType: string } }>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64String = (reader.result as string).split(',')[1];
-                resolve({
-                    inlineData: {
-                        data: base64String,
-                        mimeType: file.type
-                    }
-                });
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-    };
 
     // Step 1: Trigger Modal
     const handleStartAnalysis = () => {
@@ -169,37 +136,9 @@ export const OpeNatIdentifier: React.FC = () => {
         if (!invoiceFile) return;
 
         setShowContextModal(false); // Close modal
-        setIsProcessing(true);
-        setAiResult(null);
-
         try {
             // 5 Seconds Delay (User Request)
             await new Promise(resolve => setTimeout(resolve, 5000));
-
-            // API KEY LOGIC: Now handled on server, but we can pass it if we want to override or authenticate the user
-            // For this implementation, we rely on the server-side env var as requested.
-            // If the user wants to support custom keys input in the UI, we would pass it in the header.
-            // efficient logic: if manualApiKey is set, pass it to the proxy via header x-custom-api-key (need to support in proxy)
-            // or just assume we use the server key. The user request says "secure the key on server".
-            // So we can largely ignore the client-side key logic *unless* the user wants to override it.
-            // Let's assume server key is primary.
-
-            // However, existing UI has key config. Let's send the key if it exists manually, 
-            // otherwise the proxy uses the env var. But we didn't implement that in proxy.
-            // Let's update proxy to accept valid key or use env.
-            // For now, I'll remove the client-side key requirement check since the server handles it.
-
-            // const apiKey = manualApiKey || (isEnvKeyValid ? envKey : ''); // Unused in this new flow request
-
-            // Client-side key check removed as we use Server-side key.
-            // if (!apiKey) { ... }
-
-            // Prepare Parts
-            const invoicePart = await fileToGenerativePart(invoiceFile);
-
-            const codeListParts = await Promise.all(
-                codeListFiles.map(file => fileToGenerativePart(file))
-            );
 
             const prompt = `
             Você é um especialista em classificação fiscal e contábil, com foco em carcinicultura (criação de camarão).
@@ -223,96 +162,15 @@ export const OpeNatIdentifier: React.FC = () => {
             }
             `;
 
-            const MODELS = availableModels.length > 0
-                ? availableModels
-                : [
-                    "gemini-2.0-flash-lite",
-                    "gemini-2.0-flash",
-                    "gemini-1.5-flash",
-                    "gemini-1.5-pro"
-                ];
+            const allFiles = [invoiceFile, ...codeListFiles];
+            const result = await processFiles(allFiles, prompt);
 
-            // Prioritize flash
-            MODELS.sort((a, b) => {
-                if (a.includes('flash') && !b.includes('flash')) return -1;
-                if (!a.includes('flash') && b.includes('flash')) return 1;
-                return 0;
-            });
-
-            let lastError = null;
-            let success = false;
-            let saw403Forbidden = false;
-
-
-
-            for (const modelName of MODELS) {
-                try {
-                    console.log(`Trying model: ${modelName}`);
-
-                    // Format parts for REST API
-                    const formattedParts = [
-                        { text: prompt },
-                        invoicePart,
-                        ...codeListParts
-                    ];
-
-                    const response = await fetch('/api/generative', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            model: modelName,
-                            prompt: prompt,
-                            contents: [{ role: 'user', parts: formattedParts }]
-                        })
-                    });
-
-                    const payload = await response.json().catch(() => ({ ok: false, error: 'Invalid JSON response' }));
-
-                    if (!response.ok || !payload.ok) {
-                        const errorMsg = payload.error?.message || payload.error || 'Unknown error';
-                        // Throw specific object to catch below
-                        throw { message: errorMsg, status: response.status };
-                    }
-
-                    // Extract text from REST API response structure (now nested in payload.data)
-                    // payload = { ok: true, data: { candidates: [...] } }
-                    const resultText = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                    if (!resultText) {
-                        throw new Error('Empty response from AI');
-                    }
-
-                    // Clean and Parse JSON
-                    const jsonStr = resultText.replace(/```json/g, '').replace(/```/g, '').trim();
-                    const parsed = JSON.parse(jsonStr);
-
-                    setAiResult(parsed);
-                    success = true;
-                    break;
-                } catch (e: any) {
-                    console.warn(`Model ${modelName} failed:`, e.message || e);
-                    lastError = e;
-
-                    // Check for 403 (Keys) or 429 (Quota) using safeIncludes
-                    // e might be an object or string
-                    if (safeIncludes(e.message, '403') || safeIncludes(e, '403') ||
-                        safeIncludes(e.message, 'leaked') || safeIncludes(e, 'leaked') ||
-                        safeIncludes(e.message, 'API key') || safeIncludes(e, 'API key') ||
-                        e.status === 403) {
-                        saw403Forbidden = true;
-                    }
-                }
+            if (result && typeof result === 'object' && !Array.isArray(result)) {
+                setAiResult(result as AIResult);
+            } else {
+                throw new Error("Falha ao classificar nota fiscal. Resposta inválida.");
             }
-
-            if (!success) {
-                // Prioritize the 403 error if it happened at any point
-                if (saw403Forbidden) {
-                    throw new Error("Erro de permissão na API (403). Verifique a chave no servidor.");
-                }
-                throw lastError || new Error("Todos os modelos falharam. Verifique sua chave de API e conexão.");
-            }
+        } catch (error: any) {
         } catch (error: any) {
             console.error("Erro na classificação:", error);
             alert(`Erro ao processar a nota fiscal: ${error.message}`);
