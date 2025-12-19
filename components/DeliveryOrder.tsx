@@ -43,21 +43,32 @@ const COLORS = {
 
 // --- Helper for AI Numeric Parsing ---
 const safeParseNumber = (val: any): number => {
-    if (typeof val === 'number') return val;
+    if (val === null || val === undefined) return 0;
+
+    // If it's already a number, but has 3 decimal places (e.g. 3.675), 
+    // it's highly likely it was a "thousands" dot that got treated as decimal
+    if (typeof val === 'number') {
+        const strVal = val.toString();
+        if (strVal.includes('.') && strVal.split('.')[1].length === 3) {
+            return val * 1000;
+        }
+        return val;
+    }
+
     if (typeof val === 'string') {
-        // Remove units like 'kg', 'g', 'R$'
+        // Remove units and spaces
         let clean = val.replace(/[^\d,.-]/g, '');
-        // Brazilian logic: if it has a dot and NO comma, it might be thousands
-        // However, standard JSON doesn't use dot for thousands.
-        // If the AI followed instructions, it's already clean.
-        // But let's handle "3.728" -> 3728 if it looks like a thousand.
+
+        // Handle Brazilian thousands separator: "3.728" or "3.000"
         if (clean.includes('.') && !clean.includes(',')) {
             const parts = clean.split('.');
+            // If the last part has exactly 3 digits, it's likely a thousands separator
             if (parts.length > 1 && parts[parts.length - 1].length === 3) {
                 clean = clean.replace(/\./g, '');
             }
         }
-        // Replace comma with dot for JS Number parsing
+
+        // Final swap: comma to dot for parseFloat
         clean = clean.replace(',', '.');
         return parseFloat(clean) || 0;
     }
@@ -119,17 +130,17 @@ export const DeliveryOrder: React.FC = () => {
            - A sobrevivência, FCA, Dias de Cultivo e outros parâmetros técnicos devem ser os mesmos para ambos os registros.
         
         Retorne um JSON estrito contendo APENAS uma lista (array) de objetos.
-        Cada objeto deve ter as chaves (se disponíveis, senão null/0/"" conforme tipo):
+        Cada objeto deve ter as chaves (USE SEMPRE STRING para os valores numéricos para preservar a formatação original):
         {
             "data": "DD/MM/AAAA",
             "viveiro": "Nome do Viveiro",
             "cliente": "Nome do Cliente",
-            "producao": number (kg),
-            "preco": number (R$),
-            "pesoMedio": number (g),
+            "producao": "string (ex: '3.675' ou '3728')",
+            "preco": "string (ex: '22,00')",
+            "pesoMedio": "string",
             "sobrevivencia": "string com %",
             "fca": "string",
-            "diasCultivo": number,
+            "diasCultivo": "string",
             "laboratorio": "Nome",
             "notas": "Obs"
         }
@@ -159,7 +170,7 @@ export const DeliveryOrder: React.FC = () => {
                     visible: true
                 }));
 
-                setData(prev => [...newItems, ...prev]);
+                setData(newItems); // SUBSTITUI os dados anteriores em vez de acumular
                 setInputText(''); // Limpa o texto após processar
                 setView('DASHBOARD');
             }
@@ -198,7 +209,7 @@ export const DeliveryOrder: React.FC = () => {
                     visible: true
                 }));
 
-                setData(prev => [...newItems, ...prev]);
+                setData(newItems); // SUBSTITUI os dados anteriores em vez de acumular
                 setView('DASHBOARD');
             }
         } catch (error) {
