@@ -1778,7 +1778,12 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                   return (
                     <div key={copyNum} className="bg-white border-[3px] border-orange-800 p-8 rounded-sm shadow-sm relative print:shadow-none print:border-[2px] mb-8 last:mb-0">
                       {/* Top Header */}
-                      <div className="flex flex-col items-center gap-4 mb-6">
+                      <div className="flex flex-col items-center gap-2 mb-6">
+                        {activeCompany.logoUrl && (
+                          <div className="mb-2">
+                            <img src={activeCompany.logoUrl} alt="Logo" className="h-12 w-auto object-contain" />
+                          </div>
+                        )}
                         <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
                         <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
                           <span className="text-[10px] text-slate-400 font-bold uppercase">{copyNum}ª VIA</span>
@@ -1808,12 +1813,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                           {receiptItem.input.bankName && <>, {receiptItem.input.bankName}</>}.
                         </p>
 
-                        <div className="flex justify-between items-end mt-12">
-                          <div className="w-1/3">
-                            {activeCompany.logoUrl && (
-                              <img src={activeCompany.logoUrl} alt="Logo" className="max-h-16 object-contain opacity-80" />
-                            )}
-                          </div>
+                        <div className="flex justify-end items-end mt-12">
                           <div className="text-right flex-1 italic text-slate-500 font-medium uppercase">
                             CANAVIEIRAS, {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
                           </div>

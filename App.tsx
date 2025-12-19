@@ -87,6 +87,17 @@ export default function App() {
     setActiveCompanyId(id);
   };
 
+  const handleUpdateCompany = (updatedCompany: Company) => {
+    setCompanies(prev => prev.map(c => c.id === updatedCompany.id ? updatedCompany : c));
+  };
+
+  const handleDeleteCompany = (id: string) => {
+    if (window.confirm('Tem certeza que deseja excluir esta empresa? Todos os dados da folha serão perdidos.')) {
+      setCompanies(prev => prev.filter(c => c.id !== id));
+      if (activeCompanyId === id) setActiveCompanyId(null);
+    }
+  };
+
   const handleBackToSelection = () => {
     setActiveCompanyId(null);
   };
@@ -196,6 +207,8 @@ export default function App() {
               <CompanySelection
                 companies={companies}
                 onAddCompany={handleAddCompany}
+                onUpdateCompany={handleUpdateCompany}
+                onDeleteCompany={handleDeleteCompany}
                 onSelectCompany={handleSelectCompany}
               />
             )}
