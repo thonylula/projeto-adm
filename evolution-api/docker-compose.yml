@@ -1,32 +1,44 @@
 version: '3.3'
 services:
   evolution_api:
+    container_name: evolution_api_v2
     image: atendai/evolution-api:v2.1.2
-    command: ["node", "./dist/src/main.js"]
+    command: [ "node", "./dist/src/main.js" ]
     environment:
       - SERVER_URL=http://localhost:8080
       - SERVER_PORT=8080
       - AUTH_AUTHENTICATION_GLOBAL_AUTH_TOKEN=minhasenha123
       - DATABASE_ENABLED=true
       - DATABASE_PROVIDER=postgresql
-      - DATABASE_CONNECTION_URI=postgresql://evolution:password@postgres:5432/evolution?schema=public
+      - DATABASE_CONNECTION_URI=postgresql://evolution:password@evolution_postgres:5432/evolution?schema=public
+      - CACHE_REDIS_ENABLED=true
+      - CACHE_REDIS_URI=redis://evolution_redis:6379
       - STORE_MESSAGES=true
       - STORE_MESSAGE_UP_TO=30
     ports:
       - "8080:8080"
     depends_on:
-      - postgres
+      - evolution_postgres
+      - evolution_redis
     networks:
       - evolution_network
 
-  postgres:
+  evolution_postgres:
+    container_name: evolution_postgres
     image: postgres:15-alpine
     environment:
       - POSTGRES_USER=evolution
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=evolution
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - evolution_postgres_data:/var/lib/postgresql/data
+    networks:
+      - evolution_network
+
+  evolution_redis:
+    container_name: evolution_redis
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
     networks:
       - evolution_network
 
@@ -35,4 +47,4 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
+  evolution_postgres_data:
