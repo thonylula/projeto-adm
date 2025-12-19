@@ -898,6 +898,21 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
 
 
+    // Dados Bancários
+    const empRegistry = registeredEmployees.find(e => e.name === input.employeeName);
+    if (empRegistry) {
+      if (empRegistry.bankName) {
+        let bankInfo = `BANCO: ${empRegistry.bankName}`;
+        if (empRegistry.agency) bankInfo += ` AG: ${empRegistry.agency}`;
+        if (empRegistry.account) bankInfo += ` CC: ${empRegistry.account}`;
+        if (empRegistry.accountType) bankInfo += ` (${empRegistry.accountType})`;
+        parts.push(bankInfo);
+      }
+      if (empRegistry.pixKey) {
+        parts.push(`PIX: ${empRegistry.pixKey}`);
+      }
+    }
+
     // Final
     parts.push(`TOTAL BRUTO ${formatCurrency(result.grossSalary)}.`);
 
