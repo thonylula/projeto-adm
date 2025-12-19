@@ -61,6 +61,11 @@ export interface PayrollInput {
 
   familyAllowance: number; // Salário Família 
 
+  // Empréstimos (Novo)
+  loanTotalValue: number; // Valor Total do Empréstimo
+  loanDiscountValue: number; // Valor do Desconto Atual
+
+
   // Hora Extra 2 (Novo)
   overtimeHours2: number;
   overtimePercentage2: 50 | 100;
@@ -89,6 +94,10 @@ export interface PayrollResult {
   sundayBonusValue: number; // Valor total dos Domingos (HE 50% ou similar)
 
   visitsTotalValue: number;
+
+  // Empréstimo
+  loanDiscountValue: number;
+
   // dsrProductionValue removido conforme nova regra de negócio
 
   grossSalary: number;

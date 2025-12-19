@@ -63,6 +63,11 @@ const INITIAL_INPUT_STATE: Omit<PayrollInput, 'companyName' | 'companyLogo'> = {
 
   familyAllowance: 0, // Novo campo
 
+  // Empréstimo
+  loanTotalValue: 0,
+  loanDiscountValue: 0,
+
+
   overtimeHours: 0,
   overtimePercentage: 50,
 
@@ -72,6 +77,8 @@ const INITIAL_INPUT_STATE: Omit<PayrollInput, 'companyName' | 'companyLogo'> = {
   productionBonus: 0,
   visitsAmount: 0,
   visitUnitValue: 0,
+
+
 };
 
 // Helper seguro para gerar IDs
@@ -611,6 +618,20 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       input.costAllowance +
       (input.familyAllowance || 0);
 
+    // Descontos de Empréstimo não abatem do "Bruto" contábil normalmente, mas para "Valor a Receber" sim.
+    // Como a UI foca no "Total Bruto" como "Total Gerado", vamos manter no bruto se o usuário quiser ver o "Total da Folha"
+    // Mas talvez seja melhor subtrair apenas num "Líquido".
+    // O usuário pediu: "TERÁ O VALOR QUE PEGOU... E O VALOR QUE JA FOI... DESCONTADO"
+    // Vamos adicionar ao objeto de resultado mas NÃO subtrair do GrossSalary para manter coerência de "Salário Bruto",
+    // mas talvez criar um "NetSalary" ou apenas exibir.
+    // Porem, em folhas simples, muitas vezes "Total" é o a pagar.
+    // Vou manter GrossSalary como soma de proventos e adicionar os dados de empréstimo para exibição.
+    // Se o usuário quiser que subtraia, ele pedirá. Por enquanto, a feature é "Mostrar".
+    // EDIT: Para garantir que o cálculo "feche" se for um recibo simples, talvez subtrair?
+    // Melhor não alterar o conceito de "Bruto" agora. O "Total Bruto" é a soma dos ganhos. 
+    // O empréstimo é um desconto. Vamos passar os valores para o result para exibição.
+
+
     // --- CÁLCULO ESPECÍFICO DE 13º SALÁRIO ---
     let thirteenthTotalAvos = 0;
     let thirteenthTotalDays = 0;
@@ -648,7 +669,9 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       proportionalSalary, hourlyRate, hazardPayValue, effectiveNightHours, nightShiftValue,
       dsrNightShiftValue, overtimeValue: totalOvertimeValue, overtime1Value: overtimeValue1,
       overtime2Value: overtimeValue2, holidayValue, dsrOvertimeValue, sundayBonusValue,
-      visitsTotalValue, grossSalary, thirteenthTotalAvos, thirteenthTotalDays
+      visitsTotalValue, grossSalary, thirteenthTotalAvos, thirteenthTotalDays,
+      loanDiscountValue: input.loanDiscountValue // Passa o valor do desconto para o resultado
+
     };
   };
 
@@ -806,6 +829,12 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     if (input.costAllowance && input.costAllowance > 0) parts.push(`AJUDA DE CUSTO ${formatCurrency(input.costAllowance)}`);
     if (result.visitsTotalValue > 0) parts.push(`VISITAS (${input.visitsAmount}) ${formatCurrency(result.visitsTotalValue)}`);
     if (input.productionBonus && input.productionBonus > 0) parts.push(`PRODUÇÃO ${formatCurrency(input.productionBonus)}`);
+
+    // Empréstimo
+    if (input.loanTotalValue > 0 || input.loanDiscountValue > 0) {
+      parts.push(`EMPRÉSTIMO (TOTAL: ${formatCurrency(input.loanTotalValue)} / DESC. ATUAL: ${formatCurrency(input.loanDiscountValue)})`);
+    }
+
 
     // Final
     parts.push(`TOTAL BRUTO ${formatCurrency(result.grossSalary)}.`);
@@ -1155,18 +1184,20 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                   </div>
                 )}
               </div>
-              <div className="flex items-center pt-1">
-                <input
-                  id="hasHazardPay"
-                  name="hasHazardPay"
-                  type="checkbox"
-                  checked={formState.hasHazardPay}
-                  onChange={handleInputChange}
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label htmlFor="hasHazardPay" className="ml-3 text-sm text-slate-700 font-medium">Periculosidade (30%)</label>
-              </div>
             </div>
+            <div className="flex items-center pt-1 cursor-pointer">
+              <input
+                id="hasHazardPay"
+                name="hasHazardPay"
+                type="checkbox"
+                checked={formState.hasHazardPay}
+                onChange={handleInputChange}
+                className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer accent-indigo-600"
+              />
+              <label htmlFor="hasHazardPay" className="ml-3 text-sm text-slate-700 font-medium cursor-pointer select-none">Periculosidade (30%)</label>
+            </div>
+
+
 
             {/* Nova Seção: Benefícios e Produção */}
             <div className="space-y-4">
@@ -1326,108 +1357,119 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
         </div>
       </div>
 
+
       {/* REPORT TABLE */}
-      {history.length > 0 && (
-        <div ref={reportRef} className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-16 print:shadow-none print:border-none print:rounded-none print:m-0 print:w-full">
-          <div className="relative p-8 border-b-2 border-gray-100 bg-white flex flex-row items-center justify-start gap-8 print:border-slate-800">
-            {/* ... (Menu de exportação mantido, simplificado aqui) ... */}
-            {activeCompany.logoUrl && (
-              <div className="w-32 flex-shrink-0">
-                <img src={activeCompany.logoUrl} alt="Logo" className="w-full object-contain" />
+      {
+        history.length > 0 && (
+          <div ref={reportRef} className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-16 print:shadow-none print:border-none print:rounded-none print:m-0 print:w-full">
+            <div className="relative p-8 border-b-2 border-gray-100 bg-white flex flex-row items-center justify-start gap-8 print:border-slate-800">
+              {/* ... (Menu de exportação mantido, simplificado aqui) ... */}
+              {activeCompany.logoUrl && (
+                <div className="w-32 flex-shrink-0">
+                  <img src={activeCompany.logoUrl} alt="Logo" className="w-full object-contain" />
+                </div>
+              )}
+              <div className="flex-1 text-left">
+                <h2 className="text-xl font-bold text-slate-900 uppercase">{activeCompany.name}</h2>
+                <p className="text-slate-500 text-[10px] mt-1 uppercase tracking-[0.2em]">Folha Analítica</p>
               </div>
-            )}
-            <div className="flex-1 text-left">
-              <h2 className="text-xl font-bold text-slate-900 uppercase">{activeCompany.name}</h2>
-              <p className="text-slate-500 text-[10px] mt-1 uppercase tracking-[0.2em]">Folha Analítica</p>
+            </div>
+
+            <div className="overflow-x-auto print:overflow-visible">
+              <table className="w-full text-xs text-left border-collapse">
+                <thead className="bg-slate-100 text-slate-600 font-semibold uppercase tracking-wider border-b border-gray-200 print:bg-slate-200 print:text-black">
+                  <tr>
+                    <th className="px-3 py-2 min-w-[120px]">Nome/Ref</th>
+                    <th className="px-2 py-2 text-right">Base/Integral</th>
+                    <th className="px-2 py-2 text-right bg-indigo-50/50 print:bg-transparent">Extras</th>
+                    <th className="px-2 py-2 text-right bg-indigo-50/50 print:bg-transparent">DSR</th>
+                    <th className="px-2 py-2 text-right">Noturno</th>
+                    <th className="px-2 py-2 text-right">Peric.</th>
+                    <th className="px-2 py-2 text-right bg-blue-50/50">Sal.Fam.</th>
+                    <th className="px-2 py-2 text-right bg-blue-50/50">Aj.Custo</th>
+                    <th className="px-2 py-2 text-right bg-orange-50/50">Prod.</th>
+                    <th className="px-2 py-2 text-right bg-orange-50/50">Visitas</th>
+                    <th className="px-2 py-2 text-right bg-red-50/50">Empréstimo</th>
+                    <th className="px-3 py-2 text-right bg-slate-200 text-slate-900 font-bold print:bg-slate-300">TOTAL BRUTO</th>
+
+                    <th className="px-2 py-2 text-center print:hidden export-ignore">Opções</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {history.map((item) => (
+                    <tr key={item.id} className={`hover:bg-blue-50 transition-colors group print:hover:bg-transparent ${item.input.calculationMode === '13TH' ? 'bg-red-50/30' : ''}`}>
+                      <td className="px-3 py-2 font-medium text-slate-900">
+                        {item.input.employeeName}
+                        <span className="block text-[10px] text-slate-400 font-normal">
+                          {item.input.calculationMode === '13TH'
+                            ? (item.input.thirteenthCalculationType === 'CLT'
+                              ? <span className="text-red-600 font-bold">[13º CLT] {(item.result.thirteenthTotalAvos || 0)}/12</span>
+                              : <span className="text-blue-600 font-bold">[13º Avulso] {(item.result.thirteenthTotalDays || 0)} dias</span>)
+                            : `Ref: ${item.input.referenceMonth}/${item.input.referenceYear}`
+                          }
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.proportionalSalary)}</td>
+                      <td className="px-2 py-2 text-right tabular-nums text-slate-600 bg-indigo-50/20">{formatCurrency(item.result.overtimeValue)}</td>
+                      <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-indigo-50/20">{formatCurrency(item.result.dsrOvertimeValue + item.result.dsrNightShiftValue)}</td>
+                      <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.nightShiftValue)}</td>
+                      <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.hazardPayValue)}</td>
+                      <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-blue-50/20">{formatCurrency(item.input.familyAllowance || 0)}</td>
+                      <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-blue-50/20">{formatCurrency(item.input.costAllowance)}</td>
+                      <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-orange-50/20">{formatCurrency(item.input.productionBonus)}</td>
+                      <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-orange-50/20">{formatCurrency(item.result.visitsTotalValue)}</td>
+                      <td className="px-2 py-2 text-right tabular-nums text-red-500 bg-red-50/20">
+                        {item.input.loanDiscountValue > 0 ? `-${formatCurrency(item.input.loanDiscountValue)}` : '-'}
+                      </td>
+
+
+                      <td className="px-3 py-2 text-right font-bold text-emerald-700 bg-slate-50 border-l border-slate-100 tabular-nums print:bg-slate-100 print:text-black">
+                        {formatCurrency(item.result.grossSalary)}
+                      </td>
+                      <td className="px-2 py-2 text-center print:hidden export-ignore">
+                        <div className="flex justify-center gap-1 items-center">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              const summary = generateSmartSummary(item);
+                              navigator.clipboard.writeText(summary);
+                              alert(`Copiado para área de transferência:\n\n${summary}`);
+                            }}
+                            className="p-1 text-slate-100 bg-slate-600 hover:bg-slate-800 rounded shadow-sm" title="Copiar Resumo"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                              <path fillRule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97zM6.75 8.25a.75.75 0 01.75-.75h9a.75.75 0 010 1.5h-9a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H7.5z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                          <button type="button" onClick={(e) => handleEditClick(e, item)} className="p-1 text-amber-500 hover:bg-amber-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
+                          <button type="button" onClick={(e) => handleDeleteClick(e, item.id)} className="p-1 text-red-400 hover:bg-red-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-slate-900 text-white print:bg-slate-800">
+                  <tr>
+                    <td colSpan={10} className="px-4 py-4 text-right font-bold uppercase text-xs">Total Geral</td>
+                    <td className="px-3 py-4 text-right font-bold text-base text-emerald-400 bg-slate-800 tabular-nums print:text-black print:bg-slate-300">
+                      {formatCurrency(totalCompanyCost)}
+                    </td>
+                    <td></td>
+
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end print:hidden export-ignore">
+              <button type="button" onClick={exportToCSV} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-slate-700 rounded-lg text-sm font-semibold hover:bg-gray-50">
+                Exportar CSV
+              </button>
             </div>
           </div>
-
-          <div className="overflow-x-auto print:overflow-visible">
-            <table className="w-full text-xs text-left border-collapse">
-              <thead className="bg-slate-100 text-slate-600 font-semibold uppercase tracking-wider border-b border-gray-200 print:bg-slate-200 print:text-black">
-                <tr>
-                  <th className="px-3 py-2 min-w-[120px]">Nome/Ref</th>
-                  <th className="px-2 py-2 text-right">Base/Integral</th>
-                  <th className="px-2 py-2 text-right bg-indigo-50/50 print:bg-transparent">Extras</th>
-                  <th className="px-2 py-2 text-right bg-indigo-50/50 print:bg-transparent">DSR</th>
-                  <th className="px-2 py-2 text-right">Noturno</th>
-                  <th className="px-2 py-2 text-right">Peric.</th>
-                  <th className="px-2 py-2 text-right bg-blue-50/50">Sal.Fam.</th>
-                  <th className="px-2 py-2 text-right bg-blue-50/50">Aj.Custo</th>
-                  <th className="px-2 py-2 text-right bg-orange-50/50">Prod.</th>
-                  <th className="px-2 py-2 text-right bg-orange-50/50">Visitas</th>
-                  <th className="px-3 py-2 text-right bg-slate-200 text-slate-900 font-bold print:bg-slate-300">TOTAL</th>
-                  <th className="px-2 py-2 text-center print:hidden export-ignore">Opções</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
-                {history.map((item) => (
-                  <tr key={item.id} className={`hover:bg-blue-50 transition-colors group print:hover:bg-transparent ${item.input.calculationMode === '13TH' ? 'bg-red-50/30' : ''}`}>
-                    <td className="px-3 py-2 font-medium text-slate-900">
-                      {item.input.employeeName}
-                      <span className="block text-[10px] text-slate-400 font-normal">
-                        {item.input.calculationMode === '13TH'
-                          ? (item.input.thirteenthCalculationType === 'CLT'
-                            ? <span className="text-red-600 font-bold">[13º CLT] {(item.result.thirteenthTotalAvos || 0)}/12</span>
-                            : <span className="text-blue-600 font-bold">[13º Avulso] {(item.result.thirteenthTotalDays || 0)} dias</span>)
-                          : `Ref: ${item.input.referenceMonth}/${item.input.referenceYear}`
-                        }
-                      </span>
-                    </td>
-                    <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.proportionalSalary)}</td>
-                    <td className="px-2 py-2 text-right tabular-nums text-slate-600 bg-indigo-50/20">{formatCurrency(item.result.overtimeValue)}</td>
-                    <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-indigo-50/20">{formatCurrency(item.result.dsrOvertimeValue + item.result.dsrNightShiftValue)}</td>
-                    <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.nightShiftValue)}</td>
-                    <td className="px-2 py-2 text-right tabular-nums text-slate-600">{formatCurrency(item.result.hazardPayValue)}</td>
-                    <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-blue-50/20">{formatCurrency(item.input.familyAllowance || 0)}</td>
-                    <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-blue-50/20">{formatCurrency(item.input.costAllowance)}</td>
-                    <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-orange-50/20">{formatCurrency(item.input.productionBonus)}</td>
-                    <td className="px-2 py-2 text-right tabular-nums text-slate-500 bg-orange-50/20">{formatCurrency(item.result.visitsTotalValue)}</td>
-
-                    <td className="px-3 py-2 text-right font-bold text-emerald-700 bg-slate-50 border-l border-slate-100 tabular-nums print:bg-slate-100 print:text-black">
-                      {formatCurrency(item.result.grossSalary)}
-                    </td>
-                    <td className="px-2 py-2 text-center print:hidden export-ignore">
-                      <div className="flex justify-center gap-1 items-center">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            const summary = generateSmartSummary(item);
-                            navigator.clipboard.writeText(summary);
-                            alert(`Copiado para área de transferência:\n\n${summary}`);
-                          }}
-                          className="p-1 text-slate-100 bg-slate-600 hover:bg-slate-800 rounded shadow-sm" title="Copiar Resumo"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                            <path fillRule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97zM6.75 8.25a.75.75 0 01.75-.75h9a.75.75 0 010 1.5h-9a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H7.5z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                        <button type="button" onClick={(e) => handleEditClick(e, item)} className="p-1 text-amber-500 hover:bg-amber-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
-                        <button type="button" onClick={(e) => handleDeleteClick(e, item.id)} className="p-1 text-red-400 hover:bg-red-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot className="bg-slate-900 text-white print:bg-slate-800">
-                <tr>
-                  <td colSpan={10} className="px-4 py-4 text-right font-bold uppercase text-xs">Total Geral</td>
-                  <td className="px-3 py-4 text-right font-bold text-base text-emerald-400 bg-slate-800 tabular-nums print:text-black print:bg-slate-300">
-                    {formatCurrency(totalCompanyCost)}
-                  </td>
-                  <td></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-
-          <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end print:hidden export-ignore">
-            <button type="button" onClick={exportToCSV} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-slate-700 rounded-lg text-sm font-semibold hover:bg-gray-50">
-              Exportar CSV
-            </button>
-          </div>
-        </div>
-      )}
+        )
+      }
     </div>
   );
 };
