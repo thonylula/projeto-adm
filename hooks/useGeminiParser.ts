@@ -112,8 +112,80 @@ export const useGeminiParser = ({ onSuccess, onError }: UseGeminiParserProps = {
         }
     };
 
+    const processText = async (prompt: string, userText: string) => {
+        setIsProcessing(true);
+        try {
+            const MODELS = [
+                "gemini-2.0-flash",
+                "gemini-2.0-flash-lite",
+                "gemini-1.5-flash",
+                "gemini-1.5-pro"
+            ];
+
+            const fullPrompt = userText ? `${prompt}\n\nTEXTO PARA ANALISAR:\n${userText}` : prompt;
+            const contents = [{
+                role: 'user',
+                parts: [{ text: fullPrompt }]
+            }];
+
+            let lastError = null;
+            let success = false;
+            let parsedResult = null;
+
+            for (const modelName of MODELS) {
+                try {
+                    console.log(`[Gemini Hook] Trying model: ${modelName}`);
+
+                    const response = await fetch('/api/generative', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ model: modelName, contents: contents })
+                    });
+
+                    const payload = await response.json().catch(() => ({ ok: false, error: 'Invalid JSON' }));
+
+                    if (!response.ok || !payload.ok) {
+                        const errorMsg = payload.error?.message || payload.error || 'Unknown error';
+                        throw new Error(`Model ${modelName} error: ${response.status} - ${errorMsg}`);
+                    }
+
+                    const text = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!text) throw new Error('Empty response from AI');
+
+                    const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+                    try {
+                        parsedResult = JSON.parse(jsonStr);
+                        success = true;
+                        break;
+                    } catch (e) {
+                        console.warn(`[Gemini Hook] JSON Parse failed for ${modelName}:`, e);
+                    }
+
+                } catch (e: any) {
+                    console.warn(`[Gemini Hook] Model ${modelName} failed:`, e.message);
+                    lastError = e;
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
+
+            if (success && parsedResult) {
+                if (onSuccess) onSuccess(parsedResult);
+                return parsedResult;
+            } else {
+                throw lastError || new Error("Todos os modelos falharam ao processar o texto.");
+            }
+        } catch (error: any) {
+            console.error("[Gemini Hook] Error:", error);
+            if (onError) onError(error);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     return {
         processFile,
+        processText,
         isProcessing
     };
 };
