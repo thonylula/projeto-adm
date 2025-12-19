@@ -82,7 +82,8 @@ const INITIAL_INPUT_STATE: Omit<PayrollInput, 'companyName' | 'companyLogo'> = {
   visitsAmount: 0,
   visitUnitValue: 0,
 
-
+  bankName: '',
+  pixKey: '',
 };
 
 // Helper seguro para gerar IDs
@@ -494,7 +495,11 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     const emp = registeredEmployees.find(r => r.id === empId);
     if (emp) {
       setFormState(prev => ({
-        ...prev, employeeName: emp.name, baseSalary: emp.salary,
+        ...prev,
+        employeeName: emp.name,
+        baseSalary: emp.salary,
+        bankName: emp.bankName || '',
+        pixKey: emp.pixKey || '',
       }));
     }
   };
@@ -864,8 +869,8 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       if (input.sundaysAmount > 0) {
         overtimeDetails.push(`${input.sundaysAmount} DOM`);
       }
-      // Feriados
-      if (input.holidayHours > 0) {
+      // Feriados (Apenas 12x36)
+      if (input.workScale === '12x36' && input.holidayHours > 0 && input.workedOnHoliday) {
         overtimeDetails.push(`${input.holidayHours}h FER`);
       }
 
@@ -899,18 +904,11 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
 
     // Dados Bancários
-    const empRegistry = registeredEmployees.find(e => e.name === input.employeeName);
-    if (empRegistry) {
-      if (empRegistry.bankName) {
-        let bankInfo = `BANCO: ${empRegistry.bankName}`;
-        if (empRegistry.agency) bankInfo += ` AG: ${empRegistry.agency}`;
-        if (empRegistry.account) bankInfo += ` CC: ${empRegistry.account}`;
-        if (empRegistry.accountType) bankInfo += ` (${empRegistry.accountType})`;
-        parts.push(bankInfo);
-      }
-      if (empRegistry.pixKey) {
-        parts.push(`PIX: ${empRegistry.pixKey}`);
-      }
+    if (input.bankName) {
+      parts.push(`BANCO: ${input.bankName}`);
+    }
+    if (input.pixKey) {
+      parts.push(`PIX: ${input.pixKey}`);
     }
 
     // Final
@@ -1426,6 +1424,37 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                     <span className="text-sm font-black text-red-700">{formatCurrency(formState.loanTotalValue / formState.loanTotalInstallments)}</span>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Dados Bancários para o Resumo */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">
+                Dados para Pagamento (Resumo)
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Banco / Ag. / CC</label>
+                  <input
+                    type="text"
+                    name="bankName"
+                    value={formState.bankName}
+                    onChange={handleInputChange}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900"
+                    placeholder="Ex: Nubank Ag 0001 CC 12345-6"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Chave PIX</label>
+                  <input
+                    type="text"
+                    name="pixKey"
+                    value={formState.pixKey}
+                    onChange={handleInputChange}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900"
+                    placeholder="CPF, E-mail, Celular ou Aleatória"
+                  />
+                </div>
               </div>
             </div>
 

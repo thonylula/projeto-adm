@@ -75,6 +75,10 @@ export interface PayrollInput {
   productionBonus: number; // Participação de Produção
   visitsAmount: number; // Qtd Visitas
   visitUnitValue: number; // Valor por Visita
+
+  // Dados para Summary (Novo)
+  bankName: string;
+  pixKey: string;
 }
 
 export interface PayrollResult {
