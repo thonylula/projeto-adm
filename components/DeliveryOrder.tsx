@@ -41,6 +41,29 @@ const COLORS = {
     dark: '#3a3a3a'
 };
 
+// --- Helper for AI Numeric Parsing ---
+const safeParseNumber = (val: any): number => {
+    if (typeof val === 'number') return val;
+    if (typeof val === 'string') {
+        // Remove units like 'kg', 'g', 'R$'
+        let clean = val.replace(/[^\d,.-]/g, '');
+        // Brazilian logic: if it has a dot and NO comma, it might be thousands
+        // However, standard JSON doesn't use dot for thousands.
+        // If the AI followed instructions, it's already clean.
+        // But let's handle "3.728" -> 3728 if it looks like a thousand.
+        if (clean.includes('.') && !clean.includes(',')) {
+            const parts = clean.split('.');
+            if (parts.length > 1 && parts[parts.length - 1].length === 3) {
+                clean = clean.replace(/\./g, '');
+            }
+        }
+        // Replace comma with dot for JS Number parsing
+        clean = clean.replace(',', '.');
+        return parseFloat(clean) || 0;
+    }
+    return 0;
+};
+
 export const DeliveryOrder: React.FC = () => {
     const [view, setView] = useState<'INPUT' | 'DASHBOARD'>('INPUT');
     const [inputText, setInputText] = useState('');
@@ -85,6 +108,16 @@ export const DeliveryOrder: React.FC = () => {
     const HARVEST_PROMPT = `
         Analise este documento (Recibo de Despesca, Planilha ou Anotação Manual).
         Extraia a lista de despescas realizadas.
+        
+        ### REGRAS CRÍTICAS DE FORMATAÇÃO:
+        1. **Números e Milhar (BRASIL)**: No contexto brasileiro, o ponto (.) é separador de MILHAR. 
+           - Exemplo: "3.728" deve ser interpretado como 3728 (três mil setecentos e vinte e oito).
+           - "3 kg" é 3.
+           - Certifique-se de remover pontos de milhar antes de retornar o número.
+        2. **Múltiplos Clientes**: Se uma entrada/venda citar mais de um cliente (ex: "Victor, Henrique" ou "Victor e Henrique"), você **DEVE** gerar um objeto JSON separado para cada um.
+           - Se houver apenas um peso total para ambos, divida a produção proporcionalmente ou conforme indicado. Se não houver indicação, divida por 2.
+           - A sobrevivência, FCA, Dias de Cultivo e outros parâmetros técnicos devem ser os mesmos para ambos os registros.
+        
         Retorne um JSON estrito contendo APENAS uma lista (array) de objetos.
         Cada objeto deve ter as chaves (se disponíveis, senão null/0/"" conforme tipo):
         {
@@ -115,12 +148,12 @@ export const DeliveryOrder: React.FC = () => {
                     data: item.data || new Date().toLocaleDateString(),
                     viveiro: item.viveiro || "---",
                     cliente: item.cliente || "Desconhecido",
-                    producao: Number(item.producao) || 0,
-                    preco: Number(item.preco) || 0,
-                    pesoMedio: Number(item.pesoMedio) || 0,
+                    producao: safeParseNumber(item.producao),
+                    preco: safeParseNumber(item.preco),
+                    pesoMedio: safeParseNumber(item.pesoMedio),
                     sobrevivencia: item.sobrevivencia || "---",
                     fca: item.fca || "---",
-                    diasCultivo: Number(item.diasCultivo) || 0,
+                    diasCultivo: safeParseNumber(item.diasCultivo),
                     laboratorio: item.laboratorio || "---",
                     notas: item.notas || "",
                     visible: true
@@ -154,12 +187,12 @@ export const DeliveryOrder: React.FC = () => {
                     data: item.data || new Date().toLocaleDateString(),
                     viveiro: item.viveiro || "---",
                     cliente: item.cliente || "Desconhecido",
-                    producao: Number(item.producao) || 0,
-                    preco: Number(item.preco) || 0,
-                    pesoMedio: Number(item.pesoMedio) || 0,
+                    producao: safeParseNumber(item.producao),
+                    preco: safeParseNumber(item.preco),
+                    pesoMedio: safeParseNumber(item.pesoMedio),
                     sobrevivencia: item.sobrevivencia || "---",
                     fca: item.fca || "---",
-                    diasCultivo: Number(item.diasCultivo) || 0,
+                    diasCultivo: safeParseNumber(item.diasCultivo),
                     laboratorio: item.laboratorio || "---",
                     notas: item.notas || "",
                     visible: true
