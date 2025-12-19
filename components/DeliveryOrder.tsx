@@ -26,21 +26,7 @@ interface ClientInfo {
 }
 
 // --- Hardcoded Data (Ported from User Source) ---
-const INITIAL_HARVEST_DATA: HarvestData[] = [
-    { id: 1, data: "31/10/2025", viveiro: "OC - 002", cliente: "CEAGESP", producao: 765, preco: 23.00, pesoMedio: 12.5, sobrevivencia: "19%", fca: "1,1", diasCultivo: 38, laboratorio: "AQUASUL", notas: "", visible: true },
-    { id: 2, data: "31/10/2025", viveiro: "OC - P09", cliente: "CEAGESP", producao: 675, preco: 22.00, pesoMedio: 10, sobrevivencia: "15%", fca: "3,8", diasCultivo: 168, laboratorio: "AQUASUL", notas: "", visible: true },
-    { id: 3, data: "31/10/2025", viveiro: "OC - 016", cliente: "CEAGESP", producao: 3450, preco: 22.00, pesoMedio: 11, sobrevivencia: "50%", fca: "2.2", diasCultivo: 93, laboratorio: "AQUASUL", notas: "", visible: true },
-    { id: 4, data: "31/10/2025", viveiro: "OC - 005", cliente: "CEAGESP", producao: 1513, preco: 22.00, pesoMedio: 10, sobrevivencia: "-- %", fca: "--", diasCultivo: 102, laboratorio: "AQUASUL", notas: "Despesca PARCIAL", visible: true },
-    { id: 5, data: "31/10/2025", viveiro: "OC - 013", cliente: "CEAGESP", producao: 3285, preco: 22.00, pesoMedio: 11, sobrevivencia: "47%", fca: "2,0", diasCultivo: 93, laboratorio: "AQUASUL", notas: "", visible: true },
-    { id: 6, data: "26/10/2025", viveiro: "OC - 018", cliente: "Funelli", producao: 3616, preco: 22.50, pesoMedio: 10.5, sobrevivencia: "59%", fca: "1,30", diasCultivo: 83, laboratorio: "AQUASUL", notas: "", visible: true },
-    { id: 7, data: "26/10/2025", viveiro: "OC - 011", cliente: "Funelli", producao: 4624, preco: 22.50, pesoMedio: 10.5, sobrevivencia: "51%", fca: "1,55", diasCultivo: 93, laboratorio: "AQUASUL", notas: "", visible: true },
-    { id: 8, data: "10/11/2025", viveiro: "OC - 020", cliente: "CEAGESP", producao: 2140, preco: 23.00, pesoMedio: 12, sobrevivencia: "59%", fca: "0.60", diasCultivo: 46, laboratorio: "AQUASUL", notas: "", visible: true },
-    { id: 9, data: "10/11/2025", viveiro: "OC - 005", cliente: "CEAGESP", producao: 2235, preco: 22.00, pesoMedio: 10, sobrevivencia: "52%", fca: "2,00", diasCultivo: 111, laboratorio: "AQUASUL", notas: "", visible: true },
-    { id: 10, data: "14/12/2025", viveiro: "OC - 003", cliente: "Victor", producao: 2595, preco: 23.00, pesoMedio: 11.5, sobrevivencia: "81%", fca: "0.93", diasCultivo: 72, laboratorio: "AQUASUL", notas: "", visible: true },
-    { id: 11, data: "14/12/2025", viveiro: "OC - 003", cliente: "Henrique", producao: 1133, preco: 23.00, pesoMedio: 11.5, sobrevivencia: "81%", fca: "0.93", diasCultivo: 72, laboratorio: "AQUASUL", notas: "", visible: true },
-    { id: 12, data: "13/12/2025", viveiro: "OC - 015", cliente: "Victor", producao: 3000, preco: 23.00, pesoMedio: 11, sobrevivencia: "83%", fca: "0.96", diasCultivo: 71, laboratorio: "AQUASUL", notas: "", visible: true },
-    { id: 13, data: "13/12/2025", viveiro: "OC - 014", cliente: "Victor", producao: 3675, preco: 22.00, pesoMedio: 9.1, sobrevivencia: "76%", fca: "1", diasCultivo: 72, laboratorio: "AQUASUL", notas: "", visible: true }
-];
+const INITIAL_HARVEST_DATA: HarvestData[] = [];
 
 const CLIENT_INFO: Record<string, ClientInfo> = {
     "CEAGESP": { codigo: "8410", prazo: "28 dias" },
@@ -65,7 +51,7 @@ export const DeliveryOrder: React.FC = () => {
         } catch (e) {
             console.error(e);
         }
-        return []; // Start empty - no example data
+        return INITIAL_HARVEST_DATA; // Use processed data as initial state
     });
 
     useEffect(() => {
@@ -88,54 +74,40 @@ export const DeliveryOrder: React.FC = () => {
     const formatNumber = (val: number, unit = '') => val.toLocaleString('pt-BR') + unit;
     const formatGrams = (val: number) => val.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' g';
 
-    // --- Actions ---
-    const handleProcess = () => {
-        // In a real scenario, we would parse 'inputText'. 
-        // For now, we just switch views as requested by the "code example" logic.
-        setView('DASHBOARD');
-    };
-
-    const toggleRow = (id: number) => {
-        setData(prev => prev.map(item =>
-            item.id === id ? { ...item, visible: !item.visible } : item
-        ));
-    };
-
     // --- AI SMART UPLOAD ---
-    const { processFile, isProcessing } = useGeminiParser({
+    const { processFile, processText, isProcessing } = useGeminiParser({
         onError: (err) => alert(`Erro na Inteligência Artificial: ${err.message}`)
     });
 
-    const handleSmartUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files || !e.target.files[0]) return;
-        const file = e.target.files[0];
+    const HARVEST_PROMPT = `
+        Analise este documento (Recibo de Despesca, Planilha ou Anotação Manual).
+        Extraia a lista de despescas realizadas.
+        Retorne um JSON estrito contendo APENAS uma lista (array) de objetos.
+        Cada objeto deve ter as chaves (se disponíveis, senão null/0/"" conforme tipo):
+        {
+            "data": "DD/MM/AAAA",
+            "viveiro": "Nome do Viveiro",
+            "cliente": "Nome do Cliente",
+            "producao": number (kg),
+            "preco": number (R$),
+            "pesoMedio": number (g),
+            "sobrevivencia": "string com %",
+            "fca": "string",
+            "diasCultivo": number,
+            "laboratorio": "Nome",
+            "notas": "Obs"
+        }
+    `;
+
+    // --- Actions ---
+    const handleProcess = async () => {
+        if (!inputText.trim()) return;
 
         try {
-            const prompt = `
-                Analise este documento (Recibo de Despesca, Planilha ou Anotação Manual).
-                Extraia a lista de despescas realizadas.
-                Retorne um JSON estrito contendo APENAS uma lista (array) de objetos.
-                Cada objeto deve ter as chaves (se disponíveis, senão null/0/"" conforme tipo):
-                {
-                    "data": "DD/MM/AAAA",
-                    "viveiro": "Nome do Viveiro",
-                    "cliente": "Nome do Cliente",
-                    "producao": number (kg),
-                    "preco": number (R$),
-                    "pesoMedio": number (g),
-                    "sobrevivencia": "string com %",
-                    "fca": "string",
-                    "diasCultivo": number,
-                    "laboratorio": "Nome",
-                    "notas": "Obs"
-                }
-            `;
+            const results = await processText(HARVEST_PROMPT, inputText);
 
-            const results = await processFile(file, prompt);
-
-            if (Array.isArray(results)) {
-                // Map results to HarvestData strucutre with new IDs
-                const newItems: HarvestData[] = results.map((item: any) => ({
+            if (results) {
+                const newItems: HarvestData[] = (Array.isArray(results) ? results : [results]).map((item: any) => ({
                     id: Date.now() + Math.random(),
                     data: item.data || new Date().toLocaleDateString(),
                     viveiro: item.viveiro || "---",
@@ -152,11 +124,29 @@ export const DeliveryOrder: React.FC = () => {
                 }));
 
                 setData(prev => [...newItems, ...prev]);
-                setView('DASHBOARD'); // Auto switch to view results
-            } else if (results && typeof results === 'object') {
-                // Single object returned maybe? Wrap in array
-                const item = results;
-                const newItem: HarvestData = {
+                setInputText(''); // Limpa o texto após processar
+                setView('DASHBOARD');
+            }
+        } catch (error) {
+            console.error("Text Processing Error", error);
+        }
+    };
+
+    const toggleRow = (id: number) => {
+        setData(prev => prev.map(item =>
+            item.id === id ? { ...item, visible: !item.visible } : item
+        ));
+    };
+
+    const handleSmartUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || !e.target.files[0]) return;
+        const file = e.target.files[0];
+
+        try {
+            const results = await processFile(file, HARVEST_PROMPT);
+
+            if (results) {
+                const newItems: HarvestData[] = (Array.isArray(results) ? results : [results]).map((item: any) => ({
                     id: Date.now() + Math.random(),
                     data: item.data || new Date().toLocaleDateString(),
                     viveiro: item.viveiro || "---",
@@ -170,11 +160,11 @@ export const DeliveryOrder: React.FC = () => {
                     laboratorio: item.laboratorio || "---",
                     notas: item.notas || "",
                     visible: true
-                };
-                setData(prev => [newItem, ...prev]);
+                }));
+
+                setData(prev => [...newItems, ...prev]);
                 setView('DASHBOARD');
             }
-
         } catch (error) {
             console.error("Smart Upload Error", error);
         } finally {
@@ -215,7 +205,7 @@ export const DeliveryOrder: React.FC = () => {
         // It DOES NOT seem to react to the checkboxes.
         // So Summary Cards = All Data. Table Footer = Checked Data.
 
-        INITIAL_HARVEST_DATA.forEach(row => { // Using initial data to match HTML behavior of static summary
+        data.forEach(row => {
             const valorTotal = row.producao * row.preco;
 
             if (!summary[row.cliente]) {
@@ -230,7 +220,7 @@ export const DeliveryOrder: React.FC = () => {
         });
 
         return summary;
-    }, []); // Empty dependency array as it processes static INITIAL_DATA for now
+    }, [data]);
 
     // --- Gemini API Logic ---
     const generateEmail = async (cliente: string) => {
@@ -240,12 +230,12 @@ export const DeliveryOrder: React.FC = () => {
         setGeneratedEmail('');
 
         const clientSummary = summaryByClient[cliente];
-        const info = CLIENT_INFO[cliente];
+        const info = CLIENT_INFO[cliente] || { codigo: "---", prazo: "---" };
 
-        if (!clientSummary || !info) {
+        if (!clientSummary) {
             setModalError(true);
             setModalLoading(false);
-            setGeneratedEmail('Erro: Dados do cliente não encontrados.');
+            setGeneratedEmail('Erro: Dados do resumo do cliente não encontrados.');
             return;
         }
 
