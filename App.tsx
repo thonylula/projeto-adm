@@ -148,6 +148,20 @@ export default function App() {
     }));
   };
 
+  const handleBulkUpdateEmployees = (newEmployees: PayrollHistoryItem[]) => {
+    if (!activeCompanyId) return;
+
+    setCompanies(prev => prev.map(company => {
+      if (company.id === activeCompanyId) {
+        return {
+          ...company,
+          employees: newEmployees
+        };
+      }
+      return company;
+    }));
+  };
+
   // Render Login Screen (Wrapped in MainLayout for aesthetics)
   if (!isAuthenticated) {
     return (
@@ -175,6 +189,7 @@ export default function App() {
                 onAddEmployee={handleAddEmployee}
                 onUpdateEmployee={handleUpdateEmployee}
                 onDeleteEmployee={handleDeleteEmployee}
+                onBulkUpdateEmployees={handleBulkUpdateEmployees}
               />
             ) : (
               <CompanySelection
