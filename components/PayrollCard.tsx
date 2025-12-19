@@ -4,6 +4,7 @@ import { PayrollInput, PayrollResult, PayrollHistoryItem, Company, RegistryEmplo
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { useGeminiParser } from '../hooks/useGeminiParser';
+import { numberToWordsBRL } from '../utils';
 
 interface PayrollCardProps {
   activeCompany: Company;
@@ -169,6 +170,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [copiedSummaryId, setCopiedSummaryId] = useState<string | null>(null);
+  const [receiptItem, setReceiptItem] = useState<PayrollHistoryItem | null>(null);
 
   // Lista de funcionários cadastrados para importação
   const [registeredEmployees, setRegisteredEmployees] = useState<RegistryEmployee[]>([]);
@@ -827,14 +829,14 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       const label = input.thirteenthCalculationType === 'CLT'
         ? `${result.thirteenthTotalAvos}/12 AVOS`
         : `${result.thirteenthTotalDays}D`;
-      parts.push(`13º REF ${input.referenceYear} (${label})`);
+      parts.push(`13º PAGT. REF ${input.referenceYear} (${label})`);
     } else {
-      const label = input.workScale === '12x36' ? `${input.daysWorked}PL` : `${input.daysWorked}D`;
-      parts.push(`REF ${input.referenceMonth}/${input.referenceYear} (${label})`);
+      const label = input.workScale === '12x36' ? `${input.daysWorked} PLANTÕES` : `${input.daysWorked} DIAS TRAB.`;
+      parts.push(`PAGT. REF ${input.referenceMonth}/${input.referenceYear} (${label})`);
     }
 
     // BASE
-    parts.push(`BASE ${formatCurrency(input.baseSalary)}`);
+    parts.push(`SAL. BASE ${formatCurrency(input.baseSalary)}`);
 
     // Ganhos Adicionais
     if (result.hazardPayValue > 0) parts.push(`PERIC. ${formatCurrency(result.hazardPayValue)}`);
@@ -842,7 +844,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     // Noturno
     if (result.nightShiftValue > 0) {
       const nightDetails = result.effectiveNightHours ? `(${result.effectiveNightHours.toFixed(2).replace('.', ',')}H)` : '';
-      parts.push(`NOT. ${nightDetails} ${formatCurrency(result.nightShiftValue)}`);
+      parts.push(`ADI. NOT. ${nightDetails} ${formatCurrency(result.nightShiftValue)}`);
     }
 
     // HE Detalhado
@@ -854,7 +856,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       if (input.workScale === '12x36' && input.holidayHours > 0 && input.workedOnHoliday) details.push(`${input.holidayHours}H/FER`);
 
       const detailsStr = details.length > 0 ? `(${details.join('+')})` : '';
-      parts.push(`HE ${detailsStr} ${formatCurrency(result.overtimeValue)}`);
+      parts.push(`H. EXTRAS ${detailsStr} ${formatCurrency(result.overtimeValue)}`);
     }
 
     // DSR
@@ -862,8 +864,8 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     if (totalDsr > 0) parts.push(`DSR ${formatCurrency(totalDsr)}`);
 
     // Ganhos/Descontos
-    if (input.familyAllowance > 0) parts.push(`FAML. ${formatCurrency(input.familyAllowance)}`);
-    if (input.costAllowance > 0) parts.push(`AJUDA ${formatCurrency(input.costAllowance)}`);
+    if (input.familyAllowance > 0) parts.push(`SAL. FAML. ${formatCurrency(input.familyAllowance)}`);
+    if (input.costAllowance > 0) parts.push(`AJ. DE CUSTO ${formatCurrency(input.costAllowance)}`);
     if (result.visitsTotalValue > 0) parts.push(`VISIT. (${input.visitsAmount}) ${formatCurrency(result.visitsTotalValue)}`);
     if (input.productionBonus > 0) parts.push(`PROD. ${formatCurrency(input.productionBonus)}`);
 
@@ -874,7 +876,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     }
 
     // Banco / Pix
-    if (input.bankName) parts.push(`BK: ${input.bankName}`);
+    if (input.bankName) parts.push(`BANCO: ${input.bankName}`);
     if (input.pixKey) parts.push(`PIX: ${input.pixKey}`);
 
     // Final
@@ -1628,6 +1630,19 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                               <path fillRule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97zM6.75 8.25a.75.75 0 01.75-.75h9a.75.75 0 010 1.5h-9a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H7.5z" clipRule="evenodd" />
                             </svg>
                           </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setReceiptItem(item)}
+                            className="p-1 text-white bg-orange-600 hover:bg-orange-700 rounded shadow-sm flex items-center gap-1 px-2 text-[10px] font-bold"
+                            title="Gerar Recibo"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            RECIBO
+                          </button>
+
                           <button type="button" onClick={(e) => handleEditClick(e, item)} className="p-1 text-amber-500 hover:bg-amber-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
                           <button type="button" onClick={(e) => handleDeleteClick(e, item.id)} className="p-1 text-red-400 hover:bg-red-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
                         </div>
@@ -1717,6 +1732,108 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
         </div>
       </div>
 
+      {/* --- RECEIPT MODAL --- */}
+      {receiptItem && (
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 overflow-y-auto">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-slate-200">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-8 py-4 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-100 rounded-xl text-orange-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Recibo de Pagamento</h3>
+                  <p className="text-xs text-slate-500 font-medium">{receiptItem.input.employeeName} • {receiptItem.input.referenceMonth}/{receiptItem.input.referenceYear}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => window.print()}
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all font-bold text-xs"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                  IMPRIMIR
+                </button>
+                <button
+                  onClick={() => setReceiptItem(null)}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content - Scrollable for web view */}
+            <div className="flex-1 overflow-y-auto p-8 bg-slate-50/30 print:p-0 print:bg-white print:overflow-visible">
+              <div id="receipt-content" className="space-y-8 print:space-y-4">
+                {/* Generating 2 copies */}
+                {[1, 2].map((copyNum) => {
+                  const employeeRegistry = registeredEmployees.find(re =>
+                    re.name.toLowerCase() === receiptItem.input.employeeName.toLowerCase()
+                  );
+
+                  return (
+                    <div key={copyNum} className="bg-white border-[3px] border-orange-800 p-8 rounded-sm shadow-sm relative print:shadow-none print:border-[2px] mb-8 last:mb-0">
+                      {/* Top Header */}
+                      <div className="flex flex-col items-center gap-4 mb-6">
+                        <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
+                        <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
+                          <span className="text-[10px] text-slate-400 font-bold uppercase">{copyNum}ª VIA</span>
+                          <div className="bg-slate-100 border border-slate-300 px-3 py-1 rounded font-black text-slate-900 text-lg">
+                            {formatCurrency(receiptItem.result.grossSalary)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Content Body */}
+                      <div className="space-y-4 text-sm leading-relaxed text-justify text-slate-800">
+                        <p>
+                          Recebi de <strong className="font-black uppercase">{activeCompany.name}</strong>
+                          {activeCompany.cnpj && <> – CNPJ <span className="font-mono">{activeCompany.cnpj}</span></>}, a importância de
+                          <strong className="font-black"> {numberToWordsBRL(receiptItem.result.grossSalary).toUpperCase()}</strong>,
+                          referente à <strong className="font-black">{generateSmartSummary(receiptItem)}</strong>.
+                        </p>
+
+                        <p>
+                          Para maior clareza, firmo o presente recibo, que comprova o recebimento integral do valor mencionado,
+                          concedendo <strong className="font-black">quitação plena, geral e irrevogável</strong> pela quantia recebida.
+                        </p>
+
+                        <p>
+                          Pagamento recebido por <strong className="font-black">{receiptItem.input.employeeName}</strong>
+                          {receiptItem.input.pixKey && <> através da chave Pix: <strong className="font-mono">{receiptItem.input.pixKey}</strong></>}
+                          {receiptItem.input.bankName && <>, {receiptItem.input.bankName}</>}.
+                        </p>
+
+                        <div className="flex justify-between items-end mt-12">
+                          <div className="w-1/3">
+                            {activeCompany.logoUrl && (
+                              <img src={activeCompany.logoUrl} alt="Logo" className="max-h-16 object-contain opacity-80" />
+                            )}
+                          </div>
+                          <div className="text-right flex-1 italic text-slate-500 font-medium uppercase">
+                            CANAVIEIRAS, {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                          </div>
+                        </div>
+
+                        {/* Signature Area */}
+                        <div className="mt-10 pt-4 border-t border-slate-400 flex flex-col items-center">
+                          <p className="font-black uppercase text-base tracking-tight">{receiptItem.input.employeeName}</p>
+                          {employeeRegistry?.cpf && <p className="text-xs text-slate-500 font-mono italic mt-1">CPF: {employeeRegistry.cpf}</p>}
+                          {employeeRegistry?.phone && <p className="text-xs text-slate-500 font-mono italic">{employeeRegistry.phone}</p>}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

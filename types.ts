@@ -124,6 +124,7 @@ export interface PayrollHistoryItem {
 export interface Company {
   id: string;
   name: string;
+  cnpj?: string; // Novo campo
   logoUrl: string | null;
   employees: PayrollHistoryItem[];
 }
