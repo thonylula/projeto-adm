@@ -35,10 +35,13 @@ const CLIENT_INFO: Record<string, ClientInfo> = {
     "Henrique": { codigo: "---", prazo: "---" }
 };
 
-// --- Styles constants ---
+// --- Styles constants (Tone on Tone Orange) ---
 const COLORS = {
-    orange: '#f26522',
-    dark: '#3a3a3a'
+    primary: '#f26522',    // Orange
+    secondary: '#ff9d6c',  // Light Orange
+    dark: '#d95213',       // Dark Orange
+    soft: '#fff5f0',       // Very Light Orange
+    text: '#3a3a3a'
 };
 
 // --- Helper for AI Numeric Parsing ---
@@ -79,21 +82,27 @@ export const DeliveryOrder: React.FC = () => {
     const [view, setView] = useState<'INPUT' | 'DASHBOARD'>('INPUT');
     const [inputText, setInputText] = useState('');
     const [data, setData] = useState<HarvestData[]>(INITIAL_HARVEST_DATA);
+    const [logo, setLogo] = useState<string | null>(null);
 
     useEffect(() => {
         try {
-            const saved = localStorage.getItem('delivery_order_db');
-            if (saved) setData(JSON.parse(saved));
+            const savedData = localStorage.getItem('delivery_order_db');
+            if (savedData) setData(JSON.parse(savedData));
+
+            const savedLogo = localStorage.getItem('delivery_order_logo');
+            if (savedLogo) setLogo(savedLogo);
         } catch (e) {
             console.error(e);
         }
     }, []);
 
     useEffect(() => {
-        if (data.length > 0) {
-            localStorage.setItem('delivery_order_db', JSON.stringify(data));
-        }
+        localStorage.setItem('delivery_order_db', JSON.stringify(data));
     }, [data]);
+
+    useEffect(() => {
+        if (logo) localStorage.setItem('delivery_order_logo', logo);
+    }, [logo]);
 
     const reportRef = useRef<HTMLDivElement>(null);
 
@@ -151,6 +160,9 @@ export const DeliveryOrder: React.FC = () => {
         if (!inputText.trim()) return;
 
         try {
+            // Limpa dados anteriores explicitamente para evitar acúmulo
+            setData([]);
+
             const results = await processText(HARVEST_PROMPT, inputText);
 
             if (results) {
@@ -170,12 +182,27 @@ export const DeliveryOrder: React.FC = () => {
                     visible: true
                 }));
 
-                setData(newItems); // SUBSTITUI os dados anteriores em vez de acumular
-                setInputText(''); // Limpa o texto após processar
+                setData(newItems);
+                setInputText('');
                 setView('DASHBOARD');
             }
         } catch (error) {
             console.error("Text Processing Error", error);
+        }
+    };
+
+    const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (ev) => setLogo(ev.target?.result as string);
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    };
+
+    const clearAllData = () => {
+        if (window.confirm("Tem certeza que deseja apagar todos os dados e começar de novo?")) {
+            setData([]);
+            localStorage.removeItem('delivery_order_db');
         }
     };
 
@@ -190,6 +217,7 @@ export const DeliveryOrder: React.FC = () => {
         const file = e.target.files[0];
 
         try {
+            setData([]); // Limpa antes de processar novo arquivo
             const results = await processFile(file, HARVEST_PROMPT);
 
             if (results) {
@@ -209,7 +237,7 @@ export const DeliveryOrder: React.FC = () => {
                     visible: true
                 }));
 
-                setData(newItems); // SUBSTITUI os dados anteriores em vez de acumular
+                setData(newItems);
                 setView('DASHBOARD');
             }
         } catch (error) {
@@ -432,15 +460,34 @@ export const DeliveryOrder: React.FC = () => {
                             </label>
                         </div>
 
-                        <button
-                            onClick={handleProcess}
-                            className="w-full py-3 px-4 bg-[#f26522] hover:bg-[#d95213] text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 group"
-                        >
-                            <span>Processar Dados</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 group-hover:translate-x-1 transition-transform">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                            </svg>
-                        </button>
+                        <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <button
+                                onClick={handleProcess}
+                                className="w-full py-3 px-6 bg-[#f26522] hover:bg-[#d95213] text-white font-bold rounded-xl shadow-lg hover:shadow-orange-200 transition-all flex items-center justify-center gap-2 group"
+                            >
+                                <span>Processar Dados</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 group-hover:translate-x-1 transition-transform">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                                </svg>
+                            </button>
+
+                            <label className="w-full py-3 px-6 bg-white border-2 border-orange-500 text-orange-600 hover:bg-orange-50 font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                                </svg>
+                                {logo ? 'Alterar Logo' : 'Adicionar Logo'}
+                                <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                            </label>
+                        </div>
+
+                        {data.length > 0 && (
+                            <button
+                                onClick={clearAllData}
+                                className="w-full py-2 text-sm text-gray-400 hover:text-red-500 transition-colors underline"
+                            >
+                                Limpar Base de Dados Atual
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -449,69 +496,79 @@ export const DeliveryOrder: React.FC = () => {
 
     // DASHBOARD VIEW
     return (
-        <div className="space-y-8 font-inter animate-fadeIn">
-            <header className="bg-[#f26522] p-6 rounded-xl shadow-lg text-white">
-                <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-bold">Resumo de Faturamento Carapitanga 0019(Ocean) - Dezembro/2025</h2>
-                    <button onClick={() => setView('INPUT')} className="text-white/80 hover:text-white underline text-sm">
-                        Voltar para Importação
-                    </button>
+        <div className="space-y-8 font-inter animate-fadeIn pb-20">
+            <header className="bg-gradient-to-r from-[#f26522] to-[#ff9d6c] p-8 rounded-2xl shadow-xl text-white flex flex-col md:flex-row justify-between items-center gap-6">
+                <div className="flex items-center gap-6">
+                    {logo && (
+                        <div className="w-24 h-24 bg-white p-2 rounded-xl shadow-inner flex items-center justify-center overflow-hidden">
+                            <img src={logo} alt="Empresa Logo" className="max-w-full max-h-full object-contain" />
+                        </div>
+                    )}
+                    <div>
+                        <h2 className="text-3xl font-extrabold tracking-tight">Resumo de Faturamento</h2>
+                        <p className="text-orange-100 font-medium">Carapitanga 0019 (Ocean) — Dezembro/2025</p>
+                    </div>
                 </div>
+                <button
+                    onClick={() => setView('INPUT')}
+                    className="px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-lg text-white font-bold transition-all border border-white/30"
+                >
+                    Nova Importação
+                </button>
             </header>
 
-            <section className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+            <section className="bg-white rounded-2xl shadow-xl shadow-orange-100/50 overflow-hidden border border-orange-50">
                 <div className="overflow-x-auto" ref={reportRef}>
-                    <table className="w-full">
-                        <thead className="bg-[#f26522] text-white">
-                            <tr>
-                                <th className="p-4 text-center w-16 first:rounded-tl-lg" data-html2canvas-ignore>Ocultar</th>
-                                <th className="p-4 text-left">Data</th>
-                                <th className="p-4 text-left">Viveiro</th>
-                                <th className="p-4 text-left">Cliente</th>
-                                <th className="p-4 text-left">Produção (kg)</th>
-                                <th className="p-4 text-left">Peso Médio (g)</th>
-                                <th className="p-4 text-left">Preço (R$)</th>
-                                <th className="p-4 text-left">Valor Total (R$)</th>
-                                <th className="p-4 text-left">Sobrev. (%)</th>
-                                <th className="p-4 text-left">FCA</th>
-                                <th className="p-4 text-left">Dias Cult.</th>
-                                <th className="p-4 text-left">Laboratório</th>
-                                <th className="p-4 text-left last:rounded-tr-lg">Notas</th>
+                    <table className="w-full border-collapse">
+                        <thead>
+                            <tr className="bg-[#f26522] text-white">
+                                <th className="p-5 text-center w-16" data-html2canvas-ignore></th>
+                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Data</th>
+                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Viveiro</th>
+                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Cliente</th>
+                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Produção</th>
+                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">P. Médio</th>
+                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Preço</th>
+                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Total</th>
+                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Sobrev.</th>
+                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">FCA</th>
+                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Ciclo</th>
+                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Laborat.</th>
+                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider last:rounded-tr-2xl">Obs</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-orange-50">
                             {data.map((row) => (
-                                <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+                                <tr key={row.id} className={`transition-colors h-16 ${row.visible ? 'bg-white hover:bg-orange-50/30' : 'bg-gray-50/50 opacity-50'}`}>
                                     <td className="p-4 text-center" data-html2canvas-ignore>
                                         <input
                                             type="checkbox"
                                             checked={row.visible}
                                             onChange={() => toggleRow(row.id)}
-                                            className="h-5 w-5 rounded text-orange-600 focus:ring-orange-500 border-gray-300"
+                                            className="h-5 w-5 rounded-md text-[#f26522] focus:ring-[#f26522] border-orange-200 cursor-pointer"
                                         />
                                     </td>
-                                    <td className={`p-4 ${!row.visible ? 'invisible' : ''}`}>{row.data}</td>
-                                    <td className={`p-4 ${!row.visible ? 'invisible' : ''}`}>{row.viveiro}</td>
-                                    <td className={`p-4 font-medium text-gray-800 ${!row.visible ? 'invisible' : ''}`}>{row.cliente}</td>
-                                    <td className={`p-4 font-bold text-gray-900 ${!row.visible ? 'invisible' : ''}`}>{formatNumber(row.producao, ' kg')}</td>
-                                    <td className={`p-4 ${!row.visible ? 'invisible' : ''}`}>{formatGrams(row.pesoMedio)}</td>
-                                    <td className={`p-4 ${!row.visible ? 'invisible' : ''}`}>{formatCurrency(row.preco)}</td>
-                                    <td className={`p-4 font-bold text-green-600 ${!row.visible ? 'invisible' : ''}`}>{formatCurrency(row.producao * row.preco)}</td>
-                                    <td className={`p-4 ${!row.visible ? 'invisible' : ''}`}>{row.sobrevivencia}</td>
-                                    <td className={`p-4 ${!row.visible ? 'invisible' : ''}`}>{row.fca}</td>
-                                    <td className={`p-4 ${!row.visible ? 'invisible' : ''}`}>{row.diasCultivo}</td>
-                                    <td className={`p-4 ${!row.visible ? 'invisible' : ''}`}>{row.laboratorio}</td>
-                                    <td className={`p-4 font-medium text-red-600 ${!row.visible ? 'invisible' : ''}`}>{row.notas}</td>
+                                    <td className="p-5 text-sm font-semibold text-gray-500">{row.data}</td>
+                                    <td className="p-5 text-sm font-bold text-gray-700">{row.viveiro}</td>
+                                    <td className="p-5 text-sm font-extrabold text-[#f26522]">{row.cliente}</td>
+                                    <td className="p-5 text-sm font-black text-gray-900">{formatNumber(row.producao, ' kg')}</td>
+                                    <td className="p-5 text-sm text-gray-600 font-medium">{formatGrams(row.pesoMedio)}</td>
+                                    <td className="p-5 text-sm text-gray-600 font-medium">{formatCurrency(row.preco)}</td>
+                                    <td className="p-5 text-sm font-black text-green-600 bg-green-50/30">{formatCurrency(row.producao * row.preco)}</td>
+                                    <td className="p-5 text-sm text-gray-600">{row.sobrevivencia}</td>
+                                    <td className="p-5 text-sm text-gray-600">{row.fca}</td>
+                                    <td className="p-5 text-sm text-gray-600">{row.diasCultivo} d</td>
+                                    <td className="p-5 text-sm text-gray-600 font-semibold">{row.laboratorio}</td>
+                                    <td className="p-5 text-xs text-red-500 font-bold max-w-[120px] truncate">{row.notas}</td>
                                 </tr>
                             ))}
                         </tbody>
-                        <tfoot className="bg-gray-50 font-bold text-gray-800 border-t-2 border-slate-800">
+                        <tfoot className="bg-orange-50/50 font-black text-[#3a3a3a] border-t-2 border-[#f26522]">
                             <tr>
-                                <td colSpan={4} className="p-4 text-right">TOTAIS (SELECIONADOS):</td>
-                                <td className="p-4 text-slate-900 text-lg">{formatNumber(grandTotals.biomass, ' kg')}</td>
-                                <td>-</td>
-                                <td>-</td>
-                                <td className="p-4 text-green-600 text-lg">{formatCurrency(grandTotals.value)}</td>
+                                <td colSpan={4} className="p-6 text-right text-sm uppercase tracking-widest text-gray-500">Total Selecionado</td>
+                                <td className="p-6 text-2xl text-[#f26522]">{formatNumber(grandTotals.biomass, ' kg')}</td>
+                                <td colSpan={2}></td>
+                                <td className="p-6 text-2xl text-green-600">{formatCurrency(grandTotals.value)}</td>
                                 <td colSpan={5}></td>
                             </tr>
                         </tfoot>
@@ -520,32 +577,42 @@ export const DeliveryOrder: React.FC = () => {
             </section>
 
             <section>
-                <h3 className="text-2xl font-bold text-gray-800 mb-6">Resumo por Cliente</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {Object.entries(summaryByClient).map(([cliente, data]: [string, any]) => {
+                <div className="flex items-center gap-4 mb-8">
+                    <div className="h-8 w-2 bg-[#f26522] rounded-full"></div>
+                    <h3 className="text-2xl font-black text-gray-800 tracking-tight">Resumo Consolidado</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {Object.entries(summaryByClient).map(([cliente, summaryData]: [string, any]) => {
                         const info = CLIENT_INFO[cliente] || { codigo: '---', prazo: '---' };
-                        const mediaGramatura = data.gramaturas.reduce((a, b) => a + b, 0) / data.count;
-                        const mediaPreco = data.value / data.biomass;
+                        const mediaGramatura = summaryData.gramaturas.reduce((a: number, b: number) => a + b, 0) / summaryData.count;
+                        const mediaPreco = summaryData.value / summaryData.biomass;
 
                         return (
-                            <div key={cliente} className="bg-white rounded-xl p-6 shadow-sm border-l-4 border-[#f26522] flex flex-col h-full">
-                                <h4 className="text-xl font-bold text-[#3a3a3a] mb-4">{cliente}</h4>
-                                <div className="space-y-3 flex-1">
-                                    <SummaryItem label="Código do Cliente" value={info.codigo} />
-                                    <SummaryItem label="Prazo de Pagamento" value={info.prazo} />
-                                    <SummaryItem label="Biomassa Total" value={formatNumber(data.biomass, ' kg')} />
-                                    <SummaryItem label="Gramatura Média" value={formatGrams(mediaGramatura)} />
-                                    <SummaryItem label="Preço Unitário Médio" value={formatCurrency(mediaPreco)} />
-                                    <div className="pt-4 mt-2 border-t border-gray-100 flex justify-between items-center">
-                                        <span className="text-gray-600 font-semibold">Valor Total:</span>
-                                        <span className="text-xl font-extrabold text-[#f26522]">{formatCurrency(data.value)}</span>
+                            <div key={cliente} className="group bg-white rounded-3xl p-8 shadow-xl shadow-orange-100/30 border border-orange-50 flex flex-col h-full transform transition-all hover:-translate-y-2 hover:shadow-orange-200/50">
+                                <div className="flex justify-between items-start mb-6">
+                                    <h4 className="text-2xl font-black text-[#3a3a3a] leading-tight">{cliente}</h4>
+                                    <div className="bg-orange-100 text-[#f26522] p-2 rounded-xl">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div className="space-y-4 flex-1">
+                                    <SummaryItem label="ID Faturamento" value={info.codigo} />
+                                    <SummaryItem label="Pagamento" value={info.prazo} />
+                                    <SummaryItem label="Biomassa" value={formatNumber(summaryData.biomass, ' kg')} />
+                                    <SummaryItem label="Média G" value={formatGrams(mediaGramatura)} />
+                                    <SummaryItem label="Preço Médio" value={formatCurrency(mediaPreco)} />
+                                    <div className="pt-6 mt-4 border-t-2 border-orange-50 flex flex-col gap-2">
+                                        <span className="text-xs font-black uppercase tracking-widest text-gray-400">Total a Faturar</span>
+                                        <span className="text-3xl font-black text-[#f26522] drop-shadow-sm">{formatCurrency(summaryData.value)}</span>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => generateEmail(cliente)}
-                                    className="mt-6 w-full py-2 bg-[#3a3a3a] hover:bg-[#f26522] text-white rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                                    className="mt-8 w-full py-4 bg-gray-900 hover:bg-[#f26522] text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-3 shadow-lg shadow-gray-200 group-hover:shadow-orange-200"
                                 >
-                                    <span>✨ Gerar E-mail</span>
+                                    <span className="text-lg">✨ Gerar Rascunho</span>
                                 </button>
                             </div>
                         );
@@ -631,7 +698,7 @@ export const DeliveryOrder: React.FC = () => {
                 </div>
             </div>
             <div className="h-24"></div> {/* Spacer for fixed footer */}
-        </div >
+        </div>
     );
 };
 
