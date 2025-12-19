@@ -930,8 +930,36 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     if (history.length === 0) return;
     const phone = prompt("Digite o número do WhatsApp (DDI + DDD + Número):", "55");
     if (!phone) return;
-    alert("Gerando PDFs... Aguarde o download iniciar.");
-    window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=Olá, seguem em anexo os recibos de pagamento da empresa ${activeCompany.name}.`, '_blank');
+
+    try {
+      // 1. Actually generate a bulk PDF
+      const bulkContainer = document.getElementById('bulk-receipts-container');
+      if (!bulkContainer) {
+        alert("Erro técnico: container de recibos não encontrado.");
+        return;
+      }
+
+      // Show a non-blocking indicator if possible, or just proceed
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const receipts = bulkContainer.querySelectorAll('.bulk-receipt-page');
+
+      for (let i = 0; i < receipts.length; i++) {
+        const element = receipts[i] as HTMLElement;
+        const canvas = await html2canvas(element, { scale: 1.5, useCORS: true });
+        const imgData = canvas.toDataURL('image/png');
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+      }
+
+      pdf.save(`Recibos_Gerais_${activeCompany.name}.pdf`);
+
+      // 2. Open WhatsApp
+      const message = encodeURIComponent(`Olá, seguem os recibos de pagamento da empresa ${activeCompany.name}. Acabei de baixar o arquivo PDF completo, vou te enviar agora.`);
+      window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${message}`, '_blank');
+    } catch (e) {
+      console.error("Bulk PDF Error", e);
+      alert("Erro ao gerar PDF em massa. Tente novamente.");
+    }
   };
 
   const handlePrint = () => { setShowExportMenu(false); window.print(); };
@@ -1926,6 +1954,75 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
           </div>
         </div>
       )}
+
+      {/* --- HIDDEN BULK RECEIPTS CONTAINER (For PDF Export) --- */}
+      <div id="bulk-receipts-container" className="fixed left-[-9999px] top-[-9999px]">
+        {history.map((item, idx) => (
+          <div key={`bulk-${idx}`} className="bulk-receipt-page bg-white w-[210mm] h-[297mm] p-[15mm] space-y-8 flex flex-col justify-between">
+            {/* Copy of individual receipt logic (1st via) */}
+            <div className="bg-white border-[1px] border-slate-300 p-8 rounded-sm relative">
+              <div className="flex flex-col items-center gap-2 mb-6 text-center">
+                {activeCompany.logoUrl && (
+                  <img src={activeCompany.logoUrl} alt="Logo" className="h-10 w-auto object-contain mb-2" />
+                )}
+                <h1 className="text-lg font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
+                <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase italic">1ª VIA</span>
+                  <div className="border border-slate-300 px-3 py-1 rounded font-black text-slate-900 text-base">
+                    {formatCurrency(item.result.grossSalary)}
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-3 text-sm leading-relaxed text-justify text-slate-800">
+                <p>
+                  Recebi de <strong className="font-black uppercase">{activeCompany.name}</strong>
+                  {activeCompany.cnpj && <> – CNPJ <span className="font-mono">{activeCompany.cnpj}</span></>}, a importância de
+                  <strong className="font-bold"> {numberToWordsBRL(item.result.grossSalary).toUpperCase()}</strong>,
+                  referente à <strong className="font-bold">{generateSmartSummary(item)}</strong>.
+                </p>
+                <p>Para maior clareza, firmo o presente recibo, que comprova o recebimento integral do valor mencionado, concedendo <strong className="font-bold">quitação plena, geral e irrevogável</strong> pela quantia recebida.</p>
+                <p className="text-[12px]">Pagamento recebido por <strong className="font-bold">{item.input.employeeName}</strong> através da chave Pix: <strong className="font-mono">{item.input.pixKey}</strong>, {item.input.bankName}.</p>
+                <div className="text-right italic text-slate-500 font-medium uppercase text-[11px] mt-6">CANAVIEIRAS, {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                <div className="mt-8 pt-4 border-t border-slate-300 flex flex-col items-center">
+                  <p className="font-black uppercase text-sm tracking-tight">{item.input.employeeName}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t-[1px] border-dashed border-slate-300 my-4"></div>
+
+            {/* Copy of individual receipt logic (2nd via) */}
+            <div className="bg-white border-[1px] border-slate-300 p-8 rounded-sm relative">
+              <div className="flex flex-col items-center gap-2 mb-6 text-center">
+                {activeCompany.logoUrl && (
+                  <img src={activeCompany.logoUrl} alt="Logo" className="h-10 w-auto object-contain mb-2" />
+                )}
+                <h1 className="text-lg font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
+                <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase italic">2ª VIA</span>
+                  <div className="border border-slate-300 px-3 py-1 rounded font-black text-slate-900 text-base">
+                    {formatCurrency(item.result.grossSalary)}
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-3 text-sm leading-relaxed text-justify text-slate-800">
+                <p>
+                  Recebi de <strong className="font-black uppercase">{activeCompany.name}</strong>
+                  {activeCompany.cnpj && <> – CNPJ <span className="font-mono">{activeCompany.cnpj}</span></>}, a importância de
+                  <strong className="font-bold"> {numberToWordsBRL(item.result.grossSalary).toUpperCase()}</strong>,
+                  referente à <strong className="font-bold">{generateSmartSummary(item)}</strong>.
+                </p>
+                <p>Para maior clareza, firmo o presente recibo, que comprova o recebimento integral do valor mencionado, concedendo <strong className="font-bold">quitação plena, geral e irrevogável</strong> pela quantia recebida.</p>
+                <p className="text-[12px]">Pagamento recebido por <strong className="font-bold">{item.input.employeeName}</strong> através da chave Pix: <strong className="font-mono">{item.input.pixKey}</strong>, {item.input.bankName}.</p>
+                <div className="text-right italic text-slate-500 font-medium uppercase text-[11px] mt-6">CANAVIEIRAS, {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                <div className="mt-8 pt-4 border-t border-slate-300 flex flex-col items-center">
+                  <p className="font-black uppercase text-sm tracking-tight">{item.input.employeeName}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
