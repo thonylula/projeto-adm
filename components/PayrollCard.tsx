@@ -824,95 +824,61 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
     // TÍTULO / REFERÊNCIA
     if (input.calculationMode === '13TH') {
-      parts.push(`PAGT 13º SALÁRIO REF A ${input.referenceYear}`);
-      if (input.thirteenthCalculationType === 'CLT') {
-        parts.push(`(${result.thirteenthTotalAvos}/12 AVOS).`);
-      } else {
-        parts.push(`(${result.thirteenthTotalDays} DIAS TRABALHADOS).`);
-      }
+      const label = input.thirteenthCalculationType === 'CLT'
+        ? `${result.thirteenthTotalAvos}/12 AVOS`
+        : `${result.thirteenthTotalDays}D`;
+      parts.push(`13º REF ${input.referenceYear} (${label})`);
     } else {
-      parts.push(`PAGT REF A ${input.referenceMonth}/${input.referenceYear}`);
-      if (input.workScale === '12x36') {
-        parts.push(`(${input.daysWorked} PLANTÕES).`);
-      } else {
-        parts.push(`(${input.daysWorked} DIAS TRABALHADOS).`);
-      }
+      const label = input.workScale === '12x36' ? `${input.daysWorked}PL` : `${input.daysWorked}D`;
+      parts.push(`REF ${input.referenceMonth}/${input.referenceYear} (${label})`);
     }
 
     // BASE
-    parts.push(`SALÁRIO BASE ${formatCurrency(input.baseSalary)}`);
+    parts.push(`BASE ${formatCurrency(input.baseSalary)}`);
 
     // Ganhos Adicionais
-    if (result.hazardPayValue > 0) parts.push(`PERICULOSIDADE ${formatCurrency(result.hazardPayValue)}`);
+    if (result.hazardPayValue > 0) parts.push(`PERIC. ${formatCurrency(result.hazardPayValue)}`);
 
-    // Adicional Noturno com Horas
+    // Noturno
     if (result.nightShiftValue > 0) {
-      const nightDetails = result.effectiveNightHours
-        ? `(${result.effectiveNightHours.toFixed(2).replace('.', ',')}h)`
-        : '';
-      parts.push(`ADIC. NOTURNO ${nightDetails} ${formatCurrency(result.nightShiftValue)}`);
+      const nightDetails = result.effectiveNightHours ? `(${result.effectiveNightHours.toFixed(2).replace('.', ',')}H)` : '';
+      parts.push(`NOT. ${nightDetails} ${formatCurrency(result.nightShiftValue)}`);
     }
 
-    // Horas Extras Detalhadas (Inclui HE, Domingos, Feriados)
+    // HE Detalhado
     if (result.overtimeValue > 0) {
-      const overtimeDetails = [];
+      const details = [];
+      if (input.overtimeHours > 0) details.push(`${input.overtimeHours}H/${input.overtimePercentage}%`);
+      if (input.overtimeHours2 > 0) details.push(`${input.overtimeHours2}H/${input.overtimePercentage2}%`);
+      if (input.sundaysAmount > 0) details.push(`${input.sundaysAmount}DOM`);
+      if (input.workScale === '12x36' && input.holidayHours > 0 && input.workedOnHoliday) details.push(`${input.holidayHours}H/FER`);
 
-      // HE 1
-      if (input.overtimeHours > 0) {
-        overtimeDetails.push(`${input.overtimeHours}h A ${input.overtimePercentage}%`);
-      }
-      // HE 2
-      if (input.overtimeHours2 > 0) {
-        overtimeDetails.push(`${input.overtimeHours2}h A ${input.overtimePercentage2}%`);
-      }
-      // Domingos
-      if (input.sundaysAmount > 0) {
-        overtimeDetails.push(`${input.sundaysAmount} DOM`);
-      }
-      // Feriados (Apenas 12x36)
-      if (input.workScale === '12x36' && input.holidayHours > 0 && input.workedOnHoliday) {
-        overtimeDetails.push(`${input.holidayHours}h FER`);
-      }
-
-      const detailsStr = overtimeDetails.length > 0 ? `(${overtimeDetails.join(' + ')})` : '';
-      parts.push(`HORAS EXTRAS ${detailsStr} ${formatCurrency(result.overtimeValue)}`);
+      const detailsStr = details.length > 0 ? `(${details.join('+')})` : '';
+      parts.push(`HE ${detailsStr} ${formatCurrency(result.overtimeValue)}`);
     }
 
-    // DSR (Reflexos)
+    // DSR
     const totalDsr = result.dsrOvertimeValue + result.dsrNightShiftValue;
-    if (totalDsr > 0) {
-      parts.push(`DSR (REFLEXOS) ${formatCurrency(totalDsr)}`);
-    }
+    if (totalDsr > 0) parts.push(`DSR ${formatCurrency(totalDsr)}`);
 
-    // Novos Campos
-    if (input.familyAllowance && input.familyAllowance > 0) parts.push(`SAL. FAMÍLIA ${formatCurrency(input.familyAllowance)}`);
-    if (input.costAllowance && input.costAllowance > 0) parts.push(`AJUDA DE CUSTO ${formatCurrency(input.costAllowance)}`);
-    if (result.visitsTotalValue > 0) parts.push(`VISITAS (${input.visitsAmount}) ${formatCurrency(result.visitsTotalValue)}`);
-    if (input.productionBonus && input.productionBonus > 0) parts.push(`PRODUÇÃO ${formatCurrency(input.productionBonus)}`);
+    // Ganhos/Descontos
+    if (input.familyAllowance > 0) parts.push(`FAML. ${formatCurrency(input.familyAllowance)}`);
+    if (input.costAllowance > 0) parts.push(`AJUDA ${formatCurrency(input.costAllowance)}`);
+    if (result.visitsTotalValue > 0) parts.push(`VISIT. (${input.visitsAmount}) ${formatCurrency(result.visitsTotalValue)}`);
+    if (input.productionBonus > 0) parts.push(`PROD. ${formatCurrency(input.productionBonus)}`);
 
     // Empréstimo
     if (input.loanTotalValue > 0 || result.loanDiscountValue > 0) {
-      const installmentsStr = (input.loanTotalInstallments > 0)
-        ? `${input.loanCurrentInstallment}/${input.loanTotalInstallments}`
-        : '';
-      const partsLoan = [];
-      if (installmentsStr) partsLoan.push(installmentsStr);
-      partsLoan.push(formatCurrency(result.loanDiscountValue));
-      parts.push(`EMPRÉSTIMO (${partsLoan.join(' ')})`);
+      const inst = input.loanTotalInstallments > 0 ? `(${input.loanCurrentInstallment}/${input.loanTotalInstallments})` : '';
+      parts.push(`EMP. ${inst} ${formatCurrency(result.loanDiscountValue)}`);
     }
 
-
-
-    // Dados Bancários
-    if (input.bankName) {
-      parts.push(`BANCO: ${input.bankName}`);
-    }
-    if (input.pixKey) {
-      parts.push(`PIX: ${input.pixKey}`);
-    }
+    // Banco / Pix
+    if (input.bankName) parts.push(`BK: ${input.bankName}`);
+    if (input.pixKey) parts.push(`PIX: ${input.pixKey}`);
 
     // Final
-    parts.push(`TOTAL BRUTO ${formatCurrency(result.grossSalary)}.`);
+    parts.push(`TOTAL ${formatCurrency(result.grossSalary)}.`);
 
     return parts.join(', ').toUpperCase();
   };
