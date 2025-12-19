@@ -113,22 +113,24 @@ export const RegistrationManager: React.FC = () => {
     const [exportingId, setExportingId] = useState<string | null>(null);
     const sheetRef = useRef<HTMLDivElement>(null);
 
-    // --- DATA STORE (SAFE PARSING) ---
-    const [employees, setEmployees] = useState<RegistryEmployee[]>(() => {
+    const [employees, setEmployees] = useState<RegistryEmployee[]>([]);
+    const [suppliers, setSuppliers] = useState<RegistrySupplier[]>([]);
+    const [clients, setClients] = useState<RegistryClient[]>([]);
+
+    useEffect(() => {
         try {
-            return JSON.parse(localStorage.getItem('folha_registry_employees') || '[]');
-        } catch { return []; }
-    });
-    const [suppliers, setSuppliers] = useState<RegistrySupplier[]>(() => {
+            const e = localStorage.getItem('folha_registry_employees');
+            if (e) setEmployees(JSON.parse(e));
+        } catch { }
         try {
-            return JSON.parse(localStorage.getItem('folha_registry_suppliers') || '[]');
-        } catch { return []; }
-    });
-    const [clients, setClients] = useState<RegistryClient[]>(() => {
+            const s = localStorage.getItem('folha_registry_suppliers');
+            if (s) setSuppliers(JSON.parse(s));
+        } catch { }
         try {
-            return JSON.parse(localStorage.getItem('folha_registry_clients') || '[]');
-        } catch { return []; }
-    });
+            const c = localStorage.getItem('folha_registry_clients');
+            if (c) setClients(JSON.parse(c));
+        } catch { }
+    }, []);
 
     // --- FORM STATES ---
     const [empForm, setEmpForm] = useState(INITIAL_EMPLOYEE);
@@ -136,9 +138,9 @@ export const RegistrationManager: React.FC = () => {
     const [cliForm, setCliForm] = useState(INITIAL_CLIENT);
 
     // --- PERSISTENCE ---
-    useEffect(() => localStorage.setItem('folha_registry_employees', JSON.stringify(employees)), [employees]);
-    useEffect(() => localStorage.setItem('folha_registry_suppliers', JSON.stringify(suppliers)), [suppliers]);
-    useEffect(() => localStorage.setItem('folha_registry_clients', JSON.stringify(clients)), [clients]);
+    useEffect(() => { if (employees.length > 0) localStorage.setItem('folha_registry_employees', JSON.stringify(employees)); }, [employees]);
+    useEffect(() => { if (suppliers.length > 0) localStorage.setItem('folha_registry_suppliers', JSON.stringify(suppliers)); }, [suppliers]);
+    useEffect(() => { if (clients.length > 0) localStorage.setItem('folha_registry_clients', JSON.stringify(clients)); }, [clients]);
 
     // --- AI SMART UPLOAD ---
     const { processFile, isProcessing } = useGeminiParser({

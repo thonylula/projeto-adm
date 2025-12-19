@@ -29,32 +29,32 @@ export default function App() {
   // Navigation State
   const [activeTab, setActiveTab] = useState('payroll');
 
-  // Load initial state from localStorage if available with ROBUST SANITIZATION
-  const [companies, setCompanies] = useState<Company[]>(() => {
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(null);
+
+  // Load initial state from localStorage on mount (Client-side only)
+  useEffect(() => {
     try {
       const saved = localStorage.getItem('folha_companies');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          // Sanitiza cada empresa para garantir que 'employees' seja um array
-          return parsed.map((c: any) => ({
+          setCompanies(parsed.map((c: any) => ({
             ...c,
             employees: Array.isArray(c.employees) ? c.employees : []
-          }));
+          })));
         }
       }
-      return [];
     } catch (e) {
       console.error("Failed to load companies from storage", e);
-      return [];
     }
-  });
-
-  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(null);
+  }, []);
 
   // Persist companies on change
   useEffect(() => {
-    localStorage.setItem('folha_companies', JSON.stringify(companies));
+    if (companies.length > 0) {
+      localStorage.setItem('folha_companies', JSON.stringify(companies));
+    }
   }, [companies]);
 
   const activeCompany = companies.find(c => c.id === activeCompanyId);
