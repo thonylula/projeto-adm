@@ -172,23 +172,43 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const [copiedSummaryId, setCopiedSummaryId] = useState<string | null>(null);
   const [receiptItem, setReceiptItem] = useState<PayrollHistoryItem | null>(null);
 
+  // WhatsApp API Configuration
+  const [whatsappConfig, setWhatsappConfig] = useState({
+    apiUrl: '',
+    apiToken: '',
+    instanceName: ''
+  });
+  const [showWhatsAppConfigModal, setShowWhatsAppConfigModal] = useState(false);
+
   // Lista de funcionários cadastrados para importação
   const [registeredEmployees, setRegisteredEmployees] = useState<RegistryEmployee[]>([]);
 
   const reportRef = useRef<HTMLDivElement>(null);
   const exportMenuRef = useRef<HTMLDivElement>(null);
 
-  // Carregar funcionários do "Cadastros Gerais"
+  // Carregar funcionários do "Cadastros Gerais" e WhatsApp config
   useEffect(() => {
     try {
       const stored = localStorage.getItem('folha_registry_employees');
       if (stored) {
         setRegisteredEmployees(JSON.parse(stored));
       }
+
+      const whatsappStored = localStorage.getItem('whatsapp_api_config');
+      if (whatsappStored) {
+        setWhatsappConfig(JSON.parse(whatsappStored));
+      }
     } catch (e) {
-      console.error("Erro ao carregar cadastros", e);
+      console.error("Erro ao carregar dados", e);
     }
   }, []);
+
+  // Salvar configuração do WhatsApp
+  const saveWhatsAppConfig = () => {
+    localStorage.setItem('whatsapp_api_config', JSON.stringify(whatsappConfig));
+    setShowWhatsAppConfigModal(false);
+    alert('✅ Configuração salva com sucesso!');
+  };
 
   // --- Lógica de Calendário (Holidays & Business Days) ---
   const getEasterDate = (year: number): Date => {
@@ -928,18 +948,21 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
   const handleWhatsAppBulk = async () => {
     if (history.length === 0) return;
+
+    // Check if API is configured
+    const isApiConfigured = whatsappConfig.apiUrl && whatsappConfig.apiToken && whatsappConfig.instanceName;
+
     const phone = prompt("Digite o número do WhatsApp (DDI + DDD + Número):", "55");
     if (!phone) return;
 
     try {
-      // 1. Actually generate a bulk PDF
+      // 1. Generate the bulk PDF
       const bulkContainer = document.getElementById('bulk-receipts-container');
       if (!bulkContainer) {
         alert("Erro técnico: container de recibos não encontrado.");
         return;
       }
 
-      // Show a non-blocking indicator if possible, or just proceed
       const pdf = new jsPDF('p', 'mm', 'a4');
       const receipts = bulkContainer.querySelectorAll('.bulk-receipt-page');
 
@@ -951,14 +974,54 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
         pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
       }
 
-      pdf.save(`Recibos_Gerais_${activeCompany.name}.pdf`);
-
-      // 2. Open WhatsApp
-      const message = encodeURIComponent(`Olá, seguem os recibos de pagamento da empresa ${activeCompany.name}. Acabei de baixar o arquivo PDF completo, vou te enviar agora.`);
-      window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${message}`, '_blank');
+      // 2. If API is configured, send via API
+      if (isApiConfigured) {
+        const pdfBase64 = pdf.output('dataurlstring').split(',')[1];
+        await sendPDFViaWhatsAppAPI(phone, pdfBase64, `Recibos_${activeCompany.name}.pdf`);
+      } else {
+        // Fallback: download PDF and open WhatsApp web
+        pdf.save(`Recibos_Gerais_${activeCompany.name}.pdf`);
+        const message = encodeURIComponent(`Olá, seguem os recibos de pagamento da empresa ${activeCompany.name}. Acabei de baixar o arquivo PDF completo, vou te enviar agora.`);
+        window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${message}`, '_blank');
+      }
     } catch (e) {
       console.error("Bulk PDF Error", e);
-      alert("Erro ao gerar PDF em massa. Tente novamente.");
+      alert("Erro ao gerar/enviar PDF. Verifique a configuração da API.");
+    }
+  };
+
+  // Send PDF via WhatsApp API
+  const sendPDFViaWhatsAppAPI = async (phone: string, pdfBase64: string, filename: string) => {
+    try {
+      const cleanPhone = phone.replace(/\D/g, '');
+
+      // Evolution API format (most common free API)
+      const response = await fetch(`${whatsappConfig.apiUrl}/message/sendMedia/${whatsappConfig.instanceName}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': whatsappConfig.apiToken
+        },
+        body: JSON.stringify({
+          number: cleanPhone,
+          mediatype: 'document',
+          mimetype: 'application/pdf',
+          caption: `Recibos de pagamento - ${activeCompany.name}`,
+          fileName: filename,
+          media: pdfBase64
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      alert(`✅ PDF enviado com sucesso via WhatsApp para ${phone}!`);
+      console.log('WhatsApp API Response:', result);
+    } catch (error) {
+      console.error('WhatsApp API Error:', error);
+      alert(`❌ Erro ao enviar via API. Verifique sua configuração.\n\nDetalhes: ${error}`);
     }
   };
 
@@ -1752,6 +1815,15 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
           WHATSAPP
         </button>
 
+        <button
+          onClick={() => setShowWhatsAppConfigModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl shadow-md font-bold transition-all text-xs"
+          title="Configurar API do WhatsApp"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          CONFIG
+        </button>
+
         <div className="w-px h-6 bg-slate-200 mx-1"></div>
 
         <button
@@ -2023,6 +2095,90 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
           </div>
         ))}
       </div>
+
+      {/* --- WHATSAPP API CONFIG MODAL --- */}
+      {showWhatsAppConfigModal && (
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200">
+            <div className="flex items-center justify-between px-8 py-4 border-b border-slate-100 bg-gradient-to-r from-emerald-500 to-green-600">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-xl text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.393 0 12.03c0 2.122.54 4.197 1.57 6.05L0 24l6.117-1.605a11.815 11.815 0 005.933 1.598h.005c6.632 0 12.028-5.391 12.032-12.027a11.8 11.8 0 00-3.48-8.413Z" /></svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Configurar API do WhatsApp</h3>
+                  <p className="text-xs text-white/80 font-medium">Evolution API ou similar</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowWhatsAppConfigModal(false)}
+                className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <div className="p-8 space-y-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <p className="text-sm text-blue-900 font-medium">
+                  💡 <strong>Dica:</strong> Use a <strong>Evolution API</strong> (gratuita) ou qualquer API compatível com WhatsApp.
+                </p>
+                <p className="text-xs text-blue-700 mt-2">
+                  Exemplo de URL: <code className="bg-blue-100 px-2 py-1 rounded">https://sua-api.com</code>
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">URL da API</label>
+                <input
+                  type="text"
+                  value={whatsappConfig.apiUrl}
+                  onChange={(e) => setWhatsappConfig({ ...whatsappConfig, apiUrl: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  placeholder="https://api.exemplo.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Token da API (apikey)</label>
+                <input
+                  type="password"
+                  value={whatsappConfig.apiToken}
+                  onChange={(e) => setWhatsappConfig({ ...whatsappConfig, apiToken: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  placeholder="Seu token secreto"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Nome da Instância</label>
+                <input
+                  type="text"
+                  value={whatsappConfig.instanceName}
+                  onChange={(e) => setWhatsappConfig({ ...whatsappConfig, instanceName: e.target.value })}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  placeholder="minha-instancia"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setShowWhatsAppConfigModal(false)}
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={saveWhatsAppConfig}
+                  className="flex-[2] py-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold rounded-xl shadow-lg transition-all"
+                >
+                  ✅ Salvar Configuração
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
