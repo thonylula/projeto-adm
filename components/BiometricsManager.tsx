@@ -1,3 +1,6 @@
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import html2canvas from 'html2canvas';
+import html2pdf from 'html2pdf.js';
 import { safeIncludes } from '../utils';
 import { useGeminiParser } from '../hooks/useGeminiParser';
 
@@ -477,11 +480,7 @@ export const BiometricsManager: React.FC = () => {
         return processed.filter(item => item.hasBiometrics);
     }, [currentData]);
 
-    const handleReset = () => {
-        setStep('UPLOAD');
-        setFiles([]);
-        setTextInput('');
-    };
+
 
     const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
