@@ -64,6 +64,8 @@ export interface PayrollInput {
   // Empréstimos (Novo)
   loanTotalValue: number; // Valor Total do Empréstimo
   loanDiscountValue: number; // Valor do Desconto Atual
+  loanTotalInstallments: number; // Total de Parcelas (Ex: 5)
+  loanCurrentInstallment: number; // Parcela Atual (Ex: 3)
 
 
   // Hora Extra 2 (Novo)
