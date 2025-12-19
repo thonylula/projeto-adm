@@ -893,7 +893,47 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     });
   };
 
+  // --- DERIVED STATE & CONSTANTS ---
+  const isThirteenthMode = formState.calculationMode === '13TH';
+  const history = activeCompany.employees || [];
+  const totalCompanyCost = history.reduce((acc, item) => acc + (item.result?.grossSalary || 0), 0);
+  const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+  const monthAbbr = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+  const currentCalculatedAvos = isThirteenthMode && formState.thirteenthDetailedDays
+    ? Object.values(formState.thirteenthDetailedDays).filter((d: any) => d >= 15).length
+    : 0;
+
+  const currentTotalDays = isThirteenthMode && formState.thirteenthDetailedDays
+    ? Object.values(formState.thirteenthDetailedDays).reduce((a: number, b: any) => a + (b || 0), 0)
+    : 0;
+
   // --- EXPORT & BACKUP FUNCTIONS ---
+  const handleDownloadPDF = async (item: PayrollHistoryItem) => {
+    const element = document.getElementById('receipt-content');
+    if (!element) return;
+    try {
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Recibo_${item.input.employeeName.replace(/\s+/g, '_')}.pdf`);
+    } catch (e) {
+      console.error("PDF Error", e);
+      alert("Erro ao gerar PDF.");
+    }
+  };
+
+  const handleWhatsAppBulk = async () => {
+    if (history.length === 0) return;
+    const phone = prompt("Digite o número do WhatsApp (DDI + DDD + Número):", "55");
+    if (!phone) return;
+    alert("Gerando PDFs... Aguarde o download iniciar.");
+    window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=Olá, seguem em anexo os recibos de pagamento da empresa ${activeCompany.name}.`, '_blank');
+  };
+
   const handlePrint = () => { setShowExportMenu(false); window.print(); };
 
   const handleExportPDF = async () => {
@@ -978,28 +1018,16 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   };
 
   const exportToCSV = () => {
-    const history = activeCompany.employees;
-    if (history.length === 0) return;
-    const headers = [
-      "Modo", "Competência", "Nome", "Ref. 13o (Avos/Dias)", "Salário Base", "Total Bruto"
-    ];
-    const rows = history.map(item => {
-      let ref13 = "0";
-      if (item.input.calculationMode === '13TH') {
-        ref13 = item.input.thirteenthCalculationType === 'CLT'
-          ? `${(item.result.thirteenthTotalAvos || 0)}/12 avos`
-          : `${(item.result.thirteenthTotalDays || 0)} dias`;
-      }
-
-      return [
-        item.input.calculationMode === '13TH' ? "13 SALARIO" : "MENSAL",
-        `"${item.input.referenceMonth}/${item.input.referenceYear}"`,
-        `"${item.input.employeeName}"`,
-        ref13,
-        item.input.baseSalary.toFixed(2),
-        item.result.grossSalary.toFixed(2)
-      ];
-    });
+    const data = activeCompany.employees || [];
+    if (data.length === 0) return;
+    const headers = ["Modo", "Competência", "Nome", "Salário Base", "Total Bruto"];
+    const rows = data.map(item => [
+      item.input.calculationMode === '13TH' ? "13 SALARIO" : "MENSAL",
+      `"${item.input.referenceMonth}/${item.input.referenceYear}"`,
+      `"${item.input.employeeName}"`,
+      item.input.baseSalary.toFixed(2),
+      item.result.grossSalary.toFixed(2)
+    ]);
     const csvContent = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -1010,27 +1038,6 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     link.click();
     document.body.removeChild(link);
   };
-
-  // Safe access to history
-  const history = activeCompany.employees || [];
-  const totalCompanyCost = history.reduce((acc, item) => {
-    const val = safeNum(item.result?.grossSalary);
-    return acc + val;
-  }, 0);
-
-  const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-  const monthAbbr = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-
-  const isThirteenthMode = formState.calculationMode === '13TH';
-
-  // Calculate current stats in real-time for display
-  const currentCalculatedAvos = isThirteenthMode && formState.thirteenthDetailedDays
-    ? Object.values(formState.thirteenthDetailedDays).filter((d: any) => d >= 15).length
-    : 0;
-
-  const currentTotalDays = isThirteenthMode && formState.thirteenthDetailedDays
-    ? Object.values(formState.thirteenthDetailedDays).reduce((a: number, b: any) => a + (b || 0), 0)
-    : 0;
 
   return (
     <div className="w-full max-w-6xl mx-auto print:max-w-none print:w-full">
@@ -1552,8 +1559,20 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                 </div>
               )}
               <div className="flex-1 text-left">
-                <h2 className="text-xl font-bold text-slate-900 uppercase">{activeCompany.name}</h2>
-                <p className="text-slate-500 text-[10px] mt-1 uppercase tracking-[0.2em]">Folha Analítica</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900 uppercase">{activeCompany.name}</h2>
+                    <p className="text-slate-500 text-[10px] mt-1 uppercase tracking-[0.2em]">Folha Analítica</p>
+                  </div>
+                  <button
+                    onClick={handleWhatsAppBulk}
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-bold text-xs shadow-md"
+                    title="Enviar todos os recibos via WhatsApp"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.393 0 12.03c0 2.122.54 4.197 1.57 6.05L0 24l6.117-1.605a11.815 11.815 0 005.933 1.598h.005c6.632 0 12.028-5.391 12.032-12.027a11.8 11.8 0 00-3.48-8.413Z" /></svg>
+                    WPP TODOS
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1751,6 +1770,13 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => handleDownloadPDF(receiptItem)}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-bold text-xs"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  BAIXAR PDF
+                </button>
+                <button
                   onClick={() => window.print()}
                   className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all font-bold text-xs"
                 >
@@ -1766,69 +1792,131 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
               </div>
             </div>
 
-            {/* Modal Content - Scrollable for web view */}
-            <div className="flex-1 overflow-y-auto p-8 bg-slate-50/30 print:p-0 print:bg-white print:overflow-visible">
-              <div id="receipt-content" className="space-y-8 print:space-y-4">
-                {/* Generating 2 copies */}
-                {[1, 2].map((copyNum) => {
-                  const employeeRegistry = registeredEmployees.find(re =>
-                    re.name.toLowerCase() === receiptItem.input.employeeName.toLowerCase()
-                  );
+            <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-slate-100 print:p-0 print:bg-white print:overflow-visible flex justify-center">
+              <div id="receipt-content" className="bg-white shadow-2xl print:shadow-none w-[210mm] min-h-[297mm] p-[15mm] space-y-8 flex flex-col justify-between">
+                <div>
+                  <div className="space-y-4 print:space-y-4">
+                    {/* Generating 1ª Copy */}
+                    {(() => {
+                      const item = receiptItem;
+                      const employeeRegistry = registeredEmployees.find(re =>
+                        re.name.toLowerCase() === item.input.employeeName.toLowerCase()
+                      );
 
-                  return (
-                    <div key={copyNum} className="bg-white border-[3px] border-orange-800 p-8 rounded-sm shadow-sm relative print:shadow-none print:border-[2px] mb-8 last:mb-0">
-                      {/* Top Header */}
-                      <div className="flex flex-col items-center gap-2 mb-6">
-                        {activeCompany.logoUrl && (
-                          <div className="mb-2">
-                            <img src={activeCompany.logoUrl} alt="Logo" className="h-12 w-auto object-contain" />
+                      return (
+                        <div className="bg-white border-[1px] border-slate-300 p-8 rounded-sm relative print:border-[1px] mb-8">
+                          {/* Top Header */}
+                          <div className="flex flex-col items-center gap-2 mb-6 text-center">
+                            {activeCompany.logoUrl && (
+                              <img src={activeCompany.logoUrl} alt="Logo" className="h-10 w-auto object-contain mb-2" />
+                            )}
+                            <h1 className="text-lg font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
+                            <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
+                              <span className="text-[10px] text-slate-400 font-bold uppercase italic">1ª VIA</span>
+                              <div className="border border-slate-300 px-3 py-1 rounded font-black text-slate-900 text-base">
+                                {formatCurrency(item.result.grossSalary)}
+                              </div>
+                            </div>
                           </div>
-                        )}
-                        <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
-                        <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase">{copyNum}ª VIA</span>
-                          <div className="bg-slate-100 border border-slate-300 px-3 py-1 rounded font-black text-slate-900 text-lg">
-                            {formatCurrency(receiptItem.result.grossSalary)}
+
+                          {/* Content Body */}
+                          <div className="space-y-3 text-sm leading-relaxed text-justify text-slate-800">
+                            <p>
+                              Recebi de <strong className="font-black uppercase">{activeCompany.name}</strong>
+                              {activeCompany.cnpj && <> – CNPJ <span className="font-mono">{activeCompany.cnpj}</span></>}, a importância de
+                              <strong className="font-bold"> {numberToWordsBRL(item.result.grossSalary).toUpperCase()}</strong>,
+                              referente à <strong className="font-bold">{generateSmartSummary(item)}</strong>.
+                            </p>
+
+                            <p>
+                              Para maior clareza, firmo o presente recibo, que comprova o recebimento integral do valor mencionado,
+                              concedendo <strong className="font-bold">quitação plena, geral e irrevogável</strong> pela quantia recebida.
+                            </p>
+
+                            <p className="text-[12px]">
+                              Pagamento recebido por <strong className="font-bold">{item.input.employeeName}</strong> através da chave Pix: <strong className="font-mono">{item.input.pixKey}</strong>, {item.input.bankName}.
+                            </p>
+
+                            <div className="text-right italic text-slate-500 font-medium uppercase text-[11px] mt-6">
+                              CANAVIEIRAS, {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                            </div>
+
+                            {/* Signature Area */}
+                            <div className="mt-8 pt-4 border-t border-slate-300 flex flex-col items-center">
+                              <p className="font-black uppercase text-sm tracking-tight">{item.input.employeeName}</p>
+                              <div className="flex gap-4 text-[10px] text-slate-500 italic mt-1 font-mono">
+                                {employeeRegistry?.cpf && <span>CPF: {employeeRegistry.cpf}</span>}
+                                {employeeRegistry?.phone && <span>{employeeRegistry.phone}</span>}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      );
+                    })()}
 
-                      {/* Content Body */}
-                      <div className="space-y-4 text-sm leading-relaxed text-justify text-slate-800">
-                        <p>
-                          Recebi de <strong className="font-black uppercase">{activeCompany.name}</strong>
-                          {activeCompany.cnpj && <> – CNPJ <span className="font-mono">{activeCompany.cnpj}</span></>}, a importância de
-                          <strong className="font-black"> {numberToWordsBRL(receiptItem.result.grossSalary).toUpperCase()}</strong>,
-                          referente à <strong className="font-black">{generateSmartSummary(receiptItem)}</strong>.
-                        </p>
-
-                        <p>
-                          Para maior clareza, firmo o presente recibo, que comprova o recebimento integral do valor mencionado,
-                          concedendo <strong className="font-black">quitação plena, geral e irrevogável</strong> pela quantia recebida.
-                        </p>
-
-                        <p>
-                          Pagamento recebido por <strong className="font-black">{receiptItem.input.employeeName}</strong>
-                          {receiptItem.input.pixKey && <> através da chave Pix: <strong className="font-mono">{receiptItem.input.pixKey}</strong></>}
-                          {receiptItem.input.bankName && <>, {receiptItem.input.bankName}</>}.
-                        </p>
-
-                        <div className="flex justify-end items-end mt-12">
-                          <div className="text-right flex-1 italic text-slate-500 font-medium uppercase">
-                            CANAVIEIRAS, {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
-                          </div>
-                        </div>
-
-                        {/* Signature Area */}
-                        <div className="mt-10 pt-4 border-t border-slate-400 flex flex-col items-center">
-                          <p className="font-black uppercase text-base tracking-tight">{receiptItem.input.employeeName}</p>
-                          {employeeRegistry?.cpf && <p className="text-xs text-slate-500 font-mono italic mt-1">CPF: {employeeRegistry.cpf}</p>}
-                          {employeeRegistry?.phone && <p className="text-xs text-slate-500 font-mono italic">{employeeRegistry.phone}</p>}
-                        </div>
-                      </div>
+                    <div className="border-t-[1px] border-dashed border-slate-300 my-4 relative">
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-[10px] text-slate-300 font-bold uppercase italic">Corte aqui</div>
                     </div>
-                  );
-                })}
+
+                    {/* Generating 2ª Copy */}
+                    {(() => {
+                      const item = receiptItem;
+                      const employeeRegistry = registeredEmployees.find(re =>
+                        re.name.toLowerCase() === item.input.employeeName.toLowerCase()
+                      );
+
+                      return (
+                        <div className="bg-white border-[1px] border-slate-300 p-8 rounded-sm relative print:border-[1px]">
+                          {/* Top Header */}
+                          <div className="flex flex-col items-center gap-2 mb-6 text-center">
+                            {activeCompany.logoUrl && (
+                              <img src={activeCompany.logoUrl} alt="Logo" className="h-10 w-auto object-contain mb-2" />
+                            )}
+                            <h1 className="text-lg font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
+                            <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
+                              <span className="text-[10px] text-slate-400 font-bold uppercase italic">2ª VIA</span>
+                              <div className="border border-slate-300 px-3 py-1 rounded font-black text-slate-900 text-base">
+                                {formatCurrency(item.result.grossSalary)}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Content Body */}
+                          <div className="space-y-3 text-sm leading-relaxed text-justify text-slate-800">
+                            <p>
+                              Recebi de <strong className="font-black uppercase">{activeCompany.name}</strong>
+                              {activeCompany.cnpj && <> – CNPJ <span className="font-mono">{activeCompany.cnpj}</span></>}, a importância de
+                              <strong className="font-bold"> {numberToWordsBRL(item.result.grossSalary).toUpperCase()}</strong>,
+                              referente à <strong className="font-bold">{generateSmartSummary(item)}</strong>.
+                            </p>
+
+                            <p>
+                              Para maior clareza, firmo o presente recibo, que comprova o recebimento integral do valor mencionado,
+                              concedendo <strong className="font-bold">quitação plena, geral e irrevogável</strong> pela quantia recebida.
+                            </p>
+
+                            <p className="text-[12px]">
+                              Pagamento recebido por <strong className="font-bold">{item.input.employeeName}</strong> através da chave Pix: <strong className="font-mono">{item.input.pixKey}</strong>, {item.input.bankName}.
+                            </p>
+
+                            <div className="text-right italic text-slate-500 font-medium uppercase text-[11px] mt-6">
+                              CANAVIEIRAS, {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                            </div>
+
+                            {/* Signature Area */}
+                            <div className="mt-8 pt-4 border-t border-slate-300 flex flex-col items-center">
+                              <p className="font-black uppercase text-sm tracking-tight">{item.input.employeeName}</p>
+                              <div className="flex gap-4 text-[10px] text-slate-500 italic mt-1 font-mono">
+                                {employeeRegistry?.cpf && <span>CPF: {employeeRegistry.cpf}</span>}
+                                {employeeRegistry?.phone && <span>{employeeRegistry.phone}</span>}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
