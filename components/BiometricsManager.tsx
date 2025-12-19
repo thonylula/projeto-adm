@@ -50,6 +50,7 @@ export const BiometricsManager: React.FC = () => {
 
     const { processFile, isProcessing } = useGeminiParser();
     const [filterText, setFilterText] = useState('');
+    const [showReferenceTable, setShowReferenceTable] = useState(false);
 
     // --- NEWS ROTATION STATE ---
     const [newsList, setNewsList] = useState<string[]>(NEWS_HEADLINES_SOURCE);
