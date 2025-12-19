@@ -72,10 +72,11 @@ export default function App() {
     setActiveTab('payroll');
   };
 
-  const handleAddCompany = (name: string, logoUrl: string | null) => {
+  const handleAddCompany = (name: string, cnpj: string | undefined, logoUrl: string | null) => {
     const newCompany: Company = {
       id: generateId(),
       name,
+      cnpj,
       logoUrl,
       employees: []
     };
