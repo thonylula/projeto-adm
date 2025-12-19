@@ -179,6 +179,8 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     instanceName: ''
   });
   const [showWhatsAppConfigModal, setShowWhatsAppConfigModal] = useState(false);
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [connectionState, setConnectionState] = useState<'DISCONNECTED' | 'CONNECTED' | 'CONNECTING' | 'LOADING' | null>(null);
 
   // Lista de funcionários cadastrados para importação
   const [registeredEmployees, setRegisteredEmployees] = useState<RegistryEmployee[]>([]);
@@ -207,7 +209,106 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const saveWhatsAppConfig = () => {
     localStorage.setItem('whatsapp_api_config', JSON.stringify(whatsappConfig));
     setShowWhatsAppConfigModal(false);
+    setQrCode(null);
     alert('✅ Configuração salva com sucesso!');
+  };
+
+  // Evolution API Helpers
+  const handleTestConnection = async () => {
+    if (!whatsappConfig.apiUrl || !whatsappConfig.instanceName) {
+      alert("⚠️ Preencha a URL e o Nome da Instância.");
+      return;
+    }
+    setConnectionState('LOADING');
+    try {
+      const resp = await fetch(`${whatsappConfig.apiUrl}/instance/connectionState/${whatsappConfig.instanceName}`, {
+        headers: { 'apikey': whatsappConfig.apiToken }
+      });
+      const data = await resp.json();
+      if (data.instance?.state === 'open') {
+        setConnectionState('CONNECTED');
+        setQrCode(null);
+      } else {
+        setConnectionState('DISCONNECTED');
+      }
+    } catch (e) {
+      setConnectionState('DISCONNECTED');
+      alert("❌ Erro ao conectar. Verifique a URL e se a API está rodando.");
+    }
+  };
+
+  const handleCreateInstance = async () => {
+    if (!whatsappConfig.apiUrl || !whatsappConfig.instanceName) return;
+    try {
+      setConnectionState('LOADING');
+      // Tenta criar a instância
+      await fetch(`${whatsappConfig.apiUrl}/instance/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': whatsappConfig.apiToken
+        },
+        body: JSON.stringify({
+          instanceName: whatsappConfig.instanceName,
+          token: whatsappConfig.apiToken,
+          qrcode: true
+        })
+      });
+      handleConnect();
+    } catch (e) {
+      alert("Erro ao criar instância.");
+    }
+  };
+
+  const handleConnect = async () => {
+    setConnectionState('CONNECTING');
+    try {
+      const resp = await fetch(`${whatsappConfig.apiUrl}/instance/connect/${whatsappConfig.instanceName}`, {
+        headers: { 'apikey': whatsappConfig.apiToken }
+      });
+      const data = await resp.json();
+      if (data.base64) {
+        setQrCode(data.base64);
+      } else if (data.instance?.state === 'open') {
+        setConnectionState('CONNECTED');
+        setQrCode(null);
+      }
+    } catch (e) {
+      alert("Erro ao obter QR Code.");
+    }
+  };
+
+  const sendTextViaWhatsAppAPI = async (phone: string, text: string) => {
+    if (!whatsappConfig.apiUrl || !whatsappConfig.apiToken || !whatsappConfig.instanceName) {
+      alert("⚠️ Configure a API do WhatsApp primeiro.");
+      setShowWhatsAppConfigModal(true);
+      return;
+    }
+
+    try {
+      const cleanPhone = phone.replace(/\D/g, '');
+      const response = await fetch(`${whatsappConfig.apiUrl}/message/sendText/${whatsappConfig.instanceName}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': whatsappConfig.apiToken
+        },
+        body: JSON.stringify({
+          number: cleanPhone,
+          text: text,
+          delay: 1200,
+          linkPreview: false
+        })
+      });
+
+      if (response.ok) {
+        alert("✅ Mensagem enviada com sucesso!");
+      } else {
+        throw new Error("Erro no envio");
+      }
+    } catch (e) {
+      alert("❌ Erro ao enviar mensagem. Verifique a conexão.");
+    }
   };
 
   // --- Lógica de Calendário (Holidays & Business Days) ---
@@ -990,12 +1091,17 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     }
   };
 
-  // Send PDF via WhatsApp API
+  // Send PDF via WhatsApp API (Evolution API v2 format)
   const sendPDFViaWhatsAppAPI = async (phone: string, pdfBase64: string, filename: string) => {
     try {
       const cleanPhone = phone.replace(/\D/g, '');
 
-      // Evolution API format (most common free API)
+      console.log('📤 Enviando PDF via Evolution API...');
+      console.log('URL:', `${whatsappConfig.apiUrl}/message/sendMedia/${whatsappConfig.instanceName}`);
+      console.log('Número:', cleanPhone);
+      console.log('Arquivo:', filename);
+
+      // Evolution API v2 format
       const response = await fetch(`${whatsappConfig.apiUrl}/message/sendMedia/${whatsappConfig.instanceName}`, {
         method: 'POST',
         headers: {
@@ -1013,15 +1119,17 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ Erro da API:', errorText);
+        throw new Error(`API retornou erro ${response.status}: ${errorText}`);
       }
 
       const result = await response.json();
-      alert(`✅ PDF enviado com sucesso via WhatsApp para ${phone}!`);
-      console.log('WhatsApp API Response:', result);
+      console.log('✅ Resposta da API:', result);
+      alert(`✅ PDF enviado com sucesso via WhatsApp para +${cleanPhone}!\n\nID da Mensagem: ${result.key?.id || 'N/A'}`);
     } catch (error) {
-      console.error('WhatsApp API Error:', error);
-      alert(`❌ Erro ao enviar via API. Verifique sua configuração.\n\nDetalhes: ${error}`);
+      console.error('❌ WhatsApp API Error:', error);
+      alert(`❌ Erro ao enviar via WhatsApp API\n\nDetalhes: ${error}\n\n💡 Dica: Verifique se:\n- A Evolution API está rodando\n- O WhatsApp está conectado\n- As credenciais estão corretas`);
     }
   };
 
@@ -1745,6 +1853,21 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                             RECIBO
                           </button>
 
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              const phone = prompt("Digite o número do WhatsApp (DDI+DDD+Número):", "55");
+                              if (phone) {
+                                sendTextViaWhatsAppAPI(phone, generateSmartSummary(item));
+                              }
+                            }}
+                            className="p-1 text-white bg-emerald-600 hover:bg-emerald-700 rounded shadow-sm flex items-center gap-1 px-2 text-[10px] font-bold"
+                            title="Enviar Resumo via WhatsApp"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.393 0 12.03c0 2.122.54 4.197 1.57 6.05L0 24l6.117-1.605a11.815 11.815 0 005.933 1.598h.005c6.632 0 12.028-5.391 12.032-12.027a11.8 11.8 0 00-3.48-8.413Z" /></svg>
+                            MSG
+                          </button>
+
                           <button type="button" onClick={(e) => handleEditClick(e, item)} className="p-1 text-amber-500 hover:bg-amber-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
                           <button type="button" onClick={(e) => handleDeleteClick(e, item.id)} className="p-1 text-red-400 hover:bg-red-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
                         </div>
@@ -2160,6 +2283,49 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                   placeholder="minha-instancia"
                 />
               </div>
+
+              <div className="flex flex-col gap-3 pb-2 border-b border-slate-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-slate-700">Status da Conexão</span>
+                  {connectionState === 'CONNECTED' ? (
+                    <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase">Conectado</span>
+                  ) : connectionState === 'LOADING' || connectionState === 'CONNECTING' ? (
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black uppercase animate-pulse">Sincronizando...</span>
+                  ) : (
+                    <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-[10px] font-black uppercase">Desconectado</span>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleTestConnection}
+                    className="flex-1 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-all"
+                  >
+                    Testar Conexão
+                  </button>
+                  <button
+                    onClick={handleCreateInstance}
+                    className="flex-1 py-2 text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg transition-all border border-indigo-100"
+                  >
+                    Ativar / Gerar QR Code
+                  </button>
+                </div>
+              </div>
+
+              {qrCode && (
+                <div className="flex flex-col items-center gap-4 p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 animate-in zoom-in-95">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Escaneie o QR Code no WhatsApp</p>
+                  <div className="bg-white p-4 rounded-xl shadow-lg">
+                    <img src={qrCode} alt="WhatsApp QR Code" className="w-48 h-48" />
+                  </div>
+                  <button
+                    onClick={handleTestConnection}
+                    className="text-[10px] font-black text-emerald-600 uppercase hover:underline"
+                  >
+                    Já escaneei, verificar agora
+                  </button>
+                </div>
+              )}
 
               <div className="flex gap-3 pt-4">
                 <button

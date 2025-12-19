@@ -1,0 +1,38 @@
+version: '3.3'
+services:
+  evolution_api:
+    image: atendai/evolution-api:v2.1.2
+    command: ["node", "./dist/src/main.js"]
+    environment:
+      - SERVER_URL=http://localhost:8080
+      - SERVER_PORT=8080
+      - AUTH_AUTHENTICATION_GLOBAL_AUTH_TOKEN=minhasenha123
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=postgresql
+      - DATABASE_CONNECTION_URI=postgresql://evolution:password@postgres:5432/evolution?schema=public
+      - STORE_MESSAGES=true
+      - STORE_MESSAGE_UP_TO=30
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - evolution_network
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=evolution
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=evolution
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - evolution_network
+
+networks:
+  evolution_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
