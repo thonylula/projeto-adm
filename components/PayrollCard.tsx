@@ -11,6 +11,7 @@ interface PayrollCardProps {
   onAddEmployee: (newItem: PayrollHistoryItem) => void;
   onUpdateEmployee: (updatedItem: PayrollHistoryItem) => void;
   onDeleteEmployee: (itemId: string) => void;
+  onBulkUpdateEmployees: (newEmployees: PayrollHistoryItem[]) => void;
 }
 
 // Configuração Inicial
@@ -136,7 +137,8 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   onBack,
   onAddEmployee,
   onUpdateEmployee,
-  onDeleteEmployee
+  onDeleteEmployee,
+  onBulkUpdateEmployees
 }) => {
   const [formState, setFormState] = useState<PayrollInput>({
     ...INITIAL_INPUT_STATE,
@@ -874,11 +876,89 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     });
   };
 
-  // --- EXPORT FUNCTIONS (Simplificadas para brevidade) ---
+  // --- EXPORT & BACKUP FUNCTIONS ---
   const handlePrint = () => { setShowExportMenu(false); window.print(); };
-  const handleExportPDF = async () => { /* Mesma lógica anterior */ setShowExportMenu(false); if (!reportRef.current) return; try { const canvas = await html2canvas(reportRef.current, { scale: 2, backgroundColor: '#ffffff', ignoreElements: (node) => node.classList.contains('export-ignore') }); const imgData = canvas.toDataURL('image/png'); const pdf = new jsPDF('l', 'mm', 'a4'); pdf.addImage(imgData, 'PNG', 0, 0, 297, 210); pdf.save(`Folha.pdf`); } catch (e) { } };
-  const handleExportPNG = async () => { /* Mesma lógica anterior */ setShowExportMenu(false); if (!reportRef.current) return; try { const canvas = await html2canvas(reportRef.current, { scale: 2, backgroundColor: '#ffffff', ignoreElements: (node) => node.classList.contains('export-ignore') }); const link = document.createElement('a'); link.download = `Folha.png`; link.href = canvas.toDataURL('image/png'); link.click(); } catch (e) { } };
-  const handleExportHTML = () => { setShowExportMenu(false); if (reportRef.current) navigator.clipboard.writeText(reportRef.current.outerHTML); };
+
+  const handleExportPDF = async () => {
+    setShowExportMenu(false);
+    if (!reportRef.current) return;
+    try {
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        ignoreElements: (node) => node.classList.contains('export-ignore')
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('l', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Folha_${activeCompany.name}.pdf`);
+    } catch (e) {
+      console.error("PDF Export Error", e);
+    }
+  };
+
+  const handleExportPNG = async () => {
+    setShowExportMenu(false);
+    if (!reportRef.current) return;
+    try {
+      const canvas = await html2canvas(reportRef.current, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        ignoreElements: (node) => node.classList.contains('export-ignore')
+      });
+      const link = document.createElement('a');
+      link.download = `Folha_${activeCompany.name}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (e) {
+      console.error("PNG Export Error", e);
+    }
+  };
+
+  const handleExportHTML = () => {
+    setShowExportMenu(false);
+    if (!reportRef.current) return;
+    navigator.clipboard.writeText(reportRef.current.outerHTML).then(() => {
+      alert("HTML da tabela copiado para a área de transferência!");
+    });
+  };
+
+  const handleSaveBackup = () => {
+    setShowExportMenu(false);
+    const data = activeCompany.employees || [];
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `backup_folha_${activeCompany.name}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleLoadBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string);
+        if (Array.isArray(parsed)) {
+          onBulkUpdateEmployees(parsed);
+          alert("Backup carregado com sucesso!");
+        } else {
+          alert("Formato de arquivo inválido. O backup deve ser uma lista de registros.");
+        }
+      } catch (err) {
+        alert("Erro ao ler o arquivo de backup.");
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // Reset input
+  };
 
   const exportToCSV = () => {
     const history = activeCompany.employees;
@@ -1528,6 +1608,66 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
           </div>
         )
       }
+
+      {/* --- FOOTER ACTIONS (Floating Menu) --- */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-white/90 backdrop-blur shadow-2xl px-6 py-3 rounded-2xl border border-slate-200 z-50 print:hidden transition-all hover:bg-white">
+        <button
+          onClick={handleExportPDF}
+          className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-md font-bold transition-all text-xs"
+          title="Exportar PDF"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+          PDF
+        </button>
+
+        <button
+          onClick={handleExportPNG}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md font-bold transition-all text-xs"
+          title="Exportar PNG"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+          PNG
+        </button>
+
+        <button
+          onClick={handleExportHTML}
+          className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-xl shadow-md font-bold transition-all text-xs"
+          title="Copiar HTML"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+          HTML
+        </button>
+
+        <div className="w-px h-6 bg-slate-200 mx-1"></div>
+
+        <button
+          onClick={handleSaveBackup}
+          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md font-bold transition-all text-xs"
+          title="Salvar Backup JSON"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+          BACKUP
+        </button>
+
+        <div className="relative">
+          <input
+            type="file"
+            id="payroll-restore"
+            className="hidden"
+            accept=".json"
+            onChange={handleLoadBackup}
+          />
+          <label
+            htmlFor="payroll-restore"
+            className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-md font-bold transition-all text-xs cursor-pointer"
+            title="Restaurar Backup JSON"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+            CARREGAR
+          </label>
+        </div>
+      </div>
+
     </div>
   );
 };
