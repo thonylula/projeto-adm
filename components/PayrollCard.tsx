@@ -929,15 +929,16 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       const element = receipts[i] as HTMLElement;
       try {
         const canvas = await html2canvas(element, {
-          scale: 1.5,
+          scale: 1.3, // Reduzido de 1.5 para otimizar tamanho
           useCORS: true,
           logging: false,
           backgroundColor: '#ffffff',
           allowTaint: true
         });
-        const imgData = canvas.toDataURL('image/png');
+        // Usando JPEG com 75% de qualidade para reduzir drasticamente o peso (PNG é muito pesado)
+        const imgData = canvas.toDataURL('image/jpeg', 0.75);
         if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+        pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
       } catch (canvasErr: any) {
         console.error(`Erro ao capturar página ${i + 1}`, canvasErr);
         throw new Error(`Erro na página ${i + 1}: ${canvasErr.message}`);
@@ -992,10 +993,16 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     const element = document.getElementById('receipt-content');
     if (!element) return;
     try {
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-      const imgData = canvas.toDataURL('image/png');
+      // Reduzido o scale de 2 para 1.3 e usando JPEG 75%
+      const canvas = await html2canvas(element, {
+        scale: 1.3,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      const imgData = canvas.toDataURL('image/jpeg', 0.75);
       const pdf = new jsPDF('p', 'mm', 'a4');
-      pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+      pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
       const filename = `Recibo_${item.input.employeeName.replace(/\s+/g, '_')}.pdf`;
 
       // Oferecer compartilhamento para recibo individual também se disponível
