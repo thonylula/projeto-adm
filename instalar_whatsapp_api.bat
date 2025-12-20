@@ -19,6 +19,14 @@ echo ==========================================
 docker ps | findstr evolution
 echo.
 echo Se voce ver nomes como "evolution_api" e "postgres" acima, deu certo!
+echo.
+echo ==========================================
+echo VOCE USA O SITE PELA VERCEL?
+echo ==========================================
+echo Se SIM, voce precisa de um link HTTPS. 
+echo Rode o comando abaixo em OUTRO terminal:
+echo npx localtunnel --port 8080
+echo.
 echo AGUARDE 30 SEGUNDOS E ACESSE: http://localhost:8080
 echo ==========================================
 pause
