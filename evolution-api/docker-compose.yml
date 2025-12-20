@@ -8,6 +8,8 @@ services:
       - SERVER_URL=http://localhost:8080
       - SERVER_PORT=8080
       - AUTH_AUTHENTICATION_GLOBAL_AUTH_TOKEN=minhasenha123
+      - DATABASE_ENABLED=true
+      - DATABASE_PROVIDER=postgresql
       - DATABASE_CONNECTION_URI=postgresql://evolution:password@evolution_postgres:5432/evolution?schema=public
       - CACHE_REDIS_ENABLED=true
       - CACHE_REDIS_URI=redis://evolution_redis:6379

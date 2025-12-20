@@ -172,15 +172,6 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const [copiedSummaryId, setCopiedSummaryId] = useState<string | null>(null);
   const [receiptItem, setReceiptItem] = useState<PayrollHistoryItem | null>(null);
 
-  // WhatsApp API Configuration
-  const [whatsappConfig, setWhatsappConfig] = useState({
-    apiUrl: '',
-    apiToken: '',
-    instanceName: ''
-  });
-  const [showWhatsAppConfigModal, setShowWhatsAppConfigModal] = useState(false);
-  const [qrCode, setQrCode] = useState<string | null>(null);
-  const [connectionState, setConnectionState] = useState<'DISCONNECTED' | 'CONNECTED' | 'CONNECTING' | 'LOADING' | null>(null);
 
   // Lista de funcionários cadastrados para importação
   const [registeredEmployees, setRegisteredEmployees] = useState<RegistryEmployee[]>([]);
@@ -195,213 +186,11 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       if (stored) {
         setRegisteredEmployees(JSON.parse(stored));
       }
-
-      const whatsappStored = localStorage.getItem('whatsapp_api_config');
-      if (whatsappStored) {
-        setWhatsappConfig(JSON.parse(whatsappStored));
-      }
     } catch (e) {
       console.error("Erro ao carregar dados", e);
     }
   }, []);
 
-  // Salvar configuração do WhatsApp
-  const saveWhatsAppConfig = () => {
-    localStorage.setItem('whatsapp_api_config', JSON.stringify(whatsappConfig));
-    setShowWhatsAppConfigModal(false);
-    setQrCode(null);
-    alert('✅ Configuração salva com sucesso!');
-  };
-
-  // Evolution API Helpers
-  const handleTestConnection = async () => {
-    if (!whatsappConfig.apiUrl || !whatsappConfig.instanceName) {
-      alert("⚠️ Preencha a URL e o Nome da Instância.");
-      return;
-    }
-    setConnectionState('LOADING');
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-      const resp = await fetch(`${whatsappConfig.apiUrl}/instance/connectionState/${whatsappConfig.instanceName}`, {
-        headers: {
-          'apikey': whatsappConfig.apiToken,
-          'ngrok-skip-browser-warning': 'true',
-          'bypass-tunnel-reminder': 'true'
-        },
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      const data = await resp.json();
-      if (data.instance?.state === 'open') {
-        setConnectionState('CONNECTED');
-        setQrCode(null);
-      } else {
-        setConnectionState('DISCONNECTED');
-        if (data.message) console.log("API Message:", data.message);
-      }
-    } catch (e: any) {
-      setConnectionState('DISCONNECTED');
-      const isHttps = window.location.protocol === 'https:';
-      const isLocalApi = whatsappConfig.apiUrl.includes('localhost') || whatsappConfig.apiUrl.includes('127.0.0.1');
-
-      let msg = "Erro de conexão. Verifique se a API está rodando no Docker.";
-
-      if (isHttps && isLocalApi) {
-        msg = "BLOQUEIO DE SEGURANÇA: Seu site está em HTTPS (Vercel), mas sua API está em HTTP (Local). O navegador bloqueia essa conexão por segurança.\n\nSOLUÇÃO: Use o link local (npm run dev) ou use um Túnel Seguro (Ngrok/Localtunnel).";
-      } else if (e.name === 'AbortError') {
-        msg = "Tempo esgotado (5s). A API não respondeu.";
-      }
-
-      alert(`❌ ${msg}`);
-    }
-  };
-
-  const handleCreateInstance = async () => {
-    if (!whatsappConfig.apiUrl || !whatsappConfig.instanceName) return;
-    try {
-      setConnectionState('LOADING');
-      const response = await fetch(`${whatsappConfig.apiUrl}/instance/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': whatsappConfig.apiToken,
-          'ngrok-skip-browser-warning': 'true',
-          'bypass-tunnel-reminder': 'true'
-        },
-        body: JSON.stringify({
-          instanceName: whatsappConfig.instanceName,
-          token: whatsappConfig.apiToken,
-          qrcode: true
-        })
-      });
-
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("text/html")) {
-        throw new Error("PAGINA_BLOQUEIO");
-      }
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || "Erro desconhecido na API");
-      }
-
-      handleConnect();
-    } catch (e: any) {
-      setConnectionState('DISCONNECTED');
-      if (e.message === "PAGINA_BLOQUEIO") {
-        alert("⚠️ O Túnel (Localtunnel) está bloqueando o acesso.\n\nSOLUÇÃO: Abra o link da API no seu navegador (em outra aba) e clique no botão 'Click to Visit' ou similar para liberar o acesso, depois volte aqui.");
-      } else {
-        alert("❌ Erro ao criar instância: " + e.message);
-      }
-    }
-  };
-
-  const handleConnect = async () => {
-    setConnectionState('CONNECTING');
-    try {
-      const resp = await fetch(`${whatsappConfig.apiUrl}/instance/connect/${whatsappConfig.instanceName}`, {
-        headers: {
-          'apikey': whatsappConfig.apiToken,
-          'ngrok-skip-browser-warning': 'true',
-          'bypass-tunnel-reminder': 'true'
-        }
-      });
-
-      const contentType = resp.headers.get("content-type");
-      if (contentType && contentType.includes("text/html")) {
-        throw new Error("PAGINA_BLOQUEIO");
-      }
-
-      const data = await resp.json();
-      if (data.base64) {
-        setQrCode(data.base64);
-      } else if (data.instance?.state === 'open') {
-        setConnectionState('CONNECTED');
-        setQrCode(null);
-      }
-    } catch (e: any) {
-      if (e.message === "PAGINA_BLOQUEIO") {
-        alert("⚠️ O Túnel está bloqueando o acesso. Abra o link da API em outra aba e libere o acesso.");
-      } else {
-        alert("❌ Erro ao obter QR Code: " + e.message);
-      }
-    }
-  };
-
-  const sendTextViaWhatsAppAPI = async (phone: string, text: string) => {
-    if (!whatsappConfig.apiUrl || !whatsappConfig.apiToken || !whatsappConfig.instanceName) {
-      alert("⚠️ Configure a API do WhatsApp primeiro.");
-      setShowWhatsAppConfigModal(true);
-      return;
-    }
-
-    try {
-      const cleanPhone = phone.replace(/\D/g, '');
-      const response = await fetch(`${whatsappConfig.apiUrl}/message/sendText/${whatsappConfig.instanceName}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': whatsappConfig.apiToken,
-          'ngrok-skip-browser-warning': 'true',
-          'bypass-tunnel-reminder': 'true'
-        },
-        body: JSON.stringify({
-          number: cleanPhone,
-          text: text,
-          delay: 1200,
-          linkPreview: false
-        })
-      });
-
-      if (response.ok) {
-        alert("✅ Mensagem enviada com sucesso!");
-      } else {
-        throw new Error("Erro no envio");
-      }
-    } catch (e) {
-      alert("❌ Erro ao enviar mensagem. Verifique a conexão.");
-    }
-  };
-
-  const sendPDFViaWhatsAppAPI = async (phone: string, pdfBase64: string, filename: string) => {
-    if (!whatsappConfig.apiUrl || !whatsappConfig.apiToken || !whatsappConfig.instanceName) return;
-    try {
-      const cleanPhone = phone.replace(/\D/g, '');
-      console.log('📤 Enviando PDF via Evolution API...');
-
-      const response = await fetch(`${whatsappConfig.apiUrl}/message/sendMedia/${whatsappConfig.instanceName}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': whatsappConfig.apiToken,
-          'ngrok-skip-browser-warning': 'true',
-          'bypass-tunnel-reminder': 'true'
-        },
-        body: JSON.stringify({
-          number: cleanPhone,
-          mediatype: 'document',
-          mimetype: 'application/pdf',
-          caption: `Recibos de pagamento - ${activeCompany.name}`,
-          fileName: filename,
-          media: pdfBase64
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API retornou erro ${response.status}: ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log('✅ Resposta da API:', result);
-    } catch (e) {
-      console.error("Erro ao enviar PDF via WhatsApp API", e);
-      throw e;
-    }
-  };
 
   // --- Lógica de Calendário (Holidays & Business Days) ---
   const getEasterDate = (year: number): Date => {
@@ -1122,17 +911,72 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     : 0;
 
   // --- EXPORT & BACKUP FUNCTIONS ---
-  const handleDownloadPDF = async (item: PayrollHistoryItem) => {
+  const generateBulkPDF = async () => {
+    const bulkContainer = document.getElementById('bulk-receipts-container');
+    if (!bulkContainer) {
+      throw new Error("Container de recibos não encontrado.");
+    }
+
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const receipts = bulkContainer.querySelectorAll('.bulk-receipt-page');
+
+    for (let i = 0; i < receipts.length; i++) {
+      const element = receipts[i] as HTMLElement;
+      const canvas = await html2canvas(element, { scale: 1.5, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      if (i > 0) pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+    }
+    return pdf;
+  };
+
+  const handleShareBulk = async () => {
+    if (history.length === 0) return;
+    try {
+      const pdf = await generateBulkPDF();
+      const pdfBlob = pdf.output('blob');
+      const filename = `Recibos_${activeCompany.name.replace(/\s+/g, '_')}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
+      const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Recibos de Pagamento',
+          text: `Seguem os recibos de pagamento - ${activeCompany.name}`
+        });
+      } else {
+        pdf.save(filename);
+        alert("O seu navegador não suporta compartilhamento direto. O arquivo foi baixado.");
+      }
+    } catch (e) {
+      console.error("Share Bulk Error", e);
+      alert("Erro ao gerar/compartilhar recibos.");
+    }
+  };
+
+  const handleDownloadReceiptPDF = async (item: PayrollHistoryItem) => {
     const element = document.getElementById('receipt-content');
     if (!element) return;
     try {
       const canvas = await html2canvas(element, { scale: 2, useCORS: true });
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Recibo_${item.input.employeeName.replace(/\s+/g, '_')}.pdf`);
+      pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+      const filename = `Recibo_${item.input.employeeName.replace(/\s+/g, '_')}.pdf`;
+
+      // Oferecer compartilhamento para recibo individual também se disponível
+      const pdfBlob = pdf.output('blob');
+      const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: 'Recibo de Pagamento',
+          text: `Recibo de ${item.input.employeeName}`
+        });
+      } else {
+        pdf.save(filename);
+      }
     } catch (e) {
       console.error("PDF Error", e);
       alert("Erro ao gerar PDF.");
@@ -1142,44 +986,19 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const handleWhatsAppBulk = async () => {
     if (history.length === 0) return;
 
-    // Check if API is configured
-    const isApiConfigured = whatsappConfig.apiUrl && whatsappConfig.apiToken && whatsappConfig.instanceName;
-
     const phone = prompt("Digite o número do WhatsApp (DDI + DDD + Número):", "55");
     if (!phone) return;
 
     try {
-      // 1. Generate the bulk PDF
-      const bulkContainer = document.getElementById('bulk-receipts-container');
-      if (!bulkContainer) {
-        alert("Erro técnico: container de recibos não encontrado.");
-        return;
-      }
+      const pdf = await generateBulkPDF();
 
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const receipts = bulkContainer.querySelectorAll('.bulk-receipt-page');
-
-      for (let i = 0; i < receipts.length; i++) {
-        const element = receipts[i] as HTMLElement;
-        const canvas = await html2canvas(element, { scale: 1.5, useCORS: true });
-        const imgData = canvas.toDataURL('image/png');
-        if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
-      }
-
-      // 2. If API is configured, send via API
-      if (isApiConfigured) {
-        const pdfBase64 = pdf.output('dataurlstring').split(',')[1];
-        await sendPDFViaWhatsAppAPI(phone, pdfBase64, `Recibos_${activeCompany.name}.pdf`);
-      } else {
-        // Fallback: download PDF and open WhatsApp web
-        pdf.save(`Recibos_Gerais_${activeCompany.name}.pdf`);
-        const message = encodeURIComponent(`Olá, seguem os recibos de pagamento da empresa ${activeCompany.name}. Acabei de baixar o arquivo PDF completo, vou te enviar agora.`);
-        window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${message}`, '_blank');
-      }
+      // Fallback: download PDF and open WhatsApp web (since we're removing API)
+      pdf.save(`Recibos_Gerais_${activeCompany.name}.pdf`);
+      const message = encodeURIComponent(`Olá, seguem os recibos de pagamento da empresa ${activeCompany.name}. Acabei de baixar o arquivo PDF completo, vou te enviar agora.`);
+      window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${message}`, '_blank');
     } catch (e) {
       console.error("Bulk PDF Error", e);
-      alert("Erro ao gerar/enviar PDF. Verifique a configuração da API.");
+      alert("Erro ao gerar PDF.");
     }
   };
 
@@ -1881,13 +1700,17 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                             type="button"
                             onClick={(e) => {
                               const summary = generateSmartSummary(item);
-                              navigator.clipboard.writeText(summary);
-                              alert(`Copiado para área de transferência:\n\n${summary}`);
+                              if (navigator.share) {
+                                navigator.share({ title: 'Resumo de Pagamento', text: summary });
+                              } else {
+                                navigator.clipboard.writeText(summary);
+                                alert(`Copiado para área de transferência:\n\n${summary}`);
+                              }
                             }}
-                            className="p-1 text-slate-100 bg-slate-600 hover:bg-slate-800 rounded shadow-sm" title="Copiar Resumo"
+                            className="p-1 text-slate-100 bg-slate-600 hover:bg-slate-800 rounded shadow-sm" title="Compartilhar Resumo"
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                              <path fillRule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97zM6.75 8.25a.75.75 0 01.75-.75h9a.75.75 0 010 1.5h-9a.75.75 0 01-.75-.75zm.75 2.25a.75.75 0 000 1.5H12a.75.75 0 000-1.5H7.5z" clipRule="evenodd" />
+                              <path fillRule="evenodd" d="M15.75 4.5a3 3 0 11.825 2.066l-8.421 4.679a3.002 3.002 0 010 1.51l8.421 4.679a3 3 0 11-.729 1.31l-8.421-4.678a3 3 0 110-4.132l8.421-4.679a3 3 0 011.079-.755z" clipRule="evenodd" />
                             </svg>
                           </button>
 
@@ -1903,20 +1726,6 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                             RECIBO
                           </button>
 
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              const phone = prompt("Digite o número do WhatsApp (DDI+DDD+Número):", "55");
-                              if (phone) {
-                                sendTextViaWhatsAppAPI(phone, generateSmartSummary(item));
-                              }
-                            }}
-                            className="p-1 text-white bg-emerald-600 hover:bg-emerald-700 rounded shadow-sm flex items-center gap-1 px-2 text-[10px] font-bold"
-                            title="Enviar Resumo via WhatsApp"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.393 0 12.03c0 2.122.54 4.197 1.57 6.05L0 24l6.117-1.605a11.815 11.815 0 005.933 1.598h.005c6.632 0 12.028-5.391 12.032-12.027a11.8 11.8 0 00-3.48-8.413Z" /></svg>
-                            MSG
-                          </button>
 
                           <button type="button" onClick={(e) => handleEditClick(e, item)} className="p-1 text-amber-500 hover:bg-amber-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
                           <button type="button" onClick={(e) => handleDeleteClick(e, item.id)} className="p-1 text-red-400 hover:bg-red-50 rounded"><svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
@@ -1980,22 +1789,14 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
         <div className="w-px h-6 bg-slate-200 mx-1"></div>
 
         <button
-          onClick={handleWhatsAppBulk}
+          onClick={handleShareBulk}
           className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md font-bold transition-all text-xs"
-          title="Enviar Recibos via WhatsApp"
+          title="Compartilhar Todos os Recibos"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.393 0 12.03c0 2.122.54 4.197 1.57 6.05L0 24l6.117-1.605a11.815 11.815 0 005.933 1.598h.005c6.632 0 12.028-5.391 12.032-12.027a11.8 11.8 0 00-3.48-8.413Z" /></svg>
-          WHATSAPP
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6L15.316 8.684m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+          COMPARTILHAR
         </button>
 
-        <button
-          onClick={() => setShowWhatsAppConfigModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl shadow-md font-bold transition-all text-xs"
-          title="Configurar API do WhatsApp"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-          CONFIG
-        </button>
 
         <div className="w-px h-6 bg-slate-200 mx-1"></div>
 
@@ -2046,11 +1847,11 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
               </div>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => handleDownloadPDF(receiptItem)}
+                  onClick={() => handleDownloadReceiptPDF(receiptItem)}
                   className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-black text-sm shadow-lg shadow-emerald-200/50 active:scale-95"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                  BAIXAR PDF
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6L15.316 8.684m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                  COMPARTILHAR
                 </button>
                 <button
                   onClick={() => window.print()}
@@ -2269,139 +2070,6 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
         ))}
       </div>
 
-      {/* --- WHATSAPP API CONFIG MODAL --- */}
-      {showWhatsAppConfigModal && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200">
-            <div className="flex items-center justify-between px-8 py-4 border-b border-slate-100 bg-gradient-to-r from-emerald-500 to-green-600">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/20 rounded-xl text-white">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.393 0 12.03c0 2.122.54 4.197 1.57 6.05L0 24l6.117-1.605a11.815 11.815 0 005.933 1.598h.005c6.632 0 12.028-5.391 12.032-12.027a11.8 11.8 0 00-3.48-8.413Z" /></svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">Configurar API do WhatsApp</h3>
-                  <p className="text-xs text-white/80 font-medium">Evolution API ou similar</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowWhatsAppConfigModal(false)}
-                className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-xl transition-all"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-
-            <div className="p-8 space-y-6">
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                <p className="text-sm text-amber-900 font-bold mb-1">
-                  ⚠️ Atenção para quem usa VERCEL:
-                </p>
-                <p className="text-xs text-amber-800">
-                  O navegador <strong>bloqueia</strong> sites HTTPS (Vercel) de acessarem endereços locais HTTP (localhost).
-                </p>
-                <div className="mt-3 space-y-2">
-                  <p className="text-xs font-bold text-slate-700">Como resolver:</p>
-                  <ol className="text-[10px] text-slate-600 list-decimal ml-4 space-y-1">
-                    <li>Rode o site no seu computador (<strong>npm run dev</strong>).</li>
-                    <li>Ou use um Tunel Seguro para ganhar um link <strong>https</strong> para sua API.</li>
-                  </ol>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">URL da API</label>
-                <input
-                  type="text"
-                  value={whatsappConfig.apiUrl}
-                  onChange={(e) => setWhatsappConfig({ ...whatsappConfig, apiUrl: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  placeholder="https://api.exemplo.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Token da API (apikey)</label>
-                <input
-                  type="password"
-                  value={whatsappConfig.apiToken}
-                  onChange={(e) => setWhatsappConfig({ ...whatsappConfig, apiToken: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  placeholder="Seu token secreto"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Nome da Instância</label>
-                <input
-                  type="text"
-                  value={whatsappConfig.instanceName}
-                  onChange={(e) => setWhatsappConfig({ ...whatsappConfig, instanceName: e.target.value })}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                  placeholder="minha-instancia"
-                />
-              </div>
-
-              <div className="flex flex-col gap-3 pb-2 border-b border-slate-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-slate-700">Status da Conexão</span>
-                  {connectionState === 'CONNECTED' ? (
-                    <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase">Conectado</span>
-                  ) : connectionState === 'LOADING' || connectionState === 'CONNECTING' ? (
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-black uppercase animate-pulse">Sincronizando...</span>
-                  ) : (
-                    <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-[10px] font-black uppercase">Desconectado</span>
-                  )}
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleTestConnection}
-                    className="flex-1 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-all"
-                  >
-                    Testar Conexão
-                  </button>
-                  <button
-                    onClick={handleCreateInstance}
-                    className="flex-1 py-2 text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg transition-all border border-indigo-100"
-                  >
-                    Ativar / Gerar QR Code
-                  </button>
-                </div>
-              </div>
-
-              {qrCode && (
-                <div className="flex flex-col items-center gap-4 p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 animate-in zoom-in-95">
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Escaneie o QR Code no WhatsApp</p>
-                  <div className="bg-white p-4 rounded-xl shadow-lg">
-                    <img src={qrCode} alt="WhatsApp QR Code" className="w-48 h-48" />
-                  </div>
-                  <button
-                    onClick={handleTestConnection}
-                    className="text-[10px] font-black text-emerald-600 uppercase hover:underline"
-                  >
-                    Já escaneei, verificar agora
-                  </button>
-                </div>
-              )}
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={() => setShowWhatsAppConfigModal(false)}
-                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={saveWhatsAppConfig}
-                  className="flex-[2] py-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold rounded-xl shadow-lg transition-all"
-                >
-                  ✅ Salvar Configuração
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
