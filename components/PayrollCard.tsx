@@ -221,19 +221,37 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     }
     setConnectionState('LOADING');
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
       const resp = await fetch(`${whatsappConfig.apiUrl}/instance/connectionState/${whatsappConfig.instanceName}`, {
-        headers: { 'apikey': whatsappConfig.apiToken }
+        headers: { 'apikey': whatsappConfig.apiToken },
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
+
       const data = await resp.json();
       if (data.instance?.state === 'open') {
         setConnectionState('CONNECTED');
         setQrCode(null);
       } else {
         setConnectionState('DISCONNECTED');
+        if (data.message) console.log("API Message:", data.message);
       }
-    } catch (e) {
+    } catch (e: any) {
       setConnectionState('DISCONNECTED');
-      alert("❌ Erro ao conectar. Verifique a URL e se a API está rodando.");
+      const isHttps = window.location.protocol === 'https:';
+      const isLocalApi = whatsappConfig.apiUrl.includes('localhost') || whatsappConfig.apiUrl.includes('127.0.0.1');
+
+      let msg = "Erro de conexão. Verifique se a API está rodando no Docker.";
+
+      if (isHttps && isLocalApi) {
+        msg = "BLOQUEIO DE SEGURANÇA: Seu site está em HTTPS (Vercel), mas sua API está em HTTP (Local). O navegador bloqueia essa conexão por segurança.\n\nSOLUÇÃO: Use o link local (npm run dev) ou use um Túnel Seguro (Ngrok/Localtunnel).";
+      } else if (e.name === 'AbortError') {
+        msg = "Tempo esgotado (5s). A API não respondeu.";
+      }
+
+      alert(`❌ ${msg}`);
     }
   };
 
@@ -2242,13 +2260,20 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
             </div>
 
             <div className="p-8 space-y-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <p className="text-sm text-blue-900 font-medium">
-                  💡 <strong>Dica:</strong> Use a <strong>Evolution API</strong> (gratuita) ou qualquer API compatível com WhatsApp.
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <p className="text-sm text-amber-900 font-bold mb-1">
+                  ⚠️ Atenção para quem usa VERCEL:
                 </p>
-                <p className="text-xs text-blue-700 mt-2">
-                  Exemplo de URL: <code className="bg-blue-100 px-2 py-1 rounded">https://sua-api.com</code>
+                <p className="text-xs text-amber-800">
+                  O navegador <strong>bloqueia</strong> sites HTTPS (Vercel) de acessarem endereços locais HTTP (localhost).
                 </p>
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs font-bold text-slate-700">Como resolver:</p>
+                  <ol className="text-[10px] text-slate-600 list-decimal ml-4 space-y-1">
+                    <li>Rode o site no seu computador (<strong>npm run dev</strong>).</li>
+                    <li>Ou use um Tunel Seguro para ganhar um link <strong>https</strong> para sua API.</li>
+                  </ol>
+                </div>
               </div>
 
               <div>
