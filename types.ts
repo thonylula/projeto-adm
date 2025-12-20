@@ -187,6 +187,7 @@ export interface RegistryClient extends AddressData, BankData {
 
 export interface InvoiceItem {
   id: string;
+  code: string;
   description: string;
   quantity: number;
   unit: string;
@@ -197,6 +198,10 @@ export interface InvoiceItem {
 export interface InvoiceData {
   recipientName: string;
   recipientCnpj: string;
+  issuerName: string;
+  invoiceNumber: string;
+  series: string;
+  issueDate: string;
   totalValue: number;
   items: InvoiceItem[];
 }
