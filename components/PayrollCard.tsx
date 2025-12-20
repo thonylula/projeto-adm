@@ -1739,20 +1739,19 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                         <div className="flex justify-center gap-1 items-center">
                           <button
                             type="button"
-                            onClick={(e) => {
-                              const summary = generateSmartSummary(item);
-                              if (navigator.share) {
-                                navigator.share({ title: 'Resumo de Pagamento', text: summary });
-                              } else {
-                                navigator.clipboard.writeText(summary);
-                                alert(`Copiado para área de transferência:\n\n${summary}`);
-                              }
-                            }}
-                            className="p-1 text-slate-100 bg-slate-600 hover:bg-slate-800 rounded shadow-sm" title="Compartilhar Resumo"
+                            onClick={(e) => handleCopySummary(e, generateSmartSummary(item), item.id)}
+                            className={`p-1 rounded shadow-sm transition-all duration-300 ${copiedSummaryId === item.id ? 'bg-emerald-600' : 'bg-slate-600 hover:bg-slate-800'} text-white`}
+                            title="Copiar Resumo Inteligente"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                              <path fillRule="evenodd" d="M15.75 4.5a3 3 0 11.825 2.066l-8.421 4.679a3.002 3.002 0 010 1.51l8.421 4.679a3 3 0 11-.729 1.31l-8.421-4.678a3 3 0 110-4.132l8.421-4.679a3 3 0 011.079-.755z" clipRule="evenodd" />
-                            </svg>
+                            {copiedSummaryId === item.id ? (
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                <path fillRule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z" clipRule="evenodd" />
+                              </svg>
+                            ) : (
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                <path fillRule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97z" clipRule="evenodd" />
+                              </svg>
+                            )}
                           </button>
 
                           <button
