@@ -1,31 +1,31 @@
 @echo off
-title CONECTOR WHATSAPP API (FINAL)
+setlocal
 echo ==================================================
-echo   WHATSAPP API - CONECTOR VERCEL (MODO TUNEL)
+echo   WHATSAPP API - CONECTOR VERCEL (MODO FINAL)
 echo ==================================================
 echo.
 
 :: 1. Docker
-echo [1/2] Verificando servicos locais...
+echo [1/2] Iniciando servicos locais...
 cd evolution-api
 docker compose up -d
 echo Servicos OK!
 echo.
 
-:: 2. O Tunel Blindado
-echo [2/2] ABRINDO A PONTE PARA A VERCEL...
+:: 2. Tunel Localhost.run (Sem Senha)
+echo [2/2] GERANDO LINK PARA VERCEL...
 echo --------------------------------------------------
-echo COPIE O LINK DA TELA AZUL QUE VAI ABRIR AGORA.
-echo O link termina em ".pinggy.link" ou ".trycloudflare.com"
+echo COPIE O LINK QUE TERMINA EM ".lhr.life"
+echo Sera algo parecido com: https://...lhr.life
 echo --------------------------------------------------
 echo.
-echo DICA: Nao feche a tela azul enquanto usar o sistema!
+echo DICA: Se a janela azul pedir senha, FECHE ELA 
+echo e use o comando manual que mandei no chat.
 echo.
 pause
 
-:: Abre uma nova janela do PowerShell que NAO FECHA SOZINHA (NoExit)
-start powershell -NoExit -Command "echo 'GERANDO LINK... AGUARDE'; ssh -o StrictHostKeyChecking=no -p 443 -R0:localhost:8080 qr@a.pinggy.io"
+:: Abre o PowerShell com o comando que nao pede senha
+start powershell -NoExit -Command "echo 'GERANDO LINK...'; ssh -o StrictHostKeyChecking=no -R 80:localhost:8080 nokey@localhost.run"
 
-echo.
-echo Tudo pronto! Procure o link na nova janela que abriu.
+echo Todo pronto! Procure o link na nova janela que abriu.
 pause
