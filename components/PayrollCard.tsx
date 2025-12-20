@@ -344,7 +344,9 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': whatsappConfig.apiToken
+          'apikey': whatsappConfig.apiToken,
+          'ngrok-skip-browser-warning': 'true',
+          'bypass-tunnel-reminder': 'true'
         },
         body: JSON.stringify({
           number: cleanPhone,
@@ -361,6 +363,35 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       }
     } catch (e) {
       alert("❌ Erro ao enviar mensagem. Verifique a conexão.");
+    }
+  };
+
+  const sendPDFViaWhatsAppAPI = async (phone: string, filename: string, pdfBase64: string) => {
+    if (!whatsappConfig.apiUrl || !whatsappConfig.apiToken || !whatsappConfig.instanceName) return;
+    try {
+      const cleanPhone = phone.replace(/\D/g, '');
+      const response = await fetch(`${whatsappConfig.apiUrl}/message/sendMedia/${whatsappConfig.instanceName}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': whatsappConfig.apiToken,
+          'ngrok-skip-browser-warning': 'true',
+          'bypass-tunnel-reminder': 'true'
+        },
+        body: JSON.stringify({
+          number: cleanPhone,
+          mediatype: 'document',
+          mimetype: 'application/pdf',
+          caption: `Recibo de pagamento - ${activeCompany.name}`,
+          fileName: filename,
+          media: pdfBase64
+        })
+      });
+
+      if (!response.ok) throw new Error("Erro no envio do PDF");
+    } catch (e) {
+      console.error("Erro ao enviar PDF via WhatsApp API", e);
+      throw e;
     }
   };
 
