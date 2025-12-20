@@ -183,3 +183,20 @@ export interface RegistryClient extends AddressData, BankData {
   email: string;
   status: 'ACTIVE' | 'INACTIVE' | 'LEAD';
 }
+// --- TIPOS PARA CESTAS BÁSICAS / NOTAS FISCAIS ---
+
+export interface InvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unit: string;
+  price: number;
+  total: number;
+}
+
+export interface InvoiceData {
+  recipientName: string;
+  recipientCnpj: string;
+  totalValue: number;
+  items: InvoiceItem[];
+}

@@ -9,6 +9,7 @@ import { BiometricsManager } from './components/BiometricsManager';
 import { OpeNatIdentifier } from './components/OpeNatIdentifier';
 import { RegistrationManager } from './components/RegistrationManager';
 import { DeliveryOrder } from './components/DeliveryOrder';
+import { CestasBasicas } from './components/CestasBasicas';
 import { Company, PayrollHistoryItem } from './types';
 
 // Helper for ID generation
@@ -229,6 +230,10 @@ export default function App() {
 
         {activeTab === 'delivery-order' && (
           <DeliveryOrder />
+        )}
+
+        {activeTab === 'pantry' && (
+          <CestasBasicas />
         )}
       </DashboardLayout>
     );
