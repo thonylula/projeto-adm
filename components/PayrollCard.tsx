@@ -366,10 +366,12 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     }
   };
 
-  const sendPDFViaWhatsAppAPI = async (phone: string, filename: string, pdfBase64: string) => {
+  const sendPDFViaWhatsAppAPI = async (phone: string, pdfBase64: string, filename: string) => {
     if (!whatsappConfig.apiUrl || !whatsappConfig.apiToken || !whatsappConfig.instanceName) return;
     try {
       const cleanPhone = phone.replace(/\D/g, '');
+      console.log('📤 Enviando PDF via Evolution API...');
+
       const response = await fetch(`${whatsappConfig.apiUrl}/message/sendMedia/${whatsappConfig.instanceName}`, {
         method: 'POST',
         headers: {
@@ -382,13 +384,19 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
           number: cleanPhone,
           mediatype: 'document',
           mimetype: 'application/pdf',
-          caption: `Recibo de pagamento - ${activeCompany.name}`,
+          caption: `Recibos de pagamento - ${activeCompany.name}`,
           fileName: filename,
           media: pdfBase64
         })
       });
 
-      if (!response.ok) throw new Error("Erro no envio do PDF");
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API retornou erro ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Resposta da API:', result);
     } catch (e) {
       console.error("Erro ao enviar PDF via WhatsApp API", e);
       throw e;
@@ -1172,48 +1180,6 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     } catch (e) {
       console.error("Bulk PDF Error", e);
       alert("Erro ao gerar/enviar PDF. Verifique a configuração da API.");
-    }
-  };
-
-  // Send PDF via WhatsApp API (Evolution API v2 format)
-  const sendPDFViaWhatsAppAPI = async (phone: string, pdfBase64: string, filename: string) => {
-    try {
-      const cleanPhone = phone.replace(/\D/g, '');
-
-      console.log('📤 Enviando PDF via Evolution API...');
-      console.log('URL:', `${whatsappConfig.apiUrl}/message/sendMedia/${whatsappConfig.instanceName}`);
-      console.log('Número:', cleanPhone);
-      console.log('Arquivo:', filename);
-
-      // Evolution API v2 format
-      const response = await fetch(`${whatsappConfig.apiUrl}/message/sendMedia/${whatsappConfig.instanceName}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': whatsappConfig.apiToken
-        },
-        body: JSON.stringify({
-          number: cleanPhone,
-          mediatype: 'document',
-          mimetype: 'application/pdf',
-          caption: `Recibos de pagamento - ${activeCompany.name}`,
-          fileName: filename,
-          media: pdfBase64
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Erro da API:', errorText);
-        throw new Error(`API retornou erro ${response.status}: ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log('✅ Resposta da API:', result);
-      alert(`✅ PDF enviado com sucesso via WhatsApp para +${cleanPhone}!\n\nID da Mensagem: ${result.key?.id || 'N/A'}`);
-    } catch (error) {
-      console.error('❌ WhatsApp API Error:', error);
-      alert(`❌ Erro ao enviar via WhatsApp API\n\nDetalhes: ${error}\n\n💡 Dica: Verifique se:\n- A Evolution API está rodando\n- O WhatsApp está conectado\n- As credenciais estão corretas`);
     }
   };
 
