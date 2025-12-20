@@ -171,6 +171,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [copiedSummaryId, setCopiedSummaryId] = useState<string | null>(null);
   const [receiptItem, setReceiptItem] = useState<PayrollHistoryItem | null>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
 
   // Lista de funcionários cadastrados para importação
@@ -914,43 +915,76 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const generateBulkPDF = async () => {
     const bulkContainer = document.getElementById('bulk-receipts-container');
     if (!bulkContainer) {
-      throw new Error("Container de recibos não encontrado.");
+      throw new Error("Container de recibos (DOM) não encontrado.");
+    }
+
+    const receipts = bulkContainer.querySelectorAll('.bulk-receipt-page');
+    if (receipts.length === 0) {
+      throw new Error("Nenhum elemento de recibo foi encontrado no container.");
     }
 
     const pdf = new jsPDF('p', 'mm', 'a4');
-    const receipts = bulkContainer.querySelectorAll('.bulk-receipt-page');
 
     for (let i = 0; i < receipts.length; i++) {
       const element = receipts[i] as HTMLElement;
-      const canvas = await html2canvas(element, { scale: 1.5, useCORS: true });
-      const imgData = canvas.toDataURL('image/png');
-      if (i > 0) pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+      try {
+        const canvas = await html2canvas(element, {
+          scale: 1.5,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          allowTaint: true
+        });
+        const imgData = canvas.toDataURL('image/png');
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+      } catch (canvasErr: any) {
+        console.error(`Erro ao capturar página ${i + 1}`, canvasErr);
+        throw new Error(`Erro na página ${i + 1}: ${canvasErr.message}`);
+      }
     }
     return pdf;
   };
 
   const handleShareBulk = async () => {
-    if (history.length === 0) return;
+    if (history.length === 0) {
+      alert("⚠️ Nenhum funcionário na lista da empresa para gerar recibos.");
+      return;
+    }
+
+    setIsGeneratingPDF(true);
     try {
       const pdf = await generateBulkPDF();
-      const pdfBlob = pdf.output('blob');
       const filename = `Recibos_${activeCompany.name.replace(/\s+/g, '_')}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
-      const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+      const pdfBlob = pdf.output('blob');
 
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'Recibos de Pagamento',
-          text: `Seguem os recibos de pagamento - ${activeCompany.name}`
-        });
-      } else {
-        pdf.save(filename);
-        alert("O seu navegador não suporta compartilhamento direto. O arquivo foi baixado.");
+      // Tentativa de compartilhamento nativo
+      let shared = false;
+      if (typeof File !== 'undefined' && navigator.share && navigator.canShare) {
+        try {
+          const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: 'Recibos de Pagamento',
+              text: `Seguem os recibos de pagamento - ${activeCompany.name}`
+            });
+            shared = true;
+          }
+        } catch (shareErr) {
+          console.warn("Navegador não permitiu compartilhar o arquivo diretamente.", shareErr);
+        }
       }
-    } catch (e) {
+
+      if (!shared) {
+        pdf.save(filename);
+        alert("✅ Arquivo de recibos gerado e baixado com sucesso!");
+      }
+    } catch (e: any) {
       console.error("Share Bulk Error", e);
-      alert("Erro ao gerar/compartilhar recibos.");
+      alert("❌ Erro ao processar recibos: " + (e.message || "Erro inesperado ao gerar PDF"));
+    } finally {
+      setIsGeneratingPDF(false);
     }
   };
 
@@ -1790,11 +1824,21 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
         <button
           onClick={handleShareBulk}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md font-bold transition-all text-xs"
+          disabled={isGeneratingPDF}
+          className={`flex items-center gap-2 px-4 py-2 text-white rounded-xl shadow-md font-bold transition-all text-xs ${isGeneratingPDF ? 'bg-slate-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700'}`}
           title="Compartilhar Todos os Recibos"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6L15.316 8.684m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
-          COMPARTILHAR
+          {isGeneratingPDF ? (
+            <>
+              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              GERANDO...
+            </>
+          ) : (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6L15.316 8.684m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+              COMPARTILHAR
+            </>
+          )}
         </button>
 
 
@@ -2001,8 +2045,8 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
         </div>
       )}
 
-      {/* --- HIDDEN BULK RECEIPTS CONTAINER (For PDF Export) --- */}
-      <div id="bulk-receipts-container" className="fixed left-[-9999px] top-[-9999px]">
+      {/* --- HIDDEN BULK RECEIPTS CONTAINER (Para extração de PDF) --- */}
+      <div id="bulk-receipts-container" style={{ position: 'fixed', left: '-10000px', top: '0', opacity: 0, pointerEvents: 'none', zIndex: -100 }}>
         {history.map((item, idx) => (
           <div key={`bulk-${idx}`} className="bulk-receipt-page bg-white w-[210mm] h-[297mm] p-[15mm] space-y-8 flex flex-col justify-between">
             {/* Copy of individual receipt logic (1st via) */}
