@@ -4,81 +4,95 @@ import type { InvoiceData } from '../types';
 interface PantryListProps {
     data: InvoiceData;
     employeeNames: string[];
+    motivationalMessages?: string[];
     sloganImage?: string | null;
     companyName: string;
     recipientCnpj?: string;
     companyLogo?: string | null;
 }
 
-export const PantryList: React.FC<PantryListProps> = ({ data, employeeNames, companyName, sloganImage, companyLogo }) => {
+export const PantryList: React.FC<PantryListProps> = ({
+    data,
+    employeeNames,
+    motivationalMessages = [],
+    companyName,
+    recipientCnpj,
+    companyLogo,
+    sloganImage
+}) => {
+    const formatQty = (qty: number) => qty.toLocaleString('pt-BR', { minimumFractionDigits: 3 });
+
     return (
-        <div className="bg-white p-8 rounded-xl shadow-lg print:shadow-none print:p-0">
-            <div className="flex justify-between items-center mb-8 border-b-2 border-slate-900 pb-6">
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">{companyName}</h1>
-                    <h2 className="text-xl font-bold text-indigo-600 mt-1">Conferência de Cestas Básicas</h2>
-                </div>
-                {companyLogo && <img src={companyLogo} alt="Logo" className="h-16 w-auto" />}
-            </div>
+        <div className="space-y-8 print:space-y-0">
+            {employeeNames.map((name, index) => (
+                <div key={index} className="bg-white border-2 border-orange-500 rounded-sm shadow-sm overflow-hidden font-sans text-[#444] print:shadow-none print:border-2 print:mb-0 print:break-after-page min-h-[400px] flex flex-col">
+                    {/* Header */}
+                    <div className="p-3 border-b border-orange-500 flex justify-between items-center">
+                        <div className="space-y-0.5">
+                            <h1 className="text-xs font-bold uppercase text-slate-800">{companyName}</h1>
+                            <p className="text-[9px] text-slate-500 font-medium">CNPJ: {recipientCnpj || '---'}</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-[10px] font-bold text-slate-700">Data: {new Date().toLocaleDateString('pt-BR')}</p>
+                        </div>
+                    </div>
 
-            <div className="grid grid-cols-2 gap-8 mb-8">
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                    <p className="text-xs font-bold text-slate-500 uppercase mb-1">Total de Funcionários</p>
-                    <p className="text-2xl font-black text-slate-900">{employeeNames.length}</p>
-                </div>
-                <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                    <p className="text-xs font-bold text-indigo-500 uppercase mb-1">Total da Nota Fiscal</p>
-                    <p className="text-2xl font-black text-indigo-900">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.totalValue)}
-                    </p>
-                </div>
-            </div>
+                    <div className="h-1 w-full bg-orange-500" />
 
-            <div className="mb-10">
-                <h3 className="text-lg font-bold text-slate-800 mb-4 uppercase tracking-wide">Itens para Distribuição</h3>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-slate-900 text-white">
-                                <th className="px-4 py-3 text-xs font-bold uppercase">Item</th>
-                                <th className="px-4 py-3 text-xs font-bold uppercase text-center">NF Total</th>
-                                <th className="px-4 py-3 text-xs font-bold uppercase text-center">Por Cesta</th>
-                                <th className="px-4 py-3 text-xs font-bold uppercase text-center">Saldo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {data.items.map((item, index) => {
-                                const qtyPerEmployee = Math.floor(item.quantity / employeeNames.length);
-                                const remainder = item.quantity % employeeNames.length;
-                                return (
-                                    <tr key={index} className="border-b border-slate-100">
-                                        <td className="px-4 py-4 text-sm font-bold text-slate-700">{item.description}</td>
-                                        <td className="px-4 py-4 text-sm text-center font-mono">{item.quantity} {item.unit}</td>
-                                        <td className="px-4 py-4 text-sm text-center bg-indigo-50/50 font-black text-indigo-700">
-                                            {qtyPerEmployee > 0 ? `${qtyPerEmployee} ${item.unit}` : '-'}
-                                        </td>
-                                        <td className="px-4 py-4 text-sm text-center text-slate-400">
-                                            {remainder > 0 ? `Sobra: ${remainder}` : 'Exato'}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                    {/* Motivational Message */}
+                    <div className="p-4 text-center">
+                        <p className="text-indigo-600 font-bold italic text-sm">
+                            "{motivationalMessages[index] || "Sua dedicação é a força que impulsiona nosso sucesso. Obrigado!"}"
+                        </p>
+                    </div>
 
-            <div className="mt-auto pt-8 border-t flex justify-between items-center text-xs text-slate-400 italic font-medium">
-                <span>* Tabela gerada automaticamente para apoio logístico.</span>
-                {sloganImage && <img src={sloganImage} alt="Slogan" className="h-8 w-auto opacity-50 grayscale" />}
-            </div>
+                    {/* Table */}
+                    <div className="flex-1 px-4 pb-4">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="border-b border-orange-500">
+                                    <th className="py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">DESCRIÇÃO DO PRODUTO</th>
+                                    <th className="py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">QUANTIDADE NA CESTA</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-orange-100">
+                                {data.items.map((item, idx) => {
+                                    const qtyPerEmployee = item.quantity / employeeNames.length;
+                                    return (
+                                        <tr key={idx}>
+                                            <td className="py-2 text-[11px] font-bold text-slate-800 uppercase leading-snug">{item.description}</td>
+                                            <td className="py-2 text-[11px] text-right text-slate-600 font-bold">
+                                                {formatQty(qtyPerEmployee)} {item.unit}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Footer Divider */}
+                    <div className="h-0.5 w-full border-t-2 border-dashed border-orange-500 mt-auto" />
+
+                    {/* Dummy Duplicate Header for visual reference like in image */}
+                    <div className="p-3 bg-slate-50/50 flex justify-between items-center opacity-60">
+                        <div className="space-y-0.5">
+                            <h1 className="text-[9px] font-bold uppercase text-slate-800">{companyName}</h1>
+                            <p className="text-[8px] text-slate-500 font-medium">Portador: {name}</p>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-[9px] font-bold text-slate-700">Data: {new Date().toLocaleDateString('pt-BR')}</p>
+                        </div>
+                    </div>
+                </div>
+            ))}
 
             <div className="mt-8 text-center print:hidden">
                 <button
                     onClick={() => window.print()}
-                    className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg"
+                    className="bg-indigo-600 text-white px-8 py-3 rounded-sm font-black uppercase text-sm hover:bg-indigo-700 transition-all shadow-lg active:scale-95"
                 >
-                    Imprimir Lista de Conferência
+                    Imprimir Cupons de Entrega (14)
                 </button>
             </div>
         </div>

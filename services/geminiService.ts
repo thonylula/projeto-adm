@@ -84,3 +84,42 @@ export async function extractInvoiceData(base64: string, mimeType: string): Prom
         throw error;
     }
 }
+
+/**
+ * Generates 14 distinct motivational messages for employee pantry lists.
+ * @param names The list of employee names.
+ * @returns A promise that resolves to an array of 14 strings.
+ */
+export async function generateMotivationalMessages(names: string[]): Promise<string[]> {
+    const prompt = `
+    Gere 14 frases motivacionais curtas, inspiradoras e profissionais para serem colocadas em listas de entrega de cestas básicas. 
+    As frases devem ser variadas e demonstrar gratidão pelo trabalho dos funcionários.
+    Retorne apenas um array JSON de strings, sem blocos de código markdown.
+    Exemplo: ["Frase 1", "Frase 2", ...]
+  `;
+
+    try {
+        const contents = [{
+            role: 'user',
+            parts: [{ text: prompt }]
+        }];
+
+        const response = await fetch('/api/generative', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents })
+        });
+
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error('Falha ao gerar mensagens.');
+
+        const text = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error('Mensagens vazias.');
+
+        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(jsonStr);
+    } catch (error) {
+        console.warn('Erro ao gerar mensagens motivacionais, usando padrão.', error);
+        return names.map(() => "Sua dedicação é a força que impulsiona nosso sucesso. Obrigado!");
+    }
+}
