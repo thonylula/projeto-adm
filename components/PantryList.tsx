@@ -9,6 +9,8 @@ interface PantryListProps {
     companyName: string;
     recipientCnpj?: string;
     companyLogo?: string | null;
+    nonDrinkerCount?: number;
+    itemAllocation?: Record<string, 'ALL' | 'NON_DRINKER' | 'DRINKER'>;
 }
 
 export const PantryList: React.FC<PantryListProps> = ({
@@ -18,81 +20,122 @@ export const PantryList: React.FC<PantryListProps> = ({
     companyName,
     recipientCnpj,
     companyLogo,
-    sloganImage
+    sloganImage,
+    nonDrinkerCount = 0,
+    itemAllocation = {}
 }) => {
     const formatQty = (qty: number) => qty.toLocaleString('pt-BR', { minimumFractionDigits: 3 });
 
+    const totalEmployees = employeeNames.length;
+    const drinkerCount = totalEmployees - nonDrinkerCount;
+
     return (
         <div className="space-y-8 print:space-y-0">
-            {employeeNames.map((name, index) => (
-                <div key={index} className="bg-white border-2 border-orange-500 rounded-sm shadow-sm overflow-hidden font-sans text-[#444] print:shadow-none print:border-2 print:mb-0 print:break-after-page min-h-[400px] flex flex-col">
-                    {/* Header */}
-                    <div className="p-3 border-b border-orange-500 flex justify-between items-center">
-                        <div className="space-y-0.5">
-                            <h1 className="text-xs font-bold uppercase text-slate-800">{companyName}</h1>
-                            <p className="text-[9px] text-slate-500 font-medium">CNPJ: {recipientCnpj || '---'}</p>
+            {employeeNames.map((name, index) => {
+                const isNonDrinker = index < nonDrinkerCount;
+
+                // Filter items based on allocation
+                const visibleItems = data.items.filter(item => {
+                    const allocation = itemAllocation[item.id] || 'ALL';
+                    if (allocation === 'ALL') return true;
+                    if (isNonDrinker && allocation === 'NON_DRINKER') return true;
+                    if (!isNonDrinker && allocation === 'DRINKER') return true;
+                    return false;
+                });
+
+                return (
+                    <div key={index} className="bg-white border-2 border-orange-500 rounded-sm shadow-sm overflow-hidden font-sans text-[#444] print:shadow-none print:border-2 print:mb-0 print:break-after-page min-h-[400px] flex flex-col relative">
+
+                        {/* Tag for special basket */}
+                        <div className={`absolute top-0 right-0 px-3 py-1 text-[8px] font-black uppercase text-white ${isNonDrinker ? 'bg-indigo-600' : 'bg-orange-500'} print:hidden`}>
+                            {isNonDrinker ? 'CONFERÊNCIA (NÃO BEBE)' : 'CONFERÊNCIA (PADRÃO)'}
                         </div>
-                        <div className="text-right">
-                            <p className="text-[10px] font-bold text-slate-700">Data: {new Date().toLocaleDateString('pt-BR')}</p>
+
+                        {/* Header */}
+                        <div className="p-3 border-b border-orange-500 flex justify-between items-center">
+                            <div className="space-y-0.5">
+                                <h1 className="text-xs font-bold uppercase text-slate-800">{companyName}</h1>
+                                <p className="text-[9px] text-slate-500 font-medium">CNPJ: {recipientCnpj || '---'}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[10px] font-bold text-slate-700">Data: {new Date().toLocaleDateString('pt-BR')}</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="h-1 w-full bg-orange-500" />
+                        <div className="h-1 w-full bg-orange-500" />
 
-                    {/* Motivational Message */}
-                    <div className="p-4 text-center">
-                        <p className="text-indigo-600 font-bold italic text-sm">
-                            "{motivationalMessages[index] || "Sua dedicação é a força que impulsiona nosso sucesso. Obrigado!"}"
-                        </p>
-                    </div>
+                        {/* Motivational Message */}
+                        <div className="p-4 text-center">
+                            <p className="text-indigo-600 font-bold italic text-sm">
+                                "{motivationalMessages[index] || "Sua dedicação é a força que impulsiona nosso sucesso. Obrigado!"}"
+                            </p>
+                        </div>
 
-                    {/* Table */}
-                    <div className="flex-1 px-4 pb-4">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="border-b border-orange-500">
-                                    <th className="py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">DESCRIÇÃO DO PRODUTO</th>
-                                    <th className="py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">QUANTIDADE NA CESTA</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-orange-100">
-                                {data.items.map((item, idx) => {
-                                    const qtyPerEmployee = item.quantity / employeeNames.length;
-                                    return (
-                                        <tr key={idx}>
-                                            <td className="py-2 text-[11px] font-bold text-slate-800 uppercase leading-snug">{item.description}</td>
-                                            <td className="py-2 text-[11px] text-right text-slate-600 font-bold">
-                                                {formatQty(qtyPerEmployee)} {item.unit}
-                                            </td>
+                        {/* Table */}
+                        <div className="flex-1 px-4 pb-4">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-orange-500">
+                                        <th className="py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">DESCRIÇÃO DO PRODUTO</th>
+                                        <th className="py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">QUANTIDADE NA CESTA</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-orange-100">
+                                    {visibleItems.map((item, idx) => {
+                                        const allocation = itemAllocation[item.id] || 'ALL';
+                                        let qtyPerEmployee = 0;
+
+                                        if (allocation === 'ALL') {
+                                            qtyPerEmployee = item.quantity / totalEmployees;
+                                        } else if (allocation === 'NON_DRINKER' && isNonDrinker) {
+                                            qtyPerEmployee = item.quantity / nonDrinkerCount;
+                                        } else if (allocation === 'DRINKER' && !isNonDrinker) {
+                                            qtyPerEmployee = item.quantity / drinkerCount;
+                                        }
+
+                                        return (
+                                            <tr key={idx}>
+                                                <td className="py-2 text-[11px] font-bold text-slate-800 uppercase leading-snug">{item.description}</td>
+                                                <td className="py-2 text-[11px] text-right text-slate-600 font-bold">
+                                                    {formatQty(qtyPerEmployee)} {item.unit}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                    {visibleItems.length === 0 && (
+                                        <tr>
+                                            <td colSpan={2} className="py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nenhum item alocado para este grupo</td>
                                         </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Footer Divider */}
-                    <div className="h-0.5 w-full border-t-2 border-dashed border-orange-500 mt-auto" />
-
-                    {/* Dummy Duplicate Header for visual reference like in image */}
-                    <div className="p-3 bg-slate-50/50 flex justify-between items-center opacity-60">
-                        <div className="space-y-0.5">
-                            <h1 className="text-[9px] font-bold uppercase text-slate-800">{companyName}</h1>
-                            <p className="text-[8px] text-slate-500 font-medium">Portador: {name}</p>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
-                        <div className="text-right">
-                            <p className="text-[9px] font-bold text-slate-700">Data: {new Date().toLocaleDateString('pt-BR')}</p>
+
+                        {/* Footer Divider */}
+                        <div className="h-0.5 w-full border-t-2 border-dashed border-orange-500 mt-auto" />
+
+                        {/* Dummy Duplicate Header for visual reference like in image */}
+                        <div className="p-3 bg-slate-50/50 flex justify-between items-center opacity-60">
+                            <div className="space-y-0.5">
+                                <h1 className="text-[9px] font-bold uppercase text-slate-800">{companyName}</h1>
+                                <p className="text-[8px] text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
+                                    Portador: <span className="font-black underline">{name}</span>
+                                </p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-[9px] font-bold text-slate-700">{isNonDrinker ? 'CESTA ESPECIAL' : 'CESTA PADRÃO'}</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            ))}
+                );
+            })}
 
             <div className="mt-8 text-center print:hidden">
                 <button
                     onClick={() => window.print()}
                     className="bg-indigo-600 text-white px-8 py-3 rounded-sm font-black uppercase text-sm hover:bg-indigo-700 transition-all shadow-lg active:scale-95"
                 >
-                    Imprimir Cupons de Entrega (14)
+                    Imprimir Cupons de Entrega ({totalEmployees})
                 </button>
             </div>
         </div>
