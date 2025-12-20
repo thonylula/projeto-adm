@@ -108,12 +108,25 @@ export const CestasBasicas: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<Tab>('summary');
+    const [nonDrinkerCount, setNonDrinkerCount] = useState<number>(0);
+    const [itemAllocation, setItemAllocation] = useState<Record<string, 'ALL' | 'NON_DRINKER' | 'DRINKER'>>({});
 
     useEffect(() => {
         if (invoiceData?.recipientName) {
             setCompanyName(invoiceData.recipientName);
         }
+        if (invoiceData?.items) {
+            const initialAllocation: Record<string, 'ALL' | 'NON_DRINKER' | 'DRINKER'> = {};
+            invoiceData.items.forEach(item => {
+                initialAllocation[item.id] = 'ALL';
+            });
+            setItemAllocation(initialAllocation);
+        }
     }, [invoiceData]);
+
+    const toggleAllocation = (itemId: string, target: 'ALL' | 'NON_DRINKER' | 'DRINKER') => {
+        setItemAllocation(prev => ({ ...prev, [itemId]: target }));
+    };
 
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files?.[0]) {
@@ -179,6 +192,8 @@ export const CestasBasicas: React.FC = () => {
             companyLogoBase64,
             sloganImageBase64,
             appMode,
+            nonDrinkerCount,
+            itemAllocation,
             timestamp: new Date().toISOString()
         };
         const blob = new Blob([JSON.stringify(backup)], { type: 'application/json' });
@@ -202,6 +217,8 @@ export const CestasBasicas: React.FC = () => {
                 setCompanyLogoBase64(backup.companyLogoBase64);
                 setSloganImageBase64(backup.sloganImageBase64);
                 setAppMode(backup.appMode);
+                setNonDrinkerCount(backup.nonDrinkerCount || 0);
+                setItemAllocation(backup.itemAllocation || {});
                 setActiveTab('summary');
             } catch (err) {
                 alert('Falha ao carregar backup.');
@@ -343,6 +360,51 @@ export const CestasBasicas: React.FC = () => {
                             )}
                         </div>
                     </div>
+
+                    {/* --- Targeted Distribution UI --- */}
+                    {invoiceData && (
+                        <div className="mt-8 pt-8 border-t border-slate-200 animate-in slide-in-from-top-4 duration-500">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                                <div>
+                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Configuração de Distribuição</h3>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Separe os itens entre bebedores e não bebedores</p>
+                                </div>
+                                <div className="flex items-center gap-3 bg-slate-100 p-2 rounded-sm border border-slate-200">
+                                    <label className="text-[10px] font-black uppercase text-slate-600">Funcionários que NÃO bebem:</label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="14"
+                                        value={nonDrinkerCount}
+                                        onChange={(e) => setNonDrinkerCount(Math.min(14, Math.max(0, parseInt(e.target.value) || 0)))}
+                                        className="w-16 px-2 py-1 border border-slate-300 rounded-none font-bold text-indigo-600 text-center focus:outline-none focus:border-indigo-500"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {invoiceData.items.map(item => (
+                                    <div key={item.id} className="p-3 border border-slate-200 rounded-sm bg-slate-50/50 flex flex-col gap-2">
+                                        <div className="text-[10px] font-bold text-slate-800 truncate uppercase">{item.description}</div>
+                                        <div className="flex gap-1">
+                                            {['ALL', 'NON_DRINKER', 'DRINKER'].map(type => (
+                                                <button
+                                                    key={type}
+                                                    onClick={() => toggleAllocation(item.id, type as any)}
+                                                    className={`flex-1 text-[8px] font-black p-1.5 rounded-none border transition-all ${itemAllocation[item.id] === type
+                                                            ? (appMode === 'CHRISTMAS' ? 'bg-red-600 border-red-600 text-white' : 'bg-indigo-600 border-indigo-600 text-white')
+                                                            : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400'
+                                                        }`}
+                                                >
+                                                    {type === 'ALL' ? 'TODOS' : type === 'NON_DRINKER' ? 'NÃO BEBEM' : 'BEBEM'}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {invoiceData && (
@@ -356,7 +418,19 @@ export const CestasBasicas: React.FC = () => {
                         <div id="active-view" className="animate-in fade-in duration-700">
                             {activeTab === 'summary' && <InvoiceSummary data={invoiceData} companyName={companyName} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
                             {activeTab === 'signature' && <SignatureSheet employeeNames={employeeNames} companyName={companyName} recipientCnpj={invoiceData.recipientCnpj} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
-                            {activeTab === 'pantry' && <PantryList data={invoiceData} employeeNames={employeeNames} motivationalMessages={motivationalMessages} sloganImage={sloganImageBase64} companyName={companyName} recipientCnpj={invoiceData.recipientCnpj} companyLogo={companyLogoBase64} />}
+                            {activeTab === 'pantry' && (
+                                <PantryList
+                                    data={invoiceData}
+                                    employeeNames={employeeNames}
+                                    motivationalMessages={motivationalMessages}
+                                    sloganImage={sloganImageBase64}
+                                    companyName={companyName}
+                                    recipientCnpj={invoiceData.recipientCnpj}
+                                    companyLogo={companyLogoBase64}
+                                    nonDrinkerCount={nonDrinkerCount}
+                                    itemAllocation={itemAllocation}
+                                />
+                            )}
                         </div>
                     </div>
                 )}
