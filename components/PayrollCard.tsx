@@ -225,7 +225,11 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       const timeoutId = setTimeout(() => controller.abort(), 5000);
 
       const resp = await fetch(`${whatsappConfig.apiUrl}/instance/connectionState/${whatsappConfig.instanceName}`, {
-        headers: { 'apikey': whatsappConfig.apiToken },
+        headers: {
+          'apikey': whatsappConfig.apiToken,
+          'ngrok-skip-browser-warning': 'true',
+          'bypass-tunnel-reminder': 'true'
+        },
         signal: controller.signal
       });
       clearTimeout(timeoutId);
@@ -259,12 +263,13 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     if (!whatsappConfig.apiUrl || !whatsappConfig.instanceName) return;
     try {
       setConnectionState('LOADING');
-      // Tenta criar a instância
-      await fetch(`${whatsappConfig.apiUrl}/instance/create`, {
+      const response = await fetch(`${whatsappConfig.apiUrl}/instance/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': whatsappConfig.apiToken
+          'apikey': whatsappConfig.apiToken,
+          'ngrok-skip-browser-warning': 'true',
+          'bypass-tunnel-reminder': 'true'
         },
         body: JSON.stringify({
           instanceName: whatsappConfig.instanceName,
@@ -272,9 +277,25 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
           qrcode: true
         })
       });
+
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("text/html")) {
+        throw new Error("PAGINA_BLOQUEIO");
+      }
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || "Erro desconhecido na API");
+      }
+
       handleConnect();
-    } catch (e) {
-      alert("Erro ao criar instância.");
+    } catch (e: any) {
+      setConnectionState('DISCONNECTED');
+      if (e.message === "PAGINA_BLOQUEIO") {
+        alert("⚠️ O Túnel (Localtunnel) está bloqueando o acesso.\n\nSOLUÇÃO: Abra o link da API no seu navegador (em outra aba) e clique no botão 'Click to Visit' ou similar para liberar o acesso, depois volte aqui.");
+      } else {
+        alert("❌ Erro ao criar instância: " + e.message);
+      }
     }
   };
 
@@ -282,8 +303,18 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     setConnectionState('CONNECTING');
     try {
       const resp = await fetch(`${whatsappConfig.apiUrl}/instance/connect/${whatsappConfig.instanceName}`, {
-        headers: { 'apikey': whatsappConfig.apiToken }
+        headers: {
+          'apikey': whatsappConfig.apiToken,
+          'ngrok-skip-browser-warning': 'true',
+          'bypass-tunnel-reminder': 'true'
+        }
       });
+
+      const contentType = resp.headers.get("content-type");
+      if (contentType && contentType.includes("text/html")) {
+        throw new Error("PAGINA_BLOQUEIO");
+      }
+
       const data = await resp.json();
       if (data.base64) {
         setQrCode(data.base64);
@@ -291,8 +322,12 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
         setConnectionState('CONNECTED');
         setQrCode(null);
       }
-    } catch (e) {
-      alert("Erro ao obter QR Code.");
+    } catch (e: any) {
+      if (e.message === "PAGINA_BLOQUEIO") {
+        alert("⚠️ O Túnel está bloqueando o acesso. Abra o link da API em outra aba e libere o acesso.");
+      } else {
+        alert("❌ Erro ao obter QR Code: " + e.message);
+      }
     }
   };
 
