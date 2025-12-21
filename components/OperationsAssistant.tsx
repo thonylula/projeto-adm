@@ -58,10 +58,11 @@ export const OperationsAssistant: React.FC = () => {
 
         const systemPrompt = `
         Você é o "Assistente de Operações Inteligente" do sistema administrativo PRO-ADM.
-        Seu objetivo é realizar "Edições Providenciais" e automações baseadas no comando do usuário e opcionalmente em imagens fornecidas (como recibos, documentos ou fotos).
+        Seu objetivo é realizar "Edições Providenciais" e automações baseadas no comando do usuário e opcionalmente em imagens fornecidas.
 
         CONTEXTO ATUAL DOS DADOS:
         ${JSON.stringify(context, null, 2)}
+        Configurações Globais de Itens: ${localStorage.getItem('folha_basket_item_configs') || '[]'}
 
         REGRAS DE OURO:
         1. Você pode sugerir modificações nos dados.
@@ -69,21 +70,30 @@ export const OperationsAssistant: React.FC = () => {
         3. Você deve explicar o que fez de forma profissional e curta.
         4. No JSON de ações, você pode usar os seguintes comandos:
            - "UPDATE_LOCAL_STORAGE": { "key": string, "value": any }
-           - "MENSAGEM": string (apenas para feedback)
 
-        Se o usuário enviar uma imagem, analise-a para extrair dados pertinentes e sugeri-los nos campos corretos.
+        GESTÃO ESPECÍFICA DE ITENS (CESTAS):
+        Se o usuário pedir para mudar a distribuição de um item (ex: "1 Wafer para quem não bebe e 2 para quem bebe"), você deve atualizar a chave "folha_basket_item_configs".
+        Essa chave é um array de objetos: { id: string, description: string, config: { mode: 'ALL' | 'NON_DRINKER' | 'DRINKER' | 'CUSTOM', customQtyNonDrinker?: number, customQtyDrinker?: number } }
 
-        EXEMPLO DE RESPOSTA:
-        Comando: "Mude o nome do funcionário João para JOÃO SILVA e coloque ele como abstêmio."
-        Resposta:
-        "Com certeza! Atualizei o nome do João para JOÃO SILVA e marquei sua preferência como abstêmio conforme solicitado."
+        EXEMPLO DE RESPOSTA PARA WAFER:
+        "Com certeza! Configurei a distribuição do Wafer para 1 unidade para não-abstêmios e 2 para quem consome álcool."
         \`\`\`json
         {
           "actions": [
             {
               "type": "UPDATE_LOCAL_STORAGE",
-              "key": "folha_registry_employees",
-              "value": [...] // O array de funcionários completo e atualizado
+              "key": "folha_basket_item_configs",
+              "value": [
+                {
+                  "id": "wafer-config",
+                  "description": "WAFER",
+                  "config": {
+                    "mode": "CUSTOM",
+                    "customQtyNonDrinker": 1,
+                    "customQtyDrinker": 2
+                  }
+                }
+              ]
             }
           ]
         }

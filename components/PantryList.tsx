@@ -1,5 +1,5 @@
 import React from 'react';
-import type { InvoiceData } from '../types';
+import type { InvoiceData, ItemAllocationConfig } from '../types';
 
 interface PantryListProps {
     data: InvoiceData;
@@ -10,7 +10,7 @@ interface PantryListProps {
     recipientCnpj?: string;
     companyLogo?: string | null;
     selectedNonDrinkers?: number[];
-    itemAllocation?: Record<string, 'ALL' | 'NON_DRINKER' | 'DRINKER'>;
+    itemAllocation?: Record<string, ItemAllocationConfig>;
 }
 
 export const PantryList: React.FC<PantryListProps> = ({
@@ -37,10 +37,10 @@ export const PantryList: React.FC<PantryListProps> = ({
 
                 // Filter items based on allocation
                 const visibleItems = data.items.filter(item => {
-                    const allocation = itemAllocation[item.id] || 'ALL';
-                    if (allocation === 'ALL') return true;
-                    if (isNonDrinker && allocation === 'NON_DRINKER') return true;
-                    if (!isNonDrinker && allocation === 'DRINKER') return true;
+                    const config = itemAllocation[item.id] || { mode: 'ALL' };
+                    if (config.mode === 'ALL' || config.mode === 'CUSTOM') return true;
+                    if (isNonDrinker && config.mode === 'NON_DRINKER') return true;
+                    if (!isNonDrinker && config.mode === 'DRINKER') return true;
                     return false;
                 });
 
@@ -83,14 +83,18 @@ export const PantryList: React.FC<PantryListProps> = ({
                                 </thead>
                                 <tbody className="divide-y divide-orange-100">
                                     {visibleItems.map((item, idx) => {
-                                        const allocation = itemAllocation[item.id] || 'ALL';
+                                        const config = itemAllocation[item.id] || { mode: 'ALL' };
                                         let qtyPerEmployee = 0;
 
-                                        if (allocation === 'ALL') {
+                                        if (config.mode === 'CUSTOM') {
+                                            qtyPerEmployee = isNonDrinker
+                                                ? (config.customQtyNonDrinker || 0)
+                                                : (config.customQtyDrinker || 0);
+                                        } else if (config.mode === 'ALL') {
                                             qtyPerEmployee = item.quantity / totalEmployees;
-                                        } else if (allocation === 'NON_DRINKER' && isNonDrinker) {
+                                        } else if (config.mode === 'NON_DRINKER' && isNonDrinker) {
                                             qtyPerEmployee = item.quantity / (nonDrinkerCount || 1);
-                                        } else if (allocation === 'DRINKER' && !isNonDrinker) {
+                                        } else if (config.mode === 'DRINKER' && !isNonDrinker) {
                                             qtyPerEmployee = item.quantity / (drinkerCount || 1);
                                         }
 
