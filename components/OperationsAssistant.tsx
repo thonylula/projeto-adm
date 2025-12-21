@@ -1,0 +1,269 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { useGeminiParser } from '../hooks/useGeminiParser';
+
+export const OperationsAssistant: React.FC = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [command, setCommand] = useState('');
+    const [history, setHistory] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
+    const [isApplying, setIsApplying] = useState(false);
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    const { processText, processFile, isProcessing } = useGeminiParser({
+        onError: (err) => {
+            setHistory(prev => [...prev, { role: 'assistant', content: `Erro: ${err.message}` }]);
+        }
+    });
+
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [history]);
+
+    const [selectedImage, setSelectedImage] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedImage(file);
+            const reader = new FileReader();
+            reader.onloadend = () => setImagePreview(reader.result as string);
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleSend = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if ((!command.trim() && !selectedImage) || isProcessing) return;
+
+        const userCommand = command;
+        const img = selectedImage;
+
+        setCommand('');
+        setSelectedImage(null);
+        setImagePreview(null);
+
+        setHistory(prev => [...prev, { role: 'user', content: userCommand || (img ? "[Imagem Enviada]" : "") }]);
+
+        // Prepare context from localStorage
+        const context = {
+            companies: JSON.parse(localStorage.getItem('folha_companies') || '[]'),
+            employees: JSON.parse(localStorage.getItem('folha_registry_employees') || '[]'),
+            suppliers: JSON.parse(localStorage.getItem('folha_registry_suppliers') || '[]'),
+            clients: JSON.parse(localStorage.getItem('folha_registry_clients') || '[]'),
+            currentDate: new Date().toLocaleDateString('pt-BR'),
+            currentTime: new Date().toLocaleTimeString('pt-BR')
+        };
+
+        const systemPrompt = `
+        Você é o "Assistente de Operações Inteligente" do sistema administrativo PRO-ADM.
+        Seu objetivo é realizar "Edições Providenciais" e automações baseadas no comando do usuário e opcionalmente em imagens fornecidas (como recibos, documentos ou fotos).
+
+        CONTEXTO ATUAL DOS DADOS:
+        ${JSON.stringify(context, null, 2)}
+
+        REGRAS DE OURO:
+        1. Você pode sugerir modificações nos dados.
+        2. Toda modificação deve ser retornada em um bloco JSON específico chamado "actions".
+        3. Você deve explicar o que fez de forma profissional e curta.
+        4. No JSON de ações, você pode usar os seguintes comandos:
+           - "UPDATE_LOCAL_STORAGE": { "key": string, "value": any }
+           - "MENSAGEM": string (apenas para feedback)
+
+        Se o usuário enviar uma imagem, analise-a para extrair dados pertinentes e sugeri-los nos campos corretos.
+
+        EXEMPLO DE RESPOSTA:
+        Comando: "Mude o nome do funcionário João para JOÃO SILVA e coloque ele como abstêmio."
+        Resposta:
+        "Com certeza! Atualizei o nome do João para JOÃO SILVA e marquei sua preferência como abstêmio conforme solicitado."
+        \`\`\`json
+        {
+          "actions": [
+            {
+              "type": "UPDATE_LOCAL_STORAGE",
+              "key": "folha_registry_employees",
+              "value": [...] // O array de funcionários completo e atualizado
+            }
+          ]
+        }
+        \`\`\`
+
+        IMPORTANTE: Se você for atualizar um array, envie o ARRAY COMPLETO atualizado.
+        `;
+
+        let result;
+        if (img) {
+            result = await processFile(img, `${systemPrompt}\n\nCOMANDO DO USUÁRIO: ${userCommand}`);
+        } else {
+            result = await processText(systemPrompt, userCommand);
+        }
+
+        if (result && typeof result === 'object') {
+            const assistantMessage = result.message || "Ação processada com sucesso.";
+            setHistory(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
+
+            if (result.actions && Array.isArray(result.actions)) {
+                setIsApplying(true);
+                result.actions.forEach((action: any) => {
+                    if (action.type === 'UPDATE_LOCAL_STORAGE') {
+                        localStorage.setItem(action.key, JSON.stringify(action.value));
+                    }
+                });
+
+                // Notify application of changes
+                window.dispatchEvent(new Event('app-data-updated'));
+                setTimeout(() => setIsApplying(false), 1000);
+            }
+        } else if (typeof result === 'string') {
+            setHistory(prev => [...prev, { role: 'assistant', content: result }]);
+        }
+    };
+
+    return (
+        <div className="fixed bottom-6 right-6 z-[9999] font-sans">
+            {/* Toggle Button */}
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 transform hover:scale-110 active:scale-95 ${isOpen ? 'bg-slate-800 rotate-90' : 'bg-gradient-to-tr from-indigo-600 to-purple-600'
+                    }`}
+            >
+                {isOpen ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6 text-white">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                ) : (
+                    <div className="relative">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7 text-white animate-pulse">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                        </svg>
+                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500 border-2 border-white"></span>
+                        </span>
+                    </div>
+                )}
+            </button>
+
+            {/* Panel */}
+            {isOpen && (
+                <div className="absolute bottom-20 right-0 w-[400px] h-[600px] max-h-[80vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in slide-in-from-bottom-6 duration-300">
+                    {/* Header */}
+                    <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-xs font-bold">IA</div>
+                            <div>
+                                <h3 className="text-sm font-bold uppercase tracking-tight">Assistente de Operações</h3>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase">Online & Pronto</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {/* Chat Messages */}
+                    <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
+                        {history.length === 0 && (
+                            <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-40">
+                                <div className="text-4xl">✨</div>
+                                <div>
+                                    <p className="text-sm font-bold uppercase text-slate-600">Olá! Eu sou sua IA de Operações.</p>
+                                    <p className="text-xs text-slate-500">Peça para eu corrigir nomes, salários, <br /> cadastrar novos itens ou automatizar tarefas.</p>
+                                </div>
+                            </div>
+                        )}
+                        {history.map((msg, idx) => (
+                            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${msg.role === 'user'
+                                    ? 'bg-indigo-600 text-white rounded-tr-none shadow-md'
+                                    : 'bg-white border border-slate-200 text-slate-700 rounded-tl-none shadow-sm'
+                                    }`}>
+                                    {msg.content}
+                                </div>
+                            </div>
+                        ))}
+                        {isProcessing && (
+                            <div className="flex justify-start">
+                                <div className="bg-white border border-slate-200 p-3 rounded-2xl rounded-tl-none flex items-center gap-2 text-xs text-slate-400 font-bold uppercase animate-pulse">
+                                    <div className="flex gap-1">
+                                        <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce"></div>
+                                        <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                                        <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+                                    </div>
+                                    Processando Comando...
+                                </div>
+                            </div>
+                        )}
+                        {isApplying && (
+                            <div className="flex justify-center">
+                                <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-1 rounded-full text-[10px] font-black uppercase flex items-center gap-2 shadow-sm animate-bounce">
+                                    <span>✅ Aplicando Edições Providenciais...</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Input */}
+                    <form onSubmit={handleSend} className="p-4 border-t border-slate-100 bg-white">
+                        {imagePreview && (
+                            <div className="mb-2 relative inline-block">
+                                <img src={imagePreview} alt="Preview" className="h-20 w-auto rounded-lg border border-slate-200 shadow-sm" />
+                                <button
+                                    type="button"
+                                    onClick={() => { setSelectedImage(null); setImagePreview(null); }}
+                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        )}
+                        <div className="relative flex items-end gap-2">
+                            <label className="p-2 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors h-[48px] flex items-center justify-center">
+                                <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-slate-500">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15a2.25 2.25 0 002.25-2.25V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </label>
+                            <div className="flex-1 relative">
+                                <textarea
+                                    value={command}
+                                    onChange={(e) => setCommand(e.target.value)}
+                                    placeholder="O que deseja ajustar hoje?"
+                                    className="w-full p-3 pr-12 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-medium resize-none min-h-[48px]"
+                                    rows={1}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handleSend(e as any);
+                                        }
+                                    }}
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={(!command.trim() && !selectedImage) || isProcessing}
+                                    className="absolute right-2 bottom-1.5 p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-slate-300 transition-colors shadow-lg"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase mt-2 text-center tracking-widest">
+                            Inteligência Artificial Operacional • PRO-ADM
+                        </p>
+                    </form>
+                </div>
+            )}
+        </div>
+    );
+};

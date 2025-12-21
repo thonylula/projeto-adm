@@ -113,25 +113,29 @@ export const CestasBasicas: React.FC = () => {
     const [itemAllocation, setItemAllocation] = useState<Record<string, 'ALL' | 'NON_DRINKER' | 'DRINKER'>>({});
 
     useEffect(() => {
-        // Load employees from registry
-        try {
-            const stored = localStorage.getItem('folha_registry_employees');
-            if (stored) {
-                const registered: any[] = JSON.parse(stored);
-                if (registered.length > 0) {
-                    const names = registered.map(r => r.name);
-                    setActualEmployees(names);
+        const loadRegistry = () => {
+            // Load employees from registry
+            try {
+                const stored = localStorage.getItem('folha_registry_employees');
+                if (stored) {
+                    const registered: any[] = JSON.parse(stored);
+                    if (registered.length > 0) {
+                        const names = registered.map(r => r.name);
+                        setActualEmployees(names);
 
-                    // Auto-select non-drinkers based on registry
-                    const nonDrinkerIndices = registered
-                        .map((r, idx) => r.isNonDrinker ? idx : -1)
-                        .filter(idx => idx !== -1);
-                    setSelectedNonDrinkers(nonDrinkerIndices);
+                        // Auto-select non-drinkers based on registry
+                        const nonDrinkerIndices = registered
+                            .map((r, idx) => r.isNonDrinker ? idx : -1)
+                            .filter(idx => idx !== -1);
+                        setSelectedNonDrinkers(nonDrinkerIndices);
+                    }
                 }
+            } catch (e) {
+                console.error("Failed to load employees from registry", e);
             }
-        } catch (e) {
-            console.error("Failed to load employees from registry", e);
-        }
+        };
+
+        loadRegistry();
 
         if (invoiceData?.recipientName) {
             setCompanyName(invoiceData.recipientName);
@@ -143,6 +147,13 @@ export const CestasBasicas: React.FC = () => {
             });
             setItemAllocation(initialAllocation);
         }
+
+        window.addEventListener('storage', loadRegistry);
+        window.addEventListener('app-data-updated', loadRegistry);
+        return () => {
+            window.removeEventListener('storage', loadRegistry);
+            window.removeEventListener('app-data-updated', loadRegistry);
+        };
     }, [invoiceData]);
 
     const toggleAllocation = (itemId: string, target: 'ALL' | 'NON_DRINKER' | 'DRINKER') => {

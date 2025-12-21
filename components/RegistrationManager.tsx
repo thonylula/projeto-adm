@@ -118,18 +118,29 @@ export const RegistrationManager: React.FC = () => {
     const [clients, setClients] = useState<RegistryClient[]>([]);
 
     useEffect(() => {
-        try {
-            const e = localStorage.getItem('folha_registry_employees');
-            if (e) setEmployees(JSON.parse(e));
-        } catch { }
-        try {
-            const s = localStorage.getItem('folha_registry_suppliers');
-            if (s) setSuppliers(JSON.parse(s));
-        } catch { }
-        try {
-            const c = localStorage.getItem('folha_registry_clients');
-            if (c) setClients(JSON.parse(c));
-        } catch { }
+        const load = () => {
+            try {
+                const e = localStorage.getItem('folha_registry_employees');
+                if (e) setEmployees(JSON.parse(e));
+            } catch { }
+            try {
+                const s = localStorage.getItem('folha_registry_suppliers');
+                if (s) setSuppliers(JSON.parse(s));
+            } catch { }
+            try {
+                const c = localStorage.getItem('folha_registry_clients');
+                if (c) setClients(JSON.parse(c));
+            } catch { }
+        };
+
+        load();
+
+        window.addEventListener('storage', load);
+        window.addEventListener('app-data-updated', load);
+        return () => {
+            window.removeEventListener('storage', load);
+            window.removeEventListener('app-data-updated', load);
+        };
     }, []);
 
     // --- FORM STATES ---

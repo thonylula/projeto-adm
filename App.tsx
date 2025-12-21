@@ -35,20 +35,33 @@ export default function App() {
 
   // Load initial state from localStorage on mount (Client-side only)
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('folha_companies');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          setCompanies(parsed.map((c: any) => ({
-            ...c,
-            employees: Array.isArray(c.employees) ? c.employees : []
-          })));
+    const loadFromStorage = () => {
+      try {
+        const saved = localStorage.getItem('folha_companies');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            setCompanies(parsed.map((c: any) => ({
+              ...c,
+              employees: Array.isArray(c.employees) ? c.employees : []
+            })));
+          }
         }
+      } catch (e) {
+        console.error("Failed to load companies from storage", e);
       }
-    } catch (e) {
-      console.error("Failed to load companies from storage", e);
-    }
+    };
+
+    loadFromStorage();
+
+    // Listen for storage changes (for local sync)
+    window.addEventListener('storage', loadFromStorage);
+    window.addEventListener('app-data-updated', loadFromStorage);
+
+    return () => {
+      window.removeEventListener('storage', loadFromStorage);
+      window.removeEventListener('app-data-updated', loadFromStorage);
+    };
   }, []);
 
   // Persist companies on change
