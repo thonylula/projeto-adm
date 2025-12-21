@@ -136,7 +136,7 @@ export const CestasBasicas: React.FC = () => {
                 setRetryCountdown(prev => {
                     const next = prev !== null ? prev - 1 : null;
                     if (next === 0) {
-                        SupabaseService.saveConfig('folha_ai_quota_until', null);
+                        SupabaseService.saveConfig('folha_ai_quota_until', null).catch(() => { });
                         setError(null);
                         return null;
                     }
@@ -209,11 +209,16 @@ export const CestasBasicas: React.FC = () => {
             setCompanyName(invoiceData.recipientName);
         }
 
-        window.addEventListener('storage', reloadAllData);
-        window.addEventListener('app-data-updated', reloadAllData);
+        const reloadFromEvents = () => {
+            // Avoid reloading while processing to prevent state loss/conflicts
+            if (!isLoading) reloadAllData();
+        };
+
+        window.addEventListener('storage', reloadFromEvents);
+        window.addEventListener('app-data-updated', reloadFromEvents);
         return () => {
-            window.removeEventListener('storage', reloadAllData);
-            window.removeEventListener('app-data-updated', reloadAllData);
+            window.removeEventListener('storage', reloadFromEvents);
+            window.removeEventListener('app-data-updated', reloadFromEvents);
         };
     }, [invoiceData]);
 

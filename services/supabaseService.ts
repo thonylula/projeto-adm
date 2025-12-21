@@ -297,9 +297,21 @@ export const SupabaseService = {
 
     // --- GLOBAL CONFIGS ---
     async getConfig(id: string): Promise<any | null> {
-        const { data, error } = await supabase.from('global_configs').select('value').eq('id', id).single();
-        if (error) return null;
-        return data.value;
+        try {
+            const { data, error } = await supabase
+                .from('global_configs')
+                .select('value')
+                .eq('id', id)
+                .maybeSingle(); // Use maybeSingle to avoid 406/error when not found
+
+            if (error) {
+                console.warn(`[Supabase] Erro ao buscar config ${id}:`, error.message);
+                return null;
+            }
+            return data?.value || null;
+        } catch (e) {
+            return null;
+        }
     },
 
     async saveConfig(id: string, value: any): Promise<boolean> {
