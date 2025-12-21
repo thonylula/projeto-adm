@@ -113,12 +113,12 @@ export const CestasBasicas: React.FC = () => {
     const [itemAllocation, setItemAllocation] = useState<Record<string, ItemAllocationConfig>>({});
 
     useEffect(() => {
-        const loadRegistry = () => {
-            // Load employees from registry
+        const reloadAllData = () => {
+            // 1. Load employees from registry
             try {
-                const stored = localStorage.getItem('folha_registry_employees');
-                if (stored) {
-                    const registered: any[] = JSON.parse(stored);
+                const storedEmployees = localStorage.getItem('folha_registry_employees');
+                if (storedEmployees) {
+                    const registered: any[] = JSON.parse(storedEmployees);
                     if (registered.length > 0) {
                         const names = registered.map(r => r.name);
                         setActualEmployees(names);
@@ -133,44 +133,47 @@ export const CestasBasicas: React.FC = () => {
             } catch (e) {
                 console.error("Failed to load employees from registry", e);
             }
+
+            // 2. Load Item Allocations based on global configs
+            if (invoiceData?.items) {
+                let globalConfigs: ItemConfiguration[] = [];
+                try {
+                    const storedConfigs = localStorage.getItem('folha_basket_item_configs');
+                    if (storedConfigs) globalConfigs = JSON.parse(storedConfigs);
+                } catch (e) {
+                    console.error("Failed to load global item configs", e);
+                }
+
+                const updatedAllocation: Record<string, ItemAllocationConfig> = {};
+                invoiceData.items.forEach(item => {
+                    const desc = item.description.toUpperCase();
+                    const configMatch = globalConfigs.find(c => {
+                        const keyword = c.description.toUpperCase();
+                        // Precise matching or keyword inclusion
+                        return desc === keyword || desc.includes(keyword) || keyword.includes(desc);
+                    });
+
+                    if (configMatch) {
+                        updatedAllocation[item.id] = configMatch.config;
+                    } else {
+                        updatedAllocation[item.id] = { mode: 'ALL' };
+                    }
+                });
+                setItemAllocation(updatedAllocation);
+            }
         };
 
-        loadRegistry();
+        reloadAllData();
 
         if (invoiceData?.recipientName) {
             setCompanyName(invoiceData.recipientName);
         }
-        if (invoiceData?.items) {
-            // Load global configurations for items
-            let globalConfigs: ItemConfiguration[] = [];
-            try {
-                const stored = localStorage.getItem('folha_basket_item_configs');
-                if (stored) globalConfigs = JSON.parse(stored);
-            } catch (e) {
-                console.error("Failed to load global item configs", e);
-            }
 
-            const initialAllocation: Record<string, ItemAllocationConfig> = {};
-            invoiceData.items.forEach(item => {
-                // Try to find a global config matching this item's description
-                const configMatch = globalConfigs.find(c =>
-                    item.description.toUpperCase().includes(c.description.toUpperCase())
-                );
-
-                if (configMatch) {
-                    initialAllocation[item.id] = configMatch.config;
-                } else {
-                    initialAllocation[item.id] = { mode: 'ALL' };
-                }
-            });
-            setItemAllocation(initialAllocation);
-        }
-
-        window.addEventListener('storage', loadRegistry);
-        window.addEventListener('app-data-updated', loadRegistry);
+        window.addEventListener('storage', reloadAllData);
+        window.addEventListener('app-data-updated', reloadAllData);
         return () => {
-            window.removeEventListener('storage', loadRegistry);
-            window.removeEventListener('app-data-updated', loadRegistry);
+            window.removeEventListener('storage', reloadAllData);
+            window.removeEventListener('app-data-updated', reloadAllData);
         };
     }, [invoiceData]);
 
@@ -487,6 +490,44 @@ export const CestasBasicas: React.FC = () => {
                                     })}
                                 </div>
                             </div>
+
+                            {/* --- Active Rules Panel (Debug/Visibility) --- */}
+                            {Object.values(itemAllocation).some((config) => (config as ItemAllocationConfig).mode === 'CUSTOM') && (
+                                <div className="mb-8 p-4 bg-amber-50 border-2 border-amber-200 rounded-sm">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xl">⚙️</span>
+                                            <div>
+                                                <h3 className="text-sm font-black text-amber-800 uppercase tracking-tighter">Regras Ativas de Distribuição</h3>
+                                                <p className="text-[10px] text-amber-600 font-bold uppercase tracking-widest text-left">Ajustes manuais ou via I.A.</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                localStorage.removeItem('folha_basket_item_configs');
+                                                window.dispatchEvent(new Event('app-data-updated'));
+                                            }}
+                                            className="px-3 py-1 bg-amber-600 text-white text-[9px] font-black uppercase rounded-sm hover:bg-amber-700 transition-all"
+                                        >
+                                            Limpar Todas as Regras
+                                        </button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {invoiceData.items.filter(item => itemAllocation[item.id]?.mode === 'CUSTOM').map(item => {
+                                            const config = itemAllocation[item.id];
+                                            return (
+                                                <div key={item.id} className="flex justify-between items-center bg-white p-2 border border-amber-200 text-[10px]">
+                                                    <span className="font-bold text-slate-700 uppercase">{item.description}</span>
+                                                    <div className="flex gap-4 font-black">
+                                                        <span className="text-indigo-600">🥤 {config.customQtyNonDrinker} p/ Abstêmio</span>
+                                                        <span className="text-orange-600">🍺 {config.customQtyDrinker} p/ Padrão</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

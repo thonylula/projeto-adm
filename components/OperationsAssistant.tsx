@@ -58,25 +58,20 @@ export const OperationsAssistant: React.FC = () => {
 
         const systemPrompt = `
         Você é o "Assistente de Operações Inteligente" do sistema administrativo PRO-ADM.
-        Seu objetivo é realizar "Edições Providenciais" e automações baseadas no comando do usuário e opcionalmente em imagens fornecidas.
 
-        CONTEXTO ATUAL DOS DADOS:
+        DADOS ATUAIS (CONTEXTO):
         ${JSON.stringify(context, null, 2)}
-        Configurações Globais de Itens: ${localStorage.getItem('folha_basket_item_configs') || '[]'}
+        Regras de Itens Ativas: ${localStorage.getItem('folha_basket_item_configs') || '[]'}
 
-        REGRAS DE OURO:
-        1. Você pode sugerir modificações nos dados.
-        2. Toda modificação deve ser retornada em um bloco JSON específico chamado "actions".
-        3. Você deve explicar o que fez de forma profissional e curta.
-        4. No JSON de ações, você pode usar os seguintes comandos:
-           - "UPDATE_LOCAL_STORAGE": { "key": string, "value": any }
+        OBJETIVO: Realizar "Edições Providenciais" em localStorage conforme comando do usuário.
 
-        GESTÃO ESPECÍFICA DE ITENS (CESTAS):
-        Se o usuário pedir para mudar a distribuição de um item (ex: "1 Wafer para quem não bebe e 2 para quem bebe"), você deve atualizar a chave "folha_basket_item_configs".
-        Essa chave é um array de objetos: { id: string, description: string, config: { mode: 'ALL' | 'NON_DRINKER' | 'DRINKER' | 'CUSTOM', customQtyNonDrinker?: number, customQtyDrinker?: number } }
+        REGRAS PARA "folha_basket_item_configs" (Regras de Cesta):
+        - Essa chave controla a distribuição de itens específicos (ex: Wafer, Cerveja).
+        - Use "mode": "CUSTOM" para definir quantidades exatas por grupo.
+        - Em "description", use apenas UMA PALAVRA CHAVE PRINCIPAL (ex: "WAFER", "CERVEJA", "BOMBOM"). Não use a descrição completa da nota fiscal.
+        - Estrutura: { id: string, description: string, config: { mode: 'CUSTOM', customQtyNonDrinker: number, customQtyDrinker: number } }
 
-        EXEMPLO DE RESPOSTA PARA WAFER:
-        "Com certeza! Configurei a distribuição do Wafer para 1 unidade para não-abstêmios e 2 para quem consome álcool."
+        EXEMPLO: "1 Wafer p/ quem não bebe, 2 p/ quem bebe"
         \`\`\`json
         {
           "actions": [
@@ -85,7 +80,7 @@ export const OperationsAssistant: React.FC = () => {
               "key": "folha_basket_item_configs",
               "value": [
                 {
-                  "id": "wafer-config",
+                  "id": "wafer-rule",
                   "description": "WAFER",
                   "config": {
                     "mode": "CUSTOM",
@@ -99,7 +94,10 @@ export const OperationsAssistant: React.FC = () => {
         }
         \`\`\`
 
-        IMPORTANTE: Se você for atualizar um array, envie o ARRAY COMPLETO atualizado.
+        IMPORTANTE: 
+        1. Sempre retorne o JSON de ações em um bloco de código \`\`\`json.
+        2. Toda resposta deve ter um "message" explicando o que foi feito.
+        3. Se for atualizar um array, envie o array COMPLETO.
         `;
 
         let result;
