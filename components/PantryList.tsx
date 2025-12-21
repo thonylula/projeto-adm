@@ -9,7 +9,7 @@ interface PantryListProps {
     companyName: string;
     recipientCnpj?: string;
     companyLogo?: string | null;
-    nonDrinkerCount?: number;
+    selectedNonDrinkers?: number[];
     itemAllocation?: Record<string, 'ALL' | 'NON_DRINKER' | 'DRINKER'>;
 }
 
@@ -21,18 +21,19 @@ export const PantryList: React.FC<PantryListProps> = ({
     recipientCnpj,
     companyLogo,
     sloganImage,
-    nonDrinkerCount = 0,
+    selectedNonDrinkers = [],
     itemAllocation = {}
 }) => {
     const formatQty = (qty: number) => qty.toLocaleString('pt-BR', { minimumFractionDigits: 3 });
 
     const totalEmployees = employeeNames.length;
+    const nonDrinkerCount = selectedNonDrinkers.length;
     const drinkerCount = totalEmployees - nonDrinkerCount;
 
     return (
         <div className="space-y-8 print:space-y-0">
             {employeeNames.map((name, index) => {
-                const isNonDrinker = index < nonDrinkerCount;
+                const isNonDrinker = selectedNonDrinkers.includes(index);
 
                 // Filter items based on allocation
                 const visibleItems = data.items.filter(item => {
@@ -88,9 +89,9 @@ export const PantryList: React.FC<PantryListProps> = ({
                                         if (allocation === 'ALL') {
                                             qtyPerEmployee = item.quantity / totalEmployees;
                                         } else if (allocation === 'NON_DRINKER' && isNonDrinker) {
-                                            qtyPerEmployee = item.quantity / nonDrinkerCount;
+                                            qtyPerEmployee = item.quantity / (nonDrinkerCount || 1);
                                         } else if (allocation === 'DRINKER' && !isNonDrinker) {
-                                            qtyPerEmployee = item.quantity / drinkerCount;
+                                            qtyPerEmployee = item.quantity / (drinkerCount || 1);
                                         }
 
                                         return (
@@ -123,7 +124,9 @@ export const PantryList: React.FC<PantryListProps> = ({
                                 </p>
                             </div>
                             <div className="text-right">
-                                <p className="text-[9px] font-bold text-slate-700">{isNonDrinker ? 'CESTA ESPECIAL' : 'CESTA PADRÃO'}</p>
+                                <p className="text-[9px] font-bold text-slate-700 flex items-center justify-end gap-1">
+                                    {isNonDrinker ? '🥤 CESTA ESPECIAL' : '🍺 CESTA PADRÃO'}
+                                </p>
                             </div>
                         </div>
                     </div>

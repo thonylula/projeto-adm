@@ -23,7 +23,7 @@ const INITIAL_COMMON = {
 };
 
 const INITIAL_EMPLOYEE: Omit<RegistryEmployee, 'id'> = {
-    name: '', photoUrl: null, cpf: '', role: '', admissionDate: '', salary: 0, phone: '', email: '', active: true,
+    name: '', photoUrl: null, cpf: '', role: '', admissionDate: '', salary: 0, phone: '', email: '', active: true, isNonDrinker: false,
     ...INITIAL_COMMON
 };
 
@@ -491,6 +491,13 @@ export const RegistrationManager: React.FC = () => {
                                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
                                             <input type="email" value={empForm.email} onChange={e => setEmpForm({ ...empForm, email: e.target.value })} className={inputClass} />
                                         </div>
+                                        <div className="flex items-center gap-2 pt-4">
+                                            <label className="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" checked={empForm.isNonDrinker} onChange={e => setEmpForm({ ...empForm, isNonDrinker: e.target.checked })} className="sr-only peer" />
+                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                                <span className="ml-3 text-xs font-bold text-gray-700 uppercase">Não Consome Álcool</span>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                                 <AddressSection form={empForm} setForm={setEmpForm} />
@@ -617,7 +624,10 @@ export const RegistrationManager: React.FC = () => {
                                         </div>
                                     )}
                                     <div>
-                                        <p className="font-bold text-gray-900">{emp.name}</p>
+                                        <p className="font-bold text-gray-900 flex items-center gap-2">
+                                            {emp.name}
+                                            {emp.isNonDrinker && <span className="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase">Abstêmio</span>}
+                                        </p>
                                         <p className="text-xs text-gray-500">{emp.role} • {formatCurrency(emp.salary)}</p>
                                     </div>
                                 </td>

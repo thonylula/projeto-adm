@@ -161,6 +161,7 @@ export interface RegistryEmployee extends AddressData, BankData {
   phone: string;
   email: string;
   active: boolean;
+  isNonDrinker: boolean;
 }
 
 export interface RegistrySupplier extends AddressData, BankData {
