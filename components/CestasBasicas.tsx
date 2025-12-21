@@ -455,25 +455,36 @@ export const CestasBasicas: React.FC = () => {
                                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Defina quais itens vão para cada grupo</p>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    {invoiceData.items.map(item => (
-                                        <div key={item.id} className="p-3 border border-slate-200 rounded-sm bg-slate-50/50 flex flex-col gap-2">
-                                            <div className="text-[10px] font-bold text-slate-800 truncate uppercase">{item.description}</div>
-                                            <div className="flex gap-1">
-                                                {['ALL', 'NON_DRINKER', 'DRINKER'].map(type => (
-                                                    <button
-                                                        key={type}
-                                                        onClick={() => toggleAllocation(item.id, type as any)}
-                                                        className={`flex-1 text-[8px] font-black p-1.5 rounded-none border transition-all ${itemAllocation[item.id] === type
-                                                            ? (appMode === 'CHRISTMAS' ? 'bg-red-600 border-red-600 text-white' : 'bg-indigo-600 border-indigo-600 text-white')
-                                                            : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400'
-                                                            }`}
-                                                    >
-                                                        {type === 'ALL' ? 'TODOS' : type === 'NON_DRINKER' ? 'NÃO BEBEM' : 'BEBEM'}
-                                                    </button>
-                                                ))}
+                                    {invoiceData.items.map(item => {
+                                        const config = itemAllocation[item.id] || { mode: 'ALL' };
+                                        const isCustom = config.mode === 'CUSTOM';
+
+                                        return (
+                                            <div key={item.id} className={`p-3 border rounded-sm transition-all flex flex-col gap-2 ${isCustom ? 'border-amber-400 bg-amber-50/30 ring-1 ring-amber-400/20' : 'border-slate-200 bg-slate-50/50'
+                                                }`}>
+                                                <div className="flex justify-between items-center">
+                                                    <div className="text-[10px] font-bold text-slate-800 truncate uppercase">{item.description}</div>
+                                                    {isCustom && (
+                                                        <span className="text-[7px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">PERSONALIZADO IA</span>
+                                                    )}
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    {['ALL', 'NON_DRINKER', 'DRINKER'].map(type => (
+                                                        <button
+                                                            key={type}
+                                                            onClick={() => toggleAllocation(item.id, type as any)}
+                                                            className={`flex-1 text-[8px] font-black p-1.5 rounded-none border transition-all ${config.mode === type
+                                                                ? (appMode === 'CHRISTMAS' ? 'bg-red-600 border-red-600 text-white' : 'bg-indigo-600 border-indigo-600 text-white')
+                                                                : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400'
+                                                                }`}
+                                                        >
+                                                            {type === 'ALL' ? 'TODOS' : type === 'NON_DRINKER' ? 'NÃO BEBEM' : 'BEBEM'}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
