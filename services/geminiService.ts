@@ -68,7 +68,10 @@ export async function extractInvoiceData(base64: string, mimeType: string): Prom
         const payload = await response.json().catch(() => ({ ok: false, error: 'Resposta JSON inválida do servidor.' }));
 
         if (!response.ok || !payload.ok) {
-            const errorMsg = payload.error?.message || payload.error || 'Erro desconhecido na API.';
+            const errorObj = payload.error;
+            const errorMsg = typeof errorObj === 'object'
+                ? (errorObj.message || errorObj.error?.message || JSON.stringify(errorObj))
+                : (errorObj || 'Erro desconhecido na API.');
             throw new Error(`Falha no processamento da IA: ${errorMsg}`);
         }
 
@@ -111,7 +114,13 @@ export async function generateMotivationalMessages(names: string[]): Promise<str
         });
 
         const payload = await response.json();
-        if (!response.ok || !payload.ok) throw new Error('Falha ao gerar mensagens.');
+        if (!response.ok || !payload.ok) {
+            const errorObj = payload.error;
+            const errorMsg = typeof errorObj === 'object'
+                ? (errorObj.message || errorObj.error?.message || JSON.stringify(errorObj))
+                : (errorObj || 'Falha ao gerar mensagens.');
+            throw new Error(errorMsg);
+        }
 
         const text = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (!text) throw new Error('Mensagens vazias.');
