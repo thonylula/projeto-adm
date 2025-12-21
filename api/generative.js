@@ -3,10 +3,7 @@ const API_KEY = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 
 // Fallback to stable models only to avoid quota issues with non-existent/experimental models
 const MODELS_FALLBACK_LIST = [
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-8b",
-    "gemini-2.0-flash",
-    "gemini-1.5-pro"
+    "gemini-1.5-flash"
 ];
 // Setup utilities
 
