@@ -6,7 +6,8 @@ const MODELS_FALLBACK_LIST = [
     "gemini-1.5-pro",
     "gemini-1.5-flash",
     "gemini-2.0-flash",
-    "gemini-pro-latest"
+    "gemini-pro-latest",
+    "gemini-flash-latest"
 ];
 // Setup utilities
 
@@ -99,6 +100,7 @@ export default async function handler(req, res) {
             // --- Server-Side Smart Fallback ---
             // If the user requested a specific model, we try it first. 
             // Then we try the fallback list.
+            // --- Server-Side Smart Fallback ---
             const tryModels = requestedModel
                 ? [requestedModel, ...MODELS_FALLBACK_LIST.filter(m => m !== requestedModel)]
                 : MODELS_FALLBACK_LIST;
@@ -113,19 +115,11 @@ export default async function handler(req, res) {
                     console.warn(`[Proxy] Model ${modelName} failed. Status: ${err.status}`);
                     lastError = err;
 
-                    // If it's a 429 (Quota Exceeded), stop immediately. 
-                    // Trying other models with the same API key will likely result in the same error.
-                    if (err.status === 429) {
-                        break;
-                    }
+                    // Fatal error (bad request) -> Stop
+                    if (err.status === 400) break;
 
-                    // If it's a 503 (Server Error) or 404 (Not Found), continue to next fallback
-                    if (err.status === 503 || err.status === 404) {
-                        continue;
-                    }
-
-                    // For other errors (like 400), we also stop
-                    break;
+                    // For 429, 404, 503, continue to next fallback
+                    continue;
                 }
             }
 
