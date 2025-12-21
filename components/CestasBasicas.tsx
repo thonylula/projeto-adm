@@ -377,23 +377,24 @@ export const CestasBasicas: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex gap-2 print:hidden">
-                    <div className="relative group/export">
-                        <button className="p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-sm text-[10px] font-bold uppercase transition-all shadow-md flex items-center gap-1">
-                            Exportar
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3 h-3">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                            </svg>
-                        </button>
-                        <div className="absolute right-0 mt-1 w-40 bg-white border border-slate-200 shadow-xl rounded-sm py-1 hidden group-hover/export:block z-50">
-                            <button onClick={() => window.print()} className="w-full text-left px-4 py-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50 uppercase tracking-tighter border-b border-slate-100">Como PDF (Imp.)</button>
-                            <button onClick={() => exportToPng(`active-view`, `cesta_${activeTab}`)} className="w-full text-left px-4 py-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50 uppercase tracking-tighter border-b border-slate-100">Como Imagem (PNG)</button>
-                            <button onClick={() => exportToHtml(`active-view`, `cesta_${activeTab}`)} className="w-full text-left px-4 py-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50 uppercase tracking-tighter">Como Página (HTML)</button>
-                        </div>
-                    </div>
-                    <button onClick={saveBackup} className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-sm text-[10px] font-bold uppercase transition-all shadow-sm">
-                        Salvar Backup
+                <div className="flex flex-wrap gap-2 print:hidden justify-center md:justify-end">
+                    <button onClick={() => window.print()} className="p-2 px-3 bg-red-600 hover:bg-red-700 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md flex items-center gap-1">
+                        PDF (IMP.)
                     </button>
+                    <button onClick={() => exportToPng(`active-view`, `cesta_${activeTab}`)} className="p-2 px-3 bg-orange-500 hover:bg-orange-600 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md flex items-center gap-1">
+                        PNG
+                    </button>
+                    <button onClick={() => exportToHtml(`active-view`, `cesta_${activeTab}`)} className="p-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md flex items-center gap-1">
+                        HTML
+                    </button>
+                    <div className="h-8 w-px bg-slate-200 mx-1 self-center" />
+                    <button onClick={saveBackup} className="p-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md flex items-center gap-1">
+                        SALVAR BACKUP
+                    </button>
+                    <label className="p-2 px-3 bg-slate-600 hover:bg-slate-700 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md cursor-pointer flex items-center gap-1">
+                        <input type="file" className="hidden" onChange={loadBackup} accept=".json" />
+                        CARREGAR BACKUP
+                    </label>
                 </div>
             </header>
 
