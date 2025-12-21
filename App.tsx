@@ -41,19 +41,6 @@ export default function App() {
         const data = await SupabaseService.getCompanies();
         if (data && data.length > 0) {
           setCompanies(data);
-        } else {
-          // Fallback to localStorage for migration if no companies in Supabase
-          const saved = localStorage.getItem('folha_companies');
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              setCompanies(parsed.map((c: any) => ({
-                ...c,
-                employees: Array.isArray(c.employees) ? c.employees : []
-              })));
-              // Trigger migration alert? Or just let it stay in state.
-            }
-          }
         }
       } catch (e) {
         console.error("Failed to load companies from Supabase", e);
@@ -62,8 +49,7 @@ export default function App() {
 
     loadFromSupabase();
 
-    // Listen for storage changes (for local sync)
-    window.addEventListener('storage', loadFromSupabase);
+    // Listen for data updates (from AI Assistant or other components)
     window.addEventListener('app-data-updated', loadFromSupabase);
 
     // Listen for direct navigation requests from the AI Assistant
@@ -75,18 +61,10 @@ export default function App() {
     window.addEventListener('app-navigation', handleNavigation);
 
     return () => {
-      window.removeEventListener('storage', loadFromSupabase);
       window.removeEventListener('app-data-updated', loadFromSupabase);
       window.removeEventListener('app-navigation', handleNavigation);
     };
   }, []);
-
-  // Sync to localStorage as backup? (Optional, maybe skip if fully migrated)
-  useEffect(() => {
-    if (companies.length > 0) {
-      localStorage.setItem('folha_companies', JSON.stringify(companies));
-    }
-  }, [companies]);
 
   const activeCompany = companies.find(c => c.id === activeCompanyId);
 
@@ -107,16 +85,6 @@ export default function App() {
     const newComp = await SupabaseService.addCompany(name, cnpj, logoUrl);
     if (newComp) {
       setCompanies([...companies, newComp]);
-    } else {
-      // Fallback local if Supabase fails
-      const localComp: Company = {
-        id: generateId(),
-        name,
-        cnpj,
-        logoUrl,
-        employees: []
-      };
-      setCompanies([...companies, localComp]);
     }
   };
 

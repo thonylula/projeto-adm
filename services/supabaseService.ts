@@ -262,10 +262,48 @@ export const SupabaseService = {
     },
 
     async saveBiometrics(data: any[]): Promise<boolean> {
-        // We store it as a single record or multiple? 
-        // For simplicity with the current structure, let's store it as multiple rows or a single JSON.
-        // Let's go with a single JSON record for simplicity in migration of this specific flexible structure.
         const { error } = await supabase.from('biometrics').upsert([{ id: 'global_biometrics', data }]);
+        return !error;
+    },
+
+    // --- DELIVERY ORDERS ---
+    async getDeliveryOrders(): Promise<{ data: any[], logo: string | null }> {
+        const { data, error } = await supabase.from('delivery_orders').select('*');
+        if (error || !data || data.length === 0) return { data: [], logo: null };
+        const record = data[0];
+        return { data: record.data || [], logo: record.logo_url };
+    },
+
+    async saveDeliveryOrders(data: any[], logo: string | null): Promise<boolean> {
+        const { error } = await supabase.from('delivery_orders').upsert([{
+            id: 'global_delivery_orders',
+            data,
+            logo_url: logo
+        }]);
+        return !error;
+    },
+
+    // --- USERS ---
+    async getUsers(): Promise<any[]> {
+        const { data, error } = await supabase.from('app_users').select('*');
+        if (error) return [];
+        return data;
+    },
+
+    async saveUser(username: string, password: string): Promise<boolean> {
+        const { error } = await supabase.from('app_users').upsert([{ username, password }]);
+        return !error;
+    },
+
+    // --- GLOBAL CONFIGS ---
+    async getConfig(id: string): Promise<any | null> {
+        const { data, error } = await supabase.from('global_configs').select('value').eq('id', id).single();
+        if (error) return null;
+        return data.value;
+    },
+
+    async saveConfig(id: string, value: any): Promise<boolean> {
+        const { error } = await supabase.from('global_configs').upsert([{ id, value }]);
         return !error;
     }
 };

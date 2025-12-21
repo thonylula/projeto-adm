@@ -5,6 +5,7 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { useGeminiParser } from '../hooks/useGeminiParser';
 import { numberToWordsBRL } from '../utils';
+import { SupabaseService } from '../services/supabaseService';
 
 interface PayrollCardProps {
   activeCompany: Company;
@@ -180,16 +181,17 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const reportRef = useRef<HTMLDivElement>(null);
   const exportMenuRef = useRef<HTMLDivElement>(null);
 
-  // Carregar funcionários do "Cadastros Gerais" e WhatsApp config
+  // Carregar funcionários do "Cadastros Gerais"
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('folha_registry_employees');
-      if (stored) {
-        setRegisteredEmployees(JSON.parse(stored));
+    const load = async () => {
+      try {
+        const data = await SupabaseService.getEmployees();
+        setRegisteredEmployees(data);
+      } catch (e) {
+        console.error("Erro ao carregar dados", e);
       }
-    } catch (e) {
-      console.error("Erro ao carregar dados", e);
-    }
+    };
+    load();
   }, []);
 
 

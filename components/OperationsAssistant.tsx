@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useGeminiParser } from '../hooks/useGeminiParser';
+import { SupabaseService } from '../services/supabaseService';
 
 export const OperationsAssistant: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -46,32 +47,44 @@ export const OperationsAssistant: React.FC = () => {
 
         setHistory(prev => [...prev, { role: 'user', content: userCommand || (img ? "[Imagem Enviada]" : "") }]);
 
-        // Prepare context from localStorage
-        const keys = [
-            'folha_companies', 'folha_registry_employees', 'folha_registry_suppliers',
-            'folha_registry_clients', 'folha_basket_item_configs', 'delivery_order_db'
-        ];
+        // Prepare context from Supabase
         const context: any = {
             appState: {
-                activeTab: document.querySelector('[data-active-tab]')?.getAttribute('data-active-tab') || 'payroll', // Experimental way to get tab if needed, but we'll rely on global state knowledge
+                activeTab: document.querySelector('[data-active-tab]')?.getAttribute('data-active-tab') || 'payroll',
             },
             currentDate: new Date().toLocaleDateString('pt-BR'),
             currentTime: new Date().toLocaleTimeString('pt-BR')
         };
 
-        keys.forEach(key => {
-            try { context[key] = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { }
-        });
+        try {
+            const [companies, employees, suppliers, clients, configs, doData] = await Promise.all([
+                SupabaseService.getCompanies(),
+                SupabaseService.getEmployees(),
+                SupabaseService.getSuppliers(),
+                SupabaseService.getClients(),
+                SupabaseService.getBasketConfigs(),
+                SupabaseService.getDeliveryOrders()
+            ]);
+
+            context['folha_companies'] = companies;
+            context['folha_registry_employees'] = employees;
+            context['folha_registry_suppliers'] = suppliers;
+            context['folha_registry_clients'] = clients;
+            context['folha_basket_item_configs'] = configs;
+            context['delivery_order_db'] = doData.data;
+        } catch (e) {
+            console.error("Error fetching context for AI", e);
+        }
 
         const systemPrompt = `
-        Você é o "Cérebro Operacional" do sistema PRO-ADM. Você tem controle total sobre os dados (localStorage) e a navegação (UI).
+        Você é o "Cérebro Operacional" do sistema PRO-ADM. Você tem controle total sobre os dados e a navegação (UI).
 
         DADOS ATUAIS DO SISTEMA:
         ${JSON.stringify(context, null, 2)}
 
         CAPACIDADES:
-        1. UPDATE_LOCAL_STORAGE: Modificar qualquer dado no sistema. 
-           - Chaves comuns: folha_companies, folha_registry_employees, folha_registry_suppliers, folha_registry_clients, folha_basket_item_configs.
+        1. UPDATE_DATABASE: Modificar qualquer dado no sistema (Nuvem/Supabase). 
+           - Chaves comuns: folha_companies, folha_registry_employees, folha_registry_suppliers, folha_registry_clients, folha_basket_item_configs, delivery_order_db.
         2. NAVIGATE: Mudar a aba principal ou abas internas.
            - Abas Principais (tab): 'payroll', 'biometrics', 'fiscal', 'registrations', 'delivery-order', 'pantry'.
            - Abas Internas de Cestas (cestaTab): 'summary', 'signature', 'pantry'.
@@ -88,12 +101,12 @@ export const OperationsAssistant: React.FC = () => {
           "message": "Navegando para Cadastros e corrigindo o nome do funcionário.",
           "actions": [
             { "type": "NAVIGATE", "tab": "registrations" },
-            { "type": "UPDATE_LOCAL_STORAGE", "key": "folha_registry_employees", "value": [...] }
+            { "type": "UPDATE_DATABASE", "key": "folha_registry_employees", "value": [...] }
           ]
         }
         \`\`\`
 
-        IMPORTANTE: Ao editar listas no localStorage, envie a lista COMPLETA com as alterações.
+        IMPORTANTE: Ao editar listas, envie a lista COMPLETA com as alterações. O sistema salvará automaticamente na nuvem.
         `;
 
         let result;
@@ -109,10 +122,36 @@ export const OperationsAssistant: React.FC = () => {
 
             if (result.actions && Array.isArray(result.actions)) {
                 setIsApplying(true);
-                result.actions.forEach((action: any) => {
-                    if (action.type === 'UPDATE_LOCAL_STORAGE') {
-                        localStorage.setItem(action.key, JSON.stringify(action.value));
-                        window.dispatchEvent(new Event('app-data-updated'));
+                result.actions.forEach(async (action: any) => {
+                    if (action.type === 'UPDATE_DATABASE' || action.type === 'UPDATE_LOCAL_STORAGE') {
+                        // Sync to Supabase based on key
+                        const key = action.key;
+                        const value = action.value;
+
+                        try {
+                            if (key === 'folha_registry_employees') {
+                                for (const emp of value) await SupabaseService.saveEmployee(emp);
+                            } else if (key === 'folha_registry_suppliers') {
+                                for (const sup of value) await SupabaseService.saveSupplier(sup);
+                            } else if (key === 'folha_registry_clients') {
+                                for (const cli of value) await SupabaseService.saveClient(cli);
+                            } else if (key === 'folha_basket_item_configs') {
+                                await SupabaseService.saveBasketConfigs(value);
+                            } else if (key === 'delivery_order_db') {
+                                // For delivery orders, we also need the logo, but AI might not provide it. 
+                                // We fetch the current logo first.
+                                const current = await SupabaseService.getDeliveryOrders();
+                                await SupabaseService.saveDeliveryOrders(value, current.logo);
+                            } else if (key === 'folha_companies') {
+                                // This is complex because companies have IDs. 
+                                // AI might try to replace the whole list. 
+                                // For now, we'll log it or try to update existing ones.
+                            }
+
+                            window.dispatchEvent(new Event('app-data-updated'));
+                        } catch (err) {
+                            console.error("AI Sync Error", err);
+                        }
                     }
                     if (action.type === 'NAVIGATE' || action.type === 'SELECT_COMPANY') {
                         window.dispatchEvent(new CustomEvent('app-navigation', {

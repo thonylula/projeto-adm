@@ -3,6 +3,7 @@ import html2canvas from 'html2canvas';
 import html2pdf from 'html2pdf.js';
 import { safeIncludes } from '../utils';
 import { useGeminiParser } from '../hooks/useGeminiParser';
+import { SupabaseService } from '../services/supabaseService';
 
 // --- LOGO PADRÃO CARAPITANGA (SVG Data URI) ---
 const DEFAULT_LOGO = "data:image/svg+xml;charset=utf-8,%3Csvg%20viewBox%3D%270%200%20100%20100%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20fill%3D%27none%27%3E%3Cpath%20d%3D%27M78%2035C75%2025%2065%2018%2052%2018C35%2018%2022%2030%2022%2048C22%2062%2030%2072%2040%2078C45%2081%2052%2082%2058%2080%27%20stroke%3D%27%23f97316%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M25%2045C28%2042%2035%2040%2040%2042%27%20stroke%3D%27%23fdba74%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M26%2055C30%2052%2038%2050%2044%2052%27%20stroke%3D%27%23fdba74%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M32%2065C36%2062%2044%2060%2050%2062%27%20stroke%3D%27%23fdba74%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M78%2035C82%2038%2084%2045%2080%2052C76%2058%2070%2060%2065%2058%27%20stroke%3D%27%23f97316%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Ccircle%20cx%3D%2770%27%20cy%3D%2732%27%20r%3D%273%27%20fill%3D%27black%27%2F%3E%3Cpath%20d%3D%27M78%2035C85%2025%2095%2020%2098%2015%27%20stroke%3D%27%23ea580c%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M75%2035C85%2010%2060%205%2050%208%27%20stroke%3D%27%23ea580c%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M58%2080L62%2088M58%2080L54%2090M58%2080L66%2085%27%20stroke%3D%27%23f97316%27%20stroke-width%3D%274%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E";
@@ -59,27 +60,28 @@ export const BiometricsManager: React.FC = () => {
     const dashboardRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // --- PERSISTÊNCIA AUTOMÁTICA (LOCALSTORAGE) ---
+    // --- PERSISTÊNCIA AUTOMÁTICA (SUPABASE) ---
     useEffect(() => {
-        // Carregar do LocalStorage ao iniciar
-        const saved = localStorage.getItem('biometrics_db');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    setCurrentData(parsed);
-                    setStep('DASHBOARD'); // Pula para o dashboard se tiver dados
+        const load = async () => {
+            const data = await SupabaseService.getBiometrics();
+            if (data && data.length > 0) {
+                // In our implementation, we stored it as an array inside a record with id 'global_biometrics' 
+                // but SupabaseService.getBiometrics returns an array of data property. 
+                // Since we used upsert([{id: 'global_biometrics', data}]), data should be exactly our array.
+                // The getBiometrics implementation returns: return data.map(d => d.data);
+                // So if we have one record, it will return [dataArray].
+                if (data[0]) {
+                    setCurrentData(data[0]);
+                    setStep('DASHBOARD');
                 }
-            } catch (e) {
-                console.error("Erro ao carregar backup automático", e);
             }
-        }
+        };
+        load();
     }, []);
 
     useEffect(() => {
-        // Salvar automaticamente a cada mudança
         if (currentData.length > 0) {
-            localStorage.setItem('biometrics_db', JSON.stringify(currentData));
+            SupabaseService.saveBiometrics(currentData);
         }
     }, [currentData]);
 

@@ -62,6 +62,23 @@ export const MigrationService = {
                 await SupabaseService.saveBiometrics(bio);
             }
 
+            // 7. Migrate Delivery Orders
+            const storedDO = localStorage.getItem('delivery_order_db');
+            const storedDOLogo = localStorage.getItem('delivery_order_logo');
+            if (storedDO) {
+                const doData = JSON.parse(storedDO);
+                await SupabaseService.saveDeliveryOrders(doData, storedDOLogo);
+            }
+
+            // 8. Migrate Users
+            const storedUsers = localStorage.getItem('folha_users');
+            if (storedUsers) {
+                const users = JSON.parse(storedUsers);
+                for (const u of users) {
+                    await SupabaseService.saveUser(u.username, u.password);
+                }
+            }
+
             return { success: true, message: "Migração concluída com sucesso!" };
         } catch (error) {
             console.error("Migration error:", error);

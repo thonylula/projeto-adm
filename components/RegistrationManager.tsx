@@ -127,23 +127,9 @@ export const RegistrationManager: React.FC = () => {
                     SupabaseService.getClients()
                 ]);
 
-                if (e.length > 0) setEmployees(e);
-                else {
-                    const localE = localStorage.getItem('folha_registry_employees');
-                    if (localE) setEmployees(JSON.parse(localE));
-                }
-
-                if (s.length > 0) setSuppliers(s);
-                else {
-                    const localS = localStorage.getItem('folha_registry_suppliers');
-                    if (localS) setSuppliers(JSON.parse(localS));
-                }
-
-                if (c.length > 0) setClients(c);
-                else {
-                    const localC = localStorage.getItem('folha_registry_clients');
-                    if (localC) setClients(JSON.parse(localC));
-                }
+                setEmployees(e);
+                setSuppliers(s);
+                setClients(c);
             } catch (err) {
                 console.error("Failed to load registrations from Supabase", err);
             }
@@ -164,18 +150,7 @@ export const RegistrationManager: React.FC = () => {
     const [supForm, setSupForm] = useState(INITIAL_SUPPLIER);
     const [cliForm, setCliForm] = useState(INITIAL_CLIENT);
 
-    // --- PERSISTENCE ---
     // Persistence handled via SupabaseService in save/delete handlers
-    // localStorage kept as secondary backup via useEffect (optional)
-    useEffect(() => {
-        if (employees.length > 0) localStorage.setItem('folha_registry_employees', JSON.stringify(employees));
-    }, [employees]);
-    useEffect(() => {
-        if (suppliers.length > 0) localStorage.setItem('folha_registry_suppliers', JSON.stringify(suppliers));
-    }, [suppliers]);
-    useEffect(() => {
-        if (clients.length > 0) localStorage.setItem('folha_registry_clients', JSON.stringify(clients));
-    }, [clients]);
 
     // --- AI SMART UPLOAD ---
     const { processFile, isProcessing } = useGeminiParser({

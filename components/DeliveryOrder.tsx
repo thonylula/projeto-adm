@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useGeminiParser } from '../hooks/useGeminiParser';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { SupabaseService } from '../services/supabaseService';
 
 // --- Interfaces based on User Data ---
 interface HarvestData {
@@ -84,25 +85,21 @@ export const DeliveryOrder: React.FC = () => {
     const [data, setData] = useState<HarvestData[]>(INITIAL_HARVEST_DATA);
     const [logo, setLogo] = useState<string | null>(null);
 
+    // --- PERSISTÊNCIA AUTOMÁTICA (SUPABASE) ---
     useEffect(() => {
-        try {
-            const savedData = localStorage.getItem('delivery_order_db');
-            if (savedData) setData(JSON.parse(savedData));
-
-            const savedLogo = localStorage.getItem('delivery_order_logo');
-            if (savedLogo) setLogo(savedLogo);
-        } catch (e) {
-            console.error(e);
-        }
+        const load = async () => {
+            const { data, logo } = await SupabaseService.getDeliveryOrders();
+            if (data.length > 0) setData(data);
+            if (logo) setLogo(logo);
+        };
+        load();
     }, []);
 
     useEffect(() => {
-        localStorage.setItem('delivery_order_db', JSON.stringify(data));
-    }, [data]);
-
-    useEffect(() => {
-        if (logo) localStorage.setItem('delivery_order_logo', logo);
-    }, [logo]);
+        if (data.length > 0 || logo) {
+            SupabaseService.saveDeliveryOrders(data, logo);
+        }
+    }, [data, logo]);
 
     const reportRef = useRef<HTMLDivElement>(null);
 
@@ -202,7 +199,7 @@ export const DeliveryOrder: React.FC = () => {
     const clearAllData = () => {
         if (window.confirm("Tem certeza que deseja apagar todos os dados e começar de novo?")) {
             setData([]);
-            localStorage.removeItem('delivery_order_db');
+            SupabaseService.saveDeliveryOrders([], null);
         }
     };
 
