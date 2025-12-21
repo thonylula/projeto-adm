@@ -49,11 +49,11 @@ export const PantryList: React.FC<PantryListProps> = ({
                 return (
                     <div key={index} className="bg-white border-2 border-orange-500 rounded-sm shadow-sm overflow-hidden font-sans text-[#444] print:shadow-none print:border-2 print:mb-4 print:break-inside-avoid min-h-[400px] flex flex-col relative christmas-card overflow-visible">
                         {appMode === 'CHRISTMAS' && (
-                            <div className="w-full h-auto mb-2 hidden print:block">
-                                <img src="/christmas_banner.png" alt="Boas Festas" className="w-full h-auto object-contain" />
-                                <div className="text-center py-1 bg-red-600 text-white text-[10px] font-black uppercase tracking-tighter">
-                                    Feliz Natal e um Próspero Ano Novo! 🎄✨
-                                </div>
+                            <div className="w-full text-center py-2 border-b border-red-200 hidden print:block">
+                                <span className="text-lg">🎄</span>
+                                <span className="ml-2 text-xs font-black text-red-600 uppercase tracking-tighter">
+                                    Boas Festas 2025-2026
+                                </span>
                             </div>
                         )}
 
