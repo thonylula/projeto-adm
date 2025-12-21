@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { OperationsAssistant } from './OperationsAssistant';
 
 type Tab = 'payroll' | 'settings' | 'biometrics' | 'fiscal' | 'registrations' | 'pantry';
 
@@ -189,6 +190,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
+
+      {/* Operations Assistant (AI) */}
+      <OperationsAssistant />
     </div>
   );
 };
