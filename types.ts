@@ -206,3 +206,15 @@ export interface InvoiceData {
   totalValue: number;
   items: InvoiceItem[];
 }
+
+export interface ItemAllocationConfig {
+  mode: 'ALL' | 'NON_DRINKER' | 'DRINKER' | 'CUSTOM';
+  customQtyNonDrinker?: number;
+  customQtyDrinker?: number;
+}
+
+export interface ItemConfiguration {
+  id: string;
+  description: string;
+  config: ItemAllocationConfig;
+}

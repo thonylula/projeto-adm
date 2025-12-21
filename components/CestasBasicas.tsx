@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { extractInvoiceData, generateMotivationalMessages } from '../services/geminiService';
-import type { InvoiceData } from '../types';
+import type { InvoiceData, ItemAllocationConfig, ItemConfiguration } from '../types';
 import { ImageUploader } from './ImageUploader';
 import { InvoiceSummary } from './InvoiceSummary';
 import { SignatureSheet } from './SignatureSheet';
@@ -110,7 +110,7 @@ export const CestasBasicas: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<Tab>('summary');
     const [selectedNonDrinkers, setSelectedNonDrinkers] = useState<number[]>([]);
-    const [itemAllocation, setItemAllocation] = useState<Record<string, 'ALL' | 'NON_DRINKER' | 'DRINKER'>>({});
+    const [itemAllocation, setItemAllocation] = useState<Record<string, ItemAllocationConfig>>({});
 
     useEffect(() => {
         const loadRegistry = () => {
@@ -141,9 +141,27 @@ export const CestasBasicas: React.FC = () => {
             setCompanyName(invoiceData.recipientName);
         }
         if (invoiceData?.items) {
-            const initialAllocation: Record<string, 'ALL' | 'NON_DRINKER' | 'DRINKER'> = {};
+            // Load global configurations for items
+            let globalConfigs: ItemConfiguration[] = [];
+            try {
+                const stored = localStorage.getItem('folha_basket_item_configs');
+                if (stored) globalConfigs = JSON.parse(stored);
+            } catch (e) {
+                console.error("Failed to load global item configs", e);
+            }
+
+            const initialAllocation: Record<string, ItemAllocationConfig> = {};
             invoiceData.items.forEach(item => {
-                initialAllocation[item.id] = 'ALL';
+                // Try to find a global config matching this item's description
+                const configMatch = globalConfigs.find(c =>
+                    item.description.toUpperCase().includes(c.description.toUpperCase())
+                );
+
+                if (configMatch) {
+                    initialAllocation[item.id] = configMatch.config;
+                } else {
+                    initialAllocation[item.id] = { mode: 'ALL' };
+                }
             });
             setItemAllocation(initialAllocation);
         }
@@ -157,7 +175,10 @@ export const CestasBasicas: React.FC = () => {
     }, [invoiceData]);
 
     const toggleAllocation = (itemId: string, target: 'ALL' | 'NON_DRINKER' | 'DRINKER') => {
-        setItemAllocation(prev => ({ ...prev, [itemId]: target }));
+        setItemAllocation(prev => ({
+            ...prev,
+            [itemId]: { ...prev[itemId], mode: target }
+        }));
     };
 
     const toggleEmployeeDrinking = (index: number) => {
