@@ -47,57 +47,53 @@ export const OperationsAssistant: React.FC = () => {
         setHistory(prev => [...prev, { role: 'user', content: userCommand || (img ? "[Imagem Enviada]" : "") }]);
 
         // Prepare context from localStorage
-        const context = {
-            companies: JSON.parse(localStorage.getItem('folha_companies') || '[]'),
-            employees: JSON.parse(localStorage.getItem('folha_registry_employees') || '[]'),
-            suppliers: JSON.parse(localStorage.getItem('folha_registry_suppliers') || '[]'),
-            clients: JSON.parse(localStorage.getItem('folha_registry_clients') || '[]'),
+        const keys = [
+            'folha_companies', 'folha_registry_employees', 'folha_registry_suppliers',
+            'folha_registry_clients', 'folha_basket_item_configs', 'delivery_order_db'
+        ];
+        const context: any = {
+            appState: {
+                activeTab: document.querySelector('[data-active-tab]')?.getAttribute('data-active-tab') || 'payroll', // Experimental way to get tab if needed, but we'll rely on global state knowledge
+            },
             currentDate: new Date().toLocaleDateString('pt-BR'),
             currentTime: new Date().toLocaleTimeString('pt-BR')
         };
 
+        keys.forEach(key => {
+            try { context[key] = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { }
+        });
+
         const systemPrompt = `
-        Você é o "Assistente de Operações Inteligente" do sistema administrativo PRO-ADM.
+        Você é o "Cérebro Operacional" do sistema PRO-ADM. Você tem controle total sobre os dados (localStorage) e a navegação (UI).
 
-        DADOS ATUAIS (CONTEXTO):
+        DADOS ATUAIS DO SISTEMA:
         ${JSON.stringify(context, null, 2)}
-        Regras de Itens Ativas: ${localStorage.getItem('folha_basket_item_configs') || '[]'}
 
-        OBJETIVO: Realizar "Edições Providenciais" em localStorage conforme comando do usuário.
+        CAPACIDADES:
+        1. UPDATE_LOCAL_STORAGE: Modificar qualquer dado no sistema. 
+           - Chaves comuns: folha_companies, folha_registry_employees, folha_registry_suppliers, folha_registry_clients, folha_basket_item_configs.
+        2. NAVIGATE: Mudar a aba principal ou abas internas.
+           - Abas Principais (tab): 'payroll', 'biometrics', 'fiscal', 'registrations', 'delivery-order', 'pantry'.
+           - Abas Internas de Cestas (cestaTab): 'summary', 'signature', 'pantry'.
+        3. SELECT_COMPANY: Selecionar uma empresa específica (companyId).
 
-        REGRAS PARA "folha_basket_item_configs" (Regras de Cesta):
-        - Essa chave controla a distribuição de itens específicos (ex: Wafer, Cerveja).
-        - Use "mode": "CUSTOM" para definir quantidades exatas por grupo.
-        - Em "description", use apenas UMA PALAVRA CHAVE PRINCIPAL (ex: "WAFER", "CERVEJA", "BOMBOM"). Não use a descrição completa da nota fiscal.
-        - Estrutura: { id: string, description: string, config: { mode: 'CUSTOM', customQtyNonDrinker: number, customQtyDrinker: number } }
+        REGRAS DE RESPOSTA:
+        - Retorne SEMPRE um JSON em um bloco \`\`\`json.
+        - "message": Texto amigável e curto explicando o que você está fazendo.
+        - "actions": Lista de ações.
 
-        EXEMPLO: "1 Wafer p/ quem não bebe, 2 p/ quem bebe"
+        EXEMPLO PARA MUDAR DE TELA E ATUALIZAR UM NOME:
         \`\`\`json
         {
+          "message": "Navegando para Cadastros e corrigindo o nome do funcionário.",
           "actions": [
-            {
-              "type": "UPDATE_LOCAL_STORAGE",
-              "key": "folha_basket_item_configs",
-              "value": [
-                {
-                  "id": "wafer-rule",
-                  "description": "WAFER",
-                  "config": {
-                    "mode": "CUSTOM",
-                    "customQtyNonDrinker": 1,
-                    "customQtyDrinker": 2
-                  }
-                }
-              ]
-            }
+            { "type": "NAVIGATE", "tab": "registrations" },
+            { "type": "UPDATE_LOCAL_STORAGE", "key": "folha_registry_employees", "value": [...] }
           ]
         }
         \`\`\`
 
-        IMPORTANTE: 
-        1. Sempre retorne o JSON de ações em um bloco de código \`\`\`json.
-        2. Toda resposta deve ter um "message" explicando o que foi feito.
-        3. Se for atualizar um array, envie o array COMPLETO.
+        IMPORTANTE: Ao editar listas no localStorage, envie a lista COMPLETA com as alterações.
         `;
 
         let result;
@@ -108,7 +104,7 @@ export const OperationsAssistant: React.FC = () => {
         }
 
         if (result && typeof result === 'object') {
-            const assistantMessage = result.message || "Ação processada com sucesso.";
+            const assistantMessage = result.message || "Pedido processado.";
             setHistory(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
 
             if (result.actions && Array.isArray(result.actions)) {
@@ -116,11 +112,18 @@ export const OperationsAssistant: React.FC = () => {
                 result.actions.forEach((action: any) => {
                     if (action.type === 'UPDATE_LOCAL_STORAGE') {
                         localStorage.setItem(action.key, JSON.stringify(action.value));
+                        window.dispatchEvent(new Event('app-data-updated'));
+                    }
+                    if (action.type === 'NAVIGATE' || action.type === 'SELECT_COMPANY') {
+                        window.dispatchEvent(new CustomEvent('app-navigation', {
+                            detail: {
+                                tab: action.tab,
+                                companyId: action.companyId,
+                                cestaTab: action.cestaTab
+                            }
+                        }));
                     }
                 });
-
-                // Notify application of changes
-                window.dispatchEvent(new Event('app-data-updated'));
                 setTimeout(() => setIsApplying(false), 1000);
             }
         } else if (typeof result === 'string') {

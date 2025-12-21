@@ -113,6 +113,16 @@ export const CestasBasicas: React.FC = () => {
     const [itemAllocation, setItemAllocation] = useState<Record<string, ItemAllocationConfig>>({});
 
     useEffect(() => {
+        const handleNavigation = (e: any) => {
+            if (e.detail.cestaTab) {
+                setActiveTab(e.detail.cestaTab);
+            }
+        };
+        window.addEventListener('app-navigation', handleNavigation);
+        return () => window.removeEventListener('app-navigation', handleNavigation);
+    }, []);
+
+    useEffect(() => {
         const reloadAllData = () => {
             // 1. Load employees from registry
             try {

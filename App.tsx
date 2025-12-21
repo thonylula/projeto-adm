@@ -58,17 +58,24 @@ export default function App() {
     window.addEventListener('storage', loadFromStorage);
     window.addEventListener('app-data-updated', loadFromStorage);
 
+    // Listen for direct navigation requests from the AI Assistant
+    const handleNavigation = (e: any) => {
+      const { tab, companyId } = e.detail;
+      if (tab) setActiveTab(tab);
+      if (companyId) setActiveCompanyId(companyId);
+    };
+    window.addEventListener('app-navigation', handleNavigation);
+
     return () => {
       window.removeEventListener('storage', loadFromStorage);
       window.removeEventListener('app-data-updated', loadFromStorage);
+      window.removeEventListener('app-navigation', handleNavigation);
     };
   }, []);
 
   // Persist companies on change
   useEffect(() => {
-    if (companies.length > 0) {
-      localStorage.setItem('folha_companies', JSON.stringify(companies));
-    }
+    localStorage.setItem('folha_companies', JSON.stringify(companies));
   }, [companies]);
 
   const activeCompany = companies.find(c => c.id === activeCompanyId);
