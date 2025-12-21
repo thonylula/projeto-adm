@@ -137,7 +137,7 @@ export const CestasBasicas: React.FC = () => {
                 setRetryCountdown(nextValue === 0 ? null : nextValue);
 
                 if (nextValue === 0) {
-                    SupabaseService.saveConfig('folha_ai_quota_until', null).catch(() => { });
+                    SupabaseService.saveConfig('folha_ai_quota_until', '0').catch(() => { });
                     setError(null);
                 }
             }, 1000);
