@@ -430,187 +430,193 @@ export const CestasBasicas: React.FC = () => {
                     <div className="grid lg:grid-cols-2 gap-8 items-start">
                         <ImageUploader onFilesReady={handleFilesReady} disabled={isLoading} />
                         <div className="space-y-6">
-                            {isLoading ? 'Analisando via I.A...' : retryCountdown !== null ? `Aguarde ${retryCountdown}s...` : `Processar ${files.length > 0 ? files.length : ''} Notas`}
-                        </button>
+                            <button
+                                onClick={processInvoices}
+                                disabled={files.length === 0 || isLoading || retryCountdown !== null}
+                                className={`w-full font-black uppercase text-sm py-5 px-8 rounded-none transition-all duration-300 transform hover:scale-[1.01] shadow-xl disabled:bg-slate-200 disabled:shadow-none disabled:cursor-not-allowed ${appMode === 'CHRISTMAS' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'
+                                    }`}
+                            >
+                                {isLoading ? 'Analisando via I.A...' : retryCountdown !== null ? `Aguarde ${retryCountdown}s...` : `Processar ${files.length > 0 ? files.length : ''} Notas`}
+                            </button>
 
-                        {retryCountdown !== null && (
-                            <div className="p-4 bg-amber-50 border-l-4 border-amber-500 animate-pulse">
-                                <div className="flex items-center gap-3">
-                                    <div className="text-2xl">⏳</div>
-                                    <div>
-                                        <div className="text-[10px] font-black text-amber-800 uppercase tracking-tighter">Modo de Espera Ativo</div>
-                                        <div className="text-[14px] font-black text-amber-600 uppercase">Aguarde {retryCountdown} segundos para tentar novamente</div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {error && !retryCountdown && <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-xs font-bold uppercase">{error}</div>}
-
-                        {invoiceData && (
-                            <div className="space-y-4 pt-6 border-t border-slate-50">
-                                <div>
-                                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Empresa Destinatária</label>
-                                    <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-none focus:border-indigo-500 focus:outline-none font-bold text-slate-700 uppercase text-xs" />
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <label className="cursor-pointer bg-slate-50 border border-slate-200 p-2 text-[9px] font-bold text-slate-500 uppercase flex flex-col items-center gap-1 hover:bg-indigo-50 hover:text-indigo-600 transition-all">
-                                        <input type="file" className="hidden" onChange={handleLogoChange} accept="image/*" />
-                                        {companyLogoBase64 ? <img src={companyLogoBase64} alt="Logo" className="h-8 w-auto object-contain" /> : 'Logo Empresa'}
-                                    </label>
-                                    <label className="cursor-pointer bg-slate-50 border border-slate-200 p-2 text-[9px] font-bold text-slate-500 uppercase flex flex-col items-center gap-1 hover:bg-indigo-50 hover:text-indigo-600 transition-all">
-                                        <input type="file" className="hidden" onChange={handleSloganImageChange} accept="image/*" />
-                                        {sloganImageBase64 ? <img src={sloganImageBase64} alt="Slogan" className="h-8 w-auto object-contain" /> : 'Slogan Tema'}
-                                    </label>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* --- Targeted Distribution UI --- */}
-                {invoiceData && (
-                    <div className="mt-8 pt-8 border-t border-slate-200 animate-in slide-in-from-top-4 duration-500">
-                        <div className="mb-8">
-                            <div className="mb-4">
-                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">1. Identificar Funcionários que NÃO BEBEM</h3>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Selecione quem receberá a cesta sem álcool</p>
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
-                                {actualEmployees.map((name, idx) => {
-                                    const isNonDrinker = selectedNonDrinkers.includes(idx);
-                                    return (
-                                        <button
-                                            key={idx}
-                                            onClick={() => toggleEmployeeDrinking(idx)}
-                                            className={`p-3 text-[9px] font-black uppercase text-center border-2 transition-all rounded-sm flex flex-col items-center justify-between min-h-[70px] ${isNonDrinker
-                                                ? (appMode === 'CHRISTMAS' ? 'bg-red-50 border-red-600 text-red-700' : 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-inner')
-                                                : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300'
-                                                }`}
-                                        >
-                                            <div className="text-xl mb-1">{isNonDrinker ? '🥤' : '🍺'}</div>
-                                            <div className="leading-tight shrink-0">{name.split(' ')[0]}</div>
-                                            {isNonDrinker && <div className="mt-1 text-[7px] bg-indigo-600 text-white px-1 rounded-full">SEM ÁLCOOL</div>}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div className="mb-8">
-                            <div className="mb-4">
-                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">2. Alocação de Alimentos</h3>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Defina quais itens vão para cada grupo</p>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {invoiceData.items.map(item => {
-                                    const config = itemAllocation[item.id] || { mode: 'ALL' };
-                                    const isCustom = config.mode === 'CUSTOM';
-
-                                    return (
-                                        <div key={item.id} className={`p-3 border rounded-sm transition-all flex flex-col gap-2 ${isCustom ? 'border-amber-400 bg-amber-50/30 ring-1 ring-amber-400/20' : 'border-slate-200 bg-slate-50/50'
-                                            }`}>
-                                            <div className="flex justify-between items-center">
-                                                <div className="text-[10px] font-bold text-slate-800 truncate uppercase">{item.description}</div>
-                                                {isCustom && (
-                                                    <span className="text-[7px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">PERSONALIZADO IA</span>
-                                                )}
-                                            </div>
-                                            <div className="flex gap-1">
-                                                {['ALL', 'NON_DRINKER', 'DRINKER'].map(type => (
-                                                    <button
-                                                        key={type}
-                                                        onClick={() => toggleAllocation(item.id, type as any)}
-                                                        className={`flex-1 text-[8px] font-black p-1.5 rounded-none border transition-all ${config.mode === type
-                                                            ? (appMode === 'CHRISTMAS' ? 'bg-red-600 border-red-600 text-white' : 'bg-indigo-600 border-indigo-600 text-white')
-                                                            : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400'
-                                                            }`}
-                                                    >
-                                                        {type === 'ALL' ? 'TODOS' : type === 'NON_DRINKER' ? 'NÃO BEBEM' : 'BEBEM'}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* --- Active Rules Panel (Debug/Visibility) --- */}
-                        {Object.values(itemAllocation).some((config) => (config as ItemAllocationConfig).mode === 'CUSTOM') && (
-                            <div className="mb-8 p-4 bg-amber-50 border-2 border-amber-200 rounded-sm">
-                                <div className="flex justify-between items-center mb-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xl">⚙️</span>
+                            {retryCountdown !== null && (
+                                <div className="p-4 bg-amber-50 border-l-4 border-amber-500 animate-pulse">
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-2xl">⏳</div>
                                         <div>
-                                            <h3 className="text-sm font-black text-amber-800 uppercase tracking-tighter">Regras Ativas de Distribuição</h3>
-                                            <p className="text-[10px] text-amber-600 font-bold uppercase tracking-widest text-left">Ajustes manuais ou via I.A.</p>
+                                            <div className="text-[10px] font-black text-amber-800 uppercase tracking-tighter">Modo de Espera Ativo</div>
+                                            <div className="text-[14px] font-black text-amber-600 uppercase">Aguarde {retryCountdown} segundos para tentar novamente</div>
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => {
-                                            localStorage.removeItem('folha_basket_item_configs');
-                                            window.dispatchEvent(new Event('app-data-updated'));
-                                        }}
-                                        className="px-3 py-1 bg-amber-600 text-white text-[9px] font-black uppercase rounded-sm hover:bg-amber-700 transition-all"
-                                    >
-                                        Limpar Todas as Regras
-                                    </button>
                                 </div>
-                                <div className="space-y-2">
-                                    {invoiceData.items.filter(item => itemAllocation[item.id]?.mode === 'CUSTOM').map(item => {
-                                        const config = itemAllocation[item.id];
+                            )}
+
+                            {error && !retryCountdown && <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-xs font-bold uppercase">{error}</div>}
+
+                            {invoiceData && (
+                                <div className="space-y-4 pt-6 border-t border-slate-50">
+                                    <div>
+                                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Empresa Destinatária</label>
+                                        <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-none focus:border-indigo-500 focus:outline-none font-bold text-slate-700 uppercase text-xs" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <label className="cursor-pointer bg-slate-50 border border-slate-200 p-2 text-[9px] font-bold text-slate-500 uppercase flex flex-col items-center gap-1 hover:bg-indigo-50 hover:text-indigo-600 transition-all">
+                                            <input type="file" className="hidden" onChange={handleLogoChange} accept="image/*" />
+                                            {companyLogoBase64 ? <img src={companyLogoBase64} alt="Logo" className="h-8 w-auto object-contain" /> : 'Logo Empresa'}
+                                        </label>
+                                        <label className="cursor-pointer bg-slate-50 border border-slate-200 p-2 text-[9px] font-bold text-slate-500 uppercase flex flex-col items-center gap-1 hover:bg-indigo-50 hover:text-indigo-600 transition-all">
+                                            <input type="file" className="hidden" onChange={handleSloganImageChange} accept="image/*" />
+                                            {sloganImageBase64 ? <img src={sloganImageBase64} alt="Slogan" className="h-8 w-auto object-contain" /> : 'Slogan Tema'}
+                                        </label>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* --- Targeted Distribution UI --- */}
+                    {invoiceData && (
+                        <div className="mt-8 pt-8 border-t border-slate-200 animate-in slide-in-from-top-4 duration-500">
+                            <div className="mb-8">
+                                <div className="mb-4">
+                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">1. Identificar Funcionários que NÃO BEBEM</h3>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Selecione quem receberá a cesta sem álcool</p>
+                                </div>
+                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+                                    {actualEmployees.map((name, idx) => {
+                                        const isNonDrinker = selectedNonDrinkers.includes(idx);
                                         return (
-                                            <div key={item.id} className="flex justify-between items-center bg-white p-2 border border-amber-200 text-[10px]">
-                                                <span className="font-bold text-slate-700 uppercase">{item.description}</span>
-                                                <div className="flex gap-4 font-black">
-                                                    <span className="text-indigo-600">🥤 {config.customQtyNonDrinker} p/ Abstêmio</span>
-                                                    <span className="text-orange-600">🍺 {config.customQtyDrinker} p/ Padrão</span>
+                                            <button
+                                                key={idx}
+                                                onClick={() => toggleEmployeeDrinking(idx)}
+                                                className={`p-3 text-[9px] font-black uppercase text-center border-2 transition-all rounded-sm flex flex-col items-center justify-between min-h-[70px] ${isNonDrinker
+                                                    ? (appMode === 'CHRISTMAS' ? 'bg-red-50 border-red-600 text-red-700' : 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-inner')
+                                                    : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300'
+                                                    }`}
+                                            >
+                                                <div className="text-xl mb-1">{isNonDrinker ? '🥤' : '🍺'}</div>
+                                                <div className="leading-tight shrink-0">{name.split(' ')[0]}</div>
+                                                {isNonDrinker && <div className="mt-1 text-[7px] bg-indigo-600 text-white px-1 rounded-full">SEM ÁLCOOL</div>}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="mb-8">
+                                <div className="mb-4">
+                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">2. Alocação de Alimentos</h3>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Defina quais itens vão para cada grupo</p>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {invoiceData.items.map(item => {
+                                        const config = itemAllocation[item.id] || { mode: 'ALL' };
+                                        const isCustom = config.mode === 'CUSTOM';
+
+                                        return (
+                                            <div key={item.id} className={`p-3 border rounded-sm transition-all flex flex-col gap-2 ${isCustom ? 'border-amber-400 bg-amber-50/30 ring-1 ring-amber-400/20' : 'border-slate-200 bg-slate-50/50'
+                                                }`}>
+                                                <div className="flex justify-between items-center">
+                                                    <div className="text-[10px] font-bold text-slate-800 truncate uppercase">{item.description}</div>
+                                                    {isCustom && (
+                                                        <span className="text-[7px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">PERSONALIZADO IA</span>
+                                                    )}
+                                                </div>
+                                                <div className="flex gap-1">
+                                                    {['ALL', 'NON_DRINKER', 'DRINKER'].map(type => (
+                                                        <button
+                                                            key={type}
+                                                            onClick={() => toggleAllocation(item.id, type as any)}
+                                                            className={`flex-1 text-[8px] font-black p-1.5 rounded-none border transition-all ${config.mode === type
+                                                                ? (appMode === 'CHRISTMAS' ? 'bg-red-600 border-red-600 text-white' : 'bg-indigo-600 border-indigo-600 text-white')
+                                                                : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400'
+                                                                }`}
+                                                        >
+                                                            {type === 'ALL' ? 'TODOS' : type === 'NON_DRINKER' ? 'NÃO BEBEM' : 'BEBEM'}
+                                                        </button>
+                                                    ))}
                                                 </div>
                                             </div>
                                         );
                                     })}
                                 </div>
                             </div>
-                        )}
-                    </div>
-                )}
-        </div>
 
-                {
-        invoiceData && (
-            <div className="space-y-6">
-                <div className="flex justify-center bg-white border-b-2 border-slate-100 sticky top-0 z-40 shadow-sm print:hidden">
-                    <TabButton tabName="summary" icon={<ReceiptIcon className="w-5 h-5" />} label="Resumo" />
-                    <TabButton tabName="signature" icon={<SignatureIcon className="w-5 h-5" />} label="Assinaturas" />
-                    <TabButton tabName="pantry" icon={<BasketIcon className="w-5 h-5" />} label="Lista p/ Funcionário" />
-                </div>
-
-                <div id="active-view" className="animate-in fade-in duration-700">
-                    {activeTab === 'summary' && <InvoiceSummary data={invoiceData} companyName={companyName} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
-                    {activeTab === 'signature' && <SignatureSheet employeeNames={actualEmployees} companyName={companyName} recipientCnpj={invoiceData.recipientCnpj} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
-                    {activeTab === 'pantry' && (
-                        <PantryList
-                            data={invoiceData}
-                            employeeNames={actualEmployees}
-                            motivationalMessages={motivationalMessages}
-                            sloganImage={sloganImageBase64}
-                            companyName={companyName}
-                            recipientCnpj={invoiceData.recipientCnpj}
-                            companyLogo={companyLogoBase64}
-                            selectedNonDrinkers={selectedNonDrinkers}
-                            itemAllocation={itemAllocation}
-                            appMode={appMode}
-                        />
+                            {/* --- Active Rules Panel (Debug/Visibility) --- */}
+                            {Object.values(itemAllocation).some((config) => (config as ItemAllocationConfig).mode === 'CUSTOM') && (
+                                <div className="mb-8 p-4 bg-amber-50 border-2 border-amber-200 rounded-sm">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xl">⚙️</span>
+                                            <div>
+                                                <h3 className="text-sm font-black text-amber-800 uppercase tracking-tighter">Regras Ativas de Distribuição</h3>
+                                                <p className="text-[10px] text-amber-600 font-bold uppercase tracking-widest text-left">Ajustes manuais ou via I.A.</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                localStorage.removeItem('folha_basket_item_configs');
+                                                window.dispatchEvent(new Event('app-data-updated'));
+                                            }}
+                                            className="px-3 py-1 bg-amber-600 text-white text-[9px] font-black uppercase rounded-sm hover:bg-amber-700 transition-all"
+                                        >
+                                            Limpar Todas as Regras
+                                        </button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {invoiceData.items.filter(item => itemAllocation[item.id]?.mode === 'CUSTOM').map(item => {
+                                            const config = itemAllocation[item.id];
+                                            return (
+                                                <div key={item.id} className="flex justify-between items-center bg-white p-2 border border-amber-200 text-[10px]">
+                                                    <span className="font-bold text-slate-700 uppercase">{item.description}</span>
+                                                    <div className="flex gap-4 font-black">
+                                                        <span className="text-indigo-600">🥤 {config.customQtyNonDrinker} p/ Abstêmio</span>
+                                                        <span className="text-orange-600">🍺 {config.customQtyDrinker} p/ Padrão</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
-            </div>
-        )
-    }
+
+                {
+                    invoiceData && (
+                        <div className="space-y-6">
+                            <div className="flex justify-center bg-white border-b-2 border-slate-100 sticky top-0 z-40 shadow-sm print:hidden">
+                                <TabButton tabName="summary" icon={<ReceiptIcon className="w-5 h-5" />} label="Resumo" />
+                                <TabButton tabName="signature" icon={<SignatureIcon className="w-5 h-5" />} label="Assinaturas" />
+                                <TabButton tabName="pantry" icon={<BasketIcon className="w-5 h-5" />} label="Lista p/ Funcionário" />
+                            </div>
+
+                            <div id="active-view" className="animate-in fade-in duration-700">
+                                {activeTab === 'summary' && <InvoiceSummary data={invoiceData} companyName={companyName} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
+                                {activeTab === 'signature' && <SignatureSheet employeeNames={actualEmployees} companyName={companyName} recipientCnpj={invoiceData.recipientCnpj} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
+                                {activeTab === 'pantry' && (
+                                    <PantryList
+                                        data={invoiceData}
+                                        employeeNames={actualEmployees}
+                                        motivationalMessages={motivationalMessages}
+                                        sloganImage={sloganImageBase64}
+                                        companyName={companyName}
+                                        recipientCnpj={invoiceData.recipientCnpj}
+                                        companyLogo={companyLogoBase64}
+                                        selectedNonDrinkers={selectedNonDrinkers}
+                                        itemAllocation={itemAllocation}
+                                        appMode={appMode}
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    )
+                }
             </main >
 
-    <style dangerouslySetInnerHTML={{
-        __html: `
+            <style dangerouslySetInnerHTML={{
+                __html: `
         .christmas-theme {
             --brand-color: #dc2626;
             --secondary-color: #166534;
