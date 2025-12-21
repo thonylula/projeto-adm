@@ -6,7 +6,7 @@ import { InvoiceSummary } from './InvoiceSummary';
 import { SignatureSheet } from './SignatureSheet';
 import { PantryList } from './PantryList';
 import { ReceiptIcon, SignatureIcon, BasketIcon } from './icons';
-import { exportToPng, exportToHtml } from '../utils/exportUtils';
+import { exportToPng, exportToHtml, exportToPdf } from '../utils/exportUtils';
 
 type Tab = 'summary' | 'signature' | 'pantry';
 type AppMode = 'BASIC' | 'CHRISTMAS';
@@ -263,10 +263,20 @@ export const CestasBasicas: React.FC = () => {
         setIsLoading(true);
         setError(null);
         try {
-            const fileContents = await Promise.all(files.map(fileToBase64));
-            const results = await Promise.all(
-                fileContents.map(fc => extractInvoiceData(fc.base64, fc.mimeType))
-            );
+            const results: InvoiceData[] = [];
+
+            // Process sequential to avoid RPM limits
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fc = await fileToBase64(file);
+                const data = await extractInvoiceData(fc.base64, fc.mimeType);
+                results.push(data);
+
+                // Small delay between requests to be gentle with Rate Limits
+                if (i < files.length - 1) {
+                    await new Promise(r => setTimeout(r, 600));
+                }
+            }
 
             const aiMessages = await generateMotivationalMessages(actualEmployees);
             setMotivationalMessages(aiMessages);
@@ -287,6 +297,8 @@ export const CestasBasicas: React.FC = () => {
             const retryMatch = errorMsg.match(/retry in ([\d.]+)s/i);
             if (retryMatch) {
                 const seconds = Math.ceil(parseFloat(retryMatch[1]));
+                const until = Date.now() + (seconds * 1000);
+                localStorage.setItem('folha_ai_quota_until', until.toString());
                 setRetryCountdown(seconds);
                 setError(`Limite de frequência atingido. O sistema entrará em modo de espera e liberará em breve.`);
             } else {
@@ -296,6 +308,12 @@ export const CestasBasicas: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const formatCountdown = (totalSeconds: number) => {
+        const mins = Math.floor(totalSeconds / 60);
+        const secs = totalSeconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
     const saveBackup = () => {
@@ -455,7 +473,7 @@ export const CestasBasicas: React.FC = () => {
                                 className={`w-full font-black uppercase text-sm py-5 px-8 rounded-none transition-all duration-300 transform hover:scale-[1.01] shadow-xl disabled:bg-slate-200 disabled:shadow-none disabled:cursor-not-allowed ${appMode === 'CHRISTMAS' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'
                                     }`}
                             >
-                                {isLoading ? 'Analisando via I.A...' : retryCountdown !== null ? `Aguarde ${retryCountdown}s...` : `Processar ${files.length > 0 ? files.length : ''} Notas`}
+                                {isLoading ? 'Analisando via I.A...' : retryCountdown !== null ? `Aguarde ${formatCountdown(retryCountdown)}...` : `Processar ${files.length > 0 ? files.length : ''} Notas`}
                             </button>
 
                             {retryCountdown !== null && (
@@ -464,7 +482,7 @@ export const CestasBasicas: React.FC = () => {
                                         <div className="text-2xl">⏳</div>
                                         <div>
                                             <div className="text-[10px] font-black text-amber-800 uppercase tracking-tighter">Modo de Espera Ativo</div>
-                                            <div className="text-[14px] font-black text-amber-600 uppercase">Aguarde {retryCountdown} segundos para tentar novamente</div>
+                                            <div className="text-[14px] font-black text-amber-600 uppercase">Aguarde {formatCountdown(retryCountdown)} para tentar novamente</div>
                                         </div>
                                     </div>
                                 </div>
@@ -602,52 +620,51 @@ export const CestasBasicas: React.FC = () => {
                     )}
                 </div>
 
-                {
-                    invoiceData && (
-                        <div className="space-y-6">
-                            <div className="flex justify-center bg-white border-b-2 border-slate-100 sticky top-0 z-40 shadow-sm print:hidden">
-                                <TabButton tabName="summary" icon={<ReceiptIcon className="w-5 h-5" />} label="Resumo" />
-                                <TabButton tabName="signature" icon={<SignatureIcon className="w-5 h-5" />} label="Assinaturas" />
-                                <TabButton tabName="pantry" icon={<BasketIcon className="w-5 h-5" />} label="Lista p/ Funcionário" />
-                            </div>
-
-                            <div id="active-view" className="animate-in fade-in duration-700">
-                                {activeTab === 'summary' && <InvoiceSummary data={invoiceData} companyName={companyName} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
-                                {activeTab === 'signature' && <SignatureSheet employeeNames={actualEmployees} companyName={companyName} recipientCnpj={invoiceData.recipientCnpj} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
-                                {activeTab === 'pantry' && (
-                                    <PantryList
-                                        data={invoiceData}
-                                        employeeNames={actualEmployees}
-                                        motivationalMessages={motivationalMessages}
-                                        sloganImage={sloganImageBase64}
-                                        companyName={companyName}
-                                        recipientCnpj={invoiceData.recipientCnpj}
-                                        companyLogo={companyLogoBase64}
-                                        selectedNonDrinkers={selectedNonDrinkers}
-                                        itemAllocation={itemAllocation}
-                                        appMode={appMode}
-                                    />
-                                )}
-                            </div>
+                {invoiceData && (
+                    <div className="space-y-6">
+                        <div className="flex justify-center bg-white border-b-2 border-slate-100 sticky top-0 z-40 shadow-sm print:hidden">
+                            <TabButton tabName="summary" icon={<ReceiptIcon className="w-5 h-5" />} label="Resumo" />
+                            <TabButton tabName="signature" icon={<SignatureIcon className="w-5 h-5" />} label="Assinaturas" />
+                            <TabButton tabName="pantry" icon={<BasketIcon className="w-5 h-5" />} label="Lista p/ Funcionário" />
                         </div>
-                    )
-                }
-            </main >
+
+                        <div id="active-view" className="animate-in fade-in duration-700">
+                            {activeTab === 'summary' && <InvoiceSummary data={invoiceData} companyName={companyName} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
+                            {activeTab === 'signature' && <SignatureSheet employeeNames={actualEmployees} companyName={companyName} recipientCnpj={invoiceData.recipientCnpj} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
+                            {activeTab === 'pantry' && (
+                                <PantryList
+                                    data={invoiceData}
+                                    employeeNames={actualEmployees}
+                                    motivationalMessages={motivationalMessages}
+                                    sloganImage={sloganImageBase64}
+                                    companyName={companyName}
+                                    recipientCnpj={invoiceData.recipientCnpj}
+                                    companyLogo={companyLogoBase64}
+                                    selectedNonDrinkers={selectedNonDrinkers}
+                                    itemAllocation={itemAllocation}
+                                    appMode={appMode}
+                                />
+                            )}
+                        </div>
+                    </div>
+                )}
+            </main>
 
             <style dangerouslySetInnerHTML={{
                 __html: `
-        .christmas-theme {
-            --brand-color: #dc2626;
-            --secondary-color: #166534;
-        }
-        @media print {
-            .christmas-theme header, .christmas-theme .print\\:hidden { display: none !important; }
-            .christmas-theme .border-orange-500 { border-color: #dc2626 !important; }
-            .christmas-theme .bg-orange-500 { background-color: #dc2626 !important; }
-            .christmas-theme .text-indigo-600 { color: #dc2626 !important; }
-        }
-      `}} />
-        </div >
+                    .christmas-theme {
+                        --brand-color: #dc2626;
+                        --secondary-color: #166534;
+                    }
+                    @media print {
+                        .christmas-theme header, .christmas-theme .print\\:hidden { display: none !important; }
+                        .christmas-theme .border-orange-500 { border-color: #dc2626 !important; }
+                        .christmas-theme .bg-orange-500 { background-color: #dc2626 !important; }
+                        .christmas-theme .text-indigo-600 { color: #dc2626 !important; }
+                    }
+                `
+            }} />
+        </div>
     );
 };
 
