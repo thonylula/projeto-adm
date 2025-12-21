@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { RegistryEmployee, RegistrySupplier, RegistryClient } from '../types';
 import { useGeminiParser } from '../hooks/useGeminiParser';
+import { SupabaseService } from '../services/supabaseService';
 
 // Helper for ID generation
 const generateId = () => {
@@ -118,19 +119,34 @@ export const RegistrationManager: React.FC = () => {
     const [clients, setClients] = useState<RegistryClient[]>([]);
 
     useEffect(() => {
-        const load = () => {
+        const load = async () => {
             try {
-                const e = localStorage.getItem('folha_registry_employees');
-                if (e) setEmployees(JSON.parse(e));
-            } catch { }
-            try {
-                const s = localStorage.getItem('folha_registry_suppliers');
-                if (s) setSuppliers(JSON.parse(s));
-            } catch { }
-            try {
-                const c = localStorage.getItem('folha_registry_clients');
-                if (c) setClients(JSON.parse(c));
-            } catch { }
+                const [e, s, c] = await Promise.all([
+                    SupabaseService.getEmployees(),
+                    SupabaseService.getSuppliers(),
+                    SupabaseService.getClients()
+                ]);
+
+                if (e.length > 0) setEmployees(e);
+                else {
+                    const localE = localStorage.getItem('folha_registry_employees');
+                    if (localE) setEmployees(JSON.parse(localE));
+                }
+
+                if (s.length > 0) setSuppliers(s);
+                else {
+                    const localS = localStorage.getItem('folha_registry_suppliers');
+                    if (localS) setSuppliers(JSON.parse(localS));
+                }
+
+                if (c.length > 0) setClients(c);
+                else {
+                    const localC = localStorage.getItem('folha_registry_clients');
+                    if (localC) setClients(JSON.parse(localC));
+                }
+            } catch (err) {
+                console.error("Failed to load registrations from Supabase", err);
+            }
         };
 
         load();
@@ -149,9 +165,17 @@ export const RegistrationManager: React.FC = () => {
     const [cliForm, setCliForm] = useState(INITIAL_CLIENT);
 
     // --- PERSISTENCE ---
-    useEffect(() => { if (employees.length > 0) localStorage.setItem('folha_registry_employees', JSON.stringify(employees)); }, [employees]);
-    useEffect(() => { if (suppliers.length > 0) localStorage.setItem('folha_registry_suppliers', JSON.stringify(suppliers)); }, [suppliers]);
-    useEffect(() => { if (clients.length > 0) localStorage.setItem('folha_registry_clients', JSON.stringify(clients)); }, [clients]);
+    // Persistence handled via SupabaseService in save/delete handlers
+    // localStorage kept as secondary backup via useEffect (optional)
+    useEffect(() => {
+        if (employees.length > 0) localStorage.setItem('folha_registry_employees', JSON.stringify(employees));
+    }, [employees]);
+    useEffect(() => {
+        if (suppliers.length > 0) localStorage.setItem('folha_registry_suppliers', JSON.stringify(suppliers));
+    }, [suppliers]);
+    useEffect(() => {
+        if (clients.length > 0) localStorage.setItem('folha_registry_clients', JSON.stringify(clients));
+    }, [clients]);
 
     // --- AI SMART UPLOAD ---
     const { processFile, isProcessing } = useGeminiParser({
@@ -244,28 +268,40 @@ export const RegistrationManager: React.FC = () => {
 
     // --- HANDLERS ---
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (activeType === 'EMPLOYEE') {
+            const id = editingId || generateId();
+            const newEmployee = { id, ...empForm };
+            await SupabaseService.saveEmployee(newEmployee as RegistryEmployee);
+
             if (editingId) {
-                setEmployees(prev => prev.map(item => item.id === editingId ? { ...item, ...empForm } : item));
+                setEmployees(prev => prev.map(item => item.id === editingId ? newEmployee as RegistryEmployee : item));
             } else {
-                setEmployees(prev => [{ id: generateId(), ...empForm }, ...prev]);
+                setEmployees(prev => [newEmployee as RegistryEmployee, ...prev]);
             }
             setEmpForm(INITIAL_EMPLOYEE);
         } else if (activeType === 'SUPPLIER') {
+            const id = editingId || generateId();
+            const newSupplier = { id, ...supForm };
+            await SupabaseService.saveSupplier(newSupplier as RegistrySupplier);
+
             if (editingId) {
-                setSuppliers(prev => prev.map(item => item.id === editingId ? { ...item, ...supForm } : item));
+                setSuppliers(prev => prev.map(item => item.id === editingId ? newSupplier as RegistrySupplier : item));
             } else {
-                setSuppliers(prev => [{ id: generateId(), ...supForm }, ...prev]);
+                setSuppliers(prev => [newSupplier as RegistrySupplier, ...prev]);
             }
             setSupForm(INITIAL_SUPPLIER);
         } else if (activeType === 'CLIENT') {
+            const id = editingId || generateId();
+            const newClient = { id, ...cliForm };
+            await SupabaseService.saveClient(newClient as RegistryClient);
+
             if (editingId) {
-                setClients(prev => prev.map(item => item.id === editingId ? { ...item, ...cliForm } : item));
+                setClients(prev => prev.map(item => item.id === editingId ? newClient as RegistryClient : item));
             } else {
-                setClients(prev => [{ id: generateId(), ...cliForm }, ...prev]);
+                setClients(prev => [newClient as RegistryClient, ...prev]);
             }
             setCliForm(INITIAL_CLIENT);
         }
@@ -290,22 +326,23 @@ export const RegistrationManager: React.FC = () => {
         }
     };
 
-    const handleDelete = (id: string) => {
+    const handleDelete = async (id: string) => {
         if (!window.confirm("Tem certeza que deseja excluir este registro permanentemente?")) return;
 
-        // Se estiver editando o item que será excluído, fecha o formulário
+        if (activeType === 'EMPLOYEE') {
+            await SupabaseService.deleteEmployee(id);
+            setEmployees(prev => prev.filter(e => e.id !== id));
+        } else if (activeType === 'SUPPLIER') {
+            await SupabaseService.deleteSupplier(id);
+            setSuppliers(prev => prev.filter(s => s.id !== id));
+        } else if (activeType === 'CLIENT') {
+            await SupabaseService.deleteClient(id);
+            setClients(prev => prev.filter(c => c.id !== id));
+        }
+
         if (editingId === id) {
             setIsFormOpen(false);
             setEditingId(null);
-        }
-
-        // Força a atualização do estado
-        if (activeType === 'EMPLOYEE') {
-            setEmployees(prev => prev.filter(e => e.id !== id));
-        } else if (activeType === 'SUPPLIER') {
-            setSuppliers(prev => prev.filter(s => s.id !== id));
-        } else if (activeType === 'CLIENT') {
-            setClients(prev => prev.filter(c => c.id !== id));
         }
     };
 

@@ -11,6 +11,7 @@ import { RegistrationManager } from './components/RegistrationManager';
 import { DeliveryOrder } from './components/DeliveryOrder';
 import { CestasBasicas } from './components/CestasBasicas';
 import { Company, PayrollHistoryItem } from './types';
+import { SupabaseService } from './services/supabaseService';
 
 // Helper for ID generation
 const generateId = () => {
@@ -33,30 +34,37 @@ export default function App() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [activeCompanyId, setActiveCompanyId] = useState<string | null>(null);
 
-  // Load initial state from localStorage on mount (Client-side only)
+  // Load initial state from Supabase on mount
   useEffect(() => {
-    const loadFromStorage = () => {
+    const loadFromSupabase = async () => {
       try {
-        const saved = localStorage.getItem('folha_companies');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) {
-            setCompanies(parsed.map((c: any) => ({
-              ...c,
-              employees: Array.isArray(c.employees) ? c.employees : []
-            })));
+        const data = await SupabaseService.getCompanies();
+        if (data && data.length > 0) {
+          setCompanies(data);
+        } else {
+          // Fallback to localStorage for migration if no companies in Supabase
+          const saved = localStorage.getItem('folha_companies');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setCompanies(parsed.map((c: any) => ({
+                ...c,
+                employees: Array.isArray(c.employees) ? c.employees : []
+              })));
+              // Trigger migration alert? Or just let it stay in state.
+            }
           }
         }
       } catch (e) {
-        console.error("Failed to load companies from storage", e);
+        console.error("Failed to load companies from Supabase", e);
       }
     };
 
-    loadFromStorage();
+    loadFromSupabase();
 
     // Listen for storage changes (for local sync)
-    window.addEventListener('storage', loadFromStorage);
-    window.addEventListener('app-data-updated', loadFromStorage);
+    window.addEventListener('storage', loadFromSupabase);
+    window.addEventListener('app-data-updated', loadFromSupabase);
 
     // Listen for direct navigation requests from the AI Assistant
     const handleNavigation = (e: any) => {
@@ -67,15 +75,17 @@ export default function App() {
     window.addEventListener('app-navigation', handleNavigation);
 
     return () => {
-      window.removeEventListener('storage', loadFromStorage);
-      window.removeEventListener('app-data-updated', loadFromStorage);
+      window.removeEventListener('storage', loadFromSupabase);
+      window.removeEventListener('app-data-updated', loadFromSupabase);
       window.removeEventListener('app-navigation', handleNavigation);
     };
   }, []);
 
-  // Persist companies on change
+  // Sync to localStorage as backup? (Optional, maybe skip if fully migrated)
   useEffect(() => {
-    localStorage.setItem('folha_companies', JSON.stringify(companies));
+    if (companies.length > 0) {
+      localStorage.setItem('folha_companies', JSON.stringify(companies));
+    }
   }, [companies]);
 
   const activeCompany = companies.find(c => c.id === activeCompanyId);
@@ -93,29 +103,41 @@ export default function App() {
     setActiveTab('payroll');
   };
 
-  const handleAddCompany = (name: string, cnpj: string | undefined, logoUrl: string | null) => {
-    const newCompany: Company = {
-      id: generateId(),
-      name,
-      cnpj,
-      logoUrl,
-      employees: []
-    };
-    setCompanies([...companies, newCompany]);
+  const handleAddCompany = async (name: string, cnpj: string | undefined, logoUrl: string | null) => {
+    const newComp = await SupabaseService.addCompany(name, cnpj, logoUrl);
+    if (newComp) {
+      setCompanies([...companies, newComp]);
+    } else {
+      // Fallback local if Supabase fails
+      const localComp: Company = {
+        id: generateId(),
+        name,
+        cnpj,
+        logoUrl,
+        employees: []
+      };
+      setCompanies([...companies, localComp]);
+    }
   };
 
   const handleSelectCompany = (id: string) => {
     setActiveCompanyId(id);
   };
 
-  const handleUpdateCompany = (updatedCompany: Company) => {
-    setCompanies(prev => prev.map(c => c.id === updatedCompany.id ? updatedCompany : c));
+  const handleUpdateCompany = async (updatedCompany: Company) => {
+    const success = await SupabaseService.updateCompany(updatedCompany);
+    if (success) {
+      setCompanies(prev => prev.map(c => c.id === updatedCompany.id ? updatedCompany : c));
+    }
   };
 
-  const handleDeleteCompany = (id: string) => {
+  const handleDeleteCompany = async (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir esta empresa? Todos os dados da folha serão perdidos.')) {
-      setCompanies(prev => prev.filter(c => c.id !== id));
-      if (activeCompanyId === id) setActiveCompanyId(null);
+      const success = await SupabaseService.deleteCompany(id);
+      if (success) {
+        setCompanies(prev => prev.filter(c => c.id !== id));
+        if (activeCompanyId === id) setActiveCompanyId(null);
+      }
     }
   };
 
@@ -125,71 +147,74 @@ export default function App() {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    // Logic to reset states when switching tabs if needed
     if (tab === 'payroll') {
-      // We keep the activeCompany if already selected, 
-      // OR the user can press "Back" in the PayrollCard to go to selection.
-      // If you want "Folha Salarial" to ALWAYS go to list:
       setActiveCompanyId(null);
     }
   };
 
   // --- Employee CRUD Handlers ---
 
-  const handleAddEmployee = (newItem: PayrollHistoryItem) => {
+  const handleAddEmployee = async (newItem: PayrollHistoryItem) => {
     if (!activeCompanyId) return;
 
-    setCompanies(prev => prev.map(company => {
-      if (company.id === activeCompanyId) {
-        return {
-          ...company,
-          // Add new item to the start of the list
-          employees: [newItem, ...(company.employees || [])] // Safety check
-        };
-      }
-      return company;
-    }));
+    const success = await SupabaseService.addPayrollItem(activeCompanyId, newItem);
+    if (success) {
+      setCompanies(prev => prev.map(company => {
+        if (company.id === activeCompanyId) {
+          return {
+            ...company,
+            employees: [newItem, ...(company.employees || [])]
+          };
+        }
+        return company;
+      }));
+    }
   };
 
-  const handleUpdateEmployee = (updatedItem: PayrollHistoryItem) => {
+  const handleUpdateEmployee = async (updatedItem: PayrollHistoryItem) => {
     if (!activeCompanyId) return;
 
-    setCompanies(prev => prev.map(company => {
-      if (company.id === activeCompanyId) {
-        return {
-          ...company,
-          employees: (company.employees || []).map(emp =>
-            emp.id === updatedItem.id ? updatedItem : emp
-          )
-        };
-      }
-      return company;
-    }));
+    const success = await SupabaseService.updatePayrollItem(updatedItem);
+    if (success) {
+      setCompanies(prev => prev.map(company => {
+        if (company.id === activeCompanyId) {
+          return {
+            ...company,
+            employees: (company.employees || []).map(emp =>
+              emp.id === updatedItem.id ? updatedItem : emp
+            )
+          };
+        }
+        return company;
+      }));
+    }
   };
 
-  const handleDeleteEmployee = (itemId: string) => {
+  const handleDeleteEmployee = async (itemId: string) => {
     if (!activeCompanyId) return;
 
-    setCompanies(prev => prev.map(company => {
-      if (company.id === activeCompanyId) {
-        return {
-          ...company,
-          employees: (company.employees || []).filter(emp => emp.id !== itemId)
-        };
-      }
-      return company;
-    }));
+    const success = await SupabaseService.deletePayrollItem(itemId);
+    if (success) {
+      setCompanies(prev => prev.map(company => {
+        if (company.id === activeCompanyId) {
+          return {
+            ...company,
+            employees: (company.employees || []).filter(emp => emp.id !== itemId)
+          };
+        }
+        return company;
+      }));
+    }
   };
 
   const handleBulkUpdateEmployees = (newEmployees: PayrollHistoryItem[]) => {
+    // This is mostly used for local state updates if needed, 
+    // but a real bulk update to Supabase would be different.
+    // For now, let's keep it as is or log a warning.
     if (!activeCompanyId) return;
-
     setCompanies(prev => prev.map(company => {
       if (company.id === activeCompanyId) {
-        return {
-          ...company,
-          employees: newEmployees
-        };
+        return { ...company, employees: newEmployees };
       }
       return company;
     }));
