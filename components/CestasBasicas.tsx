@@ -116,16 +116,17 @@ export const CestasBasicas: React.FC = () => {
 
     // Load persistent quota timer on mount
     useEffect(() => {
-        const storedUntil = localStorage.getItem('folha_ai_quota_until');
-        if (storedUntil) {
-            const until = parseInt(storedUntil);
-            const now = Date.now();
-            if (until > now) {
-                setRetryCountdown(Math.ceil((until - now) / 1000));
-            } else {
-                localStorage.removeItem('folha_ai_quota_until');
+        const loadQuota = async () => {
+            const storedUntil = await SupabaseService.getConfig('folha_ai_quota_until');
+            if (storedUntil) {
+                const until = parseInt(storedUntil);
+                const now = Date.now();
+                if (until > now) {
+                    setRetryCountdown(Math.ceil((until - now) / 1000));
+                }
             }
-        }
+        };
+        loadQuota();
     }, []);
 
     useEffect(() => {
@@ -135,7 +136,7 @@ export const CestasBasicas: React.FC = () => {
                 setRetryCountdown(prev => {
                     const next = prev !== null ? prev - 1 : null;
                     if (next === 0) {
-                        localStorage.removeItem('folha_ai_quota_until');
+                        SupabaseService.saveConfig('folha_ai_quota_until', null);
                         setError(null);
                         return null;
                     }
@@ -170,13 +171,6 @@ export const CestasBasicas: React.FC = () => {
                         .map((r, idx) => r.isNonDrinker ? idx : -1)
                         .filter(idx => idx !== -1);
                     setSelectedNonDrinkers(nonDrinkerIndices);
-                } else {
-                    const storedEmployees = localStorage.getItem('folha_registry_employees');
-                    if (storedEmployees) {
-                        const localReg: any[] = JSON.parse(storedEmployees);
-                        setActualEmployees(localReg.map(r => r.name));
-                        setSelectedNonDrinkers(localReg.map((r, idx) => r.isNonDrinker ? idx : -1).filter(idx => idx !== -1));
-                    }
                 }
             } catch (e) {
                 console.error("Failed to load employees from registry", e);
@@ -187,10 +181,6 @@ export const CestasBasicas: React.FC = () => {
                 let globalConfigs: ItemConfiguration[] = [];
                 try {
                     globalConfigs = await SupabaseService.getBasketConfigs();
-                    if (globalConfigs.length === 0) {
-                        const storedConfigs = localStorage.getItem('folha_basket_item_configs');
-                        if (storedConfigs) globalConfigs = JSON.parse(storedConfigs);
-                    }
                 } catch (e) {
                     console.error("Failed to load global item configs", e);
                 }
@@ -305,7 +295,7 @@ export const CestasBasicas: React.FC = () => {
             if (retryMatch) {
                 const seconds = Math.ceil(parseFloat(retryMatch[1]));
                 const until = Date.now() + (seconds * 1000);
-                localStorage.setItem('folha_ai_quota_until', until.toString());
+                SupabaseService.saveConfig('folha_ai_quota_until', until.toString());
                 setRetryCountdown(seconds);
                 setError(`Limite de frequência atingido. O sistema entrará em modo de espera e liberará em breve.`);
             } else {
@@ -599,7 +589,7 @@ export const CestasBasicas: React.FC = () => {
                                         </div>
                                         <button
                                             onClick={() => {
-                                                localStorage.removeItem('folha_basket_item_configs');
+                                                SupabaseService.saveBasketConfigs([]);
                                                 window.dispatchEvent(new Event('app-data-updated'));
                                             }}
                                             className="px-3 py-1 bg-amber-600 text-white text-[9px] font-black uppercase rounded-sm hover:bg-amber-700 transition-all"

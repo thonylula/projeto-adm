@@ -33,31 +33,34 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-3">Opa! Algo deu errado.</h1>
             <p className="text-gray-600 mb-6 text-sm leading-relaxed">
-              O aplicativo encontrou um erro inesperado ao tentar carregar seus dados. Isso geralmente acontece quando os arquivos salvos localmente estão incompatíveis ou corrompidos.
+              O aplicativo encontrou um erro inesperado ao carregar os dados.
+              Tente atualizar a página ou verificar sua conexão com o banco de dados.
             </p>
-            
+
             <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 mb-6 text-left overflow-hidden">
-               <p className="text-xs font-bold text-gray-500 uppercase mb-1">Detalhe Técnico:</p>
-               <code className="text-xs text-red-500 font-mono break-all block">
-                 {this.state.error?.message || "Erro desconhecido"}
-               </code>
+              <p className="text-xs font-bold text-gray-500 uppercase mb-1">Detalhe Técnico:</p>
+              <code className="text-xs text-red-500 font-mono break-all block">
+                {this.state.error?.message || "Erro desconhecido"}
+              </code>
             </div>
 
             <button
               onClick={() => {
-                localStorage.clear();
                 window.location.reload();
               }}
-              className="w-full px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all shadow-lg hover:shadow-red-500/30 flex items-center justify-center gap-2"
+              className="w-full px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-500/30 flex items-center justify-center gap-2"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              Limpar Dados e Reiniciar
+              🔄 Recarregar Sistema
             </button>
-            <p className="mt-4 text-xs text-gray-400">
-              Atenção: Isso limpará o histórico local para recuperar o acesso.
+            <p className="mt-4 text-[10px] text-gray-400">
+              Se o problema persistir, entre em contato com o administrador.
             </p>
+            <button
+              onClick={() => { localStorage.clear(); window.location.reload(); }}
+              className="mt-2 text-[9px] text-gray-300 hover:text-red-300 underline"
+            >
+              Limpar cache local (avançado)
+            </button>
           </div>
         </div>
       );
