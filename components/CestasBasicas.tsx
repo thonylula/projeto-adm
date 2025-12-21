@@ -378,8 +378,11 @@ export const CestasBasicas: React.FC = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2 print:hidden justify-center md:justify-end">
-                    <button onClick={() => window.print()} className="p-2 px-3 bg-red-600 hover:bg-red-700 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md flex items-center gap-1">
-                        PDF (IMP.)
+                    <button
+                        onClick={() => exportToPdf('active-view', `listas_cesta_${new Date().getTime()}`)}
+                        className="p-2 px-3 bg-red-600 hover:bg-red-700 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md flex items-center gap-1"
+                    >
+                        PDF (BAIXAR)
                     </button>
                     <button onClick={() => exportToPng(`active-view`, `cesta_${activeTab}`)} className="p-2 px-3 bg-orange-500 hover:bg-orange-600 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md flex items-center gap-1">
                         PNG

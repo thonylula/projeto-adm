@@ -26,24 +26,13 @@ body {
     background-color: white !important;
   }
 
-  /* Hide everything by default using display: none to avoid blank spaces */
-  body>* {
+  /* Hide EVERYTHING by default using display: none */
+  body * {
     display: none !important;
   }
 
-  /* Allow the root and specifically the active content to be shown */
-  body>#root,
-  body>#root * {
-    display: block !important;
-    visibility: visible !important;
-  }
-
-  /* Hide EVERYTHING except the containers we want */
-  #root * {
-    display: none !important;
-  }
-
-  /* Whitelist containers we want to print and THEIR parents */
+  /* Whitelist ONLY the active content and its parents */
+  #root,
   #active-view,
   #active-view *,
   #receipt-content,
@@ -53,24 +42,40 @@ body {
     opacity: 1 !important;
   }
 
-  /* Ensure the active-view is at the very top of the page */
-  #active-view,
-  #receipt-content {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
+  /* Specifically hide common non-essential elements even if inside whitelisted parents */
+  button,
+  .print\:hidden,
+  .export-ignore,
+  header,
+  nav,
+  input,
+  label {
+    display: none !important;
   }
 
-  /* Specific fix for PantryList grid in print */
+  /* Fix for the configuration panel appearing in export */
+  #active-view>div:not(.space-y-8) {
+    display: none !important;
+  }
+
+  /* Ensure the list container is block-level for correct layout */
   #active-view>div.space-y-8 {
     display: block !important;
     width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  /* Hide export ignore elements strictly */
-  .export-ignore,
-  .print\:hidden {
-    display: none !important;
+  /* Reset absolute positioning that might cause blank pages */
+  #active-view {
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
+}
+
+/* Ensure consistent layout during export for html2pdf */
+.html2pdf__page-break {
+  display: block;
+  page-break-before: always;
 }
