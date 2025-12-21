@@ -564,6 +564,7 @@ export const CestasBasicas: React.FC = () => {
                                     companyLogo={companyLogoBase64}
                                     selectedNonDrinkers={selectedNonDrinkers}
                                     itemAllocation={itemAllocation}
+                                    appMode={appMode}
                                 />
                             )}
                         </div>

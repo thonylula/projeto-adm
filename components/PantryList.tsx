@@ -11,6 +11,7 @@ interface PantryListProps {
     companyLogo?: string | null;
     selectedNonDrinkers?: number[];
     itemAllocation?: Record<string, ItemAllocationConfig>;
+    appMode?: 'BASIC' | 'CHRISTMAS' | null;
 }
 
 export const PantryList: React.FC<PantryListProps> = ({
@@ -22,7 +23,8 @@ export const PantryList: React.FC<PantryListProps> = ({
     companyLogo,
     sloganImage,
     selectedNonDrinkers = [],
-    itemAllocation = {}
+    itemAllocation = {},
+    appMode = 'BASIC'
 }) => {
     const formatQty = (qty: number) => qty.toLocaleString('pt-BR', { minimumFractionDigits: 3 });
 
@@ -31,7 +33,7 @@ export const PantryList: React.FC<PantryListProps> = ({
     const drinkerCount = totalEmployees - nonDrinkerCount;
 
     return (
-        <div className="space-y-8 print:space-y-0">
+        <div className="space-y-8 print:space-y-4 print:grid print:grid-cols-1">
             {employeeNames.map((name, index) => {
                 const isNonDrinker = selectedNonDrinkers.includes(index);
 
@@ -45,7 +47,15 @@ export const PantryList: React.FC<PantryListProps> = ({
                 });
 
                 return (
-                    <div key={index} className="bg-white border-2 border-orange-500 rounded-sm shadow-sm overflow-hidden font-sans text-[#444] print:shadow-none print:border-2 print:mb-0 print:break-after-page min-h-[400px] flex flex-col relative">
+                    <div key={index} className="bg-white border-2 border-orange-500 rounded-sm shadow-sm overflow-hidden font-sans text-[#444] print:shadow-none print:border-2 print:mb-4 print:break-inside-avoid min-h-[400px] flex flex-col relative christmas-card overflow-visible">
+                        {appMode === 'CHRISTMAS' && (
+                            <div className="w-full h-auto mb-2 hidden print:block">
+                                <img src="/christmas_banner.png" alt="Boas Festas" className="w-full h-auto object-contain" />
+                                <div className="text-center py-1 bg-red-600 text-white text-[10px] font-black uppercase tracking-tighter">
+                                    Feliz Natal e um Próspero Ano Novo! 🎄✨
+                                </div>
+                            </div>
+                        )}
 
                         {/* Tag for special basket */}
                         <div className={`absolute top-0 right-0 px-3 py-1 text-[8px] font-black uppercase text-white ${isNonDrinker ? 'bg-indigo-600' : 'bg-orange-500'} print:hidden`}>
