@@ -315,7 +315,19 @@ export const SupabaseService = {
     },
 
     async saveConfig(id: string, value: any): Promise<boolean> {
-        const { error } = await supabase.from('global_configs').upsert([{ id, value }]);
-        return !error;
+        try {
+            const { error } = await supabase
+                .from('global_configs')
+                .upsert({ id, value }, { onConflict: 'id' });
+
+            if (error) {
+                console.error(`[Supabase Error] saveConfig(${id}):`, error.message, error.details);
+                return false;
+            }
+            return true;
+        } catch (e) {
+            console.error(`[Supabase Exception] saveConfig(${id}):`, e);
+            return false;
+        }
     }
 };

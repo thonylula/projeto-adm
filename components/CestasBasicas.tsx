@@ -133,15 +133,13 @@ export const CestasBasicas: React.FC = () => {
         let timer: NodeJS.Timeout;
         if (retryCountdown !== null && retryCountdown > 0) {
             timer = setTimeout(() => {
-                setRetryCountdown(prev => {
-                    const next = prev !== null ? prev - 1 : null;
-                    if (next === 0) {
-                        SupabaseService.saveConfig('folha_ai_quota_until', null).catch(() => { });
-                        setError(null);
-                        return null;
-                    }
-                    return next;
-                });
+                const nextValue = retryCountdown - 1;
+                setRetryCountdown(nextValue === 0 ? null : nextValue);
+
+                if (nextValue === 0) {
+                    SupabaseService.saveConfig('folha_ai_quota_until', null).catch(() => { });
+                    setError(null);
+                }
             }, 1000);
         }
         return () => clearTimeout(timer);
