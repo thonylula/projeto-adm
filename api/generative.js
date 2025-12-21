@@ -128,12 +128,20 @@ export default async function handler(req, res) {
                 } catch (err) {
                     console.warn(`[Proxy] Model ${modelName} failed. Status: ${err.status}`);
                     lastError = err;
-                    // If it's a 429/503 (quota/server) or 404 (not found in this region/Beta yet), we continue to next
-                    if (err.status === 429 || err.status === 503 || err.status === 404) {
+
+                    // If it's a 429 (Quota Exceeded), stop immediately. 
+                    // Trying other models with the same API key will likely result in the same error.
+                    if (err.status === 429) {
+                        break;
+                    }
+
+                    // If it's a 503 (Server Error) or 404 (Not Found), continue to next fallback
+                    if (err.status === 503 || err.status === 404) {
                         continue;
                     }
-                    // For other errors (400 Bad Request), we might want to stop too, but usually it's prompt related.
-                    // Let's continue to be safe.
+
+                    // For other errors (like 400), we also stop
+                    break;
                 }
             }
 
