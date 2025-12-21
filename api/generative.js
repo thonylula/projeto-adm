@@ -1,13 +1,12 @@
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const API_KEY = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 
-// Fallback list of models verified via ListModels for this specific API Key/Project
+// Fallback list of models requested by the user - prioritizing 1.5 Pro
 const MODELS_FALLBACK_LIST = [
-    "gemini-2.5-pro",      // Next-gen Pro (available in list)
-    "gemini-2.5-flash",    // Next-gen Flash (available in list)
-    "gemini-2.0-flash",    // Stable 2.0 (available in list)
-    "gemini-pro-latest",   // Alias for latest stable Pro (likely 1.5 Pro)
-    "gemini-flash-latest"  // Alias for latest stable Flash (likely 1.5 Flash)
+    "gemini-1.5-pro",
+    "gemini-1.5-flash",
+    "gemini-2.0-flash",
+    "gemini-pro-latest"
 ];
 // Setup utilities
 
