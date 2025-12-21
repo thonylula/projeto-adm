@@ -1,24 +1,10 @@
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const API_KEY = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 
-// Fallback list of models requested by the user
+// Fallback list of models requested by the user - prioritizing 1.5 Pro for higher quality
 const MODELS_FALLBACK_LIST = [
-    // Future/Experimental
-    "gemini-3-pro",
-    "gemini-3-flash",
-    "gemini-2.5-pro",
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-2.5-flash-image",
-    "gemini-2.5-flash-live",
-    // Current/Stable
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-lite",
-    "gemini-2.0-pro-exp",
     "gemini-1.5-pro",
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-8b",
-    "gemini-nano"
+    "gemini-1.5-flash"
 ];
 // Setup utilities
 
