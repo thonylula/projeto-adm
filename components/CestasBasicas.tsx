@@ -7,6 +7,7 @@ import { SignatureSheet } from './SignatureSheet';
 import { PantryList } from './PantryList';
 import { ReceiptIcon, SignatureIcon, BasketIcon } from './icons';
 import { exportToPng, exportToHtml, exportToPdf } from '../utils/exportUtils';
+import { SupabaseService } from '../services/supabaseService';
 
 type Tab = 'summary' | 'signature' | 'pantry';
 type AppMode = 'BASIC' | 'CHRISTMAS';
@@ -156,21 +157,25 @@ export const CestasBasicas: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        const reloadAllData = () => {
+        const reloadAllData = async () => {
             // 1. Load employees from registry
             try {
-                const storedEmployees = localStorage.getItem('folha_registry_employees');
-                if (storedEmployees) {
-                    const registered: any[] = JSON.parse(storedEmployees);
-                    if (registered.length > 0) {
-                        const names = registered.map(r => r.name);
-                        setActualEmployees(names);
+                const registered = await SupabaseService.getEmployees();
+                if (registered.length > 0) {
+                    const names = registered.map(r => r.name);
+                    setActualEmployees(names);
 
-                        // Auto-select non-drinkers based on registry
-                        const nonDrinkerIndices = registered
-                            .map((r, idx) => r.isNonDrinker ? idx : -1)
-                            .filter(idx => idx !== -1);
-                        setSelectedNonDrinkers(nonDrinkerIndices);
+                    // Auto-select non-drinkers based on registry
+                    const nonDrinkerIndices = registered
+                        .map((r, idx) => r.isNonDrinker ? idx : -1)
+                        .filter(idx => idx !== -1);
+                    setSelectedNonDrinkers(nonDrinkerIndices);
+                } else {
+                    const storedEmployees = localStorage.getItem('folha_registry_employees');
+                    if (storedEmployees) {
+                        const localReg: any[] = JSON.parse(storedEmployees);
+                        setActualEmployees(localReg.map(r => r.name));
+                        setSelectedNonDrinkers(localReg.map((r, idx) => r.isNonDrinker ? idx : -1).filter(idx => idx !== -1));
                     }
                 }
             } catch (e) {
@@ -181,8 +186,11 @@ export const CestasBasicas: React.FC = () => {
             if (invoiceData?.items) {
                 let globalConfigs: ItemConfiguration[] = [];
                 try {
-                    const storedConfigs = localStorage.getItem('folha_basket_item_configs');
-                    if (storedConfigs) globalConfigs = JSON.parse(storedConfigs);
+                    globalConfigs = await SupabaseService.getBasketConfigs();
+                    if (globalConfigs.length === 0) {
+                        const storedConfigs = localStorage.getItem('folha_basket_item_configs');
+                        if (storedConfigs) globalConfigs = JSON.parse(storedConfigs);
+                    }
                 } catch (e) {
                     console.error("Failed to load global item configs", e);
                 }
@@ -192,7 +200,6 @@ export const CestasBasicas: React.FC = () => {
                     const desc = item.description.toUpperCase();
                     const configMatch = globalConfigs.find(c => {
                         const keyword = c.description.toUpperCase();
-                        // Precise matching or keyword inclusion
                         return desc === keyword || desc.includes(keyword) || keyword.includes(desc);
                     });
 

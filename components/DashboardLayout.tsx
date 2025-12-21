@@ -167,6 +167,23 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </svg>
             Sair do Sistema
           </button>
+
+          {/* Migration Button */}
+          <div className="mt-4 pt-4 border-t border-slate-800">
+            <button
+              onClick={async () => {
+                if (window.confirm("Deseja migrar todos os dados locais para o Supabase agora? Isso enviará empresas, funcionários e configurações.")) {
+                  const { MigrationService } = await import('../services/migrationService');
+                  const res = await MigrationService.migrateAll();
+                  alert(res.message);
+                  window.location.reload();
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-orange-600/10 hover:bg-orange-600/20 text-orange-500 rounded-lg text-xs transition-colors border border-orange-600/20"
+            >
+              Sincronizar Cloud (Migrar)
+            </button>
+          </div>
         </div>
       </aside>
 
