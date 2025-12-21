@@ -44,16 +44,22 @@ export const useGeminiParser = ({ onSuccess, onError }: UseGeminiParserProps = {
             if (!text) throw new Error('Empty response from AI');
 
             // Try to parse as JSON, but fallback to raw text if it's not JSON
-            const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-            try {
-                const parsed = JSON.parse(jsonStr);
-                if (onSuccess) onSuccess(parsed);
-                return parsed;
-            } catch (e) {
-                console.warn("[Gemini Hook] Response is not valid JSON, returning raw text.");
-                if (onSuccess) onSuccess(text);
-                return text;
+            const rawText = text.trim();
+            const jsonMatch = rawText.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+
+            if (jsonMatch) {
+                try {
+                    const jsonStr = jsonMatch[0];
+                    const parsed = JSON.parse(jsonStr);
+                    if (onSuccess) onSuccess(parsed);
+                    return parsed;
+                } catch (e) {
+                    console.warn("[Gemini Hook] Valid-looking JSON failed to parse:", e);
+                }
             }
+
+            if (onSuccess) onSuccess(text);
+            return text;
 
         } catch (error: any) {
             console.error("[Gemini Hook] Error:", error);
@@ -103,14 +109,25 @@ export const useGeminiParser = ({ onSuccess, onError }: UseGeminiParserProps = {
             const text = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text;
             if (!text) throw new Error('Empty response from AI');
 
-            const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-            parsedResult = JSON.parse(jsonStr);
+            const rawText = text.trim();
+            const jsonMatch = rawText.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+
+            if (jsonMatch) {
+                try {
+                    const jsonStr = jsonMatch[0];
+                    parsedResult = JSON.parse(jsonStr);
+                } catch (e) {
+                    console.error("[Gemini Hook] JSON extraction failed:", e);
+                }
+            }
 
             if (parsedResult) {
                 if (onSuccess) onSuccess(parsedResult);
                 return parsedResult;
             } else {
-                throw new Error("Falha ao interpretar resposta da IA como JSON.");
+                // Return raw text if JSON is not found but handle it gracefully
+                if (onSuccess) onSuccess(text);
+                return text;
             }
         } catch (error: any) {
             console.error("[Gemini Hook] Error:", error);
