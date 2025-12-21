@@ -113,15 +113,34 @@ export const CestasBasicas: React.FC = () => {
     const [itemAllocation, setItemAllocation] = useState<Record<string, ItemAllocationConfig>>({});
     const [retryCountdown, setRetryCountdown] = useState<number | null>(null);
 
+    // Load persistent quota timer on mount
+    useEffect(() => {
+        const storedUntil = localStorage.getItem('folha_ai_quota_until');
+        if (storedUntil) {
+            const until = parseInt(storedUntil);
+            const now = Date.now();
+            if (until > now) {
+                setRetryCountdown(Math.ceil((until - now) / 1000));
+            } else {
+                localStorage.removeItem('folha_ai_quota_until');
+            }
+        }
+    }, []);
+
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if (retryCountdown !== null && retryCountdown > 0) {
             timer = setTimeout(() => {
-                setRetryCountdown(prev => (prev !== null ? prev - 1 : null));
+                setRetryCountdown(prev => {
+                    const next = prev !== null ? prev - 1 : null;
+                    if (next === 0) {
+                        localStorage.removeItem('folha_ai_quota_until');
+                        setError(null);
+                        return null;
+                    }
+                    return next;
+                });
             }, 1000);
-        } else if (retryCountdown === 0) {
-            setRetryCountdown(null);
-            setError(null); // Clear error when timer finishes
         }
         return () => clearTimeout(timer);
     }, [retryCountdown]);
