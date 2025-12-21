@@ -101,6 +101,7 @@ export const CestasBasicas: React.FC = () => {
     const [appMode, setAppMode] = useState<AppMode | null>(null);
     const [files, setFiles] = useState<File[]>([]);
     const [invoiceData, setInvoiceData] = useState<InvoiceData | null>(null);
+    const [actualEmployees, setActualEmployees] = useState<string[]>(employeeNames);
     const [motivationalMessages, setMotivationalMessages] = useState<string[]>([]);
     const [companyName, setCompanyName] = useState<string>('');
     const [companyLogoBase64, setCompanyLogoBase64] = useState<string | null>(null);
@@ -108,10 +109,30 @@ export const CestasBasicas: React.FC = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<Tab>('summary');
-    const [nonDrinkerCount, setNonDrinkerCount] = useState<number>(0);
+    const [selectedNonDrinkers, setSelectedNonDrinkers] = useState<number[]>([]);
     const [itemAllocation, setItemAllocation] = useState<Record<string, 'ALL' | 'NON_DRINKER' | 'DRINKER'>>({});
 
     useEffect(() => {
+        // Load employees from registry
+        try {
+            const stored = localStorage.getItem('folha_registry_employees');
+            if (stored) {
+                const registered: any[] = JSON.parse(stored);
+                if (registered.length > 0) {
+                    const names = registered.map(r => r.name);
+                    setActualEmployees(names);
+
+                    // Auto-select non-drinkers based on registry
+                    const nonDrinkerIndices = registered
+                        .map((r, idx) => r.isNonDrinker ? idx : -1)
+                        .filter(idx => idx !== -1);
+                    setSelectedNonDrinkers(nonDrinkerIndices);
+                }
+            }
+        } catch (e) {
+            console.error("Failed to load employees from registry", e);
+        }
+
         if (invoiceData?.recipientName) {
             setCompanyName(invoiceData.recipientName);
         }
@@ -126,6 +147,12 @@ export const CestasBasicas: React.FC = () => {
 
     const toggleAllocation = (itemId: string, target: 'ALL' | 'NON_DRINKER' | 'DRINKER') => {
         setItemAllocation(prev => ({ ...prev, [itemId]: target }));
+    };
+
+    const toggleEmployeeDrinking = (index: number) => {
+        setSelectedNonDrinkers(prev =>
+            prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+        );
     };
 
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,7 +190,7 @@ export const CestasBasicas: React.FC = () => {
                 fileContents.map(fc => extractInvoiceData(fc.base64, fc.mimeType))
             );
 
-            const aiMessages = await generateMotivationalMessages(employeeNames);
+            const aiMessages = await generateMotivationalMessages(actualEmployees);
             setMotivationalMessages(aiMessages);
 
             if (results.length > 0) {
@@ -192,7 +219,7 @@ export const CestasBasicas: React.FC = () => {
             companyLogoBase64,
             sloganImageBase64,
             appMode,
-            nonDrinkerCount,
+            selectedNonDrinkers,
             itemAllocation,
             timestamp: new Date().toISOString()
         };
@@ -217,7 +244,7 @@ export const CestasBasicas: React.FC = () => {
                 setCompanyLogoBase64(backup.companyLogoBase64);
                 setSloganImageBase64(backup.sloganImageBase64);
                 setAppMode(backup.appMode);
-                setNonDrinkerCount(backup.nonDrinkerCount || 0);
+                setSelectedNonDrinkers(backup.selectedNonDrinkers || []);
                 setItemAllocation(backup.itemAllocation || {});
                 setActiveTab('summary');
             } catch (err) {
@@ -364,44 +391,58 @@ export const CestasBasicas: React.FC = () => {
                     {/* --- Targeted Distribution UI --- */}
                     {invoiceData && (
                         <div className="mt-8 pt-8 border-t border-slate-200 animate-in slide-in-from-top-4 duration-500">
-                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                                <div>
-                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Configuração de Distribuição</h3>
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Separe os itens entre bebedores e não bebedores</p>
+                            <div className="mb-8">
+                                <div className="mb-4">
+                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">1. Identificar Funcionários que NÃO BEBEM</h3>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Selecione quem receberá a cesta sem álcool</p>
                                 </div>
-                                <div className="flex items-center gap-3 bg-slate-100 p-2 rounded-sm border border-slate-200">
-                                    <label className="text-[10px] font-black uppercase text-slate-600">Funcionários que NÃO bebem:</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        max="14"
-                                        value={nonDrinkerCount}
-                                        onChange={(e) => setNonDrinkerCount(Math.min(14, Math.max(0, parseInt(e.target.value) || 0)))}
-                                        className="w-16 px-2 py-1 border border-slate-300 rounded-none font-bold text-indigo-600 text-center focus:outline-none focus:border-indigo-500"
-                                    />
+                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+                                    {actualEmployees.map((name, idx) => {
+                                        const isNonDrinker = selectedNonDrinkers.includes(idx);
+                                        return (
+                                            <button
+                                                key={idx}
+                                                onClick={() => toggleEmployeeDrinking(idx)}
+                                                className={`p-3 text-[9px] font-black uppercase text-center border-2 transition-all rounded-sm flex flex-col items-center justify-between min-h-[70px] ${isNonDrinker
+                                                    ? (appMode === 'CHRISTMAS' ? 'bg-red-50 border-red-600 text-red-700' : 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-inner')
+                                                    : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300'
+                                                    }`}
+                                            >
+                                                <div className="text-xl mb-1">{isNonDrinker ? '🥤' : '🍺'}</div>
+                                                <div className="leading-tight shrink-0">{name.split(' ')[0]}</div>
+                                                {isNonDrinker && <div className="mt-1 text-[7px] bg-indigo-600 text-white px-1 rounded-full">SEM ÁLCOOL</div>}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {invoiceData.items.map(item => (
-                                    <div key={item.id} className="p-3 border border-slate-200 rounded-sm bg-slate-50/50 flex flex-col gap-2">
-                                        <div className="text-[10px] font-bold text-slate-800 truncate uppercase">{item.description}</div>
-                                        <div className="flex gap-1">
-                                            {['ALL', 'NON_DRINKER', 'DRINKER'].map(type => (
-                                                <button
-                                                    key={type}
-                                                    onClick={() => toggleAllocation(item.id, type as any)}
-                                                    className={`flex-1 text-[8px] font-black p-1.5 rounded-none border transition-all ${itemAllocation[item.id] === type
+                            <div className="mb-8">
+                                <div className="mb-4">
+                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">2. Alocação de Alimentos</h3>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Defina quais itens vão para cada grupo</p>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {invoiceData.items.map(item => (
+                                        <div key={item.id} className="p-3 border border-slate-200 rounded-sm bg-slate-50/50 flex flex-col gap-2">
+                                            <div className="text-[10px] font-bold text-slate-800 truncate uppercase">{item.description}</div>
+                                            <div className="flex gap-1">
+                                                {['ALL', 'NON_DRINKER', 'DRINKER'].map(type => (
+                                                    <button
+                                                        key={type}
+                                                        onClick={() => toggleAllocation(item.id, type as any)}
+                                                        className={`flex-1 text-[8px] font-black p-1.5 rounded-none border transition-all ${itemAllocation[item.id] === type
                                                             ? (appMode === 'CHRISTMAS' ? 'bg-red-600 border-red-600 text-white' : 'bg-indigo-600 border-indigo-600 text-white')
                                                             : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400'
-                                                        }`}
-                                                >
-                                                    {type === 'ALL' ? 'TODOS' : type === 'NON_DRINKER' ? 'NÃO BEBEM' : 'BEBEM'}
-                                                </button>
-                                            ))}
+                                                            }`}
+                                                    >
+                                                        {type === 'ALL' ? 'TODOS' : type === 'NON_DRINKER' ? 'NÃO BEBEM' : 'BEBEM'}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}
@@ -417,17 +458,17 @@ export const CestasBasicas: React.FC = () => {
 
                         <div id="active-view" className="animate-in fade-in duration-700">
                             {activeTab === 'summary' && <InvoiceSummary data={invoiceData} companyName={companyName} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
-                            {activeTab === 'signature' && <SignatureSheet employeeNames={employeeNames} companyName={companyName} recipientCnpj={invoiceData.recipientCnpj} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
+                            {activeTab === 'signature' && <SignatureSheet employeeNames={actualEmployees} companyName={companyName} recipientCnpj={invoiceData.recipientCnpj} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
                             {activeTab === 'pantry' && (
                                 <PantryList
                                     data={invoiceData}
-                                    employeeNames={employeeNames}
+                                    employeeNames={actualEmployees}
                                     motivationalMessages={motivationalMessages}
                                     sloganImage={sloganImageBase64}
                                     companyName={companyName}
                                     recipientCnpj={invoiceData.recipientCnpj}
                                     companyLogo={companyLogoBase64}
-                                    nonDrinkerCount={nonDrinkerCount}
+                                    selectedNonDrinkers={selectedNonDrinkers}
                                     itemAllocation={itemAllocation}
                                 />
                             )}
