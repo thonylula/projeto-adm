@@ -88,13 +88,19 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ data, companyNam
                                     </td>
                                 </tr>
                             ))}
+                            <tr className="border-t-2 border-orange-500 bg-orange-50">
+                                <td colSpan={4} className="px-2 py-4 text-right text-sm font-black text-slate-800 uppercase tracking-wide">Total Geral:</td>
+                                <td className="px-2 py-4 text-right text-lg font-black text-green-600">
+                                    {formatCurrency(data.items.reduce((sum, item) => sum + item.total, 0))}
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
             <div className="p-4 flex justify-between items-center border-t border-slate-100 bg-slate-50/30">
-                <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Resumo Gerado via Inteligência Artificial</div>
+                <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Resumo Automatizado do Sistema</div>
                 {companyLogo && <img src={companyLogo} alt="Logo" className="h-8 w-auto opacity-40 grayscale hover:grayscale-0 transition-all" />}
             </div>
         </div>
