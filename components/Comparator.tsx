@@ -382,21 +382,34 @@ export const Comparator: React.FC = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {result.divergences.filter((d: any) => d.isCancelled).map((div: any, idx: number) => (
                                         <div key={idx} className="bg-slate-50 border border-slate-100 p-4 rounded-2xl">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <span className="text-xs font-bold text-slate-700">{div.field}</span>
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div>
+                                                    <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Nº Nota Fiscal</p>
+                                                    <p className="text-sm font-bold text-slate-700">{div.documentNumber || 'N/A'}</p>
+                                                </div>
                                                 <span className="text-[9px] font-black text-slate-400 uppercase bg-white border border-slate-200 px-2 py-0.5 rounded">Cancelada/Invisível</span>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-2 gap-4 mb-3">
+                                                <div>
+                                                    <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">CNPJ</p>
+                                                    <p className="text-xs text-black font-medium">{div.cnpj || 'N/A'}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Empresa</p>
+                                                    <p className="text-xs text-black font-medium">{div.companyName || 'N/A'}</p>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-200">
                                                 <div>
                                                     <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">{sourceA.label}</p>
-                                                    <p className={`text-xs font-medium ${div.sourceA === 'Ausente' || div.sourceA === 'Não consta' ? 'text-red-600 italic' : 'text-black'}`}>
-                                                        {div.sourceA}
+                                                    <p className={`text-xs font-medium ${div.statusSourceA === 'AUSENTE' ? 'text-red-600 italic' : 'text-black'}`}>
+                                                        {div.statusSourceA || 'N/A'}
                                                     </p>
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">{sourceB.label}</p>
-                                                    <p className={`text-xs font-medium ${div.sourceB === 'Ausente' || div.sourceB === 'Não consta' ? 'text-red-600 italic' : 'text-black'}`}>
-                                                        {div.sourceB}
+                                                    <p className={`text-xs font-medium ${div.statusSourceB === 'AUSENTE' ? 'text-red-600 italic' : 'text-black'}`}>
+                                                        {div.statusSourceB || 'N/A'}
                                                     </p>
                                                 </div>
                                             </div>
