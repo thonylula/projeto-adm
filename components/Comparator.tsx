@@ -271,8 +271,8 @@ export const Comparator: React.FC = () => {
                                             {result.divergences.filter((d: any) => d.isMissing && !d.isCancelled && !d.isNFSe).map((div: any, idx: number) => (
                                                 <tr key={idx} className="hover:bg-red-50/30 transition-colors">
                                                     <td className="py-4 font-bold text-black">{div.documentNumber || 'N/A'}</td>
-                                                    <td className="py-4 text-black">{div.cnpj || 'N/A'}</td>
-                                                    <td className="py-4 text-black">{div.companyName || 'N/A'}</td>
+                                                    <td className="py-4 text-xs text-black">{div.cnpj || 'N/A'}</td>
+                                                    <td className="py-4 text-xs text-black">{div.companyName || 'N/A'}</td>
                                                     <td className="py-4 text-center">
                                                         <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${div.statusSourceA === 'PRESENTE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                                                             {div.statusSourceA || 'N/A'}
