@@ -61,14 +61,31 @@ export const Comparator: React.FC = () => {
         "status": "divergent" | "equal",
         "summary": "Breve resumo da análise",
         "divergences": [
-          { "field": "Nome do Campo", "sourceA": "Valor A", "sourceB": "Valor B", "severity": "high" | "medium" | "low" }
+          { 
+            "field": "Nome do Campo", 
+            "sourceA": "Valor A", 
+            "sourceB": "Valor B", 
+            "severity": "high" | "medium" | "low",
+            "date": "YYYY-MM-DD ou null"
+          }
         ],
         "observations": "Comentários adicionais"
       }
+      
+      IMPORTANTE: Para o campo 'date', use o formato ISO (AAAA-MM-DD). Se a divergência se referir a um documento com data de emissão, use essa data. Se for uma divergência geral sem data, use null.
     `;
 
         const analysis = await processFiles(files, prompt);
         if (analysis) {
+            // Ordenar divergências por data (cronologicamente)
+            if (analysis.divergences && Array.isArray(analysis.divergences)) {
+                analysis.divergences.sort((a: any, b: any) => {
+                    if (!a.date) return 1;
+                    if (!b.date) return -1;
+                    return a.date.localeCompare(b.date);
+                });
+            }
+
             setResult(analysis);
             await SupabaseService.saveComparison({
                 source_a_label: sourceA.label,
