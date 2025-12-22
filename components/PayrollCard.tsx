@@ -9,6 +9,8 @@ import { SupabaseService } from '../services/supabaseService';
 
 interface PayrollCardProps {
   activeCompany: Company;
+  activeYear?: number | null;
+  activeMonth?: number | null;
   onBack: () => void;
   onAddEmployee: (newItem: PayrollHistoryItem) => void;
   onUpdateEmployee: (updatedItem: PayrollHistoryItem) => void;
@@ -155,6 +157,8 @@ const BRAZIL_STATES = [
 
 export const PayrollCard: React.FC<PayrollCardProps> = ({
   activeCompany,
+  activeYear,
+  activeMonth,
   onBack,
   onAddEmployee,
   onUpdateEmployee,
@@ -404,10 +408,12 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       setFormState(prev => ({
         ...prev,
         companyName: activeCompany.name,
-        companyLogo: activeCompany.logoUrl
+        companyLogo: activeCompany.logoUrl,
+        referenceYear: activeYear || prev.referenceYear,
+        referenceMonth: activeMonth || prev.referenceMonth
       }));
     }
-  }, [activeCompany, editingId]);
+  }, [activeCompany, activeYear, activeMonth, editingId]);
 
   useEffect(() => {
     if (!editingId) {
@@ -900,7 +906,11 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
   // --- DERIVED STATE & CONSTANTS ---
   const isThirteenthMode = formState.calculationMode === '13TH';
-  const history = activeCompany.employees || [];
+  const history = (activeCompany.employees || []).filter(item => {
+    if (activeYear && item.input.referenceYear !== activeYear) return false;
+    if (activeMonth && item.input.referenceMonth !== activeMonth) return false;
+    return true;
+  });
   const totalCompanyCost = history.reduce((acc, item) => acc + (item.result?.grossSalary || 0), 0);
   const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
   const monthAbbr = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];

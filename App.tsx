@@ -31,6 +31,8 @@ export default function App() {
 
   // Navigation State
   const [activeTab, setActiveTab] = useState('payroll');
+  const [activeYear, setActiveYear] = useState<number | null>(null);
+  const [activeMonth, setActiveMonth] = useState<number | null>(null);
 
   const [companies, setCompanies] = useState<Company[]>([]);
   const [activeCompanyId, setActiveCompanyId] = useState<string | null>(null);
@@ -55,9 +57,11 @@ export default function App() {
 
     // Listen for direct navigation requests from the AI Assistant
     const handleNavigation = (e: any) => {
-      const { tab, companyId } = e.detail;
+      const { tab, companyId, year, month } = e.detail;
       if (tab) setActiveTab(tab);
       if (companyId) setActiveCompanyId(companyId);
+      if (year) setActiveYear(year);
+      if (month) setActiveMonth(month);
     };
     window.addEventListener('app-navigation', handleNavigation);
 
@@ -233,6 +237,8 @@ export default function App() {
             {activeCompany ? (
               <PayrollCard
                 activeCompany={activeCompany}
+                activeYear={activeYear}
+                activeMonth={activeMonth}
                 onBack={handleBackToSelection}
                 onAddEmployee={handleAddEmployee}
                 onUpdateEmployee={handleUpdateEmployee}
