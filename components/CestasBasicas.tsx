@@ -245,6 +245,17 @@ export const CestasBasicas: React.FC = () => {
         }));
     };
 
+    const setCustomQuantity = (itemId: string, qtyNonDrinker: number, qtyDrinker: number) => {
+        setItemAllocation(prev => ({
+            ...prev,
+            [itemId]: {
+                mode: 'CUSTOM',
+                customQtyNonDrinker: qtyNonDrinker,
+                customQtyDrinker: qtyDrinker
+            }
+        }));
+    };
+
     const toggleEmployeeDrinking = (index: number) => {
         setSelectedNonDrinkers(prev =>
             prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
@@ -548,8 +559,8 @@ export const CestasBasicas: React.FC = () => {
                                             key={idx}
                                             onClick={() => toggleMonthlyExclusion(name)}
                                             className={`p-3 text-left border-2 rounded-lg transition-all flex items-center justify-between ${isExcluded
-                                                    ? 'bg-red-50 border-red-500 text-red-700'
-                                                    : 'bg-white border-slate-200 hover:border-slate-300'
+                                                ? 'bg-red-50 border-red-500 text-red-700'
+                                                : 'bg-white border-slate-200 hover:border-slate-300'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-2">
@@ -666,29 +677,99 @@ export const CestasBasicas: React.FC = () => {
                                     {invoiceData.items.map(item => {
                                         const config = itemAllocation[item.id] || { mode: 'ALL' };
                                         const isCustom = config.mode === 'CUSTOM';
+                                        const totalEmployees = activeEmployees.length;
+                                        const nonDrinkerCount = selectedNonDrinkers.length;
+                                        const drinkerCount = totalEmployees - nonDrinkerCount;
 
                                         return (
-                                            <div key={item.id} className={`p-3 border rounded-sm transition-all flex flex-col gap-2 ${isCustom ? 'border-amber-400 bg-amber-50/30 ring-1 ring-amber-400/20' : 'border-slate-200 bg-slate-50/50'
+                                            <div key={item.id} className={`p-3 border-2 rounded-lg transition-all flex flex-col gap-2 ${isCustom ? 'border-amber-400 bg-amber-50/50 ring-2 ring-amber-400/30' : 'border-slate-200 bg-slate-50/50'
                                                 }`}>
                                                 <div className="flex justify-between items-center">
                                                     <div className="text-[10px] font-bold text-slate-800 truncate uppercase">{item.description}</div>
                                                     {isCustom && (
-                                                        <span className="text-[7px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">PERSONALIZADO IA</span>
+                                                        <span className="text-[7px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded-full">PERSONALIZADO</span>
                                                     )}
                                                 </div>
+
+                                                {/* Total available */}
+                                                <div className="text-[9px] text-slate-500 font-bold">
+                                                    Total Disponível: {item.quantity.toLocaleString('pt-BR', { minimumFractionDigits: 3 })} {item.unit}
+                                                </div>
+
+                                                {/* Mode Selection Buttons */}
                                                 <div className="flex gap-1">
                                                     {['ALL', 'NON_DRINKER', 'DRINKER'].map(type => (
                                                         <button
                                                             key={type}
                                                             onClick={() => toggleAllocation(item.id, type as any)}
-                                                            className={`flex-1 text-[8px] font-black p-1.5 rounded-none border transition-all ${config.mode === type
-                                                                ? (appMode === 'CHRISTMAS' ? 'bg-red-600 border-red-600 text-white' : 'bg-indigo-600 border-indigo-600 text-white')
-                                                                : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400'
+                                                            className={`flex-1 text-[8px] font-black p-1.5 rounded-sm border transition-all ${config.mode === type && !isCustom
+                                                                    ? (appMode === 'CHRISTMAS' ? 'bg-red-600 border-red-600 text-white' : 'bg-indigo-600 border-indigo-600 text-white')
+                                                                    : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400'
                                                                 }`}
                                                         >
                                                             {type === 'ALL' ? 'TODOS' : type === 'NON_DRINKER' ? 'NÃO BEBEM' : 'BEBEM'}
                                                         </button>
                                                     ))}
+                                                </div>
+
+                                                {/* Custom Quantity Inputs */}
+                                                <div className="mt-2 p-2 bg-white rounded border border-amber-200">
+                                                    <p className="text-[8px] font-black text-amber-700 uppercase mb-2">⚙️ Qtd. Manual por Funcionário</p>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        <div>
+                                                            <label className="text-[8px] font-bold text-slate-600 block mb-1">
+                                                                🥤 Abstêmios ({nonDrinkerCount})
+                                                            </label>
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                step="0.001"
+                                                                value={config.customQtyNonDrinker || ''}
+                                                                onChange={(e) => {
+                                                                    const val = parseFloat(e.target.value) || 0;
+                                                                    setCustomQuantity(
+                                                                        item.id,
+                                                                        val,
+                                                                        config.customQtyDrinker || 0
+                                                                    );
+                                                                }}
+                                                                className="w-full px-2 py-1 border border-indigo-300 rounded text-[10px] font-bold text-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                placeholder="0"
+                                                            />
+                                                            <p className="text-[7px] text-slate-500 mt-0.5">
+                                                                Total: {((config.customQtyNonDrinker || 0) * nonDrinkerCount).toFixed(3)}
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <label className="text-[8px] font-bold text-slate-600 block mb-1">
+                                                                🍺 Padrão ({drinkerCount})
+                                                            </label>
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                step="0.001"
+                                                                value={config.customQtyDrinker || ''}
+                                                                onChange={(e) => {
+                                                                    const val = parseFloat(e.target.value) || 0;
+                                                                    setCustomQuantity(
+                                                                        item.id,
+                                                                        config.customQtyNonDrinker || 0,
+                                                                        val
+                                                                    );
+                                                                }}
+                                                                className="w-full px-2 py-1 border border-orange-300 rounded text-[10px] font-bold text-orange-700 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                                                placeholder="0"
+                                                            />
+                                                            <p className="text-[7px] text-slate-500 mt-0.5">
+                                                                Total: {((config.customQtyDrinker || 0) * drinkerCount).toFixed(3)}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="mt-2 pt-2 border-t border-amber-200">
+                                                        <p className="text-[8px] font-bold text-amber-800">
+                                                            ✅ Soma: {(((config.customQtyNonDrinker || 0) * nonDrinkerCount) + ((config.customQtyDrinker || 0) * drinkerCount)).toFixed(3)} / {item.quantity.toFixed(3)}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         );
