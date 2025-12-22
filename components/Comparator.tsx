@@ -62,6 +62,9 @@ export const Comparator: React.FC = () => {
         "summary": "Breve resumo da análise",
         "divergences": [
           { 
+            "field": "Nome do Campo", 
+            "sourceA": "Valor A", 
+            "sourceB": "Valor B", 
             "severity": "high" | "medium" | "low",
             "date": "YYYY-MM-DD ou null",
             "isCancelled": boolean,
@@ -242,7 +245,7 @@ export const Comparator: React.FC = () => {
                     <div className="p-8">
                         {/* DIVERGÊNCIAS ATIVAS */}
                         <div className="mb-10">
-                            <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <h4 className="text-sm font-black text-black uppercase tracking-widest mb-4 flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-orange-500"></span>
                                 Divergências Encontradas (NFe)
                             </h4>
@@ -250,7 +253,7 @@ export const Comparator: React.FC = () => {
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left">
                                         <thead>
-                                            <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                            <tr className="text-[10px] font-black text-black uppercase tracking-widest border-b border-slate-200">
                                                 <th className="pb-4">Campo / Assunto</th>
                                                 <th className="pb-4 truncate max-w-[150px]">{sourceA.label}</th>
                                                 <th className="pb-4 truncate max-w-[150px]">{sourceB.label}</th>
@@ -314,7 +317,7 @@ export const Comparator: React.FC = () => {
                         {/* NOTAS CANCELADAS / EXCLUÍDAS */}
                         {result.divergences && result.divergences.some((d: any) => d.isCancelled) && (
                             <div className="mt-12 pt-8 border-t border-slate-100">
-                                <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <h4 className="text-sm font-black text-black uppercase tracking-widest mb-4 flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-slate-300"></span>
                                     Notas Canceladas / Excluídas ou Ausentes em uma das partes
                                 </h4>
