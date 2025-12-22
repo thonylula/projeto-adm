@@ -303,7 +303,7 @@ export const Comparator: React.FC = () => {
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left">
                                         <thead>
-                                            <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                            <tr className="text-[10px] font-black text-black uppercase tracking-widest border-b border-slate-200">
                                                 <th className="pb-4">Documento</th>
                                                 <th className="pb-4">{sourceA.label}</th>
                                                 <th className="pb-4">{sourceB.label}</th>
@@ -313,9 +313,9 @@ export const Comparator: React.FC = () => {
                                         <tbody className="divide-y divide-slate-100">
                                             {result.divergences.filter((d: any) => !d.isMissing && !d.isCancelled && !d.isNFSe).map((div: any, idx: number) => (
                                                 <tr key={idx} className="hover:bg-green-50/30 transition-colors">
-                                                    <td className="py-3 text-xs font-bold text-slate-800">{div.field}</td>
-                                                    <td className="py-3 text-xs text-slate-600">{div.sourceA}</td>
-                                                    <td className="py-3 text-xs text-slate-600 font-medium">{div.sourceB}</td>
+                                                    <td className="py-3 text-xs font-bold text-black">{div.field}</td>
+                                                    <td className="py-3 text-xs text-black">{div.sourceA}</td>
+                                                    <td className="py-3 text-xs text-black font-medium">{div.sourceB}</td>
                                                     <td className="py-3 text-center">
                                                         <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-green-100 text-green-600">
                                                             OK
@@ -332,7 +332,7 @@ export const Comparator: React.FC = () => {
                         {/* NOTAS DE SERVIÇO (NFSe) */}
                         {result.divergences && result.divergences.some((d: any) => d.isNFSe && !d.isCancelled) && (
                             <div className="mt-12 pt-8 border-t border-slate-100 mb-10">
-                                <h4 className="text-sm font-black text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <h4 className="text-sm font-black text-indigo-600 uppercase tracking-widest mb-4 flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
                                     Notas Fiscais de Serviço (NFSe)
                                 </h4>
@@ -345,11 +345,11 @@ export const Comparator: React.FC = () => {
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">{sourceA.label}</p>
+                                                    <p className="text-[10px] text-black font-bold uppercase mb-1">{sourceA.label}</p>
                                                     <p className="text-xs text-black font-medium">{div.sourceA}</p>
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">{sourceB.label}</p>
+                                                    <p className="text-[10px] text-black font-bold uppercase mb-1">{sourceB.label}</p>
                                                     <p className="text-xs text-black font-medium">{div.sourceB}</p>
                                                 </div>
                                             </div>
