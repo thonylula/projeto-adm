@@ -12,8 +12,8 @@ interface ComparisonRecord {
 }
 
 export const Comparator: React.FC = () => {
-    const [sourceA, setSourceA] = useState<{ text: string; file: File | null }>({ text: '', file: null });
-    const [sourceB, setSourceB] = useState<{ text: string; file: File | null }>({ text: '', file: null });
+    const [sourceA, setSourceA] = useState<{ text: string; file: File | null; label: string }>({ text: '', file: null, label: 'Origem A' });
+    const [sourceB, setSourceB] = useState<{ text: string; file: File | null; label: string }>({ text: '', file: null, label: 'Origem B' });
     const [result, setResult] = useState<any>(null);
     const [history, setHistory] = useState<ComparisonRecord[]>([]);
     const { processFiles, isProcessing } = useGeminiParser();
@@ -39,15 +39,15 @@ export const Comparator: React.FC = () => {
 
         const prompt = `
       Você é um assistente de auditoria especialista em encontrar divergências.
-      Sua tarefa é comparar a ORIGEM A e a ORIGEM B e listar TODAS as discrepâncias encontradas.
+      Sua tarefa é comparar a fonte "${sourceA.label}" e a fonte "${sourceB.label}" e listar TODAS as discrepâncias encontradas.
       
       Fontes fornecidas:
-      Origem A: ${sourceA.file ? '[Arquivo Anexo]' : 'Texto abaixo'}
-      Origem B: ${sourceB.file ? '[Arquivo Anexo]' : 'Texto abaixo'}
+      ${sourceA.label}: ${sourceA.file ? '[Arquivo Anexo]' : 'Texto abaixo'}
+      ${sourceB.label}: ${sourceB.file ? '[Arquivo Anexo]' : 'Texto abaixo'}
       
       Conteúdo de Texto (se houver):
-      Texto A: ${sourceA.text}
-      Texto B: ${sourceB.text}
+      Texto de ${sourceA.label}: ${sourceA.text}
+      Texto de ${sourceB.label}: ${sourceB.text}
 
       Analise detalhadamente:
       1. Valores numéricos e financeiros.
@@ -71,8 +71,8 @@ export const Comparator: React.FC = () => {
         if (analysis) {
             setResult(analysis);
             await SupabaseService.saveComparison({
-                source_a_label: sourceA.file ? sourceA.file.name : 'Texto A',
-                source_b_label: sourceB.file ? sourceB.file.name : 'Texto B',
+                source_a_label: sourceA.label,
+                source_b_label: sourceB.label,
                 analysis_result: analysis
             });
             loadHistory();
@@ -80,8 +80,8 @@ export const Comparator: React.FC = () => {
     };
 
     const clear = () => {
-        setSourceA({ text: '', file: null });
-        setSourceB({ text: '', file: null });
+        setSourceA({ text: '', file: null, label: 'Origem A' });
+        setSourceB({ text: '', file: null, label: 'Origem B' });
         setResult(null);
     };
 
@@ -97,7 +97,13 @@ export const Comparator: React.FC = () => {
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                     <div className="flex items-center gap-2 mb-4">
                         <span className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center font-bold">A</span>
-                        <h2 className="font-bold text-slate-800">Origem Principal (Referência)</h2>
+                        <input
+                            type="text"
+                            className="bg-transparent border-b border-orange-200 outline-none font-bold text-slate-800 focus:border-orange-500 transition-colors w-full"
+                            value={sourceA.label}
+                            onChange={(e) => setSourceA({ ...sourceA, label: e.target.value })}
+                            placeholder="Nome da Origem A"
+                        />
                     </div>
                     <textarea
                         className="w-full h-32 p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 outline-none mb-4"
@@ -107,7 +113,10 @@ export const Comparator: React.FC = () => {
                     />
                     <input
                         type="file"
-                        onChange={(e) => setSourceA({ ...sourceA, file: e.target.files?.[0] || null })}
+                        onChange={(e) => {
+                            const file = e.target.files?.[0] || null;
+                            setSourceA({ ...sourceA, file, label: file ? file.name : sourceA.label });
+                        }}
                         className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100"
                     />
                     {sourceA.file && <p className="mt-2 text-[10px] text-green-600 font-bold uppercase">📎 {sourceA.file.name}</p>}
@@ -117,7 +126,13 @@ export const Comparator: React.FC = () => {
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                     <div className="flex items-center gap-2 mb-4">
                         <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold">B</span>
-                        <h2 className="font-bold text-slate-800">Origem para Comparar</h2>
+                        <input
+                            type="text"
+                            className="bg-transparent border-b border-blue-200 outline-none font-bold text-slate-800 focus:border-blue-500 transition-colors w-full"
+                            value={sourceB.label}
+                            onChange={(e) => setSourceB({ ...sourceB, label: e.target.value })}
+                            placeholder="Nome da Origem B"
+                        />
                     </div>
                     <textarea
                         className="w-full h-32 p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none mb-4"
@@ -127,7 +142,10 @@ export const Comparator: React.FC = () => {
                     />
                     <input
                         type="file"
-                        onChange={(e) => setSourceB({ ...sourceB, file: e.target.files?.[0] || null })}
+                        onChange={(e) => {
+                            const file = e.target.files?.[0] || null;
+                            setSourceB({ ...sourceB, file, label: file ? file.name : sourceB.label });
+                        }}
                         className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                     />
                     {sourceB.file && <p className="mt-2 text-[10px] text-blue-600 font-bold uppercase">📎 {sourceB.file.name}</p>}
@@ -183,8 +201,8 @@ export const Comparator: React.FC = () => {
                                     <thead>
                                         <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
                                             <th className="pb-4">Campo / Assunto</th>
-                                            <th className="pb-4">Origem A</th>
-                                            <th className="pb-4">Origem B</th>
+                                            <th className="pb-4 truncate max-w-[150px]">{sourceA.label}</th>
+                                            <th className="pb-4 truncate max-w-[150px]">{sourceB.label}</th>
                                             <th className="pb-4">Gravidade</th>
                                         </tr>
                                     </thead>
@@ -196,8 +214,8 @@ export const Comparator: React.FC = () => {
                                                 <td className="py-4 text-slate-600 font-medium">{div.sourceB}</td>
                                                 <td className="py-4">
                                                     <span className={`px-2 py-1 rounded text-[10px] font-black uppercase ${div.severity === 'high' ? 'bg-red-100 text-red-600' :
-                                                            div.severity === 'medium' ? 'bg-orange-100 text-orange-600' :
-                                                                'bg-blue-100 text-blue-600'
+                                                        div.severity === 'medium' ? 'bg-orange-100 text-orange-600' :
+                                                            'bg-blue-100 text-blue-600'
                                                         }`}>
                                                         {div.severity}
                                                     </span>
