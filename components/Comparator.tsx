@@ -62,12 +62,10 @@ export const Comparator: React.FC = () => {
         "summary": "Breve resumo da análise",
         "divergences": [
           { 
-            "field": "Nome do Campo", 
-            "sourceA": "Valor A", 
-            "sourceB": "Valor B", 
             "severity": "high" | "medium" | "low",
             "date": "YYYY-MM-DD ou null",
-            "isCancelled": boolean
+            "isCancelled": boolean,
+            "isNFSe": boolean
           }
         ],
         "observations": "Comentários adicionais"
@@ -75,6 +73,7 @@ export const Comparator: React.FC = () => {
       
       IMPORTANTE:
       - O campo 'isCancelled' deve ser true apenas se o documento for explicitamente mencionado como 'Cancelado', 'Excluído' ou 'Inutilizado'.
+      - O campo 'isNFSe' deve ser true para Notas Fiscais de Serviço (NFSe).
       - Para o campo 'date', use o formato ISO (AAAA-MM-DD).
     `;
 
@@ -245,9 +244,9 @@ export const Comparator: React.FC = () => {
                         <div className="mb-10">
                             <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                                Divergências Encontradas
+                                Divergências Encontradas (NFe)
                             </h4>
-                            {result.divergences && result.divergences.filter((d: any) => !d.isCancelled).length > 0 ? (
+                            {result.divergences && result.divergences.filter((d: any) => !d.isCancelled && !d.isNFSe).length > 0 ? (
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left">
                                         <thead>
@@ -259,7 +258,7 @@ export const Comparator: React.FC = () => {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
-                                            {result.divergences.filter((d: any) => !d.isCancelled).map((div: any, idx: number) => (
+                                            {result.divergences.filter((d: any) => !d.isCancelled && !d.isNFSe).map((div: any, idx: number) => (
                                                 <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                                                     <td className="py-4 font-bold text-slate-800">{div.field}</td>
                                                     <td className="py-4 text-slate-600">{div.sourceA}</td>
@@ -278,9 +277,39 @@ export const Comparator: React.FC = () => {
                                     </table>
                                 </div>
                             ) : (
-                                <p className="text-slate-400 text-sm italic">Nenhuma divergência ativa encontrada.</p>
+                                <p className="text-slate-400 text-sm italic">Nenhuma divergência de NFe ativa encontrada.</p>
                             )}
                         </div>
+
+                        {/* NOTAS DE SERVIÇO (NFSe) */}
+                        {result.divergences && result.divergences.some((d: any) => d.isNFSe && !d.isCancelled) && (
+                            <div className="mt-12 pt-8 border-t border-slate-100 mb-10">
+                                <h4 className="text-sm font-black text-indigo-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                                    Notas Fiscais de Serviço (NFSe)
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {result.divergences.filter((d: any) => d.isNFSe && !d.isCancelled).map((div: any, idx: number) => (
+                                        <div key={idx} className="bg-indigo-50/30 border border-indigo-100 p-4 rounded-2xl">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="text-xs font-bold text-indigo-900">{div.field}</span>
+                                                <span className="text-[9px] font-black text-indigo-400 uppercase bg-white border border-indigo-200 px-2 py-0.5 rounded">NFSe</span>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">{sourceA.label}</p>
+                                                    <p className="text-xs text-slate-600">{div.sourceA}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">{sourceB.label}</p>
+                                                    <p className="text-xs text-slate-600">{div.sourceB}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* NOTAS CANCELADAS / EXCLUÍDAS */}
                         {result.divergences && result.divergences.some((d: any) => d.isCancelled) && (
