@@ -304,18 +304,18 @@ export const Comparator: React.FC = () => {
                                     <table className="w-full text-left">
                                         <thead>
                                             <tr className="text-[10px] font-black text-black uppercase tracking-widest border-b border-slate-200">
-                                                <th className="pb-4">Documento</th>
-                                                <th className="pb-4">{sourceA.label}</th>
-                                                <th className="pb-4">{sourceB.label}</th>
+                                                <th className="pb-4">Nº Nota Fiscal</th>
+                                                <th className="pb-4">CNPJ</th>
+                                                <th className="pb-4">Nome da Empresa</th>
                                                 <th className="pb-4 text-center">Status</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
                                             {result.divergences.filter((d: any) => !d.isMissing && !d.isCancelled && !d.isNFSe).map((div: any, idx: number) => (
                                                 <tr key={idx} className="hover:bg-green-50/30 transition-colors">
-                                                    <td className="py-3 text-xs font-bold text-black">{div.field}</td>
-                                                    <td className="py-3 text-xs text-black">{div.sourceA}</td>
-                                                    <td className="py-3 text-xs text-black font-medium">{div.sourceB}</td>
+                                                    <td className="py-3 text-xs font-bold text-black">{div.documentNumber || 'N/A'}</td>
+                                                    <td className="py-3 text-xs text-black">{div.cnpj || 'N/A'}</td>
+                                                    <td className="py-3 text-xs text-black font-medium">{div.companyName || 'N/A'}</td>
                                                     <td className="py-3 text-center">
                                                         <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-green-100 text-green-600">
                                                             OK
@@ -339,18 +339,31 @@ export const Comparator: React.FC = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {result.divergences.filter((d: any) => d.isNFSe && !d.isCancelled).map((div: any, idx: number) => (
                                         <div key={idx} className="bg-indigo-50/30 border border-indigo-100 p-4 rounded-2xl">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <span className="text-xs font-bold text-indigo-900">{div.field}</span>
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div>
+                                                    <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Nº Nota Fiscal</p>
+                                                    <p className="text-sm font-bold text-indigo-900">{div.documentNumber || 'N/A'}</p>
+                                                </div>
                                                 <span className="text-[9px] font-black text-indigo-400 uppercase bg-white border border-indigo-200 px-2 py-0.5 rounded">NFSe</span>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-2 gap-4 mb-3">
+                                                <div>
+                                                    <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">CNPJ</p>
+                                                    <p className="text-xs text-black font-medium">{div.cnpj || 'N/A'}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Empresa</p>
+                                                    <p className="text-xs text-black font-medium">{div.companyName || 'N/A'}</p>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4 pt-3 border-t border-indigo-100">
                                                 <div>
                                                     <p className="text-[10px] text-black font-bold uppercase mb-1">{sourceA.label}</p>
-                                                    <p className="text-xs text-black font-medium">{div.sourceA}</p>
+                                                    <p className="text-xs text-black font-medium">{div.statusSourceA || 'N/A'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] text-black font-bold uppercase mb-1">{sourceB.label}</p>
-                                                    <p className="text-xs text-black font-medium">{div.sourceB}</p>
+                                                    <p className="text-xs text-black font-medium">{div.statusSourceB || 'N/A'}</p>
                                                 </div>
                                             </div>
                                         </div>
