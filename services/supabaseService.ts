@@ -366,5 +366,21 @@ export const SupabaseService = {
             .from('ai_comparisons')
             .insert([record]);
         return !error;
+    },
+
+    async updateComparison(id: string, updates: { source_a_label?: string; source_b_label?: string }): Promise<boolean> {
+        const { error } = await supabase
+            .from('ai_comparisons')
+            .update(updates)
+            .eq('id', id);
+        return !error;
+    },
+
+    async deleteComparison(id: string): Promise<boolean> {
+        const { error } = await supabase
+            .from('ai_comparisons')
+            .delete()
+            .eq('id', id);
+        return !error;
     }
 };
