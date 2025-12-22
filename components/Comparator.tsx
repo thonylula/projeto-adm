@@ -50,11 +50,10 @@ export const Comparator: React.FC = () => {
       Texto de ${sourceB.label}: ${sourceB.text}
 
       Analise detalhadamente:
-      1. Valores numéricos e financeiros.
-      2. Nomes de pessoas, empresas e produtos.
-      3. Datas de emissão, vencimento ou referência.
-      4. Itens ausentes em uma das fontes.
-      5. Erros de digitação ou divergências de impostos.
+      1. Identifique Documentos Ausentes em uma das fontes (Divergência Crítica).
+      2. Identifique Documentos Presentes em ambas as fontes (Mesmo se houver pequenas divergências de nome/data, o usuário as considera OK se o documento existir em ambos).
+      3. Valores numéricos, impostos e datas.
+      4. Itens cancelados ou inutilizados.
 
       Responda EXCLUSIVAMENTE em formato JSON estruturado como este exemplo:
       {
@@ -68,15 +67,18 @@ export const Comparator: React.FC = () => {
             "severity": "high" | "medium" | "low",
             "date": "YYYY-MM-DD ou null",
             "isCancelled": boolean,
-            "isNFSe": boolean
+            "isNFSe": boolean,
+            "isMissing": boolean
           }
         ],
         "observations": "Comentários adicionais"
       }
       
       IMPORTANTE:
-      - O campo 'isCancelled' deve ser true apenas se o documento for explicitamente mencionado como 'Cancelado', 'Excluído' ou 'Inutilizado'.
-      - O campo 'isNFSe' deve ser true para Notas Fiscais de Serviço (NFSe).
+      - O campo 'isMissing' deve ser true apenas se o documento estiver ausente em uma das partes.
+      - Se o documento constar em ambos (ainda que com variações de texto), 'isMissing' deve ser false e ele será considerado 'OK' pelo usuário.
+      - O campo 'isCancelled' deve ser true para documentos Cancelados/Inutilizados.
+      - O campo 'isNFSe' deve ser true para Notas Fiscais de Serviço.
       - Para o campo 'date', use o formato ISO (AAAA-MM-DD).
     `;
 
@@ -243,34 +245,31 @@ export const Comparator: React.FC = () => {
                     </div>
 
                     <div className="p-8">
-                        {/* DIVERGÊNCIAS ATIVAS */}
+                        {/* DIVERGÊNCIAS CRÍTICAS (DOCUMENTOS AUSENTES) */}
                         <div className="mb-10">
-                            <h4 className="text-sm font-black text-black uppercase tracking-widest mb-4 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                                Divergências Encontradas (NFe)
+                            <h4 className="text-sm font-black text-red-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></span>
+                                Divergências Críticas (Documentos Ausentes)
                             </h4>
-                            {result.divergences && result.divergences.filter((d: any) => !d.isCancelled && !d.isNFSe).length > 0 ? (
+                            {result.divergences && result.divergences.filter((d: any) => d.isMissing && !d.isCancelled && !d.isNFSe).length > 0 ? (
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left">
                                         <thead>
                                             <tr className="text-[10px] font-black text-black uppercase tracking-widest border-b border-slate-200">
-                                                <th className="pb-4">Campo / Assunto</th>
+                                                <th className="pb-4">Documento / Referência</th>
                                                 <th className="pb-4 truncate max-w-[150px]">{sourceA.label}</th>
                                                 <th className="pb-4 truncate max-w-[150px]">{sourceB.label}</th>
                                                 <th className="pb-4 text-center">Gravidade</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
-                                            {result.divergences.filter((d: any) => !d.isCancelled && !d.isNFSe).map((div: any, idx: number) => (
-                                                <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                                            {result.divergences.filter((d: any) => d.isMissing && !d.isCancelled && !d.isNFSe).map((div: any, idx: number) => (
+                                                <tr key={idx} className="hover:bg-red-50/30 transition-colors">
                                                     <td className="py-4 font-bold text-black">{div.field}</td>
-                                                    <td className="py-4 text-black">{div.sourceA}</td>
-                                                    <td className="py-4 text-black font-medium">{div.sourceB}</td>
+                                                    <td className={`py-4 font-medium ${div.sourceA === 'Ausente' || div.sourceA === 'Não consta' ? 'text-red-600 italic' : 'text-black'}`}>{div.sourceA}</td>
+                                                    <td className={`py-4 font-medium ${div.sourceB === 'Ausente' || div.sourceB === 'Não consta' ? 'text-red-600 italic' : 'text-black'}`}>{div.sourceB}</td>
                                                     <td className="py-4 text-center">
-                                                        <span className={`px-2 py-1 rounded text-[10px] font-black uppercase ${div.severity === 'high' ? 'bg-red-100 text-red-600' :
-                                                            div.severity === 'medium' ? 'bg-orange-100 text-orange-600' :
-                                                                'bg-blue-100 text-blue-600'
-                                                            }`}>
+                                                        <span className="px-2 py-1 rounded text-[10px] font-black uppercase bg-red-100 text-red-600">
                                                             {div.severity}
                                                         </span>
                                                     </td>
@@ -280,9 +279,45 @@ export const Comparator: React.FC = () => {
                                     </table>
                                 </div>
                             ) : (
-                                <p className="text-slate-400 text-sm italic">Nenhuma divergência de NFe ativa encontrada.</p>
+                                <p className="text-slate-400 text-sm italic">Nenhum documento ausente identificado.</p>
                             )}
                         </div>
+
+                        {/* DOCUMENTOS CONFERIDOS (OK - PRESENTES EM AMBOS) */}
+                        {result.divergences && result.divergences.some((d: any) => !d.isMissing && !d.isCancelled && !d.isNFSe) && (
+                            <div className="mt-12 pt-8 border-t border-slate-100 mb-10">
+                                <h4 className="text-sm font-black text-green-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                    Documentos Conferidos (OK / Presentes em Ambos)
+                                </h4>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                                <th className="pb-4">Documento</th>
+                                                <th className="pb-4">{sourceA.label}</th>
+                                                <th className="pb-4">{sourceB.label}</th>
+                                                <th className="pb-4 text-center">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {result.divergences.filter((d: any) => !d.isMissing && !d.isCancelled && !d.isNFSe).map((div: any, idx: number) => (
+                                                <tr key={idx} className="hover:bg-green-50/30 transition-colors">
+                                                    <td className="py-3 text-xs font-bold text-slate-800">{div.field}</td>
+                                                    <td className="py-3 text-xs text-slate-600">{div.sourceA}</td>
+                                                    <td className="py-3 text-xs text-slate-600 font-medium">{div.sourceB}</td>
+                                                    <td className="py-3 text-center">
+                                                        <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-green-100 text-green-600">
+                                                            OK
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
 
                         {/* NOTAS DE SERVIÇO (NFSe) */}
                         {result.divergences && result.divergences.some((d: any) => d.isNFSe && !d.isCancelled) && (
@@ -356,51 +391,53 @@ export const Comparator: React.FC = () => {
                         )}
                     </div>
                 </div>
-            )}
+            )
+            }
 
             {/* HISTÓRICO RECENTE */}
-            {history.length > 0 && (
-                <section className="mt-12">
-                    <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Análises Recentes</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {history.map((h) => (
-                            <div
-                                key={h.id}
-                                onClick={() => setResult(h.analysis_result)}
-                                className="bg-white p-4 rounded-2xl border border-slate-200 text-left hover:border-orange-500 hover:shadow-md transition-all group relative cursor-pointer"
-                            >
-                                <div className="flex justify-between items-start mb-2">
-                                    <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${h.analysis_result.status === 'equal' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}`}>
-                                        {h.analysis_result.status}
-                                    </span>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={(e) => handleRenameHistory(h, e)}
-                                            className="p-1 text-slate-400 hover:text-blue-500 transition-colors"
-                                            title="Renomear"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
-                                            </svg>
-                                        </button>
-                                        <button
-                                            onClick={(e) => handleDeleteHistory(h.id, e)}
-                                            className="p-1 text-slate-400 hover:text-red-500 transition-colors"
-                                            title="Excluir"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                            </svg>
-                                        </button>
+            {
+                history.length > 0 && (
+                    <section className="mt-12">
+                        <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4">Análises Recentes</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {history.map((h) => (
+                                <div
+                                    key={h.id}
+                                    onClick={() => setResult(h.analysis_result)}
+                                    className="bg-white p-4 rounded-2xl border border-slate-200 text-left hover:border-orange-500 hover:shadow-md transition-all group relative cursor-pointer"
+                                >
+                                    <div className="flex justify-between items-start mb-2">
+                                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${h.analysis_result.status === 'equal' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}`}>
+                                            {h.analysis_result.status}
+                                        </span>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={(e) => handleRenameHistory(h, e)}
+                                                className="p-1 text-slate-400 hover:text-blue-500 transition-colors"
+                                                title="Renomear"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                onClick={(e) => handleDeleteHistory(h.id, e)}
+                                                className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                                                title="Excluir"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3.5 h-3.5">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
+                                    <p className="text-xs font-bold text-slate-800 line-clamp-1">{h.source_a_label} vs {h.source_b_label}</p>
+                                    <p className="text-[10px] text-slate-500 mt-1 line-clamp-2">{h.analysis_result.summary}</p>
                                 </div>
-                                <p className="text-xs font-bold text-slate-800 line-clamp-1">{h.source_a_label} vs {h.source_b_label}</p>
-                                <p className="text-[10px] text-slate-500 mt-1 line-clamp-2">{h.analysis_result.summary}</p>
-                            </div>
-                        ))}
-                    </div>
-                </section>
-            )}
+                            ))}
+                        </div>
+                    </section>
+                )}
         </div>
     );
 };
