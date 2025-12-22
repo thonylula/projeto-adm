@@ -61,9 +61,11 @@ export const Comparator: React.FC = () => {
         "summary": "Breve resumo da análise",
         "divergences": [
           { 
-            "field": "Nome do Campo", 
-            "sourceA": "Valor A", 
-            "sourceB": "Valor B", 
+            "documentNumber": "Número da Nota Fiscal ou Documento",
+            "cnpj": "CNPJ da empresa",
+            "companyName": "Nome da Empresa",
+            "statusSourceA": "PRESENTE" | "AUSENTE",
+            "statusSourceB": "PRESENTE" | "AUSENTE",
             "severity": "high" | "medium" | "low",
             "date": "YYYY-MM-DD ou null",
             "isCancelled": boolean,
@@ -75,8 +77,10 @@ export const Comparator: React.FC = () => {
       }
       
       IMPORTANTE:
-      - O campo 'isMissing' deve ser true apenas se o documento estiver ausente em uma das partes.
-      - Se o documento constar em ambos (ainda que com variações de texto), 'isMissing' deve ser false e ele será considerado 'OK' pelo usuário.
+      - Extraia o número do documento (Nota Fiscal), CNPJ e Nome da Empresa de cada registro.
+      - Use 'statusSourceA' como 'PRESENTE' se o documento existe em ${sourceA.label}, ou 'AUSENTE' se não existe.
+      - Use 'statusSourceB' como 'PRESENTE' se o documento existe em ${sourceB.label}, ou 'AUSENTE' se não existe.
+      - O campo 'isMissing' deve ser true quando statusSourceA ou statusSourceB for 'AUSENTE'.
       - O campo 'isCancelled' deve ser true para documentos Cancelados/Inutilizados.
       - O campo 'isNFSe' deve ser true para Notas Fiscais de Serviço.
       - Para o campo 'date', use o formato ISO (AAAA-MM-DD).
@@ -256,21 +260,27 @@ export const Comparator: React.FC = () => {
                                     <table className="w-full text-left">
                                         <thead>
                                             <tr className="text-[10px] font-black text-black uppercase tracking-widest border-b border-slate-200">
-                                                <th className="pb-4">Documento / Referência</th>
-                                                <th className="pb-4 truncate max-w-[150px]">{sourceA.label}</th>
-                                                <th className="pb-4 truncate max-w-[150px]">{sourceB.label}</th>
-                                                <th className="pb-4 text-center">Gravidade</th>
+                                                <th className="pb-4">Nº Nota Fiscal</th>
+                                                <th className="pb-4">CNPJ</th>
+                                                <th className="pb-4">Nome da Empresa</th>
+                                                <th className="pb-4 text-center">{sourceA.label} (Situação)</th>
+                                                <th className="pb-4 text-center">{sourceB.label} (Situação)</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
                                             {result.divergences.filter((d: any) => d.isMissing && !d.isCancelled && !d.isNFSe).map((div: any, idx: number) => (
                                                 <tr key={idx} className="hover:bg-red-50/30 transition-colors">
-                                                    <td className="py-4 font-bold text-black">{div.field}</td>
-                                                    <td className={`py-4 font-medium ${div.sourceA === 'Ausente' || div.sourceA === 'Não consta' ? 'text-red-600 italic' : 'text-black'}`}>{div.sourceA}</td>
-                                                    <td className={`py-4 font-medium ${div.sourceB === 'Ausente' || div.sourceB === 'Não consta' ? 'text-red-600 italic' : 'text-black'}`}>{div.sourceB}</td>
+                                                    <td className="py-4 font-bold text-black">{div.documentNumber || 'N/A'}</td>
+                                                    <td className="py-4 text-black">{div.cnpj || 'N/A'}</td>
+                                                    <td className="py-4 text-black">{div.companyName || 'N/A'}</td>
                                                     <td className="py-4 text-center">
-                                                        <span className="px-2 py-1 rounded text-[10px] font-black uppercase bg-red-100 text-red-600">
-                                                            {div.severity}
+                                                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${div.statusSourceA === 'PRESENTE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                            {div.statusSourceA || 'N/A'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-4 text-center">
+                                                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${div.statusSourceB === 'PRESENTE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                            {div.statusSourceB || 'N/A'}
                                                         </span>
                                                     </td>
                                                 </tr>
