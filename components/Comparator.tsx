@@ -66,13 +66,16 @@ export const Comparator: React.FC = () => {
             "sourceA": "Valor A", 
             "sourceB": "Valor B", 
             "severity": "high" | "medium" | "low",
-            "date": "YYYY-MM-DD ou null"
+            "date": "YYYY-MM-DD ou null",
+            "isCancelled": boolean
           }
         ],
         "observations": "Comentários adicionais"
       }
       
-      IMPORTANTE: Para o campo 'date', use o formato ISO (AAAA-MM-DD). Se a divergência se referir a um documento com data de emissão, use essa data. Se for uma divergência geral sem data, use null.
+      IMPORTANTE:
+      - O campo 'isCancelled' deve ser true apenas se o documento for explicitamente mencionado como 'Cancelado', 'Excluído' ou 'Inutilizado'.
+      - Para o campo 'date', use o formato ISO (AAAA-MM-DD).
     `;
 
         const analysis = await processFiles(files, prompt);
@@ -238,43 +241,78 @@ export const Comparator: React.FC = () => {
                     </div>
 
                     <div className="p-8">
-                        {result.divergences && result.divergences.length > 0 ? (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left">
-                                    <thead>
-                                        <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                                            <th className="pb-4">Campo / Assunto</th>
-                                            <th className="pb-4 truncate max-w-[150px]">{sourceA.label}</th>
-                                            <th className="pb-4 truncate max-w-[150px]">{sourceB.label}</th>
-                                            <th className="pb-4">Gravidade</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {result.divergences.map((div: any, idx: number) => (
-                                            <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                                                <td className="py-4 font-bold text-slate-800">{div.field}</td>
-                                                <td className="py-4 text-slate-600">{div.sourceA}</td>
-                                                <td className="py-4 text-slate-600 font-medium">{div.sourceB}</td>
-                                                <td className="py-4">
-                                                    <span className={`px-2 py-1 rounded text-[10px] font-black uppercase ${div.severity === 'high' ? 'bg-red-100 text-red-600' :
-                                                        div.severity === 'medium' ? 'bg-orange-100 text-orange-600' :
-                                                            'bg-blue-100 text-blue-600'
-                                                        }`}>
-                                                        {div.severity}
-                                                    </span>
-                                                </td>
+                        {/* DIVERGÊNCIAS ATIVAS */}
+                        <div className="mb-10">
+                            <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                                Divergências Encontradas
+                            </h4>
+                            {result.divergences && result.divergences.filter((d: any) => !d.isCancelled).length > 0 ? (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                                <th className="pb-4">Campo / Assunto</th>
+                                                <th className="pb-4 truncate max-w-[150px]">{sourceA.label}</th>
+                                                <th className="pb-4 truncate max-w-[150px]">{sourceB.label}</th>
+                                                <th className="pb-4 text-center">Gravidade</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        ) : (
-                            <div className="text-center py-10">
-                                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {result.divergences.filter((d: any) => !d.isCancelled).map((div: any, idx: number) => (
+                                                <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                                                    <td className="py-4 font-bold text-slate-800">{div.field}</td>
+                                                    <td className="py-4 text-slate-600">{div.sourceA}</td>
+                                                    <td className="py-4 text-slate-600 font-medium">{div.sourceB}</td>
+                                                    <td className="py-4 text-center">
+                                                        <span className={`px-2 py-1 rounded text-[10px] font-black uppercase ${div.severity === 'high' ? 'bg-red-100 text-red-600' :
+                                                            div.severity === 'medium' ? 'bg-orange-100 text-orange-600' :
+                                                                'bg-blue-100 text-blue-600'
+                                                            }`}>
+                                                            {div.severity}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
-                                <h4 className="font-bold text-slate-800">Nenhuma divergência encontrada</h4>
-                                <p className="text-slate-500 text-sm">As duas fontes parecem estar em total conformidade.</p>
+                            ) : (
+                                <p className="text-slate-400 text-sm italic">Nenhuma divergência ativa encontrada.</p>
+                            )}
+                        </div>
+
+                        {/* NOTAS CANCELADAS / EXCLUÍDAS */}
+                        {result.divergences && result.divergences.some((d: any) => d.isCancelled) && (
+                            <div className="mt-12 pt-8 border-t border-slate-100">
+                                <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-slate-300"></span>
+                                    Notas Canceladas / Excluídas ou Ausentes em uma das partes
+                                </h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {result.divergences.filter((d: any) => d.isCancelled).map((div: any, idx: number) => (
+                                        <div key={idx} className="bg-slate-50 border border-slate-100 p-4 rounded-2xl">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="text-xs font-bold text-slate-700">{div.field}</span>
+                                                <span className="text-[9px] font-black text-slate-400 uppercase bg-white border border-slate-200 px-2 py-0.5 rounded">Cancelada/Invisível</span>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">{sourceA.label}</p>
+                                                    <p className={`text-xs ${div.sourceA === 'Ausente' || div.sourceA === 'Não consta' ? 'text-red-500 italic font-medium' : 'text-slate-600'}`}>
+                                                        {div.sourceA}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">{sourceB.label}</p>
+                                                    <p className={`text-xs ${div.sourceB === 'Ausente' || div.sourceB === 'Não consta' ? 'text-red-500 italic font-medium' : 'text-slate-600'}`}>
+                                                        {div.sourceB}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
 
