@@ -8,6 +8,7 @@ import { PantryList } from './PantryList';
 import { ReceiptIcon, SignatureIcon, BasketIcon } from './icons';
 import { exportToPng, exportToHtml, exportToPdf } from '../utils/exportUtils';
 import { SupabaseService } from '../services/supabaseService';
+import { getExcludedEmployees, toggleExclusion, getCurrentMonthYear } from '../utils/basketExclusions';
 
 type Tab = 'summary' | 'signature' | 'pantry';
 type AppMode = 'BASIC' | 'CHRISTMAS';
@@ -113,6 +114,10 @@ export const CestasBasicas: React.FC = () => {
     const [selectedNonDrinkers, setSelectedNonDrinkers] = useState<number[]>([]);
     const [itemAllocation, setItemAllocation] = useState<Record<string, ItemAllocationConfig>>({});
     const [retryCountdown, setRetryCountdown] = useState<number | null>(null);
+    const [excludedEmployees, setExcludedEmployees] = useState<string[]>([]);
+    const [showExclusionModal, setShowExclusionModal] = useState<boolean>(false);
+    const [exclusionMonth, setExclusionMonth] = useState<number>(new Date().getMonth() + 1);
+    const [exclusionYear, setExclusionYear] = useState<number>(new Date().getFullYear());
 
     // Load persistent quota timer on mount
     useEffect(() => {
@@ -154,6 +159,19 @@ export const CestasBasicas: React.FC = () => {
         window.addEventListener('app-navigation', handleNavigation);
         return () => window.removeEventListener('app-navigation', handleNavigation);
     }, []);
+
+    // Load and listen for basket exclusions
+    useEffect(() => {
+        const loadExclusions = () => {
+            const excluded = getExcludedEmployees(exclusionMonth, exclusionYear);
+            setExcludedEmployees(excluded);
+        };
+        loadExclusions();
+
+        const handleExclusionsChanged = () => loadExclusions();
+        window.addEventListener('basketExclusionsChanged', handleExclusionsChanged);
+        return () => window.removeEventListener('basketExclusionsChanged', handleExclusionsChanged);
+    }, [exclusionMonth, exclusionYear]);
 
     useEffect(() => {
         const reloadAllData = async () => {
@@ -232,6 +250,13 @@ export const CestasBasicas: React.FC = () => {
             prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
         );
     };
+
+    const toggleMonthlyExclusion = (employeeName: string) => {
+        toggleExclusion(employeeName, exclusionMonth, exclusionYear);
+    };
+
+    // Filter out excluded employees for the current month
+    const activeEmployees = actualEmployees.filter(name => !excludedEmployees.includes(name));
 
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files?.[0]) {
@@ -436,6 +461,34 @@ export const CestasBasicas: React.FC = () => {
                         </h1>
                         <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Processamento Digital de Notas Fiscais</p>
                     </div>
+
+                    {/* Exclusion Manager Button */}
+                    {invoiceData && (
+                        <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-sm">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <h4 className="text-sm font-black text-slate-800 uppercase">Exclusões Mensais</h4>
+                                    <p className="text-[10px] text-slate-500 font-bold">Gerenciar funcionários que NÃO receberão cesta este mês</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowExclusionModal(true)}
+                                    className="px-4 py-2 bg-red-600 text-white text-xs font-black uppercase rounded-sm hover:bg-red-700 transition-colors flex items-center gap-2"
+                                >
+                                    🚫 Gerenciar Exclusões
+                                    {excludedEmployees.length > 0 && (
+                                        <span className="ml-1 bg-white text-red-600 px-2 py-0.5 rounded-full text-[10px]">
+                                            {excludedEmployees.length}
+                                        </span>
+                                    )}
+                                </button>
+                            </div>
+                            {excludedEmployees.length > 0 && (
+                                <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded">
+                                    <p className="text-[10px] font-bold text-red-700">Excluídos neste mês: {excludedEmployees.join(', ')}</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex flex-wrap gap-2 print:hidden justify-center md:justify-end">
@@ -461,6 +514,70 @@ export const CestasBasicas: React.FC = () => {
                     </label>
                 </div>
             </header>
+
+            {/* Exclusion Management Modal */}
+            {showExclusionModal && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-4 bg-orange-500 text-white flex justify-between items-center">
+                            <div>
+                                <h2 className="text-lg font-black uppercase">Gerenciar Exclusões da Cesta</h2>
+                                <p className="text-xs font-bold opacity-90">
+                                    {new Date(exclusionYear, exclusionMonth - 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase()}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowExclusionModal(false)}
+                                className="p-2 hover:bg-orange-600 rounded-full transition-colors"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+                            <div className="mb-4 p-3 bg-amber-50 border-l-4 border-amber-500 text-amber-800">
+                                <p className="text-xs font-bold mb-1">ℹ️ Funcionários excluídos NÃO receberão cesta no mês selecionado</p>
+                                <p className="text-[10px]">Esta exclusão é temporária e específica para o mês atual. Use para casos de faltas que resultam em perda da cesta.</p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                {actualEmployees.map((name, idx) => {
+                                    const isExcluded = excludedEmployees.includes(name);
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => toggleMonthlyExclusion(name)}
+                                            className={`p-3 text-left border-2 rounded-lg transition-all flex items-center justify-between ${isExcluded
+                                                    ? 'bg-red-50 border-red-500 text-red-700'
+                                                    : 'bg-white border-slate-200 hover:border-slate-300'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xl">{isExcluded ? '🚫' : '✅'}</span>
+                                                <span className="text-xs font-bold">{name}</span>
+                                            </div>
+                                            {isExcluded && <span className="text-[9px] font-black bg-red-600 text-white px-2 py-0.5 rounded-full">EXCLUÍDO</span>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        <div className="p-4 bg-slate-50 border-t flex justify-between items-center">
+                            <div className="text-xs font-bold text-slate-600">
+                                {excludedEmployees.length > 0
+                                    ? `${excludedEmployees.length} funcionário(s) excluído(s)`
+                                    : 'Nenhum funcionário excluído'}
+                            </div>
+                            <button
+                                onClick={() => setShowExclusionModal(false)}
+                                className="px-4 py-2 bg-orange-500 text-white text-xs font-black uppercase rounded-sm hover:bg-orange-600 transition-colors"
+                            >
+                                Concluído
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <main className="space-y-6">
                 <div className={`bg-white p-8 border-2 ${appMode === 'CHRISTMAS' ? 'border-red-200' : 'border-slate-100'} rounded-sm shadow-sm`}>
@@ -630,11 +747,11 @@ export const CestasBasicas: React.FC = () => {
 
                         <div id="active-view" className="animate-in fade-in duration-700">
                             {activeTab === 'summary' && <InvoiceSummary data={invoiceData} companyName={companyName} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
-                            {activeTab === 'signature' && <SignatureSheet employeeNames={actualEmployees} companyName={companyName} recipientCnpj={invoiceData.recipientCnpj} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
+                            {activeTab === 'signature' && <SignatureSheet employeeNames={activeEmployees} companyName={companyName} recipientCnpj={invoiceData.recipientCnpj} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
                             {activeTab === 'pantry' && (
                                 <PantryList
                                     data={invoiceData}
-                                    employeeNames={actualEmployees}
+                                    employeeNames={activeEmployees}
                                     motivationalMessages={motivationalMessages}
                                     sloganImage={sloganImageBase64}
                                     companyName={companyName}
