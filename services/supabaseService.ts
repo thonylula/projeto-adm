@@ -239,6 +239,25 @@ export const SupabaseService = {
         return !error;
     },
 
+    async saveBulkPayrollItems(companyId: string, items: PayrollHistoryItem[]): Promise<boolean> {
+        const { error } = await supabase.from('payroll_history').upsert(
+            items.map(item => ({
+                id: item.id,
+                company_id: companyId,
+                employee_name: item.input.employeeName,
+                timestamp: item.timestamp,
+                raw_date: item.rawDate,
+                input: item.input,
+                result: item.result
+            }))
+        );
+        if (error) {
+            console.error("Error saving bulk payroll items:", error);
+            return false;
+        }
+        return true;
+    },
+
     // --- BASKET CONFIGS ---
     async getBasketConfigs(): Promise<ItemConfiguration[]> {
         const { data, error } = await supabase.from('basket_item_configs').select('*');

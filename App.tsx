@@ -181,9 +181,6 @@ export default function App() {
   };
 
   const handleBulkUpdateEmployees = (newEmployees: PayrollHistoryItem[]) => {
-    // This is mostly used for local state updates if needed, 
-    // but a real bulk update to Supabase would be different.
-    // For now, let's keep it as is or log a warning.
     if (!activeCompanyId) return;
     setCompanies(prev => prev.map(company => {
       if (company.id === activeCompanyId) {
@@ -191,6 +188,17 @@ export default function App() {
       }
       return company;
     }));
+  };
+
+  const handleSaveBulkEmployees = async (newEmployees: PayrollHistoryItem[]) => {
+    if (!activeCompanyId) return;
+    const success = await SupabaseService.saveBulkPayrollItems(activeCompanyId, newEmployees);
+    if (success) {
+      alert("Folha salva com sucesso no banco de dados!");
+      handleBulkUpdateEmployees(newEmployees);
+    } else {
+      alert("Erro ao salvar a folha no banco de dados.");
+    }
   };
 
   // Render Login Screen (Wrapped in MainLayout for aesthetics)
@@ -244,6 +252,7 @@ export default function App() {
                 onUpdateEmployee={handleUpdateEmployee}
                 onDeleteEmployee={handleDeleteEmployee}
                 onBulkUpdateEmployees={handleBulkUpdateEmployees}
+                onSaveBulk={handleSaveBulkEmployees}
               />
             ) : (
               <CompanySelection

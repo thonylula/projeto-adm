@@ -16,6 +16,7 @@ interface PayrollCardProps {
   onUpdateEmployee: (updatedItem: PayrollHistoryItem) => void;
   onDeleteEmployee: (itemId: string) => void;
   onBulkUpdateEmployees: (newEmployees: PayrollHistoryItem[]) => void;
+  onSaveBulk: (newEmployees: PayrollHistoryItem[]) => void;
 }
 
 // Configuração Inicial
@@ -163,7 +164,8 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   onAddEmployee,
   onUpdateEmployee,
   onDeleteEmployee,
-  onBulkUpdateEmployees
+  onBulkUpdateEmployees,
+  onSaveBulk
 }) => {
   const [formState, setFormState] = useState<PayrollInput>({
     ...INITIAL_INPUT_STATE,
@@ -1888,6 +1890,15 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
             CARREGAR
           </label>
         </div>
+
+        <button
+          onClick={() => onSaveBulk(history)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md font-bold transition-all text-xs"
+          title="Salvar Dados no Banco de Dados"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+          SALVAR
+        </button>
       </div>
 
       {/* --- RECEIPT MODAL --- */}
