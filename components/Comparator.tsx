@@ -260,9 +260,9 @@ export const Comparator: React.FC = () => {
                                         <tbody className="divide-y divide-slate-100">
                                             {result.divergences.filter((d: any) => !d.isCancelled && !d.isNFSe).map((div: any, idx: number) => (
                                                 <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                                                    <td className="py-4 font-bold text-slate-800">{div.field}</td>
-                                                    <td className="py-4 text-slate-600">{div.sourceA}</td>
-                                                    <td className="py-4 text-slate-600 font-medium">{div.sourceB}</td>
+                                                    <td className="py-4 font-bold text-black">{div.field}</td>
+                                                    <td className="py-4 text-black">{div.sourceA}</td>
+                                                    <td className="py-4 text-black font-medium">{div.sourceB}</td>
                                                     <td className="py-4 text-center">
                                                         <span className={`px-2 py-1 rounded text-[10px] font-black uppercase ${div.severity === 'high' ? 'bg-red-100 text-red-600' :
                                                             div.severity === 'medium' ? 'bg-orange-100 text-orange-600' :
@@ -297,12 +297,12 @@ export const Comparator: React.FC = () => {
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">{sourceA.label}</p>
-                                                    <p className="text-xs text-slate-600">{div.sourceA}</p>
+                                                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">{sourceA.label}</p>
+                                                    <p className="text-xs text-black font-medium">{div.sourceA}</p>
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">{sourceB.label}</p>
-                                                    <p className="text-xs text-slate-600">{div.sourceB}</p>
+                                                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">{sourceB.label}</p>
+                                                    <p className="text-xs text-black font-medium">{div.sourceB}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -327,14 +327,14 @@ export const Comparator: React.FC = () => {
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">{sourceA.label}</p>
-                                                    <p className={`text-xs ${div.sourceA === 'Ausente' || div.sourceA === 'Não consta' ? 'text-red-500 italic font-medium' : 'text-slate-600'}`}>
+                                                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">{sourceA.label}</p>
+                                                    <p className={`text-xs font-medium ${div.sourceA === 'Ausente' || div.sourceA === 'Não consta' ? 'text-red-600 italic' : 'text-black'}`}>
                                                         {div.sourceA}
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">{sourceB.label}</p>
-                                                    <p className={`text-xs ${div.sourceB === 'Ausente' || div.sourceB === 'Não consta' ? 'text-red-500 italic font-medium' : 'text-slate-600'}`}>
+                                                    <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">{sourceB.label}</p>
+                                                    <p className={`text-xs font-medium ${div.sourceB === 'Ausente' || div.sourceB === 'Não consta' ? 'text-red-600 italic' : 'text-black'}`}>
                                                         {div.sourceB}
                                                     </p>
                                                 </div>
@@ -347,8 +347,8 @@ export const Comparator: React.FC = () => {
 
                         {result.observations && (
                             <div className="mt-8 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <span className="block text-[10px] font-black text-slate-400 uppercase mb-2">Observações da IA</span>
-                                <p className="text-sm text-slate-700 leading-relaxed italic">{result.observations}</p>
+                                <span className="block text-[10px] font-black text-slate-500 uppercase mb-2">Observações da IA</span>
+                                <p className="text-sm text-black font-medium leading-relaxed italic">{result.observations}</p>
                             </div>
                         )}
                     </div>
