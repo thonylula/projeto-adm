@@ -348,5 +348,23 @@ export const SupabaseService = {
             console.error(`[Supabase Exception] saveConfig(${id}):`, e);
             return false;
         }
+    },
+
+    // --- COMPARISON HISTORY ---
+    async getComparisonHistory(): Promise<any[]> {
+        const { data, error } = await supabase
+            .from('ai_comparisons')
+            .select('*')
+            .order('timestamp', { ascending: false })
+            .limit(10);
+        if (error) return [];
+        return data;
+    },
+
+    async saveComparison(record: { source_a_label: string; source_b_label: string; analysis_result: any }): Promise<boolean> {
+        const { error } = await supabase
+            .from('ai_comparisons')
+            .insert([record]);
+        return !error;
     }
 };

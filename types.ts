@@ -129,7 +129,7 @@ export interface Company {
   employees: PayrollHistoryItem[];
 }
 
-export type ViewMode = 'SELECTION' | 'CALCULATOR';
+export type ViewMode = 'SELECTION' | 'CALCULATOR' | 'COMPARATOR';
 
 // --- NOVOS TIPOS DE CADASTRO ---
 
