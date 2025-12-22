@@ -59,7 +59,7 @@ export const PantryList: React.FC<PantryListProps> = ({
 
                         {/* Tag for special basket */}
                         <div className={`absolute top-0 right-0 px-3 py-1 text-[8px] font-black uppercase text-white ${isNonDrinker ? 'bg-indigo-600' : 'bg-orange-500'} print:hidden`}>
-                            {isNonDrinker ? 'CONFERÊNCIA (NÃO BEBE)' : 'CONFERÊNCIA (PADRÃO)'}
+                            {isNonDrinker ? 'ABSTÊMIO' : 'CESTA PADRÃO'}
                         </div>
 
                         {/* Header */}
@@ -131,9 +131,9 @@ export const PantryList: React.FC<PantryListProps> = ({
 
                         {/* Dummy Duplicate Header for visual reference like in image */}
                         <div className="p-3 bg-slate-50/50 flex justify-between items-center opacity-60">
-                            <div className="space-y-0.5">
+                            <div className="space-y-0.5 flex-1">
                                 <h1 className="text-[9px] font-bold uppercase text-slate-800">{companyName}</h1>
-                                <p className="text-[8px] text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
+                                <p className="text-[8px] text-slate-500 font-medium">
                                     Portador: <span className="font-black underline">{name}</span>
                                 </p>
                             </div>
