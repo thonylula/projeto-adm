@@ -313,9 +313,24 @@ export const Comparator: React.FC = () => {
         if (!content) return null;
         if (typeof content === 'string') return content;
         if (typeof content === 'object') {
-            return JSON.stringify(content, null, 2);
+            // Se for um objeto com campo text ou summary, tente pegar ele
+            if (content.text) return renderSafeContent(content.text);
+            if (content.summary) return renderSafeContent(content.summary);
+            if (content.executive_summary) return renderSafeContent(content.executive_summary);
+
+            // Caso contrário, mostra chaves ou stringify amigável
+            try {
+                return JSON.stringify(content);
+            } catch (e) {
+                return "[Objeto complexo]";
+            }
         }
         return String(content);
+    };
+
+    const getBestSummary = (res: any) => {
+        if (!res) return '';
+        return renderSafeContent(res.summary || res.executive_summary || res.summary_text || '');
     };
 
     return (
@@ -438,7 +453,7 @@ export const Comparator: React.FC = () => {
                         <div className="flex justify-between items-center">
                             <div>
                                 <h3 className="text-xl font-bold uppercase tracking-tight">Resultado da Análise</h3>
-                                <p className="text-white/80 text-sm mt-1">{renderSafeContent(result.summary)}</p>
+                                <p className="text-white/80 text-sm mt-1">{getBestSummary(result)}</p>
                             </div>
                             <div className="text-4xl font-black opacity-30">
                                 {result.status === 'equal' ? 'OK' : 'DIFF'}
@@ -469,12 +484,12 @@ export const Comparator: React.FC = () => {
                                         <tbody className="divide-y divide-slate-100">
                                             {result.divergences.filter((d: any) => d.isMissing && !d.isCancelled && !d.isNFSe).map((div: any, idx: number) => (
                                                 <tr key={idx} className="hover:bg-red-50/30 transition-colors">
-                                                    <td className="py-4 font-bold text-black">{div.documentNumber || 'N/A'}</td>
-                                                    <td className="py-4 text-xs text-black">{div.cnpj || 'N/A'}</td>
+                                                    <td className="py-4 font-bold text-black">{renderSafeContent(div.documentNumber) || 'N/A'}</td>
+                                                    <td className="py-4 text-xs text-black">{renderSafeContent(div.cnpj) || 'N/A'}</td>
                                                     <td className="py-4">
                                                         <div className="flex flex-col">
-                                                            <span className="text-xs text-black font-bold mb-1">{div.description || (analysisType === 'spreadsheet' ? 'Divergência de Dados' : 'Ausente/Divergente')}</span>
-                                                            <span className="text-[10px] text-slate-500 font-medium">{div.companyName || 'N/A'}</span>
+                                                            <span className="text-xs text-black font-bold mb-1">{renderSafeContent(div.description) || (analysisType === 'spreadsheet' ? 'Divergência de Dados' : 'Ausente/Divergente')}</span>
+                                                            <span className="text-[10px] text-slate-500 font-medium">{renderSafeContent(div.companyName) || 'N/A'}</span>
                                                             {div.flags && div.flags.length > 0 && (
                                                                 <div className="flex flex-wrap gap-1 mt-1">
                                                                     {div.flags.map((f: string) => (
@@ -489,7 +504,7 @@ export const Comparator: React.FC = () => {
                                                     <td className="py-4 text-center">
                                                         <div className="flex flex-col items-center">
                                                             <span className={`px - 2 py - 0.5 rounded text - [10px] font - black ${div.statusSourceA === 'PRESENTE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'} `}>
-                                                                {div.statusSourceA}
+                                                                {renderSafeContent(div.statusSourceA)}
                                                             </span>
                                                             {div.confidence !== undefined && (
                                                                 <span className="text-[8px] mt-1 font-bold text-slate-400">{(div.confidence * 100).toFixed(0)}%</span>
@@ -499,7 +514,7 @@ export const Comparator: React.FC = () => {
                                                     <td className="py-4 text-center">
                                                         <div className="flex flex-col items-center">
                                                             <span className={`px - 2 py - 0.5 rounded text - [10px] font - black ${div.statusSourceB === 'PRESENTE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'} `}>
-                                                                {div.statusSourceB}
+                                                                {renderSafeContent(div.statusSourceB)}
                                                             </span>
                                                             {div.confidence !== undefined && (
                                                                 <span className="text-[8px] mt-1 font-bold text-slate-400">{(div.confidence * 100).toFixed(0)}%</span>
@@ -546,11 +561,11 @@ export const Comparator: React.FC = () => {
                                         <tbody className="divide-y divide-slate-100">
                                             {result.divergences.filter((d: any) => !d.isMissing && !d.isCancelled && !d.isNFSe).map((div: any, idx: number) => (
                                                 <tr key={idx} className="hover:bg-green-50/30 transition-colors">
-                                                    <td className="py-3 text-xs font-bold text-black">{div.documentNumber || 'N/A'}</td>
-                                                    <td className="py-3 text-xs text-black">{div.cnpj || 'N/A'}</td>
+                                                    <td className="py-3 text-xs font-bold text-black">{renderSafeContent(div.documentNumber) || 'N/A'}</td>
+                                                    <td className="py-3 text-xs text-black">{renderSafeContent(div.cnpj) || 'N/A'}</td>
                                                     <td className="py-3 text-xs text-black font-medium">
                                                         <div className="flex flex-col">
-                                                            <span>{div.companyName || 'N/A'}</span>
+                                                            <span>{renderSafeContent(div.companyName) || 'N/A'}</span>
                                                             {div.confidence !== undefined && (
                                                                 <span className="text-[8px] font-black text-green-500 uppercase mt-0.5">CONFIANÇA: {(div.confidence * 100).toFixed(0)}%</span>
                                                             )}
@@ -588,7 +603,7 @@ export const Comparator: React.FC = () => {
                                             <div className="flex justify-between items-start mb-3">
                                                 <div>
                                                     <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Nº Nota Fiscal</p>
-                                                    <p className="text-sm font-bold text-indigo-900">{div.documentNumber || 'N/A'}</p>
+                                                    <p className="text-sm font-bold text-indigo-900">{renderSafeContent(div.documentNumber) || 'N/A'}</p>
                                                 </div>
                                                 <span className="text-[9px] font-black text-indigo-400 uppercase bg-white border border-indigo-200 px-2 py-0.5 rounded">NFSe</span>
                                             </div>
@@ -605,11 +620,11 @@ export const Comparator: React.FC = () => {
                                             <div className="grid grid-cols-2 gap-4 pt-3 border-t border-indigo-100">
                                                 <div>
                                                     <p className="text-[10px] text-black font-bold uppercase mb-1">{sourceA.label}</p>
-                                                    <p className="text-xs text-black font-medium">{div.statusSourceA || 'N/A'}</p>
+                                                    <p className="text-xs text-black font-medium">{renderSafeContent(div.statusSourceA) || 'N/A'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] text-black font-bold uppercase mb-1">{sourceB.label}</p>
-                                                    <p className="text-xs text-black font-medium">{div.statusSourceB || 'N/A'}</p>
+                                                    <p className="text-xs text-black font-medium">{renderSafeContent(div.statusSourceB) || 'N/A'}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -649,13 +664,13 @@ export const Comparator: React.FC = () => {
                                                 <div>
                                                     <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">{sourceA.label}</p>
                                                     <p className={`text - xs font - medium ${div.statusSourceA === 'AUSENTE' ? 'text-red-600 italic' : 'text-black'} `}>
-                                                        {div.statusSourceA || 'N/A'}
+                                                        {renderSafeContent(div.statusSourceA) || 'N/A'}
                                                     </p>
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">{sourceB.label}</p>
                                                     <p className={`text - xs font - medium ${div.statusSourceB === 'AUSENTE' ? 'text-red-600 italic' : 'text-black'} `}>
-                                                        {div.statusSourceB || 'N/A'}
+                                                        {renderSafeContent(div.statusSourceB) || 'N/A'}
                                                     </p>
                                                 </div>
                                             </div>
@@ -710,11 +725,11 @@ export const Comparator: React.FC = () => {
                             <tbody className="divide-y divide-slate-50">
                                 {queuedDivergences.map((div, idx) => (
                                     <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                                        <td className="py-4 font-bold text-slate-900 text-sm">{div.documentNumber}</td>
-                                        <td className="py-4 text-xs text-slate-600">{div.cnpj}</td>
+                                        <td className="py-4 font-bold text-slate-900 text-sm">{renderSafeContent(div.documentNumber)}</td>
+                                        <td className="py-4 text-xs text-slate-600">{renderSafeContent(div.cnpj)}</td>
                                         <td className="py-4">
-                                            <p className="text-xs font-bold text-slate-900 mb-0.5">{div.description || 'Divergência Detectada'}</p>
-                                            <p className="text-[10px] font-medium text-slate-500">{div.companyName}</p>
+                                            <p className="text-xs font-bold text-slate-900 mb-0.5">{renderSafeContent(div.description) || 'Divergência Detectada'}</p>
+                                            <p className="text-[10px] font-medium text-slate-500">{renderSafeContent(div.companyName)}</p>
                                             {div.flags && div.flags.map((f: string) => (
                                                 <span key={f} className="inline-block bg-red-50 text-red-600 text-[7px] font-black px-1 py-0.5 rounded border border-red-100 uppercase mr-1 mt-1">
                                                     {f}
@@ -785,7 +800,7 @@ export const Comparator: React.FC = () => {
                                         </div>
                                     </div>
                                     <p className="text-xs font-bold text-slate-800 line-clamp-1">{h.source_a_label} vs {h.source_b_label}</p>
-                                    <p className="text-[10px] text-slate-500 mt-1 line-clamp-2">{h.analysis_result.summary}</p>
+                                    <p className="text-[10px] text-slate-500 mt-1 line-clamp-2">{getBestSummary(h.analysis_result)}</p>
                                 </div>
                             ))}
                         </div>
