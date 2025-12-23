@@ -221,3 +221,29 @@ export interface ItemConfiguration {
   description: string;
   config: ItemAllocationConfig;
 }
+
+// --- MORTALIDADE E CONSUMO ---
+
+export interface MortalityDailyRecord {
+  day: number;
+  feed: number;
+  mortality: number;
+}
+
+export interface MortalityTankRecord {
+  id: string;
+  ve: string;
+  stockingDate: string;
+  area: number;
+  initialPopulation: number;
+  density: number;
+  dailyRecords: MortalityDailyRecord[];
+}
+
+export interface MonthlyMortalityData {
+  id: string;
+  companyId: string;
+  month: number;
+  year: number;
+  records: MortalityTankRecord[];
+}
