@@ -27,70 +27,70 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ data, companyNam
             </div>
 
             {/* Meta Info Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-y-6 md:gap-y-8 p-6 text-xs border-b border-orange-500">
+            <div className="grid grid-cols-3 gap-y-2 p-4 text-xs border-b border-orange-500">
                 <div>
-                    <p className="text-[#999] font-semibold mb-1.5 uppercase tracking-tighter text-[10px]">Emitente</p>
-                    <p className="font-extrabold uppercase text-slate-800 leading-tight text-sm">{data.issuerName || '---'}</p>
+                    <p className="text-[#999] font-semibold mb-1 uppercase tracking-tighter text-[9px]">Emitente</p>
+                    <p className="font-extrabold uppercase text-slate-800 leading-tight text-xs">{data.issuerName || '---'}</p>
                 </div>
                 <div>
-                    <p className="text-[#999] font-semibold mb-1.5 uppercase tracking-tighter text-[10px]">Destinatário</p>
-                    <p className="font-extrabold uppercase text-slate-800 leading-tight text-sm">{data.recipientName || '---'}</p>
+                    <p className="text-[#999] font-semibold mb-1 uppercase tracking-tighter text-[9px]">Destinatário</p>
+                    <p className="font-extrabold uppercase text-slate-800 leading-tight text-xs">{data.recipientName || '---'}</p>
                 </div>
                 <div>
-                    <p className="text-[#999] font-semibold mb-1.5 uppercase tracking-tighter text-[10px]">Número da Nota</p>
-                    <p className="font-extrabold text-slate-800 text-sm">{data.invoiceNumber || '---'}</p>
+                    <p className="text-[#999] font-semibold mb-1 uppercase tracking-tighter text-[9px]">Número da Nota</p>
+                    <p className="font-extrabold text-slate-800 text-xs">{data.invoiceNumber || '---'}</p>
                 </div>
                 <div>
-                    <p className="text-[#999] font-semibold mb-1.5 uppercase tracking-tighter text-[10px]">Série</p>
-                    <p className="font-extrabold text-slate-800 text-sm">{data.series || '1'}</p>
+                    <p className="text-[#999] font-semibold mb-1 uppercase tracking-tighter text-[9px]">Série</p>
+                    <p className="font-extrabold text-slate-800 text-xs">{data.series || '1'}</p>
                 </div>
                 <div>
-                    <p className="text-[#999] font-semibold mb-1.5 uppercase tracking-tighter text-[10px]">Data de Emissão</p>
-                    <p className="font-extrabold text-slate-800 text-sm">{data.issueDate || '---'}</p>
+                    <p className="text-[#999] font-semibold mb-1 uppercase tracking-tighter text-[9px]">Data de Emissão</p>
+                    <p className="font-extrabold text-slate-800 text-xs">{data.issueDate || '---'}</p>
                 </div>
                 <div>
-                    <p className="text-[#999] font-semibold mb-1.5 uppercase tracking-tighter text-[10px]">Valor Total</p>
-                    <p className="text-xl font-black text-green-600">{formatCurrency(data.totalValue)}</p>
+                    <p className="text-[#999] font-semibold mb-1 uppercase tracking-tighter text-[9px]">Valor Total</p>
+                    <p className="text-lg font-black text-green-600">{formatCurrency(data.totalValue)}</p>
                 </div>
             </div>
 
             {/* Items Section */}
-            <div className="p-6">
-                <h2 className="text-2xl font-black text-slate-800 mb-1 uppercase tracking-tight">
+            <div className="p-4">
+                <h2 className="text-lg font-black text-slate-800 mb-1 uppercase tracking-tight">
                     Itens
                 </h2>
-                <div className="h-1.5 w-full bg-orange-500 mb-6 rounded-none shadow-sm" />
+                <div className="h-1 w-full bg-orange-500 mb-2 rounded-none shadow-sm" />
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="border-b-2 border-orange-500">
-                                <th className="px-2 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Código</th>
-                                <th className="px-2 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Descrição</th>
-                                <th className="px-2 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Quantidade</th>
-                                <th className="px-2 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Preço Unit.</th>
-                                <th className="px-2 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Total</th>
+                                <th className="px-2 py-2 text-[9px] font-black text-slate-500 uppercase tracking-widest">Código</th>
+                                <th className="px-2 py-2 text-[9px] font-black text-slate-500 uppercase tracking-widest">Descrição</th>
+                                <th className="px-2 py-2 text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">Quantidade</th>
+                                <th className="px-2 py-2 text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">Preço Unit.</th>
+                                <th className="px-2 py-2 text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">Total</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-orange-200">
                             {data.items.map((item, index) => (
                                 <tr key={item.id || index} className="hover:bg-orange-50/50 transition-all duration-200 group">
-                                    <td className="px-2 py-4 text-[11px] font-bold text-slate-400 font-mono tracking-tighter group-hover:text-orange-500">{item.code || '---'}</td>
-                                    <td className="px-2 py-4 text-[11px] font-extrabold text-slate-800 uppercase leading-snug tracking-tight max-w-md">{item.description}</td>
-                                    <td className="px-2 py-4 text-[11px] text-right text-slate-700 font-bold bg-slate-50/50">
+                                    <td className="px-2 py-1.5 text-[10px] font-bold text-slate-400 font-mono tracking-tighter group-hover:text-orange-500">{item.code || '---'}</td>
+                                    <td className="px-2 py-1.5 text-[10px] font-extrabold text-slate-800 uppercase leading-snug tracking-tight max-w-md">{item.description}</td>
+                                    <td className="px-2 py-1.5 text-[10px] text-right text-slate-700 font-bold bg-slate-50/50">
                                         {item.quantity.toLocaleString('pt-BR', { minimumFractionDigits: 3 })} {item.unit}
                                     </td>
-                                    <td className="px-2 py-4 text-[11px] text-right text-slate-600 font-medium">
+                                    <td className="px-2 py-1.5 text-[10px] text-right text-slate-600 font-medium">
                                         {formatCurrency(item.price)}
                                     </td>
-                                    <td className="px-2 py-4 text-[11px] text-right font-black text-slate-900 bg-orange-50/20">
+                                    <td className="px-2 py-1.5 text-[10px] text-right font-black text-slate-900 bg-orange-50/20">
                                         {formatCurrency(item.total)}
                                     </td>
                                 </tr>
                             ))}
                             <tr className="border-t-2 border-orange-500 bg-orange-50">
-                                <td colSpan={4} className="px-2 py-4 text-right text-sm font-black text-slate-800 uppercase tracking-wide">Total Geral:</td>
-                                <td className="px-2 py-4 text-right text-lg font-black text-green-600">
+                                <td colSpan={4} className="px-2 py-3 text-right text-xs font-black text-slate-800 uppercase tracking-wide">Total Geral:</td>
+                                <td className="px-2 py-3 text-right text-base font-black text-green-600">
                                     {formatCurrency(data.items.reduce((sum, item) => sum + item.total, 0))}
                                 </td>
                             </tr>
