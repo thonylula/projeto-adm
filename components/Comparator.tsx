@@ -79,11 +79,12 @@ export const Comparator: React.FC = () => {
       - Prod(kg) (Total da Biomassa)
       - Cliente
       - Preço
-      - Valor
+      - Valor (Pode estar como "Valor R$" ou "VL.OE")
 
       Analise detalhadamente cada registro:
       1. Identifique Registros Ausentes em uma das fontes (Divergência Crítica baseada em Viveiro/Data/Cliente).
-      2. Compare os valores de Prod(kg), Preço e Valor entre as fontes se o registro existir em ambas.
+      2. Compare os valores de Prod(kg), Preço e "Valor R$" / "VL.OE" entre as fontes se o registro existir em ambas.
+      3. IMPORTANTE: Considere que "Valor R$" e "VL.OE" referem-se à mesma informação de valor total.
 
       Responda EXCLUSIVAMENTE em formato JSON:
       {
