@@ -18,11 +18,11 @@ export const SignatureSheet: React.FC<SignatureSheetProps> = ({ employeeNames, c
             <div className="p-2 border-b-2" style={{ borderColor: '#f97316' }}>
                 <div className="flex justify-between items-center">
                     <div className="space-y-0 flex-1">
-                        <h1 className="text-[10px] font-black uppercase text-slate-800">{companyName}</h1>
-                        <p className="text-[8px] text-slate-500 font-bold">CNPJ: {recipientCnpj || '---'}</p>
+                        <h1 className="text-sm font-black uppercase text-slate-800">{companyName}</h1>
+                        <p className="text-[10px] text-slate-500 font-bold">CNPJ: {recipientCnpj || '---'}</p>
                     </div>
                     <div className="text-right">
-                        <p className="text-[9px] font-black text-slate-700">Data: {new Date().toLocaleDateString('pt-BR')}</p>
+                        <p className="text-[11px] font-black text-slate-700">Data: {new Date().toLocaleDateString('pt-BR')}</p>
                     </div>
                 </div>
             </div>
