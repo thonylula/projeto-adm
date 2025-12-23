@@ -309,6 +309,15 @@ export const Comparator: React.FC = () => {
         }
     };
 
+    const renderSafeContent = (content: any) => {
+        if (!content) return null;
+        if (typeof content === 'string') return content;
+        if (typeof content === 'object') {
+            return JSON.stringify(content, null, 2);
+        }
+        return String(content);
+    };
+
     return (
         <div className="w-full max-w-6xl mx-auto pb-20">
             <header className="mb-8">
@@ -429,7 +438,7 @@ export const Comparator: React.FC = () => {
                         <div className="flex justify-between items-center">
                             <div>
                                 <h3 className="text-xl font-bold uppercase tracking-tight">Resultado da Análise</h3>
-                                <p className="text-white/80 text-sm mt-1">{result.summary}</p>
+                                <p className="text-white/80 text-sm mt-1">{renderSafeContent(result.summary)}</p>
                             </div>
                             <div className="text-4xl font-black opacity-30">
                                 {result.status === 'equal' ? 'OK' : 'DIFF'}
@@ -659,7 +668,7 @@ export const Comparator: React.FC = () => {
                         {result.observations && (
                             <div className="mt-8 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                 <span className="block text-[10px] font-black text-slate-500 uppercase mb-2">Observações da IA</span>
-                                <p className="text-sm text-black font-medium leading-relaxed italic">{result.observations}</p>
+                                <p className="text-sm text-black font-medium leading-relaxed italic">{renderSafeContent(result.observations)}</p>
                             </div>
                         )}
                     </div>
