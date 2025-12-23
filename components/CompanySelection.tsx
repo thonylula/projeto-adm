@@ -8,6 +8,9 @@ interface CompanySelectionProps {
   onUpdateCompany: (company: Company) => void;
   onDeleteCompany: (companyId: string) => void;
   onSelectCompany: (companyId: string) => void;
+  title?: string;
+  description?: string;
+  buttonText?: string;
 }
 
 export const CompanySelection: React.FC<CompanySelectionProps> = ({
@@ -15,7 +18,10 @@ export const CompanySelection: React.FC<CompanySelectionProps> = ({
   onAddCompany,
   onUpdateCompany,
   onDeleteCompany,
-  onSelectCompany
+  onSelectCompany,
+  title = "Gestão de Folha de Pagamento",
+  description = "Selecione uma empresa ou cadastre uma nova para começar.",
+  buttonText = "Gerenciar Folha"
 }) => {
   const [newCompanyName, setNewCompanyName] = useState('');
   const [newCompanyCnpj, setNewCompanyCnpj] = useState('');
@@ -73,8 +79,8 @@ export const CompanySelection: React.FC<CompanySelectionProps> = ({
     <div className="w-full max-w-4xl mx-auto space-y-12">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-slate-900">Gestão de Folha de Pagamento</h1>
-        <p className="text-slate-500">Selecione uma empresa ou cadastre uma nova para começar.</p>
+        <h1 className="text-3xl font-bold text-slate-900">{title}</h1>
+        <p className="text-slate-500">{description}</p>
       </div>
 
       {/* Cadastro de Empresa */}
@@ -221,7 +227,7 @@ export const CompanySelection: React.FC<CompanySelectionProps> = ({
                   onClick={() => onSelectCompany(company.id)}
                   className="mt-auto w-full py-2.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium rounded-lg text-sm transition-colors flex items-center justify-center gap-2 group"
                 >
-                  Gerenciar Folha
+                  {buttonText}
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 group-hover:translate-x-0.5 transition-transform">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                   </svg>
