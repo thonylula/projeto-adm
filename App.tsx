@@ -300,6 +300,9 @@ export default function App() {
                 onUpdateCompany={handleUpdateCompany}
                 onDeleteCompany={handleDeleteCompany}
                 onSelectCompany={handleSelectCompany}
+                title="Orçamentos e Cestas Básicas"
+                description="Selecione uma empresa para gerenciar orçamentos e cestas."
+                buttonText="Gerenciar Orçamentos"
               />
             )}
           </>
@@ -316,6 +319,9 @@ export default function App() {
                 onUpdateCompany={handleUpdateCompany}
                 onDeleteCompany={handleDeleteCompany}
                 onSelectCompany={handleSelectCompany}
+                title="Mortalidade e Consumo"
+                description="Selecione uma empresa para gerenciar o controle de mortalidade."
+                buttonText="Gerenciar Mortalidade"
               />
             )}
           </>
