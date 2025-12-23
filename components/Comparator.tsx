@@ -85,16 +85,16 @@ export const Comparator: React.FC = () => {
       - Se Valor Planilha != (Prod * Preço), aplique a flag "inconsistencia_valor".
       - Normalize Datas (DD/MM/AAAA) e Nomes (Remova "LTDA", "EPP", etc).
 
-      FASE 3: IDENTIDADE SEMÂNTICA E DETECÇÃO DE PARENTESCO (ELITE KINSHIP)
-      - CRITÉRIO DE PESO: A reconciliação deve priorizar primeiro o [VALOR R$] (exatidão numérica) e, em segundo lugar, a [DATA].
-      - DETECÇÃO DE PARENTESCO: Se [Valor] + [Data] baterem 100%, você DEVE realizar um match por "Parentesco Semântico".
-      - Exemplo Real: "BAIANO" (Planilha) é o MESMO que "JOSÉ JURANDI DOS SANTOS-BAIANO" (Sistema).
-      - Regra de Ouro: Havendo coincidência de Valor e Data, nomes que contenham termos em comum (apelidos, sobrenomes, iniciais) devem ser tratados como MATCH 1:1. NÃO marque como "AUSENTE" se houver esse parentesco.
+      FASE 3: IDENTIDADE SEMÂNTICA E MANDATO DE CONSOLIDAÇÃO (ANTI-FRAGMENTAÇÃO)
+      - CRITÉRIO DE PESO: Prioridade Máxima ao [VALOR R$], seguido pela [DATA].
+      - MANDATO DE CONSOLIDAÇÃO: Se encontrar uma linha na Planilha e uma linha no Sistema com o MESMO VALOR e MESMA DATA, você deve OBRIGATORIAMENTE tentar consolidá-las como o mesmo registro.
+      - DETECÇÃO DE PARENTESCO AGRESSIVA: "BAIANO" (A) e "JOSÉ JURANDI DOS SANTOS-BAIANO" (B) são 100% o MESMO registro se Valor e Data baterem. 
+      - PROIBIÇÃO DE FRAGMENTAÇÃO: Nunca gere duas entradas separadas (uma como AUSENTE em A e outra como AUSENTE em B) para a mesma transação financeira. Se os valores batem, faça o merge e use o nome mais completo disponível.
 
-      FASE 4: VARREDURA DE OMISSÕES E DISCREPÂNCIAS
-      - Um registro é "OK" apenas se houver Match 1:1 total (incluindo Parentesco) e passar na Trava Matemática.
-      - Registros ausentes em uma das partes devem ser listados como "AUSENTE" e "divergent".
-      - Se detectar o "Parentesco" mas a conta matemática falhar, use "divergent" com a flag "inconsistencia_valor".
+      FASE 4: VARREDURA FINAL E PROVA REAL
+      - STATUS "equal": Use apenas se Data, Cliente (ou Parentesco), e Valor baterem 100% e a conta Peso x Preço fechar.
+      - STATUS "divergent": Use para registros órfãos (realmente não encontrados no outro lado) ou com erro na conta matemática.
+      - Ao consolidar por Parentesco, sature a confiança em 1.0 se o Valor for exato.
       - Flags obrigatórias:
         * "inconsistencia_valor": Erro na conta Peso x Preço.
         * "biometria_fora_faixa": Se Biometria(g) < 8 ou > 30.
