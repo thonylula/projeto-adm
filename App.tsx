@@ -289,7 +289,7 @@ export default function App() {
         )}
 
         {activeTab === 'budget' && (
-          <BudgetPage />
+          <BudgetPage activeCompany={activeCompany} />
         )}
 
         {activeTab === 'comparator' && (
