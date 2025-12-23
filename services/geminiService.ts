@@ -9,26 +9,27 @@ import type { InvoiceData } from '../types';
 export async function extractInvoiceData(base64: string, mimeType: string): Promise<InvoiceData> {
     const prompt = `
     Aga como um especialista em processamento de documentos fiscais brasileiros e capturas de tela do app "Preço da Hora".
-    Analise a imagem fornecida e extraia os seguintes campos com precisão:
+    Analise a imagem fornecida e extraia os seguintes campos com precisão ABSOLUTA:
     1. Nome do destinatário (empresa ou pessoa que comprou).
     2. CNPJ do destinatário.
-    3. Nome do emitente/estabelecimento (vendedor - geralmente no topo da nota ou lateral da screenshot).
-    4. Endereço completo do emitente (rua, número, bairro, cidade, estado - procure por endereços completos nos cantos ou rodapés).
-    5. Número da nota fiscal (se disponível).
-    6. Série da nota (se disponível).
+    3. Nome do emitente/estabelecimento (vendedor - Geralmente em letras grandes no topo ou em cada quadro de produto).
+    4. Endereço completo do emitente (rua, número, bairro, cidade, estado - Procure por endereços completos nos cantos, rodapés ou cabeçalhos).
+    5. Número da nota fiscal.
+    6. Série da nota.
     7. Data de emissão.
     8. Valor total da nota.
-    9. Lista de itens comprados, contendo: código, descrição, quantidade, unidade, preço unitário e total do item.
+    9. Lista de itens comprados, contendo: código, descrição, quantidade, unidade de medida (ex: KG, UN, PCT, LT), preço unitário e total do item.
 
-    IMPORTANTE PARA SCREENSHOTS DO "PREÇO DA HORA":
-    - O NOME DO ESTABELECIMENTO e o ENDEREÇO costumam estar na parte superior de cada quadro de produto ou no cabeçalho da página. Extraia-os para cada item encontrado.
+    DICAS PARA "PREÇO DA HORA":
+    - A QUANTIDADE e a UNIDADE DE MEDIDA são fundamentais. Procure por números seguidos de siglas como "KG", "UN", "PCT".
+    - O NOME DO ESTABELECIMENTO e o ENDEREÇO costumam estar na parte superior de cada quadro de produto ou no cabeçalho da página. SE HOUVER VÁRIOS ESTABELECIMENTOS NA MESMA IMAGEM, IDENTIFIQUE CADA UM PARA SEU RESPECTIVO PRODUTO.
 
     Responda EXCLUSIVAMENTE em formato JSON seguindo esta estrutura:
     {
       "recipientName": "Nome extraído",
       "recipientCnpj": "00.000.000/0000-00",
-      "issuerName": "NOME DO ESTABELECIMENTO",
-      "issuerAddress": "ENDEREÇO COMPLETO",
+      "issuerName": "NOME DO ESTABELECIMENTO ENCONTRADO",
+      "issuerAddress": "ENDEREÇO COMPLETO ENCONTRADO",
       "invoiceNumber": "12345",
       "series": "1",
       "issueDate": "DD/MM/AAAA",
@@ -38,14 +39,14 @@ export async function extractInvoiceData(base64: string, mimeType: string): Prom
           "id": "1",
           "code": "CÓDIGO",
           "description": "Item 1",
-          "quantity": 1,
-          "unit": "UN",
+          "quantity": 1.0,
+          "unit": "KG/UN/PCT",
           "price": 10.00,
           "total": 10.00
         }
       ]
     }
-    Se algum campo não for encontrado, deixe-o em branco ou use 0 para valores numéricos.
+    NUNCA deixe quantity ou unit vazios se houver qualquer indicação na imagem. Se não encontrar, use 1 para quantity e "UN" para unit como fallback.
   `;
 
     try {
