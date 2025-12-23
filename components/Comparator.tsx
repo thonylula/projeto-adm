@@ -71,54 +71,49 @@ export const Comparator: React.FC = () => {
         "observations": "Comentários"
       }
     ` : `
-      ### PROTOCOLO DE RECONCILIAÇÃO "ZERO DÚVIDA" (AUDITORIA 100% ACERTIVA) ###
-      Você é um Auditor Sênior de Elite. Seu objetivo é o ERRO ZERO. 
-      Siga rigorosamente estas fases para comparar ${sourceA.label} e ${sourceB.label}:
+      ### PROMPT MESTRE – COMPARADOR INTELIGENTE (ANÁLISE PROFUNDA E ANTICADUCIDADE) ###
+      Você é um Auditor Digital Especialista em Conciliação de Dados. Seu objetivo é precisão máxima (tolerância ZERO a omissões).
 
-      FASE 1: INDEXAÇÃO INDIVIDUAL (SCAN COMPULSÓRIO)
-      - Liste mentalmente cada linha da Planilha e cada linha das Notas Fiscais.
-      - Não pule nenhuma linha, mesmo que pareçam repetidas.
-      - Atribua um ID temporário em sua memória para cada registro extraído.
+      ETAPA 1: INGESTÃO CONTROLADA E FRAGMENTAÇÃO
+      - Processe linha por linha. Não analise tudo de uma vez para evitar sobrecarga.
+      - Se houver grande volume, valide em blocos de 10 registros.
 
-      FASE 2: TRAVA MATEMÁTICA E NORMALIZAÇÃO
-      - Toda linha da Planilha DEVE satisfazer: Prod(kg) * Preço = Valor R$.
-      - Tolerância máxima para arredondamento: 0.5%.
-      - Se Valor Planilha != (Prod * Preço), aplique a flag "inconsistencia_valor".
-      - Normalize Datas (DD/MM/AAAA) e Nomes (Remova "LTDA", "EPP", etc).
+      ETAPA 2: EXTRAÇÃO E NORMALIZAÇÃO ABSOLUTA
+      - Extraia: Data (ISO), Qtd/Peso, Nome (Pessoa/Empresa), Valor Monetário, Tipo de Operação.
+      - NORMALIZAÇÃO: Padronize nomes similares (Ex: "BAIANO" = "JOSÉ JURANDI DOS SANTOS – BAIANO").
+      - Remova variações de case e caracteres especiais.
+      - Chave Única: [DATA] + [NOME NORMALIZADO] + [VALOR] + [QUANTIDADE].
 
-      FASE 3: IDENTIDADE SEMÂNTICA E MANDATO DE CONSOLIDAÇÃO (ANTI-FRAGMENTAÇÃO)
-      - CRITÉRIO DE PESO: Prioridade Máxima ao [VALOR R$], seguido pela [DATA].
-      - MANDATO DE CONSOLIDAÇÃO: Se encontrar uma linha na Planilha e uma linha no Sistema com o MESMO VALOR e MESMA DATA, você deve OBRIGATORIAMENTE tentar consolidá-las como o mesmo registro.
-      - DETECÇÃO DE PARENTESCO AGRESSIVA: "BAIANO" (A) e "JOSÉ JURANDI DOS SANTOS-BAIANO" (B) são 100% o MESMO registro se Valor e Data baterem. 
-      - PROIBIÇÃO DE FRAGMENTAÇÃO: Nunca gere duas entradas separadas (uma como AUSENTE em A e outra como AUSENTE em B) para a mesma transação financeira. Se os valores batem, faça o merge e use o nome mais completo disponível.
+      ETAPA 3: COMPARAÇÃO CRUZADA BILATERAL (A <-> B)
+      - Verificação Bidirecional: Cada registro de A deve estar em B, e cada registro de B deve estar em A.
+      - Classifique: CORRESPONDENTE EXATO, DIVERGENTE, AUSENTE EM A, AUSENTE EM B, DUPLICADO.
 
-      FASE 4: VARREDURA FINAL E PROVA REAL
-      - STATUS "equal": Use apenas se Data, Cliente (ou Parentesco), e Valor baterem 100% e a conta Peso x Preço fechar.
-      - STATUS "divergent": Use para registros órfãos (realmente não encontrados no outro lado) ou com erro na conta matemática.
-      - Ao consolidar por Parentesco, sature a confiança em 1.0 se o Valor for exato.
-      - Flags obrigatórias:
-        * "inconsistencia_valor": Erro na conta Peso x Preço.
-        * "biometria_fora_faixa": Se Biometria(g) < 8 ou > 30.
-        * "baixo_conf": Ambiguidade no OCR ou rasuras.
+      ETAPA 4: VALIDAÇÃO EM CAMADAS (CAMADA 3 DE AUDITORIA)
+      - Camada 1 (Contagem): Total de linhas A vs B.
+      - Camada 2 (Soma Financeira): Soma total R$ de A vs B.
+      - Camada 3 (Auditoria Cruzada): Verifique se as divergências explicam a diferença nas somas financeiras.
+
+      REGRA DE OURO: É proibido supor dados ou pular linhas. Priorize a precisão sobre a velocidade.
+      FRASE DE CONTROLE: Somente finalize quando todos os registros forem auditados e confirmados.
 
       Responda EXCLUSIVAMENTE em formato JSON:
       {
         "status": "divergent" | "equal",
-        "summary": "Relatório Executivo detalhando o volume auditado (ex: X linhas conferidas, Y divergências)",
+        "summary": "RELATÓRIO EXECUTIVO (Total Analisado, Compatível, Divergente, Ausente)",
         "divergences": [{ 
-            "documentNumber": "Data do Lançamento (Ex: 03/Nov)", 
-            "cnpj": "Cliente/Pessoa (Nome Normalizado)", 
+            "documentNumber": "Data/Referência (Ex: 03/Nov)", 
+            "cnpj": "Nome do Cliente/Empresa (Normalizado)", 
             "companyName": "Valor R$",
             "statusSourceA": "PRESENTE" | "AUSENTE", 
             "statusSourceB": "PRESENTE" | "AUSENTE",
             "severity": "high" | "medium" | "low", 
             "date": "Data ISO (YYYY-MM-DD)", 
             "isMissing": boolean,
-            "confidence": 0.0 a 1.0,
-            "flags": ["inconsistencia_valor", "baixo_conf", "biometria_fora_faixa", etc],
-            "description": "Descrição detalhada do porquê divergiu (Ex: Valor não confere com Prod*Preço ou Ausente no Sistema)"
+            "confidence": 1.0,
+            "flags": ["inconsistencia_valor", "ausente_a", "ausente_b", "duplicado", "divergente"],
+            "description": "DETALHAMENTO TÉCNICO: Campo divergente ou motivo da ausência (Ex: Valor A: R$ 10 vs Valor B: R$ 12)"
         }],
-        "observations": "Lista detalhada de cada inconsistência e prova matemática do erro se houver."
+        "observations": "CONCLUSÃO TÉCNICA: Grau de confiabilidade, pontos críticos e declaração de integridade."
       }
     `;
 
