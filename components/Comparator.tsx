@@ -40,82 +40,116 @@ export const Comparator: React.FC = () => {
         if (sourceB.file) files.push(sourceB.file);
 
         const prompt = analysisType === 'nf' ? `
-      Você é um assistente de auditoria especialista em encontrar divergências.
-      Sua tarefa é comparar a fonte "${sourceA.label}" e a fonte "${sourceB.label}" e listar TODAS as discrepâncias encontradas.
-      
-      Fontes fornecidas:
-      ${sourceA.label}: ${sourceA.file ? '[Arquivo Anexo]' : 'Texto abaixo'}
-      ${sourceB.label}: ${sourceB.file ? '[Arquivo Anexo]' : 'Texto abaixo'}
-      
-      Conteúdo de Texto (se houver):
-      Texto de ${sourceA.label}: ${sourceA.text}
-      Texto de ${sourceB.label}: ${sourceB.text}
+      ### PROMPT MESTRE – AUDITORIA DE NOTA FISCAL (7 ETAPAS) ###
+      Papel: Você é um Auditor Digital Especialista em Conciliação de Documentos Fiscais.
+      Objetivo: Garantir precisão absoluta (ERRO ZERO) na comparação entre dois conjuntos de NFs (A e B).
 
-      Analise detalhadamente:
-      1. Identifique Documentos Ausentes em uma das fontes (Divergência Crítica).
-      2. Identifique Documentos Presentes em ambas as fontes.
-      3. Valores numéricos, impostos e datas.
-      4. Itens cancelados ou inutilizados.
+      ETAPA 1 – INGESTÃO CONTROLADA (ANTI-CADUCIDADE)
+      - Processe sequencialmente: linha por linha, NF por NF.
+      - Fragmentação: Se houver muitos registros, divida em blocos de 10. Realize verificação interna após cada bloco.
 
-      Responda EXCLUSIVAMENTE em formato JSON:
+      ETAPA 2 – EXTRAÇÃO TOTAL DE DADOS
+      - Extraia obrigatoriamente: Número da NF, CNPJ, Nome da Empresa, Data (ISO), Valor Total, Impostos e Itens.
+      - Origem: Identifique se o dado veio da Origem A ou Origem B.
+      - ⚠️ PROIBIÇÃO: Proibido supor dados. Marque como "DADO AUSENTE" se não explícito.
+
+      ETAPA 3 – NORMALIZAÇÃO ABSOLUTA
+      - Padronize nomes: Remova "LTDA", "EPP", normalize variações de caixa (MAIÚSCULAS/minúsculas).
+      - Converta valores para formato numérico padrão e datas para ISO.
+      - CHAVE ÚNICA: [Nº NF] + [CNPJ] + [VALOR TOTAL].
+
+      ETAPA 4 – COMPARAÇÃO CRUZADA BILATERAL
+      - Comparação A → B: Cada registro de A deve existir em B.
+      - Comparação B → A: Cada registro de B deve existir em A.
+      - Identifique: Ausências, Divergências de campos, Duplicidades.
+
+      ETAPA 5 – CLASSIFICAÇÃO DE RESULTADOS
+      - Classifique: ✅ CORRESPONDENTE EXATO, ⚠️ DIVERGENTE, ❌ AUSENTE EM A, ❌ AUSENTE EM B, 🔁 DUPLICADO.
+
+      ETAPA 6 – VALIDAÇÃO FINAL EM CAMADAS
+      - Camada 1 (Contagem): Total A vs B.
+      - Camada 2 (Soma Financeira): Soma total A vs B.
+      - Camada 3 (Auditoria Cruzada): Verifique se divergências impactam o total financeiro.
+
+      ETAPA 7 – RELATÓRIO FINAL IRREFUTÁVEL
+      - Responda EXCLUSIVAMENTE em formato JSON:
       {
         "status": "divergent" | "equal",
-        "summary": "Resumo",
-        "divergences": [{ 
-            "documentNumber": "NF", "cnpj": "CNPJ", "companyName": "Empresa",
-            "statusSourceA": "PRESENTE" | "AUSENTE", "statusSourceB": "PRESENTE" | "AUSENTE",
-            "severity": "high" | "medium" | "low", "date": "ISO", "isCancelled": boolean,
-            "isNFSe": boolean, "isMissing": boolean,
-            "description": "Explicação curta do motivo da divergência (Ex: Falta na Origem A)"
-        }],
-        "observations": "Comentários"
-      }
-    ` : `
-      ### PROMPT MESTRE – COMPARADOR INTELIGENTE (ANÁLISE PROFUNDA E ANTICADUCIDADE) ###
-      Você é um Auditor Digital Especialista em Conciliação de Dados. Seu objetivo é precisão máxima (tolerância ZERO a omissões).
-
-      ETAPA 1: INGESTÃO CONTROLADA E FRAGMENTAÇÃO
-      - Processe linha por linha. Não analise tudo de uma vez para evitar sobrecarga.
-      - Se houver grande volume, valide em blocos de 10 registros.
-
-      ETAPA 2: EXTRAÇÃO E NORMALIZAÇÃO ABSOLUTA
-      - Extraia: Data (ISO), Qtd/Peso, Nome (Pessoa/Empresa), Valor Monetário, Tipo de Operação.
-      - NORMALIZAÇÃO: Padronize nomes similares (Ex: "BAIANO" = "JOSÉ JURANDI DOS SANTOS – BAIANO").
-      - Remova variações de case e caracteres especiais.
-      - Chave Única: [DATA] + [NOME NORMALIZADO] + [VALOR] + [QUANTIDADE].
-
-      ETAPA 3: COMPARAÇÃO CRUZADA BILATERAL (A <-> B)
-      - Verificação Bidirecional: Cada registro de A deve estar em B, e cada registro de B deve estar em A.
-      - Classifique: CORRESPONDENTE EXATO, DIVERGENTE, AUSENTE EM A, AUSENTE EM B, DUPLICADO.
-
-      ETAPA 4: VALIDAÇÃO EM CAMADAS (CAMADA 3 DE AUDITORIA)
-      - Camada 1 (Contagem): Total de linhas A vs B.
-      - Camada 2 (Soma Financeira): Soma total R$ de A vs B.
-      - Camada 3 (Auditoria Cruzada): Verifique se as divergências explicam a diferença nas somas financeiras.
-
-      REGRA DE OURO: É proibido supor dados ou pular linhas. Priorize a precisão sobre a velocidade.
-      FRASE DE CONTROLE: Somente finalize quando todos os registros forem auditados e confirmados.
-
-      Responda EXCLUSIVAMENTE em formato JSON:
-      {
-        "status": "divergent" | "equal",
-        "summary": "RELATÓRIO EXECUTIVO (Total Analisado, Compatível, Divergente, Ausente)",
-        "divergences": [{ 
-            "documentNumber": "Data/Referência (Ex: 03/Nov)", 
-            "cnpj": "Nome do Cliente/Empresa (Normalizado)", 
-            "companyName": "Valor R$",
-            "statusSourceA": "PRESENTE" | "AUSENTE", 
+        "summary": "7.1 RESUMO EXECUTIVO: Total analisado, compatível, divergente e ausente.",
+        "divergences": [{
+            "documentNumber": "Número da NF",
+            "cnpj": "CNPJ",
+            "companyName": "Empresa",
+            "statusSourceA": "PRESENTE" | "AUSENTE",
             "statusSourceB": "PRESENTE" | "AUSENTE",
-            "severity": "high" | "medium" | "low", 
-            "date": "Data ISO (YYYY-MM-DD)", 
+            "severity": "high" | "medium" | "low",
+            "date": "YYYY-MM-DD",
+            "isCancelled": boolean,
+            "isNFSe": boolean,
+            "isMissing": boolean,
+            "flags": ["inconsistencia_valor", "ausente_a", "ausente_b", "duplicado", "divergente"],
+            "description": "7.2 TABELA DETALHADA: Campo divergente e valores (Ex: Valor A: R$10 vs B: R$12)"
+        }],
+        "observations": "7.3 CONCLUSÃO TÉCNICA: Grau de confiabilidade, pontos críticos e declaração de integridade."
+      }
+      
+      REGRA DE OURO: É proibido ignorar linhas ou supor dados. Priorize precisão sobre velocidade.
+      FRASE DE CONTROLE: Somente finalize a análise quando todos os registros forem auditados, validados e confirmados.
+      ` : `
+      ### PROMPT MESTRE – COMPARADOR INTELIGENTE (ANÁLISE PROFUNDA E ANTICADUCIDADE) ###
+      Papel: Você é um Auditor Digital Especialista em Conciliação de Dados (Planilhas, Prints, PDFs).
+      Objetivo: Garantir máxima precisão (tolerância zero a omissões) na comparação entre dois conjuntos de dados (A e B).
+
+      ETAPA 1 – INGESTÃO CONTROLADA (ANTI-CADUCIDADE)
+      - Processamento Sequencial: Nunca analisar tudo de uma vez. Processe linha por linha.
+      - Fragmentação Inteligente: Dividir em blocos máximos de 10 registros. Verificação interna após cada bloco.
+
+      ETAPA 2 – EXTRAÇÃO TOTAL DE DADOS
+      - Extraia e normalize para CADA REGISTRO: Data (ISO), Quantidade/Peso, Nome da Pessoa/Empresa, Valor Monetário, Tipo de Operação.
+      - Origem: Imagem A ou Imagem B.
+      - ⚠️ Nenhum campo pode ser inferido. Se não estiver explícito, marcar como "DADO AUSENTE".
+
+      ETAPA 3 – NORMALIZAÇÃO ABSOLUTA
+      - Remover variações de case, padronizar nomes similares (ex: "BAIANO" = "JOSÉ JURANDI DOS SANTOS – BAIANO").
+      - CHAVE ÚNICA: [DATA] + [NOME NORMALIZADO] + [VALOR] + [QUANTIDADE].
+
+      ETAPA 4 – COMPARAÇÃO CRUZADA BILATERAL
+      - Comparação bidirecional: A → B e B → A.
+      - Garantir que cada registro exista em ambos os lados ou seja apontado como ausente.
+
+      ETAPA 5 – CLASSIFICAÇÃO DE RESULTADOS
+      - Classificar como: ✅ CORRESPONDENTE EXATO, ⚠️ DIVERGENTE, ❌ AUSENTE EM A, ❌ AUSENTE EM B, 🔁 DUPLICADO.
+
+      ETAPA 6 – VALIDAÇÃO FINAL EM CAMADAS
+      - Camada 1 (Contagem): Total de registros A vs B.
+      - Camada 2 (Soma Financeira): Soma total de valores A vs B.
+      - Camada 3 (Auditoria Cruzada): Verificar se divergências impactam o total financeiro. Se falhar, reanalisar automaticamente.
+
+      ETAPA 7 – RELATÓRIO FINAL IRREFUTÁVEL
+      - Responda EXCLUSIVAMENTE em formato JSON:
+      {
+        "status": "divergent" | "equal",
+        "summary": "7.1 RESUMO EXECUTIVO: Total analisado, compatível, divergente e ausente.",
+        "divergences": [{
+            "documentNumber": "Data/Referência",
+            "cnpj": "Nome (Normalizado)",
+            "companyName": "Valor/Descrição",
+            "statusSourceA": "PRESENTE" | "AUSENTE",
+            "statusSourceB": "PRESENTE" | "AUSENTE",
+            "severity": "high" | "medium" | "low",
+            "date": "YYYY-MM-DD",
             "isMissing": boolean,
             "confidence": 1.0,
             "flags": ["inconsistencia_valor", "ausente_a", "ausente_b", "duplicado", "divergente"],
-            "description": "DETALHAMENTO TÉCNICO: Campo divergente ou motivo da ausência (Ex: Valor A: R$ 10 vs Valor B: R$ 12)"
+            "description": "7.2 TABELA DETALHADA: Campo divergente ou motivo da ausência (Ex: Qtd A: 5 vs Qtd B: 6)"
         }],
-        "observations": "CONCLUSÃO TÉCNICA: Grau de confiabilidade, pontos críticos e declaração de integridade."
+        "observations": "7.3 CONCLUSÃO TÉCNICA: Grau de confiabilidade, pontos críticos e declaração de integridade da análise."
       }
-    `;
+
+      REGRA DE OURO: É PROIBIDO supor dados, ignorar linhas ou pular registros.
+      FRASE DE CONTROLE: Somente finalize a análise quando todos os registros forem auditados, validados, comparados e confirmados sem exceção.
+      `;
+
 
         const analysis = await processFiles(files, prompt, 'gemini-3-pro');
         if (analysis) {
@@ -197,7 +231,7 @@ export const Comparator: React.FC = () => {
 
     const exportHTML = () => {
         const content = `
-            <html>
+            < html >
                 <head>
                     <style>
                         body { font-family: sans-serif; padding: 20px; }
@@ -236,8 +270,8 @@ export const Comparator: React.FC = () => {
                         </tbody>
                     </table>
                 </body>
-            </html>
-        `;
+            </html >
+    `;
         const blob = new Blob([content], { type: 'text/html' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
@@ -286,13 +320,13 @@ export const Comparator: React.FC = () => {
                 <div className="bg-slate-100 p-1 rounded-xl flex gap-1">
                     <button
                         onClick={() => setAnalysisType('nf')}
-                        className={`px-6 py-2 rounded-lg text-xs font-bold uppercase transition-all ${analysisType === 'nf' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`px - 6 py - 2 rounded - lg text - xs font - bold uppercase transition - all ${analysisType === 'nf' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}
                     >
                         Analisar Nota Fiscal
                     </button>
                     <button
                         onClick={() => setAnalysisType('spreadsheet')}
-                        className={`px-6 py-2 rounded-lg text-xs font-bold uppercase transition-all ${analysisType === 'spreadsheet' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`px - 6 py - 2 rounded - lg text - xs font - bold uppercase transition - all ${analysisType === 'spreadsheet' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'} `}
                     >
                         Analisar Planilha
                     </button>
@@ -371,7 +405,7 @@ export const Comparator: React.FC = () => {
                 <button
                     onClick={handleCompare}
                     disabled={isProcessing}
-                    className={`px-10 py-3 rounded-xl font-bold text-white shadow-lg transition-all flex items-center gap-2 ${isProcessing ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-black active:scale-95'}`}
+                    className={`px - 10 py - 3 rounded - xl font - bold text - white shadow - lg transition - all flex items - center gap - 2 ${isProcessing ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-black active:scale-95'} `}
                 >
                     {isProcessing ? (
                         <>
@@ -391,7 +425,7 @@ export const Comparator: React.FC = () => {
 
             {result && (
                 <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500 mb-12">
-                    <div className={`p-6 ${result.status === 'equal' ? 'bg-green-600' : 'bg-orange-600'} text-white`}>
+                    <div className={`p - 6 ${result.status === 'equal' ? 'bg-green-600' : 'bg-orange-600'} text - white`}>
                         <div className="flex justify-between items-center">
                             <div>
                                 <h3 className="text-xl font-bold uppercase tracking-tight">Resultado da Análise</h3>
@@ -445,7 +479,7 @@ export const Comparator: React.FC = () => {
                                                     </td>
                                                     <td className="py-4 text-center">
                                                         <div className="flex flex-col items-center">
-                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black ${div.statusSourceA === 'PRESENTE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                                                            <span className={`px - 2 py - 0.5 rounded text - [10px] font - black ${div.statusSourceA === 'PRESENTE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'} `}>
                                                                 {div.statusSourceA}
                                                             </span>
                                                             {div.confidence !== undefined && (
@@ -455,7 +489,7 @@ export const Comparator: React.FC = () => {
                                                     </td>
                                                     <td className="py-4 text-center">
                                                         <div className="flex flex-col items-center">
-                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black ${div.statusSourceB === 'PRESENTE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                                                            <span className={`px - 2 py - 0.5 rounded text - [10px] font - black ${div.statusSourceB === 'PRESENTE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'} `}>
                                                                 {div.statusSourceB}
                                                             </span>
                                                             {div.confidence !== undefined && (
@@ -605,13 +639,13 @@ export const Comparator: React.FC = () => {
                                             <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-200">
                                                 <div>
                                                     <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">{sourceA.label}</p>
-                                                    <p className={`text-xs font-medium ${div.statusSourceA === 'AUSENTE' ? 'text-red-600 italic' : 'text-black'}`}>
+                                                    <p className={`text - xs font - medium ${div.statusSourceA === 'AUSENTE' ? 'text-red-600 italic' : 'text-black'} `}>
                                                         {div.statusSourceA || 'N/A'}
                                                     </p>
                                                 </div>
                                                 <div>
                                                     <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">{sourceB.label}</p>
-                                                    <p className={`text-xs font-medium ${div.statusSourceB === 'AUSENTE' ? 'text-red-600 italic' : 'text-black'}`}>
+                                                    <p className={`text - xs font - medium ${div.statusSourceB === 'AUSENTE' ? 'text-red-600 italic' : 'text-black'} `}>
                                                         {div.statusSourceB || 'N/A'}
                                                     </p>
                                                 </div>
@@ -717,7 +751,7 @@ export const Comparator: React.FC = () => {
                                     className="bg-white p-4 rounded-2xl border border-slate-200 text-left hover:border-orange-500 hover:shadow-md transition-all group relative cursor-pointer"
                                 >
                                     <div className="flex justify-between items-start mb-2">
-                                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${h.analysis_result.status === 'equal' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}`}>
+                                        <span className={`px - 2 py - 0.5 rounded text - [8px] font - black uppercase ${h.analysis_result.status === 'equal' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'} `}>
                                             {h.analysis_result.status}
                                         </span>
                                         <div className="flex gap-2">
