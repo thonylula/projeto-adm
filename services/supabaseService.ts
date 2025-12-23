@@ -382,5 +382,16 @@ export const SupabaseService = {
             .delete()
             .eq('id', id);
         return !error;
+    },
+
+    // --- MORTALITY DATA ---
+    async getMortalityData(companyId: string, month: number, year: number): Promise<any | null> {
+        const id = `mortality_${companyId}_${year}_${month}`;
+        return this.getConfig(id);
+    },
+
+    async saveMortalityData(companyId: string, month: number, year: number, data: any): Promise<boolean> {
+        const id = `mortality_${companyId}_${year}_${month}`;
+        return this.saveConfig(id, data);
     }
 };

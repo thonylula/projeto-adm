@@ -237,6 +237,7 @@ export interface MortalityTankRecord {
   area: number;
   initialPopulation: number;
   density: number;
+  biometry?: string; // Manual biometry data
   dailyRecords: MortalityDailyRecord[];
 }
 
