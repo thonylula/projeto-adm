@@ -15,57 +15,53 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ data, companyNam
 
     return (
         <div
-            className="bg-white rounded-sm shadow-sm overflow-hidden animate-in fade-in duration-500 font-sans text-[#444] print:shadow-none"
-            style={{ border: '4px solid #f97316' }}
+            className="bg-white rounded-sm overflow-hidden font-sans text-[#444] print:shadow-none"
+            style={{
+                border: '6px solid #f97316',
+                margin: '2px',
+                WebkitPrintColorAdjust: 'exact'
+            }}
         >
             {/* Top Bar with Header Meta */}
-            <div className="p-3 border-b-2 flex justify-between items-center" style={{ borderColor: '#f97316' }}>
+            <div className="p-1 px-2 border-b-2 flex justify-between items-center" style={{ borderColor: '#f97316', borderBottom: '2px solid #f97316' }}>
                 <div className="space-y-0">
-                    <h1 className="text-sm font-black uppercase text-slate-800">{companyName || data.recipientName}</h1>
-                    <p className="text-[9px] text-slate-500 font-bold">CNPJ: {data.recipientCnpj || '---'}</p>
+                    <h1 className="text-[11px] font-black uppercase text-slate-800 leading-tight">{companyName || data.recipientName}</h1>
+                    <p className="text-[8px] text-slate-500 font-bold leading-tight">CNPJ: {data.recipientCnpj || '---'}</p>
                 </div>
                 <div className="text-right">
-                    <p className="text-[10px] font-black text-slate-700">Data de Emissão: {data.issueDate || '---'}</p>
+                    <p className="text-[9px] font-black text-slate-700 leading-tight">Data: {data.issueDate || '---'}</p>
                 </div>
             </div>
 
-            {/* Meta Info Grid */}
+            {/* Meta Info Grid - Using Flex for better PDF compatibility */}
             <div
-                className="grid grid-cols-3 gap-y-3 p-4 text-xs border-b-2"
-                style={{ borderColor: '#f97316', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)' }}
+                className="flex flex-wrap p-2 text-xs border-b-2"
+                style={{ borderColor: '#f97316', borderBottom: '2px solid #f97316' }}
             >
-                <div>
-                    <p className="text-[#999] font-bold mb-0.5 uppercase tracking-tighter text-[9px]">Emitente</p>
-                    <p className="font-extrabold uppercase text-slate-800 leading-tight text-xs">{data.issuerName || '---'}</p>
-                </div>
-                <div>
-                    <p className="text-[#999] font-bold mb-0.5 uppercase tracking-tighter text-[9px]">Destinatário</p>
-                    <p className="font-extrabold uppercase text-slate-800 leading-tight text-xs">{data.recipientName || '---'}</p>
-                </div>
-                <div>
-                    <p className="text-[#999] font-bold mb-0.5 uppercase tracking-tighter text-[9px]">Número da Nota</p>
-                    <p className="font-extrabold text-slate-800 text-xs">{data.invoiceNumber || '---'}</p>
-                </div>
-                <div>
-                    <p className="text-[#999] font-bold mb-0.5 uppercase tracking-tighter text-[9px]">Série</p>
-                    <p className="font-extrabold text-slate-800 text-xs">{data.series || '1'}</p>
-                </div>
-                <div>
-                    <p className="text-[#999] font-bold mb-0.5 uppercase tracking-tighter text-[9px]">Data de Emissão</p>
-                    <p className="font-extrabold text-slate-800 text-xs">{data.issueDate || '---'}</p>
-                </div>
-                <div>
-                    <p className="text-[#999] font-bold mb-0.5 uppercase tracking-tighter text-[9px]">Valor Total</p>
-                    <p className="text-lg font-black text-green-600">{formatCurrency(data.totalValue)}</p>
-                </div>
+                {[
+                    { label: 'Emitente', value: data.issuerName || '---' },
+                    { label: 'Destinatário', value: data.recipientName || '---' },
+                    { label: 'Número da Nota', value: data.invoiceNumber || '---' },
+                    { label: 'Série', value: data.series || '1' },
+                    { label: 'Emissão', value: data.issueDate || '---' },
+                    { label: 'Valor Total', value: formatCurrency(data.totalValue), isPrice: true }
+                ].map((info, i) => (
+                    <div key={i} style={{ width: '33.33%', padding: '1px 2px', marginBottom: '4px' }}>
+                        <p className="text-[#999] font-black mb-0 uppercase tracking-tighter text-[7px] leading-tight">{info.label}</p>
+                        <p className={`font-black uppercase text-slate-800 leading-tight ${info.isPrice ? 'text-sm text-green-600' : 'text-[9px]'}`}>{info.value}</p>
+                    </div>
+                ))}
             </div>
 
             {/* Items Section */}
-            <div className="p-3">
-                <h2 className="text-lg font-black text-slate-800 mb-1 uppercase tracking-tight">
-                    Itens
-                </h2>
-                <div className="h-1.5 w-full bg-orange-500 mb-2 rounded-none" style={{ backgroundColor: '#f97316' }} />
+            <div className="p-1 px-2">
+                <div className="flex justify-between items-end mb-0.5">
+                    <h2 className="text-[11px] font-black text-slate-800 uppercase tracking-tight">
+                        Itens da Nota
+                    </h2>
+                    <span className="text-[8px] font-bold text-slate-400">Qtd: {data.items.length}</span>
+                </div>
+                <div className="h-1 w-full bg-orange-500 mb-1 rounded-none" style={{ backgroundColor: '#f97316' }} />
 
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
@@ -94,9 +90,9 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ data, companyNam
                                     </td>
                                 </tr>
                             ))}
-                            <tr className="border-t-2 border-orange-500 bg-orange-50">
-                                <td colSpan={4} className="px-2 py-3 text-right text-xs font-black text-slate-800 uppercase tracking-wide">Total Geral:</td>
-                                <td className="px-2 py-3 text-right text-base font-black text-green-600">
+                            <tr className="border-t-2 bg-orange-50" style={{ borderTop: '2px solid #f97316' }}>
+                                <td colSpan={4} className="px-2 py-1 text-right text-[10px] font-black text-slate-800 uppercase tracking-wide">Total Geral:</td>
+                                <td className="px-2 py-1 text-right text-sm font-black text-green-600">
                                     {formatCurrency(data.items.reduce((sum, item) => sum + item.total, 0))}
                                 </td>
                             </tr>
