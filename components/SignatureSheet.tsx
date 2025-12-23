@@ -65,14 +65,7 @@ export const SignatureSheet: React.FC<SignatureSheetProps> = ({ employeeNames, c
                 {companyLogo && <img src={companyLogo} alt="Logo" className="h-8 w-auto opacity-40 grayscale" />}
             </div>
 
-            <div className="mt-8 text-center print:hidden p-4">
-                <button
-                    onClick={() => window.print()}
-                    className="bg-orange-600 text-white px-8 py-3 rounded-sm font-black uppercase text-sm hover:bg-orange-700 transition-all shadow-lg active:scale-95"
-                >
-                    Imprimir Folha de Assinaturas
-                </button>
-            </div>
+
         </div>
     );
 };
