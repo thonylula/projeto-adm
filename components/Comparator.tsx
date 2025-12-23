@@ -65,7 +65,8 @@ export const Comparator: React.FC = () => {
             "documentNumber": "NF", "cnpj": "CNPJ", "companyName": "Empresa",
             "statusSourceA": "PRESENTE" | "AUSENTE", "statusSourceB": "PRESENTE" | "AUSENTE",
             "severity": "high" | "medium" | "low", "date": "ISO", "isCancelled": boolean,
-            "isNFSe": boolean, "isMissing": boolean 
+            "isNFSe": boolean, "isMissing": boolean,
+            "description": "Explicação curta do motivo da divergência (Ex: Falta na Origem A)"
         }],
         "observations": "Comentários"
       }
@@ -114,7 +115,8 @@ export const Comparator: React.FC = () => {
             "date": "Data ISO (YYYY-MM-DD)", 
             "isMissing": boolean,
             "confidence": 0.0 a 1.0,
-            "flags": ["inconsistencia_valor", "baixo_conf", "biometria_fora_faixa", etc]
+            "flags": ["inconsistencia_valor", "baixo_conf", "biometria_fora_faixa", etc],
+            "description": "Descrição detalhada do porquê divergiu (Ex: Valor não confere com Prod*Preço ou Ausente no Sistema)"
         }],
         "observations": "Lista detalhada de cada inconsistência e prova matemática do erro se houver."
       }
@@ -433,7 +435,8 @@ export const Comparator: React.FC = () => {
                                                     <td className="py-4 text-xs text-black">{div.cnpj || 'N/A'}</td>
                                                     <td className="py-4">
                                                         <div className="flex flex-col">
-                                                            <span className="text-xs text-black font-medium">{div.companyName || 'N/A'}</span>
+                                                            <span className="text-xs text-black font-bold mb-1">{div.description || (analysisType === 'spreadsheet' ? 'Divergência de Dados' : 'Ausente/Divergente')}</span>
+                                                            <span className="text-[10px] text-slate-500 font-medium">{div.companyName || 'N/A'}</span>
                                                             {div.flags && div.flags.length > 0 && (
                                                                 <div className="flex flex-wrap gap-1 mt-1">
                                                                     {div.flags.map((f: string) => (
@@ -672,7 +675,8 @@ export const Comparator: React.FC = () => {
                                         <td className="py-4 font-bold text-slate-900 text-sm">{div.documentNumber}</td>
                                         <td className="py-4 text-xs text-slate-600">{div.cnpj}</td>
                                         <td className="py-4">
-                                            <p className="text-xs font-medium text-slate-800">{div.companyName}</p>
+                                            <p className="text-xs font-bold text-slate-900 mb-0.5">{div.description || 'Divergência Detectada'}</p>
+                                            <p className="text-[10px] font-medium text-slate-500">{div.companyName}</p>
                                             {div.flags && div.flags.map((f: string) => (
                                                 <span key={f} className="inline-block bg-red-50 text-red-600 text-[7px] font-black px-1 py-0.5 rounded border border-red-100 uppercase mr-1 mt-1">
                                                     {f}
