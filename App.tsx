@@ -290,11 +290,35 @@ export default function App() {
         )}
 
         {activeTab === 'budget' && (
-          <BudgetPage activeCompany={activeCompany} />
+          <>
+            {activeCompany ? (
+              <BudgetPage activeCompany={activeCompany} />
+            ) : (
+              <CompanySelection
+                companies={companies}
+                onAddCompany={handleAddCompany}
+                onUpdateCompany={handleUpdateCompany}
+                onDeleteCompany={handleDeleteCompany}
+                onSelectCompany={handleSelectCompany}
+              />
+            )}
+          </>
         )}
 
         {activeTab === 'mortalidade' && (
-          <MortalidadeConsumo activeCompany={activeCompany} />
+          <>
+            {activeCompany ? (
+              <MortalidadeConsumo activeCompany={activeCompany} />
+            ) : (
+              <CompanySelection
+                companies={companies}
+                onAddCompany={handleAddCompany}
+                onUpdateCompany={handleUpdateCompany}
+                onDeleteCompany={handleDeleteCompany}
+                onSelectCompany={handleSelectCompany}
+              />
+            )}
+          </>
         )}
 
         {activeTab === 'comparator' && (
