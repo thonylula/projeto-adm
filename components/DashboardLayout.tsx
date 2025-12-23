@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { OperationsAssistant } from './OperationsAssistant';
 
-type Tab = 'payroll' | 'settings' | 'biometrics' | 'fiscal' | 'registrations' | 'pantry' | 'delivery-order' | 'comparator';
+type Tab = 'payroll' | 'settings' | 'biometrics' | 'fiscal' | 'registrations' | 'pantry' | 'delivery-order' | 'comparator' | 'budget';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -11,6 +11,140 @@ interface DashboardLayoutProps {
   onLogout: () => void;
   currentUser: string;
 }
+
+const NavItem: React.FC<{
+  item: any;
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  setIsMobileMenuOpen: (open: boolean) => void;
+}> = ({ item, activeTab, onTabChange, setIsMobileMenuOpen }) => {
+  const isPayroll = item.id === 'payroll';
+  const isPantry = item.id === 'pantry';
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [expandedYear, setExpandedYear] = useState<number | null>(new Date().getFullYear());
+
+  const years = [2024, 2025, 2026];
+  const months = [
+    { id: 1, label: 'JAN' }, { id: 2, label: 'FEV' }, { id: 3, label: 'MAR' },
+    { id: 4, label: 'ABR' }, { id: 5, label: 'MAI' }, { id: 6, label: 'JUN' },
+    { id: 7, label: 'JUL' }, { id: 8, label: 'AGO' }, { id: 9, label: 'SET' },
+    { id: 10, label: 'OUT' }, { id: 11, label: 'NOV' }, { id: 12, label: 'DEZ' }
+  ];
+
+  const isActive = activeTab === item.id || (isPantry && activeTab === 'budget');
+
+  return (
+    <div className="space-y-1">
+      <button
+        onClick={() => {
+          if (isPayroll || isPantry) {
+            setIsExpanded(!isExpanded);
+          }
+          if (!isPayroll && !isPantry) {
+            onTabChange(item.id);
+            setIsMobileMenuOpen(false);
+          } else {
+            // Se clicar no item pai, a gente só expande
+          }
+        }}
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
+          ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50'
+          : 'hover:bg-slate-800 hover:text-white'
+          }`}
+      >
+        <span className={`${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
+          {item.icon}
+        </span>
+        <span className="font-medium text-sm uppercase text-left leading-tight">{item.label}</span>
+        {(isPayroll || isPantry) && (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className={`w-4 h-4 ml-auto transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+          </svg>
+        )}
+        {isActive && !isPayroll && !isPantry && (
+          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white flex-shrink-0"></span>
+        )}
+      </button>
+
+      {/* Submenu Folha Salarial - Anos */}
+      {isPayroll && isExpanded && (
+        <div className="ml-9 space-y-1 border-l border-slate-800 pl-2 py-1">
+          {years.map(year => (
+            <div key={year} className="space-y-1">
+              <button
+                onClick={() => setExpandedYear(expandedYear === year ? null : year)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold transition-colors ${expandedYear === year ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  }`}
+              >
+                <span>{year}</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className={`w-3 h-3 transition-transform ${expandedYear === year ? 'rotate-180' : ''}`}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                </svg>
+              </button>
+
+              {expandedYear === year && (
+                <div className="grid grid-cols-3 gap-1 px-1">
+                  {months.map(month => (
+                    <button
+                      key={month.id}
+                      onClick={() => {
+                        window.dispatchEvent(new CustomEvent('app-navigation', {
+                          detail: { tab: 'payroll', year, month: month.id }
+                        }));
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="px-1 py-2 rounded text-[10px] font-medium text-slate-500 hover:bg-orange-600/20 hover:text-orange-400 transition-colors text-center"
+                    >
+                      {month.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Submenu Cestas Básicas */}
+      {isPantry && isExpanded && (
+        <div className="ml-9 space-y-1 border-l border-slate-800 pl-2 py-1">
+          <button
+            onClick={() => {
+              onTabChange('pantry');
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeTab === 'pantry' ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+          >
+            📦 Processamento
+          </button>
+          <button
+            onClick={() => {
+              onTabChange('budget');
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeTab === 'budget' ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+          >
+            💰 Orçamento
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
@@ -21,12 +155,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Atualiza o título da página (aparece na aba do navegador e na barra do dispositivo)
   useEffect(() => {
     document.title = `Adm: ${currentUser}`;
   }, [currentUser]);
 
-  // Lista de itens do menu
   const menuItems = [
     {
       id: 'payroll',
@@ -93,12 +225,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     }
   ];
 
-  // Ordenação Alfabética
   const navItems = menuItems.sort((a, b) => a.label.localeCompare(b.label));
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row print:bg-white print:block">
-
       {/* Mobile Header */}
       <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center print:hidden">
         <span className="font-bold text-lg truncate max-w-[200px]">Adm: {currentUser}</span>
@@ -132,105 +262,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
         {/* Navigation Items */}
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {navItems.map((item) => {
-            const isPayroll = item.id === 'payroll';
-            const [isPayrollExpanded, setIsPayrollExpanded] = useState(false);
-            const [expandedYear, setExpandedYear] = useState<number | null>(new Date().getFullYear());
-
-            const years = [2024, 2025, 2026];
-            const months = [
-              { id: 1, label: 'JAN' }, { id: 2, label: 'FEV' }, { id: 3, label: 'MAR' },
-              { id: 4, label: 'ABR' }, { id: 5, label: 'MAI' }, { id: 6, label: 'JUN' },
-              { id: 7, label: 'JUL' }, { id: 8, label: 'AGO' }, { id: 9, label: 'SET' },
-              { id: 10, label: 'OUT' }, { id: 11, label: 'NOV' }, { id: 12, label: 'DEZ' }
-            ];
-
-            return (
-              <div key={item.id} className="space-y-1">
-                <button
-                  onClick={() => {
-                    if (isPayroll) {
-                      setIsPayrollExpanded(!isPayrollExpanded);
-                    }
-                    onTabChange(item.id);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${activeTab === item.id
-                    ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50'
-                    : 'hover:bg-slate-800 hover:text-white'
-                    }`}
-                >
-                  <span className={`${activeTab === item.id ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
-                    {item.icon}
-                  </span>
-                  <span className="font-medium text-sm uppercase text-left leading-tight">{item.label}</span>
-                  {isPayroll && (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                      className={`w-4 h-4 ml-auto transition-transform ${isPayrollExpanded ? 'rotate-180' : ''}`}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                    </svg>
-                  )}
-                  {activeTab === item.id && !isPayroll && (
-                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white flex-shrink-0"></span>
-                  )}
-                </button>
-
-                {/* Submenu Folha Salarial - Anos */}
-                {isPayroll && isPayrollExpanded && (
-                  <div className="ml-9 space-y-1 border-l border-slate-800 pl-2 py-1">
-                    {years.map(year => (
-                      <div key={year} className="space-y-1">
-                        <button
-                          onClick={() => setExpandedYear(expandedYear === year ? null : year)}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold transition-colors ${expandedYear === year ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                            }`}
-                        >
-                          <span>{year}</span>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className={`w-3 h-3 transition-transform ${expandedYear === year ? 'rotate-180' : ''}`}
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                          </svg>
-                        </button>
-
-                        {/* Submenu Meses */}
-                        {expandedYear === year && (
-                          <div className="grid grid-cols-3 gap-1 px-1">
-                            {months.map(month => (
-                              <button
-                                key={month.id}
-                                onClick={() => {
-                                  // Dispara evento para o App.tsx
-                                  window.dispatchEvent(new CustomEvent('app-navigation', {
-                                    detail: { tab: 'payroll', year, month: month.id }
-                                  }));
-                                  setIsMobileMenuOpen(false);
-                                }}
-                                className="px-1 py-2 rounded text-[10px] font-medium text-slate-500 hover:bg-orange-600/20 hover:text-orange-400 transition-colors text-center"
-                              >
-                                {month.label}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {navItems.map((item) => (
+            <NavItem
+              key={item.id}
+              item={item}
+              activeTab={activeTab}
+              onTabChange={onTabChange}
+              setIsMobileMenuOpen={setIsMobileMenuOpen}
+            />
+          ))}
         </nav>
 
         {/* User Footer */}
@@ -255,7 +295,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             Sair do Sistema
           </button>
 
-          {/* Migration Button */}
           <div className="mt-4 pt-4 border-t border-slate-800">
             <button
               onClick={async () => {
@@ -276,7 +315,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-auto h-[calc(100vh-60px)] md:h-screen w-full relative print:h-auto print:overflow-visible">
-        {/* Decorative Background inside Content Area */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 print:hidden opacity-50 md:opacity-100">
           <div className="absolute top-[5%] right-[5%] w-[40%] h-[40%] rounded-full bg-orange-100/50 blur-3xl" />
           <div className="absolute bottom-[5%] left-[10%] w-[30%] h-[30%] rounded-full bg-blue-50/50 blur-3xl" />
@@ -287,7 +325,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         </div>
       </main>
 
-      {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden print:hidden"
@@ -295,7 +332,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         />
       )}
 
-      {/* Operations Assistant (AI) */}
       <OperationsAssistant />
     </div>
   );

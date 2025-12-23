@@ -194,12 +194,15 @@ export interface InvoiceItem {
   unit: string;
   price: number;
   total: number;
+  issuerName?: string;
+  issuerAddress?: string;
 }
 
 export interface InvoiceData {
   recipientName: string;
   recipientCnpj: string;
   issuerName: string;
+  issuerAddress: string;
   invoiceNumber: string;
   series: string;
   issueDate: string;
