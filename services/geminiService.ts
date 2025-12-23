@@ -13,19 +13,17 @@ export async function extractInvoiceData(base64: string, mimeType: string): Prom
     1. Nome do destinatário (empresa ou pessoa que comprou).
     2. CNPJ do destinatário.
     3. Nome do emitente (vendedor).
-    4. Endereço completo do emitente (rua, número, bairro, cidade, estado).
-    5. Número da nota fiscal.
-    6. Série da nota.
-    7. Data de emissão.
-    8. Valor total da nota.
-    9. Lista de itens comprados, contendo: código, descrição, quantidade, unidade, preço unitário e total do item.
+    4. Número da nota fiscal.
+    5. Série da nota.
+    6. Data de emissão.
+    7. Valor total da nota.
+    8. Lista de itens comprados, contendo: código, descrição, quantidade, unidade, preço unitário e total do item.
 
     Responda EXCLUSIVAMENTE em formato JSON seguindo esta estrutura:
     {
       "recipientName": "Nome extraído",
       "recipientCnpj": "00.000.000/0000-00",
       "issuerName": "Nome do vendedor",
-      "issuerAddress": "Endereço completo do vendedor",
       "invoiceNumber": "12345",
       "series": "1",
       "issueDate": "DD/MM/AAAA",

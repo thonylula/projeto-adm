@@ -5,13 +5,12 @@ import { ImageUploader } from './ImageUploader';
 import { InvoiceSummary } from './InvoiceSummary';
 import { SignatureSheet } from './SignatureSheet';
 import { PantryList } from './PantryList';
-import { BudgetList } from './BudgetList';
 import { ReceiptIcon, SignatureIcon, BasketIcon } from './icons';
 import { exportToPng, exportToHtml, exportToPdf } from '../utils/exportUtils';
 import { SupabaseService } from '../services/supabaseService';
 import { getExcludedEmployees, toggleExclusion, getCurrentMonthYear } from '../utils/basketExclusions';
 
-type Tab = 'summary' | 'signature' | 'pantry' | 'budget';
+type Tab = 'summary' | 'signature' | 'pantry';
 type AppMode = 'BASIC' | 'CHRISTMAS';
 
 const employeeNames = [
@@ -322,11 +321,7 @@ export const CestasBasicas: React.FC = () => {
                 const aggregatedData: InvoiceData = {
                     ...results[0],
                     totalValue: results.reduce((sum, data) => sum + data.totalValue, 0),
-                    items: results.flatMap(data => data.items.map(item => ({
-                        ...item,
-                        issuerName: data.issuerName,
-                        issuerAddress: data.issuerAddress
-                    })))
+                    items: results.flatMap(data => data.items)
                 };
                 setInvoiceData(aggregatedData);
             }
@@ -412,12 +407,6 @@ export const CestasBasicas: React.FC = () => {
             {icon}
             {label}
         </button>
-    );
-
-    const BudgetIcon = () => (
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
     );
 
     // --- Initial Mode Selection ---
@@ -714,8 +703,8 @@ export const CestasBasicas: React.FC = () => {
                                                             key={type}
                                                             onClick={() => toggleAllocation(item.id, type as any)}
                                                             className={`flex-1 text-[8px] font-black p-1.5 rounded-sm border transition-all ${config.mode === type && !isCustom
-                                                                ? (appMode === 'CHRISTMAS' ? 'bg-red-600 border-red-600 text-white' : 'bg-indigo-600 border-indigo-600 text-white')
-                                                                : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400'
+                                                                    ? (appMode === 'CHRISTMAS' ? 'bg-red-600 border-red-600 text-white' : 'bg-indigo-600 border-indigo-600 text-white')
+                                                                    : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400'
                                                                 }`}
                                                         >
                                                             {type === 'ALL' ? 'TODOS' : type === 'NON_DRINKER' ? 'NÃO BEBEM' : 'BEBEM'}
@@ -835,7 +824,6 @@ export const CestasBasicas: React.FC = () => {
                             <TabButton tabName="summary" icon={<ReceiptIcon className="w-5 h-5" />} label="Resumo" />
                             <TabButton tabName="signature" icon={<SignatureIcon className="w-5 h-5" />} label="Assinaturas" />
                             <TabButton tabName="pantry" icon={<BasketIcon className="w-5 h-5" />} label="Lista p/ Funcionário" />
-                            <TabButton tabName="budget" icon={<BudgetIcon />} label="Orçamento" />
                         </div>
 
                         <div id="active-view" className="animate-in fade-in duration-700">
@@ -855,7 +843,6 @@ export const CestasBasicas: React.FC = () => {
                                     appMode={appMode}
                                 />
                             )}
-                            {activeTab === 'budget' && <BudgetList items={invoiceData.items} companyName={companyName} />}
                         </div>
                     </div>
                 )}
