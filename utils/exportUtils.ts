@@ -10,17 +10,17 @@ export const exportToPdf = async (elementId: string, fileName: string) => {
     if (!element) return;
 
     const opt = {
-        margin: [5, 5] as [number, number],
+        margin: [2, 2] as [number, number],
         filename: `${fileName}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
+        image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: {
             scale: 2,
             useCORS: true,
             letterRendering: true,
             logging: false
         },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] as const }
     };
 
     try {
