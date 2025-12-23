@@ -69,37 +69,45 @@ export const Comparator: React.FC = () => {
         "observations": "Comentários"
       }
     ` : `
-      Você é um assistente de auditoria financeira.
-      Sua tarefa é comparar PLANILHAS da fonte "${sourceA.label}" e da fonte "${sourceB.label}".
-      
-      Mapeamento de Colunas (Equivalência):
-      1. Data desp. = Dt. emissão
-      2. Cliente = Pessoa
-      3. Valor R$ = Vl.OE
+      ### PIPELINE DE AUDITORIA DE ALTA PRECISÃO (FOCO 100% ACERTIVIDADE) ###
+      Você atuará como um Ensemble OCR de Auditoria Financeira e Logística. 
+      Sua tarefa é comparar ${sourceA.label} e ${sourceB.label} seguindo o protocolo:
 
-      Critérios de Análise:
-      - Compare os lançamentos usando Data, Cliente e Valor como chaves de conferência.
-      - Liste TODOS os lançamentos.
-      - Aponte divergência se algum campo (Data, Cliente ou Valor) for diferente entre as fontes para o mesmo lançamento.
-      - Marque como OK se todos os campos baterem perfeitamente.
+      1. MAPEAMENTO E NORMALIZAÇÃO:
+         - Campo Data: "Data desp." equivale a "Dt. emissão" (Normalizar dd/mm/aaaa).
+         - Campo Cliente: "Cliente" equivale a "Pessoa" (Normalizar nomes, remover ruídos).
+         - Campo Valor: "Valor R$" equivale a "Vl.OE" (Normalizar separadores decimais).
+
+      2. VALIDAÇÃO MATEMÁTICA ESTRITA:
+         - Regra: Valor ≈ Prod(kg) × Preço (Tolerância: 0.5% para arredondamentos).
+         - Se |(Prod*Preço) - Valor| / (Prod*Preço) > 0.005, use a flag "inconsistencia_valor".
+
+      3. REGRAS DE INTERVENÇÃO (FLAGS):
+         - "biometria_fora_faixa": Se Biometria(g) < 8 ou > 30.
+         - "baixo_conf": Se houver ambiguidade no OCR ou rasuras.
+         - "data_invalida": Se a data for futura ou fora do esperado.
+
+      4. PROTOCOLO DE CONCORDÂNCIA:
+         - Simule um Ensemble de 3 motores. Aceite o valor apenas se houver concordância majoritária.
+         - Se houver divergência entre as fontes ou falha nas regras matemáticas, a discrepância deve ser marcada como "divergent".
 
       Responda EXCLUSIVAMENTE em formato JSON:
       {
         "status": "divergent" | "equal",
-        "summary": "Resumo focado nas 3 colunas principais",
+        "summary": "Resumo executivo com métricas de confiança",
         "divergences": [{ 
             "documentNumber": "Data do Lançamento", 
             "cnpj": "Cliente/Pessoa", 
-            "companyName": "Valor conferido (ou divergência encontrada)",
+            "companyName": "Valor",
             "statusSourceA": "PRESENTE" | "AUSENTE", 
             "statusSourceB": "PRESENTE" | "AUSENTE",
             "severity": "high" | "medium" | "low", 
-            "date": "Data em formato ISO", 
-            "isCancelled": false,
-            "isNFSe": false, 
-            "isMissing": boolean 
+            "date": "Data ISO", 
+            "isMissing": boolean,
+            "confidence": 0.0 a 1.0,
+            "flags": ["inconsistencia_valor", "baixo_conf", "biometria_fora_faixa", etc]
         }],
-        "observations": "Notas detalhadas sobre as divergências de Data, Cliente ou Valor"
+        "observations": "Lista de inconsistências encontradas e sugestões de correção"
       }
     `;
 
@@ -296,9 +304,9 @@ export const Comparator: React.FC = () => {
                                             <tr className="text-[10px] font-black text-black uppercase tracking-widest border-b border-slate-200">
                                                 <th className="pb-4">{analysisType === 'nf' ? 'Nº Nota Fiscal' : 'Data'}</th>
                                                 <th className="pb-4">{analysisType === 'nf' ? 'CNPJ' : 'Cliente / Pessoa'}</th>
-                                                <th className="pb-4">{analysisType === 'nf' ? 'Nome da Empresa' : 'Resumo Valor'}</th>
-                                                <th className="pb-4 text-center">{sourceA.label} (Situação)</th>
-                                                <th className="pb-4 text-center">{sourceB.label} (Situação)</th>
+                                                <th className="pb-4">{analysisType === 'nf' ? 'Nome da Empresa' : 'Divergência / Flags'}</th>
+                                                <th className="pb-4 text-center">{sourceA.label}</th>
+                                                <th className="pb-4 text-center">{sourceB.label}</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
@@ -306,16 +314,39 @@ export const Comparator: React.FC = () => {
                                                 <tr key={idx} className="hover:bg-red-50/30 transition-colors">
                                                     <td className="py-4 font-bold text-black">{div.documentNumber || 'N/A'}</td>
                                                     <td className="py-4 text-xs text-black">{div.cnpj || 'N/A'}</td>
-                                                    <td className="py-4 text-xs text-black">{div.companyName || 'N/A'}</td>
-                                                    <td className="py-4 text-center">
-                                                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${div.statusSourceA === 'PRESENTE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                            {div.statusSourceA || 'N/A'}
-                                                        </span>
+                                                    <td className="py-4">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-xs text-black font-medium">{div.companyName || 'N/A'}</span>
+                                                            {div.flags && div.flags.length > 0 && (
+                                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                                    {div.flags.map((f: string) => (
+                                                                        <span key={f} className="bg-red-50 text-red-600 text-[8px] font-black px-1.5 py-0.5 rounded border border-red-100 uppercase">
+                                                                            {f}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                     <td className="py-4 text-center">
-                                                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${div.statusSourceB === 'PRESENTE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                            {div.statusSourceB || 'N/A'}
-                                                        </span>
+                                                        <div className="flex flex-col items-center">
+                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black ${div.statusSourceA === 'PRESENTE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                                                                {div.statusSourceA}
+                                                            </span>
+                                                            {div.confidence !== undefined && (
+                                                                <span className="text-[8px] mt-1 font-bold text-slate-400">CONF: {(div.confidence * 100).toFixed(0)}%</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-4 text-center">
+                                                        <div className="flex flex-col items-center">
+                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black ${div.statusSourceB === 'PRESENTE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                                                                {div.statusSourceB}
+                                                            </span>
+                                                            {div.confidence !== undefined && (
+                                                                <span className="text-[8px] mt-1 font-bold text-slate-400">CONF: {(div.confidence * 100).toFixed(0)}%</span>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -351,7 +382,14 @@ export const Comparator: React.FC = () => {
                                                 <tr key={idx} className="hover:bg-green-50/30 transition-colors">
                                                     <td className="py-3 text-xs font-bold text-black">{div.documentNumber || 'N/A'}</td>
                                                     <td className="py-3 text-xs text-black">{div.cnpj || 'N/A'}</td>
-                                                    <td className="py-3 text-xs text-black font-medium">{div.companyName || 'N/A'}</td>
+                                                    <td className="py-3 text-xs text-black font-medium">
+                                                        <div className="flex flex-col">
+                                                            <span>{div.companyName || 'N/A'}</span>
+                                                            {div.confidence !== undefined && (
+                                                                <span className="text-[8px] font-black text-green-500 uppercase mt-0.5">CONFIANÇA: {(div.confidence * 100).toFixed(0)}%</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
                                                     <td className="py-3 text-center">
                                                         <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-green-100 text-green-600">
                                                             CONFERIDO
