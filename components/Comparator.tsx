@@ -164,6 +164,23 @@ export const Comparator: React.FC = () => {
         }
     };
 
+    const handlePaste = (e: React.ClipboardEvent, side: 'A' | 'B') => {
+        const items = e.clipboardData.items;
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf("image") !== -1) {
+                const blob = items[i].getAsFile();
+                if (blob) {
+                    const file = new File([blob], `screenshot_${side}_${Date.now()}.png`, { type: blob.type });
+                    if (side === 'A') {
+                        setSourceA({ ...sourceA, file, label: file.name });
+                    } else {
+                        setSourceB({ ...sourceB, file, label: file.name });
+                    }
+                }
+            }
+        }
+    };
+
     return (
         <div className="w-full max-w-6xl mx-auto pb-20">
             <header className="mb-8">
@@ -203,9 +220,10 @@ export const Comparator: React.FC = () => {
                     </div>
                     <textarea
                         className="w-full h-32 p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 outline-none mb-4"
-                        placeholder="Cole o texto aqui ou anexe um arquivo abaixo..."
+                        placeholder="Cole o texto ou PRINTE uma imagem aqui..."
                         value={sourceA.text}
                         onChange={(e) => setSourceA({ ...sourceA, text: e.target.value })}
+                        onPaste={(e) => handlePaste(e, 'A')}
                     />
                     <input
                         type="file"
@@ -232,9 +250,10 @@ export const Comparator: React.FC = () => {
                     </div>
                     <textarea
                         className="w-full h-32 p-3 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none mb-4"
-                        placeholder="Cole o texto aqui ou anexe um arquivo abaixo..."
+                        placeholder="Cole o texto ou PRINTE uma imagem aqui..."
                         value={sourceB.text}
                         onChange={(e) => setSourceB({ ...sourceB, text: e.target.value })}
+                        onPaste={(e) => handlePaste(e, 'B')}
                     />
                     <input
                         type="file"
