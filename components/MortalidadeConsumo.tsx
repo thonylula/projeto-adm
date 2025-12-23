@@ -53,7 +53,11 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         if (dayRecord) {
             dayRecord[field] = numValue;
         } else {
-            record.dailyRecords.push({ day, [field]: numValue } as MortalityDailyRecord);
+            record.dailyRecords.push({
+                day,
+                feed: field === 'feed' ? numValue : 0,
+                mortality: field === 'mortality' ? numValue : 0
+            });
         }
         setData(newData);
     };
@@ -70,13 +74,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         }, 0);
     };
 
-    if (!activeCompany) {
-        return (
-            <div className="flex flex-col items-center justify-center h-64 bg-white rounded-2xl border-2 border-dashed border-slate-200">
-                <p className="text-slate-500 font-medium">Selecione uma empresa para visualizar os dados.</p>
-            </div>
-        );
-    }
+    // activeCompany check is handled in App.tsx routing
 
     return (
         <div className="space-y-6">
