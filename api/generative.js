@@ -3,9 +3,12 @@ const API_KEY = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
 
 // Fallback list of models requested by the user - prioritizing 1.5 Pro
 const MODELS_FALLBACK_LIST = [
+    "gemini-3-flash",
+    "gemini-2.5-pro",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
     "gemini-1.5-pro",
     "gemini-1.5-flash",
-    "gemini-2.0-flash",
     "gemini-pro-latest",
     "gemini-flash-latest"
 ];

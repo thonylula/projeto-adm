@@ -106,7 +106,7 @@ export const Comparator: React.FC = () => {
       }
     `;
 
-        const analysis = await processFiles(files, prompt, 'gemini-1.5-pro');
+        const analysis = await processFiles(files, prompt, 'gemini-3-flash');
         if (analysis) {
             // Ordenar divergências por data (cronologicamente)
             if (analysis.divergences && Array.isArray(analysis.divergences)) {
