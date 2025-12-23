@@ -86,9 +86,10 @@ export const Comparator: React.FC = () => {
       - Normalize Datas (DD/MM/AAAA) e Nomes (Remova "LTDA", "EPP", etc).
 
       FASE 3: IDENTIDADE SEMÂNTICA (MATCHING DE ELITE)
+      - CRITÉRIO DE PESO: A reconciliação deve priorizar primeiro o [VALOR R$] (exatidão numérica) e, em segundo lugar, a [DATA].
       - Resolva nomes abreviados por contexto. 
       - Exemplo: "BAIANO" na planilha é IDENTIDADE COMPLETA com "JOSÉ JURANDI DOS SANTOS-BAIANO".
-      - Compare: [Data] + [Pessoa/Cliente] + [Valor Total].
+      - Ordem de Match: 1. Valor -> 2. Data -> 3. Cliente/Pessoa.
 
       FASE 4: VARREDURA DE OMISSÕES E DISCREPÂNCIAS
       - Um registro é "OK" apenas se houver Match 1:1 total nas fontes e passar na Trava Matemática.
