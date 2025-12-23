@@ -14,6 +14,7 @@ interface ComparisonRecord {
 export const Comparator: React.FC = () => {
     const [sourceA, setSourceA] = useState<{ text: string; file: File | null; label: string }>({ text: '', file: null, label: 'Origem A' });
     const [sourceB, setSourceB] = useState<{ text: string; file: File | null; label: string }>({ text: '', file: null, label: 'Origem B' });
+    const [analysisType, setAnalysisType] = useState<'nf' | 'spreadsheet'>('nf');
     const [result, setResult] = useState<any>(null);
     const [history, setHistory] = useState<ComparisonRecord[]>([]);
     const { processFiles, isProcessing } = useGeminiParser();
@@ -37,7 +38,7 @@ export const Comparator: React.FC = () => {
         if (sourceA.file) files.push(sourceA.file);
         if (sourceB.file) files.push(sourceB.file);
 
-        const prompt = `
+        const prompt = analysisType === 'nf' ? `
       Você é um assistente de auditoria especialista em encontrar divergências.
       Sua tarefa é comparar a fonte "${sourceA.label}" e a fonte "${sourceB.label}" e listar TODAS as discrepâncias encontradas.
       
@@ -51,39 +52,57 @@ export const Comparator: React.FC = () => {
 
       Analise detalhadamente:
       1. Identifique Documentos Ausentes em uma das fontes (Divergência Crítica).
-      2. Identifique Documentos Presentes em ambas as fontes (Mesmo se houver pequenas divergências de nome/data, o usuário as considera OK se o documento existir em ambos).
+      2. Identifique Documentos Presentes em ambas as fontes.
       3. Valores numéricos, impostos e datas.
       4. Itens cancelados ou inutilizados.
 
-      Responda EXCLUSIVAMENTE em formato JSON estruturado como este exemplo:
+      Responda EXCLUSIVAMENTE em formato JSON:
       {
         "status": "divergent" | "equal",
-        "summary": "Breve resumo da análise",
-        "divergences": [
-          { 
-            "documentNumber": "Número da Nota Fiscal ou Documento",
-            "cnpj": "CNPJ da empresa",
-            "companyName": "Nome da Empresa",
-            "statusSourceA": "PRESENTE" | "AUSENTE",
-            "statusSourceB": "PRESENTE" | "AUSENTE",
-            "severity": "high" | "medium" | "low",
-            "date": "YYYY-MM-DD ou null",
-            "isCancelled": boolean,
-            "isNFSe": boolean,
-            "isMissing": boolean
-          }
-        ],
-        "observations": "Comentários adicionais"
+        "summary": "Resumo",
+        "divergences": [{ 
+            "documentNumber": "NF", "cnpj": "CNPJ", "companyName": "Empresa",
+            "statusSourceA": "PRESENTE" | "AUSENTE", "statusSourceB": "PRESENTE" | "AUSENTE",
+            "severity": "high" | "medium" | "low", "date": "ISO", "isCancelled": boolean,
+            "isNFSe": boolean, "isMissing": boolean 
+        }],
+        "observations": "Comentários"
       }
+    ` : `
+      Você é um assistente de auditoria em logística e produção.
+      Sua tarefa é comparar PLANILHAS da fonte "${sourceA.label}" e da fonte "${sourceB.label}".
       
-      IMPORTANTE:
-      - Extraia o número do documento (Nota Fiscal), CNPJ e Nome da Empresa de cada registro.
-      - Use 'statusSourceA' como 'PRESENTE' se o documento existe em ${sourceA.label}, ou 'AUSENTE' se não existe.
-      - Use 'statusSourceB' como 'PRESENTE' se o documento existe em ${sourceB.label}, ou 'AUSENTE' se não existe.
-      - O campo 'isMissing' deve ser true quando statusSourceA ou statusSourceB for 'AUSENTE'.
-      - O campo 'isCancelled' deve ser true para documentos Cancelados/Inutilizados.
-      - O campo 'isNFSe' deve ser true para Notas Fiscais de Serviço.
-      - Para o campo 'date', use o formato ISO (AAAA-MM-DD).
+      COLUNAS OBRIGATÓRIAS PARA CONFERIR:
+      - Viveiro
+      - Data Desp.
+      - Biometria(g)
+      - Prod(kg) (Total da Biomassa)
+      - Cliente
+      - Preço
+      - Valor
+
+      Analise detalhadamente cada registro:
+      1. Identifique Registros Ausentes em uma das fontes (Divergência Crítica baseada em Viveiro/Data/Cliente).
+      2. Compare os valores de Prod(kg), Preço e Valor entre as fontes se o registro existir em ambas.
+
+      Responda EXCLUSIVAMENTE em formato JSON:
+      {
+        "status": "divergent" | "equal",
+        "summary": "Resumo focado nas planilhas",
+        "divergences": [{ 
+            "documentNumber": "Nome do Viveiro", 
+            "cnpj": "Cliente", 
+            "companyName": "Informações: Biometria, Prod, Preço",
+            "statusSourceA": "PRESENTE" | "AUSENTE", 
+            "statusSourceB": "PRESENTE" | "AUSENTE",
+            "severity": "high" | "medium" | "low", 
+            "date": "Data Desp. em ISO", 
+            "isCancelled": false,
+            "isNFSe": false, 
+            "isMissing": boolean 
+        }],
+        "observations": "Detalhes sobre divergências de Peso/Preço/Valor encontrados"
+      }
     `;
 
         const analysis = await processFiles(files, prompt);
@@ -101,7 +120,7 @@ export const Comparator: React.FC = () => {
             await SupabaseService.saveComparison({
                 source_a_label: sourceA.label,
                 source_b_label: sourceB.label,
-                analysis_result: analysis
+                analysis_result: { ...analysis, analysis_type: analysisType }
             });
             loadHistory();
         }
@@ -145,6 +164,23 @@ export const Comparator: React.FC = () => {
                 <h1 className="text-3xl font-bold text-slate-900">Comparador Inteligente</h1>
                 <p className="text-slate-500">Compare PDFs, Imagens ou Textos para encontrar divergências automaticamente.</p>
             </header>
+
+            <div className="flex justify-center mb-8">
+                <div className="bg-slate-100 p-1 rounded-xl flex gap-1">
+                    <button
+                        onClick={() => setAnalysisType('nf')}
+                        className={`px-6 py-2 rounded-lg text-xs font-bold uppercase transition-all ${analysisType === 'nf' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                        Analisar Nota Fiscal
+                    </button>
+                    <button
+                        onClick={() => setAnalysisType('spreadsheet')}
+                        className={`px-6 py-2 rounded-lg text-xs font-bold uppercase transition-all ${analysisType === 'spreadsheet' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                        Analisar Planilha
+                    </button>
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
                 {/* LADO A */}
@@ -260,9 +296,9 @@ export const Comparator: React.FC = () => {
                                     <table className="w-full text-left">
                                         <thead>
                                             <tr className="text-[10px] font-black text-black uppercase tracking-widest border-b border-slate-200">
-                                                <th className="pb-4">Nº Nota Fiscal</th>
-                                                <th className="pb-4">CNPJ</th>
-                                                <th className="pb-4">Nome da Empresa</th>
+                                                <th className="pb-4">{analysisType === 'nf' ? 'Nº Nota Fiscal' : 'Viveiro'}</th>
+                                                <th className="pb-4">{analysisType === 'nf' ? 'CNPJ' : 'Cliente'}</th>
+                                                <th className="pb-4">{analysisType === 'nf' ? 'Nome da Empresa' : 'Resumo Validação'}</th>
                                                 <th className="pb-4 text-center">{sourceA.label} (Situação)</th>
                                                 <th className="pb-4 text-center">{sourceB.label} (Situação)</th>
                                             </tr>
@@ -304,9 +340,9 @@ export const Comparator: React.FC = () => {
                                     <table className="w-full text-left">
                                         <thead>
                                             <tr className="text-[10px] font-black text-black uppercase tracking-widest border-b border-slate-200">
-                                                <th className="pb-4">Nº Nota Fiscal</th>
-                                                <th className="pb-4">CNPJ</th>
-                                                <th className="pb-4">Nome da Empresa</th>
+                                                <th className="pb-4">{analysisType === 'nf' ? 'Nº Nota Fiscal' : 'Viveiro'}</th>
+                                                <th className="pb-4">{analysisType === 'nf' ? 'CNPJ' : 'Cliente'}</th>
+                                                <th className="pb-4">{analysisType === 'nf' ? 'Nome da Empresa' : 'Validação'}</th>
                                                 <th className="pb-4 text-center">Status</th>
                                             </tr>
                                         </thead>
@@ -439,7 +475,12 @@ export const Comparator: React.FC = () => {
                             {history.map((h) => (
                                 <div
                                     key={h.id}
-                                    onClick={() => setResult(h.analysis_result)}
+                                    onClick={() => {
+                                        setResult(h.analysis_result);
+                                        if (h.analysis_result.analysis_type) {
+                                            setAnalysisType(h.analysis_result.analysis_type);
+                                        }
+                                    }}
                                     className="bg-white p-4 rounded-2xl border border-slate-200 text-left hover:border-orange-500 hover:shadow-md transition-all group relative cursor-pointer"
                                 >
                                     <div className="flex justify-between items-start mb-2">
