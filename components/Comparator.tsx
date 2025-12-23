@@ -69,40 +69,37 @@ export const Comparator: React.FC = () => {
         "observations": "Comentários"
       }
     ` : `
-      Você é um assistente de auditoria em logística e produção.
+      Você é um assistente de auditoria financeira.
       Sua tarefa é comparar PLANILHAS da fonte "${sourceA.label}" e da fonte "${sourceB.label}".
       
-      COLUNAS OBRIGATÓRIAS PARA CONFERIR:
-      - Viveiro
-      - Data Desp.
-      - Biometria(g)
-      - Prod(kg) (Total da Biomassa)
-      - Cliente
-      - Preço
-      - Valor (Pode estar como "Valor R$" ou "VL.OE")
+      Mapeamento de Colunas (Equivalência):
+      1. Data desp. = Dt. emissão
+      2. Cliente = Pessoa
+      3. Valor R$ = Vl.OE
 
-      Analise detalhadamente cada registro:
-      1. Identifique Registros Ausentes em uma das fontes (Divergência Crítica baseada em Viveiro/Data/Cliente).
-      2. Compare os valores de Prod(kg), Preço e "Valor R$" / "VL.OE" entre as fontes se o registro existir em ambas.
-      3. IMPORTANTE: Considere que "Valor R$" e "VL.OE" referem-se à mesma informação de valor total.
+      Critérios de Análise:
+      - Compare os lançamentos usando Data, Cliente e Valor como chaves de conferência.
+      - Liste TODOS os lançamentos.
+      - Aponte divergência se algum campo (Data, Cliente ou Valor) for diferente entre as fontes para o mesmo lançamento.
+      - Marque como OK se todos os campos baterem perfeitamente.
 
       Responda EXCLUSIVAMENTE em formato JSON:
       {
         "status": "divergent" | "equal",
-        "summary": "Resumo focado nas planilhas",
+        "summary": "Resumo focado nas 3 colunas principais",
         "divergences": [{ 
-            "documentNumber": "Nome do Viveiro", 
-            "cnpj": "Cliente", 
-            "companyName": "Informações: Biometria, Prod, Preço",
+            "documentNumber": "Data do Lançamento", 
+            "cnpj": "Cliente/Pessoa", 
+            "companyName": "Valor conferido (ou divergência encontrada)",
             "statusSourceA": "PRESENTE" | "AUSENTE", 
             "statusSourceB": "PRESENTE" | "AUSENTE",
             "severity": "high" | "medium" | "low", 
-            "date": "Data Desp. em ISO", 
+            "date": "Data em formato ISO", 
             "isCancelled": false,
             "isNFSe": false, 
             "isMissing": boolean 
         }],
-        "observations": "Detalhes sobre divergências de Peso/Preço/Valor encontrados"
+        "observations": "Notas detalhadas sobre as divergências de Data, Cliente ou Valor"
       }
     `;
 
@@ -297,9 +294,9 @@ export const Comparator: React.FC = () => {
                                     <table className="w-full text-left">
                                         <thead>
                                             <tr className="text-[10px] font-black text-black uppercase tracking-widest border-b border-slate-200">
-                                                <th className="pb-4">{analysisType === 'nf' ? 'Nº Nota Fiscal' : 'Viveiro'}</th>
-                                                <th className="pb-4">{analysisType === 'nf' ? 'CNPJ' : 'Cliente'}</th>
-                                                <th className="pb-4">{analysisType === 'nf' ? 'Nome da Empresa' : 'Resumo Validação'}</th>
+                                                <th className="pb-4">{analysisType === 'nf' ? 'Nº Nota Fiscal' : 'Data'}</th>
+                                                <th className="pb-4">{analysisType === 'nf' ? 'CNPJ' : 'Cliente / Pessoa'}</th>
+                                                <th className="pb-4">{analysisType === 'nf' ? 'Nome da Empresa' : 'Resumo Valor'}</th>
                                                 <th className="pb-4 text-center">{sourceA.label} (Situação)</th>
                                                 <th className="pb-4 text-center">{sourceB.label} (Situação)</th>
                                             </tr>
@@ -341,9 +338,9 @@ export const Comparator: React.FC = () => {
                                     <table className="w-full text-left">
                                         <thead>
                                             <tr className="text-[10px] font-black text-black uppercase tracking-widest border-b border-slate-200">
-                                                <th className="pb-4">{analysisType === 'nf' ? 'Nº Nota Fiscal' : 'Viveiro'}</th>
-                                                <th className="pb-4">{analysisType === 'nf' ? 'CNPJ' : 'Cliente'}</th>
-                                                <th className="pb-4">{analysisType === 'nf' ? 'Nome da Empresa' : 'Validação'}</th>
+                                                <th className="pb-4">{analysisType === 'nf' ? 'Nº Nota Fiscal' : 'Data'}</th>
+                                                <th className="pb-4">{analysisType === 'nf' ? 'CNPJ' : 'Cliente / Pessoa'}</th>
+                                                <th className="pb-4">{analysisType === 'nf' ? 'Nome da Empresa' : 'Valor'}</th>
                                                 <th className="pb-4 text-center">Status</th>
                                                 <th className="pb-4 text-center">Origem A</th>
                                                 <th className="pb-4 text-center">Origem B</th>
