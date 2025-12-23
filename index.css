@@ -24,25 +24,26 @@ body {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     background-color: white !important;
+    visibility: hidden;
   }
 
-  /* Hide EVERYTHING by default using display: none */
-  body * {
-    display: none !important;
+  /* Reset the active view to be visible and positioned at top */
+  #active-view {
+    visibility: visible;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  /* Whitelist ONLY the active content and its parents */
-  #root,
-  #active-view,
-  #active-view *,
-  #receipt-content,
-  #receipt-content * {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
+  /* Ensure all children are visible */
+  #active-view * {
+    visibility: visible;
   }
 
-  /* Specifically hide common non-essential elements even if inside whitelisted parents */
+  /* Specifically hide common non-essential elements */
   button,
   .print\:hidden,
   .export-ignore,
@@ -56,21 +57,6 @@ body {
   /* Fix for the configuration panel appearing in export */
   #active-view>div:not(.space-y-8) {
     display: none !important;
-  }
-
-  /* Ensure the list container is block-level for correct layout */
-  #active-view>div.space-y-8 {
-    display: block !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* Reset absolute positioning that might cause blank pages */
-  #active-view {
-    position: static !important;
-    margin: 0 !important;
-    padding: 0 !important;
   }
 }
 
