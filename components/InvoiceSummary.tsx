@@ -25,11 +25,11 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ data, companyNam
             {/* Top Bar with Header Meta */}
             <div className="p-1 px-2 border-b-2 flex justify-between items-center" style={{ borderColor: '#f97316', borderBottom: '2px solid #f97316' }}>
                 <div className="space-y-0">
-                    <h1 className="text-[11px] font-black uppercase text-slate-800 leading-tight">{companyName || data.recipientName}</h1>
-                    <p className="text-[8px] text-slate-500 font-bold leading-tight">CNPJ: {data.recipientCnpj || '---'}</p>
+                    <h1 className="text-sm font-black uppercase text-slate-800 leading-tight">{companyName || data.recipientName}</h1>
+                    <p className="text-[10px] text-slate-500 font-bold leading-tight">CNPJ: {data.recipientCnpj || '---'}</p>
                 </div>
                 <div className="text-right">
-                    <p className="text-[9px] font-black text-slate-700 leading-tight">Data: {data.issueDate || '---'}</p>
+                    <p className="text-[11px] font-black text-slate-700 leading-tight">Data: {data.issueDate || '---'}</p>
                 </div>
             </div>
 
