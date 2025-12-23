@@ -8,24 +8,27 @@ import type { InvoiceData } from '../types';
  */
 export async function extractInvoiceData(base64: string, mimeType: string): Promise<InvoiceData> {
     const prompt = `
-    Aga como um especialista em processamento de documentos fiscais brasileiros.
-    Analise a nota fiscal fornecida e extraia os seguintes campos:
+    Aga como um especialista em processamento de documentos fiscais brasileiros e capturas de tela do app "Preço da Hora".
+    Analise a imagem fornecida e extraia os seguintes campos com precisão:
     1. Nome do destinatário (empresa ou pessoa que comprou).
     2. CNPJ do destinatário.
-    3. Nome do emitente (vendedor).
-    4. Endereço completo do emitente (rua, número, bairro, cidade, estado).
-    5. Número da nota fiscal.
-    6. Série da nota.
+    3. Nome do emitente/estabelecimento (vendedor - geralmente no topo da nota ou lateral da screenshot).
+    4. Endereço completo do emitente (rua, número, bairro, cidade, estado - procure por endereços completos nos cantos ou rodapés).
+    5. Número da nota fiscal (se disponível).
+    6. Série da nota (se disponível).
     7. Data de emissão.
     8. Valor total da nota.
     9. Lista de itens comprados, contendo: código, descrição, quantidade, unidade, preço unitário e total do item.
+
+    IMPORTANTE PARA SCREENSHOTS DO "PREÇO DA HORA":
+    - O NOME DO ESTABELECIMENTO e o ENDEREÇO costumam estar na parte superior de cada quadro de produto ou no cabeçalho da página. Extraia-os para cada item encontrado.
 
     Responda EXCLUSIVAMENTE em formato JSON seguindo esta estrutura:
     {
       "recipientName": "Nome extraído",
       "recipientCnpj": "00.000.000/0000-00",
-      "issuerName": "Nome do vendedor",
-      "issuerAddress": "Endereço completo do vendedor",
+      "issuerName": "NOME DO ESTABELECIMENTO",
+      "issuerAddress": "ENDEREÇO COMPLETO",
       "invoiceNumber": "12345",
       "series": "1",
       "issueDate": "DD/MM/AAAA",
