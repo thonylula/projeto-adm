@@ -8,7 +8,7 @@ interface UseGeminiParserProps {
 export const useGeminiParser = ({ onSuccess, onError }: UseGeminiParserProps = {}) => {
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const processFiles = async (files: File[], prompt: string) => {
+    const processFiles = async (files: File[], prompt: string, model?: string) => {
         setIsProcessing(true);
         try {
             const fileParts = await Promise.all(files.map(file => fileToGenerativePart(file)));
@@ -29,7 +29,8 @@ export const useGeminiParser = ({ onSuccess, onError }: UseGeminiParserProps = {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    contents: contents
+                    contents: contents,
+                    model: model
                 })
             });
 
@@ -69,17 +70,11 @@ export const useGeminiParser = ({ onSuccess, onError }: UseGeminiParserProps = {
         }
     };
 
-    const processFile = (file: File, prompt: string) => processFiles([file], prompt);
+    const processFile = (file: File, prompt: string, model?: string) => processFiles([file], prompt, model);
 
-    const processText = async (prompt: string, userText: string) => {
+    const processText = async (prompt: string, userText: string, model?: string) => {
         setIsProcessing(true);
         try {
-            const MODELS = [
-                "gemini-2.0-flash",
-                "gemini-2.0-flash-lite",
-                "gemini-1.5-flash",
-                "gemini-1.5-pro"
-            ];
 
             const fullPrompt = userText ? `${prompt}\n\nTEXTO PARA ANALISAR:\n${userText}` : prompt;
             const contents = [{
@@ -96,7 +91,10 @@ export const useGeminiParser = ({ onSuccess, onError }: UseGeminiParserProps = {
             const response = await fetch('/api/generative', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: contents })
+                body: JSON.stringify({
+                    contents: contents,
+                    model: model
+                })
             });
 
             const payload = await response.json().catch(() => ({ ok: false, error: 'Invalid JSON' }));
