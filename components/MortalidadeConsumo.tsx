@@ -191,22 +191,22 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-[10px] border-collapse">
+                    <table className="w-full text-[9px] border-collapse">
                         <thead>
-                            <tr className="bg-slate-900 text-white uppercase">
-                                <th className="p-2 border border-slate-700 sticky left-0 z-20 bg-slate-900 min-w-[50px]" rowSpan={2}>VE</th>
-                                <th className="p-2 border border-slate-700 min-w-[100px]" rowSpan={2}>Data Povoa</th>
-                                <th className="p-2 border border-slate-700 min-w-[60px]" rowSpan={2}>Área</th>
-                                <th className="p-2 border border-slate-700 min-w-[70px]" rowSpan={2}>Pop. Ini</th>
-                                <th className="p-2 border border-slate-700 min-w-[60px]" rowSpan={2}>Dens.</th>
-                                <th className="p-2 border border-slate-700 z-10 sticky left-[50px] bg-slate-900 min-w-[80px]" rowSpan={2}>Biometria</th>
-                                <th className="p-1 border border-slate-700 text-center" colSpan={daysInMonth}>DIAS DO MÊS</th>
-                                <th className="p-2 border border-slate-700 min-w-[60px]" rowSpan={2}>Total</th>
-                                <th className="p-2 border border-slate-700 print:hidden" rowSpan={2}>Ações</th>
+                            <tr className="bg-slate-900 text-white uppercase font-bold">
+                                <th className="p-1 border border-slate-700 sticky left-0 z-20 bg-slate-900 min-w-[70px]" rowSpan={2}>VE</th>
+                                <th className="p-1 border border-slate-700 min-w-[100px]" rowSpan={2}>Data Povoa</th>
+                                <th className="p-1 border border-slate-700 min-w-[50px]" rowSpan={2}>Área</th>
+                                <th className="p-1 border border-slate-700 min-w-[65px]" rowSpan={2}>Pop. Ini</th>
+                                <th className="p-1 border border-slate-700 min-w-[55px]" rowSpan={2}>Dens.</th>
+                                <th className="p-1 border border-slate-700 z-10 sticky left-[70px] bg-slate-900 min-w-[80px]" rowSpan={2}>Biometria</th>
+                                <th className="p-0.5 border border-slate-700 text-center" colSpan={daysInMonth}>DIAS DO MÊS</th>
+                                <th className="p-1 border border-slate-700 min-w-[55px]" rowSpan={2}>Total</th>
+                                <th className="p-1 border border-slate-700 print:hidden" rowSpan={2}>Ações</th>
                             </tr>
                             <tr className="bg-slate-800 text-slate-400">
                                 {daysArray.map(d => (
-                                    <th key={d} className="p-1 border border-slate-700 text-center min-w-[35px]">{d}</th>
+                                    <th key={d} className="p-0.5 border border-slate-700 text-center min-w-[28px]">{d}</th>
                                 ))}
                             </tr>
                         </thead>
@@ -220,7 +220,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 type="text"
                                                 value={record.ve}
                                                 onChange={(e) => handleUpdateHeader(idx, 've', e.target.value)}
-                                                className="w-full p-2 text-center font-black bg-transparent border-none outline-none focus:bg-orange-100"
+                                                className="w-full p-1 text-center font-black bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
                                             />
                                         </td>
                                         <td className="p-0 border border-slate-100 text-center" rowSpan={2}>
@@ -229,7 +229,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 value={record.stockingDate}
                                                 onChange={(e) => handleUpdateHeader(idx, 'stockingDate', e.target.value)}
                                                 placeholder="DD/MM/AAAA"
-                                                className="w-full p-2 text-center bg-transparent border-none outline-none focus:bg-orange-100"
+                                                className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
                                             />
                                         </td>
                                         <td className="p-0 border border-slate-100 text-center" rowSpan={2}>
@@ -237,7 +237,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 type="number"
                                                 value={record.area || ''}
                                                 onChange={(e) => handleUpdateHeader(idx, 'area', parseFloat(e.target.value) || 0)}
-                                                className="w-full p-2 text-center bg-transparent border-none outline-none focus:bg-orange-100"
+                                                className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100"
                                             />
                                         </td>
                                         <td className="p-0 border border-slate-100 text-center" rowSpan={2}>
@@ -245,7 +245,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 type="number"
                                                 value={record.initialPopulation || ''}
                                                 onChange={(e) => handleUpdateHeader(idx, 'initialPopulation', parseInt(e.target.value) || 0)}
-                                                className="w-full p-2 text-center bg-transparent border-none outline-none focus:bg-orange-100"
+                                                className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100"
                                             />
                                         </td>
                                         <td className="p-0 border border-slate-100 text-center" rowSpan={2}>
@@ -254,15 +254,15 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 step="0.01"
                                                 value={record.density || ''}
                                                 onChange={(e) => handleUpdateHeader(idx, 'density', parseFloat(e.target.value) || 0)}
-                                                className="w-full p-2 text-center bg-transparent border-none outline-none focus:bg-orange-100"
+                                                className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100"
                                             />
                                         </td>
-                                        <td className="p-0 border border-slate-100 sticky left-[50px] z-10 bg-slate-50">
+                                        <td className="p-0 border border-slate-100 sticky left-[70px] z-10 bg-slate-50">
                                             <input
                                                 type="text"
                                                 value={record.biometry || 'RAÇÃO'}
                                                 onChange={(e) => handleUpdateHeader(idx, 'biometry', e.target.value)}
-                                                className="w-full p-2 text-center font-bold text-slate-600 bg-transparent border-none outline-none uppercase italic"
+                                                className="w-full p-1 text-center font-bold text-slate-600 bg-transparent border-none outline-none uppercase italic"
                                             />
                                         </td>
                                         {daysArray.map(d => (
@@ -271,33 +271,33 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                     type="number"
                                                     value={record.dailyRecords.find(dr => dr.day === d)?.feed || ''}
                                                     onChange={(e) => handleUpdateDay(idx, d, 'feed', e.target.value)}
-                                                    className="w-full h-full p-1 bg-transparent text-center focus:bg-orange-100 outline-none border-none font-bold text-slate-700"
+                                                    className="w-full h-full p-0.5 bg-transparent text-center focus:bg-orange-100 outline-none border-none font-bold text-slate-700"
                                                 />
                                             </td>
                                         ))}
-                                        <td className="p-2 border border-slate-100 text-center font-black bg-orange-50 text-orange-800">
+                                        <td className="p-1 border border-slate-100 text-center font-black bg-orange-50 text-orange-800 text-[10px]">
                                             {calculateRowTotal(record, 'feed')}
                                         </td>
-                                        <td className="p-2 border border-slate-100 text-center print:hidden" rowSpan={2}>
-                                            <button onClick={() => removeTank(idx)} className="text-slate-300 hover:text-red-500 transition-colors p-1">
+                                        <td className="p-1 border border-slate-100 text-center print:hidden" rowSpan={2}>
+                                            <button onClick={() => removeTank(idx)} className="text-slate-300 hover:text-red-500 transition-colors p-0.5">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
                                             </button>
                                         </td>
                                     </tr>
                                     {/* Linha Mortalidade */}
                                     <tr className="bg-pink-50/30 hover:bg-pink-100/50 transition-colors">
-                                        <td className="p-2 border border-slate-100 sticky left-[50px] z-10 bg-pink-50 font-bold text-center text-pink-700 italic uppercase">Mort.</td>
+                                        <td className="p-1 border border-slate-100 sticky left-[70px] z-10 bg-pink-50 font-bold text-center text-pink-700 italic uppercase">Mort.</td>
                                         {daysArray.map(d => (
                                             <td key={d} className="p-0 border border-slate-100">
                                                 <input
                                                     type="number"
                                                     value={record.dailyRecords.find(dr => dr.day === d)?.mortality || ''}
                                                     onChange={(e) => handleUpdateDay(idx, d, 'mortality', e.target.value)}
-                                                    className="w-full h-full p-1 bg-transparent text-center focus:bg-pink-100 outline-none border-none text-pink-600 font-bold"
+                                                    className="w-full h-full p-0.5 bg-transparent text-center focus:bg-pink-100 outline-none border-none text-pink-600 font-bold"
                                                 />
                                             </td>
                                         ))}
-                                        <td className="p-2 border border-slate-100 text-center font-black bg-pink-100 text-pink-700">
+                                        <td className="p-1 border border-slate-100 text-center font-black bg-pink-100 text-pink-700 text-[10px]">
                                             {calculateRowTotal(record, 'mortality')}
                                         </td>
                                     </tr>
@@ -306,16 +306,16 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                         </tbody>
                         <tfoot>
                             <tr className="bg-slate-900 text-white font-black uppercase">
-                                <td colSpan={6} className="p-3 text-right sticky left-0 z-10 bg-slate-900 border-r border-slate-700">TOTAIS DO DIA</td>
+                                <td colSpan={6} className="p-2 text-right sticky left-0 z-10 bg-slate-900 border-r border-slate-700">TOTAIS DO DIA</td>
                                 {daysArray.map(d => (
-                                    <td key={d} className="p-1 border-r border-slate-700 text-center">
-                                        <div className="flex flex-col gap-0.5">
-                                            <span className="text-orange-400 leading-none">{calculateDayTotal('feed', d) || 0}</span>
-                                            <span className="text-pink-400 leading-none">{calculateDayTotal('mortality', d) || 0}</span>
+                                    <td key={d} className="p-0.5 border-r border-slate-700 text-center">
+                                        <div className="flex flex-col gap-0">
+                                            <span className="text-orange-400 leading-tight text-[8px]">{calculateDayTotal('feed', d) || 0}</span>
+                                            <span className="text-pink-400 leading-tight text-[8px]">{calculateDayTotal('mortality', d) || 0}</span>
                                         </div>
                                     </td>
                                 ))}
-                                <td className="p-2 text-center bg-orange-600 border-l border-orange-500">
+                                <td className="p-1 text-center bg-orange-600 border-l border-orange-500 text-[10px]">
                                     {data?.records.reduce((sum, r) => sum + calculateRowTotal(r, 'feed'), 0)}
                                 </td>
                                 <td className="print:hidden"></td>
@@ -324,7 +324,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     </table>
                 </div>
 
-                <div className="p-4 bg-slate-50 border-t border-slate-100 print:hidden">
+                <div className="p-3 bg-slate-50 border-t border-slate-100 print:hidden text-center md:text-left">
                     <button
                         onClick={addTank}
                         className="w-full md:w-auto px-6 py-2 bg-slate-800 text-white rounded-xl text-xs font-black uppercase hover:bg-slate-900 transition-all flex items-center justify-center gap-2"
