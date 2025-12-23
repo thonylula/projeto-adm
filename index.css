@@ -16,13 +16,16 @@ body {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 5mm;
+    margin: 3mm;
   }
 
-  /* Force print background colors */
-  body {
+  /* Force print background colors and borders */
+  * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  body {
     background-color: white !important;
     visibility: hidden;
   }
@@ -38,7 +41,6 @@ body {
     padding: 0 !important;
   }
 
-  /* Ensure all children are visible */
   #active-view * {
     visibility: visible;
   }
@@ -51,11 +53,6 @@ body {
   nav,
   input,
   label {
-    display: none !important;
-  }
-
-  /* Fix for the configuration panel appearing in export */
-  #active-view>div:not(.space-y-8) {
     display: none !important;
   }
 }

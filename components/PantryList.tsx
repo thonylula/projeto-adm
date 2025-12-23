@@ -47,7 +47,11 @@ export const PantryList: React.FC<PantryListProps> = ({
                 });
 
                 return (
-                    <div key={index} className="bg-white border-2 border-orange-500 rounded-sm shadow-sm overflow-hidden font-sans text-[#444] print:shadow-none print:border-2 print:mb-4 print:break-inside-avoid min-h-[400px] flex flex-col relative christmas-card overflow-visible">
+                    <div
+                        key={index}
+                        className="bg-white rounded-sm shadow-sm overflow-hidden font-sans text-[#444] print:shadow-none print:mb-2 print:break-inside-avoid flex flex-col relative christmas-card overflow-visible"
+                        style={{ border: '4px solid #f97316', minHeight: '150px' }}
+                    >
                         {appMode === 'CHRISTMAS' && (
                             <div className="w-full text-center py-2 border-b border-red-200 hidden print:block">
                                 <span className="text-lg">🎄</span>
@@ -58,26 +62,26 @@ export const PantryList: React.FC<PantryListProps> = ({
                         )}
 
                         {/* Tag for special basket */}
-                        <div className={`absolute top-0 right-0 px-3 py-1 text-[8px] font-black uppercase text-white ${isNonDrinker ? 'bg-indigo-600' : 'bg-orange-500'} print:hidden`}>
+                        <div className={`absolute top-0 right-0 px-2 py-0.5 text-[7px] font-black uppercase text-white ${isNonDrinker ? 'bg-indigo-600' : 'bg-orange-500'} print:hidden`}>
                             {isNonDrinker ? 'ABSTÊMIO' : 'CESTA PADRÃO'}
                         </div>
 
                         {/* Header */}
-                        <div className="p-3 border-b border-orange-500 flex justify-between items-center">
-                            <div className="space-y-0.5">
-                                <h1 className="text-xs font-bold uppercase text-slate-800">{companyName}</h1>
-                                <p className="text-[9px] text-slate-500 font-medium">CNPJ: {recipientCnpj || '---'}</p>
+                        <div className="p-2 border-b-2 flex justify-between items-center" style={{ borderColor: '#f97316' }}>
+                            <div className="space-y-0 text-left">
+                                <h1 className="text-[10px] font-black uppercase text-slate-800">{companyName}</h1>
+                                <p className="text-[8px] text-slate-500 font-bold">CNPJ: {recipientCnpj || '---'}</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-[10px] font-bold text-slate-700">Data: {new Date().toLocaleDateString('pt-BR')}</p>
+                                <p className="text-[9px] font-bold text-slate-700">Data: {new Date().toLocaleDateString('pt-BR')}</p>
                             </div>
                         </div>
 
-                        <div className="h-1 w-full bg-orange-500" />
+                        <div className="h-1 w-full" style={{ backgroundColor: '#f97316' }} />
 
                         {/* Motivational Message */}
-                        <div className="p-4 text-center">
-                            <p className="text-indigo-600 font-bold italic text-sm">
+                        <div className="p-1 px-4 text-center">
+                            <p className="text-indigo-600 font-black italic text-[11px] leading-tight">
                                 "{motivationalMessages[index] || "Sua dedicação é a força que impulsiona nosso sucesso. Obrigado!"}"
                             </p>
                         </div>

@@ -10,42 +10,48 @@ interface SignatureSheetProps {
 
 export const SignatureSheet: React.FC<SignatureSheetProps> = ({ employeeNames, companyName, recipientCnpj, sloganImage, companyLogo }) => {
     return (
-        <div className="bg-white border-2 border-orange-500 rounded-sm shadow-sm overflow-hidden animate-in fade-in duration-500 font-sans text-[#444] print:shadow-none print:border-2">
+        <div
+            className="bg-white rounded-sm shadow-sm overflow-hidden animate-in fade-in duration-500 font-sans text-[#444] print:shadow-none"
+            style={{ border: '4px solid #f97316' }}
+        >
             {/* Header Bar */}
-            <div className="p-4 border-b border-orange-500">
+            <div className="p-2 border-b-2" style={{ borderColor: '#f97316' }}>
                 <div className="flex justify-between items-center">
-                    <div className="space-y-0.5">
-                        <h1 className="text-sm font-bold uppercase text-slate-800">{companyName}</h1>
-                        <p className="text-[10px] text-slate-500 font-medium">CNPJ: {recipientCnpj || '---'}</p>
+                    <div className="space-y-0 flex-1">
+                        <h1 className="text-[10px] font-black uppercase text-slate-800">{companyName}</h1>
+                        <p className="text-[8px] text-slate-500 font-bold">CNPJ: {recipientCnpj || '---'}</p>
                     </div>
                     <div className="text-right">
-                        <p className="text-[11px] font-bold text-slate-700">Data: {new Date().toLocaleDateString('pt-BR')}</p>
+                        <p className="text-[9px] font-black text-slate-700">Data: {new Date().toLocaleDateString('pt-BR')}</p>
                     </div>
                 </div>
             </div>
 
-            <div className="h-1.5 w-full bg-orange-500 rounded-none shadow-sm" />
+            <div className="h-1.5 w-full rounded-none" style={{ backgroundColor: '#f97316' }} />
 
             {/* Signature Table */}
             <div className="w-full">
                 {/* Table Headers */}
-                <div className="grid grid-cols-[1fr_2fr] border-b border-orange-500 bg-slate-50/30">
-                    <div className="p-3 border-r border-orange-500">
-                        <span className="text-lg font-black text-slate-800 uppercase tracking-tight">Nomes</span>
+                <div
+                    className="grid grid-cols-[1.5fr_2fr] border-b-2 bg-slate-50/30"
+                    style={{ borderColor: '#f97316' }}
+                >
+                    <div className="p-2 border-r-2" style={{ borderColor: '#f97316' }}>
+                        <span className="text-sm font-black text-slate-800 uppercase tracking-tight">Nome Funcionário</span>
                     </div>
-                    <div className="p-3">
-                        <span className="text-lg font-black text-slate-800 uppercase tracking-tight">Assinaturas</span>
+                    <div className="p-2">
+                        <span className="text-sm font-black text-slate-800 uppercase tracking-tight">Assinatura de Recebimento</span>
                     </div>
                 </div>
 
                 {/* Rows */}
-                <div className="divide-y divide-orange-500">
+                <div className="divide-y-2" style={{ borderColor: '#f97316' }}>
                     {employeeNames.map((name, index) => (
-                        <div key={index} className="grid grid-cols-[1fr_2fr] min-h-[48px]">
-                            <div className="p-3 border-r border-orange-500 flex items-center">
-                                <span className="text-sm font-bold text-slate-700 uppercase leading-snug">{name}</span>
+                        <div key={index} className="grid grid-cols-[1.5fr_2fr] min-h-[32px]">
+                            <div className="p-1 px-3 border-r-2 flex items-center" style={{ borderColor: '#f97316' }}>
+                                <span className="text-[10px] font-black text-slate-800 uppercase leading-snug">{name}</span>
                             </div>
-                            <div className="p-3 bg-white">
+                            <div className="p-1 bg-white">
                                 {/* Space for signature */}
                             </div>
                         </div>
