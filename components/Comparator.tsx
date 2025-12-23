@@ -85,15 +85,16 @@ export const Comparator: React.FC = () => {
       - Se Valor Planilha != (Prod * Preço), aplique a flag "inconsistencia_valor".
       - Normalize Datas (DD/MM/AAAA) e Nomes (Remova "LTDA", "EPP", etc).
 
-      FASE 3: IDENTIDADE SEMÂNTICA (MATCHING DE ELITE)
+      FASE 3: IDENTIDADE SEMÂNTICA E DETECÇÃO DE PARENTESCO (ELITE KINSHIP)
       - CRITÉRIO DE PESO: A reconciliação deve priorizar primeiro o [VALOR R$] (exatidão numérica) e, em segundo lugar, a [DATA].
-      - Resolva nomes abreviados por contexto. 
-      - Exemplo: "BAIANO" na planilha é IDENTIDADE COMPLETA com "JOSÉ JURANDI DOS SANTOS-BAIANO".
-      - Ordem de Match: 1. Valor -> 2. Data -> 3. Cliente/Pessoa.
+      - DETECÇÃO DE PARENTESCO: Se [Valor] + [Data] baterem 100%, você DEVE realizar um match por "Parentesco Semântico".
+      - Exemplo Real: "BAIANO" (Planilha) é o MESMO que "JOSÉ JURANDI DOS SANTOS-BAIANO" (Sistema).
+      - Regra de Ouro: Havendo coincidência de Valor e Data, nomes que contenham termos em comum (apelidos, sobrenomes, iniciais) devem ser tratados como MATCH 1:1. NÃO marque como "AUSENTE" se houver esse parentesco.
 
       FASE 4: VARREDURA DE OMISSÕES E DISCREPÂNCIAS
-      - Um registro é "OK" apenas se houver Match 1:1 total nas fontes e passar na Trava Matemática.
+      - Um registro é "OK" apenas se houver Match 1:1 total (incluindo Parentesco) e passar na Trava Matemática.
       - Registros ausentes em uma das partes devem ser listados como "AUSENTE" e "divergent".
+      - Se detectar o "Parentesco" mas a conta matemática falhar, use "divergent" com a flag "inconsistencia_valor".
       - Flags obrigatórias:
         * "inconsistencia_valor": Erro na conta Peso x Preço.
         * "biometria_fora_faixa": Se Biometria(g) < 8 ou > 30.
