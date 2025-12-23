@@ -151,14 +151,7 @@ export const PantryList: React.FC<PantryListProps> = ({
                 );
             })}
 
-            <div className="mt-8 text-center print:hidden">
-                <button
-                    onClick={() => window.print()}
-                    className="bg-indigo-600 text-white px-8 py-3 rounded-sm font-black uppercase text-sm hover:bg-indigo-700 transition-all shadow-lg active:scale-95"
-                >
-                    Imprimir Cupons de Entrega ({totalEmployees})
-                </button>
-            </div>
+
         </div>
     );
 };
