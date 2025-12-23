@@ -334,7 +334,7 @@ export const Comparator: React.FC = () => {
                             <div className="mt-12 pt-8 border-t border-slate-100 mb-10">
                                 <h4 className="text-sm font-black text-green-600 uppercase tracking-widest mb-4 flex items-center gap-2">
                                     <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                                    Documentos Conferidos (OK / Presentes em Ambos)
+                                    {analysisType === 'nf' ? 'Documentos Conferidos (OK / Presentes em Ambos)' : 'Registros Conferidos (OK / Presentes em Ambos)'}
                                 </h4>
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left">
@@ -344,6 +344,8 @@ export const Comparator: React.FC = () => {
                                                 <th className="pb-4">{analysisType === 'nf' ? 'CNPJ' : 'Cliente'}</th>
                                                 <th className="pb-4">{analysisType === 'nf' ? 'Nome da Empresa' : 'Validação'}</th>
                                                 <th className="pb-4 text-center">Status</th>
+                                                <th className="pb-4 text-center">Origem A</th>
+                                                <th className="pb-4 text-center">Origem B</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
@@ -354,8 +356,14 @@ export const Comparator: React.FC = () => {
                                                     <td className="py-3 text-xs text-black font-medium">{div.companyName || 'N/A'}</td>
                                                     <td className="py-3 text-center">
                                                         <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-green-100 text-green-600">
-                                                            OK
+                                                            CONFERIDO
                                                         </span>
+                                                    </td>
+                                                    <td className="py-3 text-center">
+                                                        <span className="text-[10px] text-green-600 font-bold">✓ PRESENTE</span>
+                                                    </td>
+                                                    <td className="py-3 text-center">
+                                                        <span className="text-[10px] text-green-600 font-bold">✓ PRESENTE</span>
                                                     </td>
                                                 </tr>
                                             ))}
