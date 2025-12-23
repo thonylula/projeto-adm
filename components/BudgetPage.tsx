@@ -195,71 +195,92 @@ export const BudgetPage: FC<BudgetPageProps> = ({ activeCompany }) => {
                         <table className="w-full text-left border-collapse border-2" style={{ borderColor: '#f97316' }}>
                             <thead>
                                 <tr className="bg-orange-50" style={{ borderBottom: '2px solid #f97316' }}>
-                                    {['QUANT.', 'UNI. DE MEDIDA', 'MATERIAL', 'PREÇO UNIT.', 'VALOR TOTAL', 'ESTABELECIMENTO', 'ENDEREÇO'].map(h => (
-                                        <th key={h} className="p-2 border-r-2 last:border-r-0 text-[10px] font-black uppercase text-slate-700" style={{ borderColor: '#f97316' }}>{h}</th>
-                                    ))}
-                                    <th className="p-2 text-[10px] font-black uppercase text-slate-700 print:hidden">AÇÕES</th>
+                                    <th className="p-2 border-r-2 text-[10px] font-black uppercase text-slate-800" style={{ borderColor: '#f97316' }}>QUANT.</th>
+                                    <th className="p-2 border-r-2 text-[10px] font-black uppercase text-slate-800" style={{ borderColor: '#f97316' }}>UNI. DE MEDIDA</th>
+                                    <th className="p-2 border-r-2 text-[10px] font-black uppercase text-slate-800" style={{ borderColor: '#f97316' }}>MATERIAL</th>
+                                    <th className="p-2 border-r-2 text-[10px] font-black uppercase text-slate-800" style={{ borderColor: '#f97316' }}>PREÇO UNIT.</th>
+                                    <th className="p-2 border-r-2 text-[10px] font-black uppercase text-slate-800" style={{ borderColor: '#f97316' }}>VALOR TOTAL</th>
+                                    <th className="p-2 border-r-2 text-[10px] font-black uppercase text-slate-800" style={{ borderColor: '#f97316' }}>ESTABELECIMENTO</th>
+                                    <th className="p-2 border-r-2 text-[10px] font-black uppercase text-slate-800" style={{ borderColor: '#f97316' }}>ENDEREÇO</th>
+                                    <th className="p-2 text-[10px] font-black uppercase text-slate-800 print:hidden" data-html2canvas-ignore="true">AÇÕES</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y-2" style={{ borderColor: '#f97316' }}>
                                 {budgetItems.map((item, i) => (
                                     <tr key={item.id} className="hover:bg-slate-50 group">
-                                        <td className="p-0 border-r-2" style={{ borderColor: '#f97316' }}>
+                                        <td className="p-0 border-r-2 align-middle" style={{ borderColor: '#f97316' }}>
                                             <input
                                                 type="text"
-                                                value={item.quantity}
+                                                value={item.quantity || ''}
                                                 onChange={(e) => updateItem(i, 'quantity', e.target.value)}
-                                                className="w-full p-2 h-full bg-transparent text-[11px] font-bold outline-none border-none text-center"
+                                                placeholder="0"
+                                                className="w-full p-2 min-h-[40px] bg-transparent text-[11px] font-bold text-slate-900 outline-none border-none text-center"
                                             />
                                         </td>
-                                        <td className="p-0 border-r-2" style={{ borderColor: '#f97316' }}>
+                                        <td className="p-0 border-r-2 align-middle" style={{ borderColor: '#f97316' }}>
                                             <input
                                                 type="text"
-                                                value={item.unit}
+                                                value={item.unit || ''}
                                                 onChange={(e) => updateItem(i, 'unit', e.target.value)}
-                                                className="w-full p-2 h-full bg-transparent text-[11px] font-bold outline-none border-none text-center uppercase"
+                                                placeholder="UN"
+                                                className="w-full p-2 min-h-[40px] bg-transparent text-[11px] font-bold text-slate-900 outline-none border-none text-center uppercase"
                                             />
                                         </td>
-                                        <td className="p-0 border-r-2" style={{ borderColor: '#f97316' }}>
+                                        <td className="p-0 border-r-2 align-middle" style={{ borderColor: '#f97316', width: '25%' }}>
                                             <textarea
                                                 rows={1}
-                                                value={item.description}
+                                                value={item.description || ''}
                                                 onChange={(e) => updateItem(i, 'description', e.target.value)}
-                                                className="w-full p-2 h-full bg-transparent text-[11px] font-black uppercase outline-none border-none resize-none"
+                                                className="w-full p-2 min-h-[40px] bg-transparent text-[11px] font-black text-slate-900 uppercase outline-none border-none resize-none overflow-hidden"
+                                                onInput={(e) => {
+                                                    const target = e.target as HTMLTextAreaElement;
+                                                    target.style.height = 'auto';
+                                                    target.style.height = target.scrollHeight + 'px';
+                                                }}
                                             />
                                         </td>
-                                        <td className="p-0 border-r-2" style={{ borderColor: '#f97316' }}>
-                                            <div className="flex items-center px-2">
-                                                <span className="text-[9px] text-slate-400 font-bold mr-1">R$</span>
+                                        <td className="p-0 border-r-2 align-middle" style={{ borderColor: '#f97316' }}>
+                                            <div className="flex items-center px-1">
+                                                <span className="text-[9px] text-slate-400 font-bold">R$</span>
                                                 <input
                                                     type="number"
                                                     step="0.01"
-                                                    value={item.price}
+                                                    value={item.price || 0}
                                                     onChange={(e) => updateItem(i, 'price', e.target.value)}
-                                                    className="w-full h-full bg-transparent text-[11px] font-bold outline-none border-none py-2"
+                                                    className="w-full p-2 min-h-[40px] bg-transparent text-[11px] font-bold text-slate-900 outline-none border-none"
                                                 />
                                             </div>
                                         </td>
-                                        <td className="p-2 border-r-2 text-[11px] font-black text-indigo-700" style={{ borderColor: '#f97316' }}>
+                                        <td className="p-2 border-r-2 text-[11px] font-black text-indigo-700 align-middle" style={{ borderColor: '#f97316' }}>
                                             {item.total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                         </td>
-                                        <td className="p-0 border-r-2" style={{ borderColor: '#f97316' }}>
+                                        <td className="p-0 border-r-2 align-middle" style={{ borderColor: '#f97316', width: '20%' }}>
                                             <textarea
                                                 rows={1}
-                                                value={item.issuerName}
+                                                value={item.issuerName || ''}
                                                 onChange={(e) => updateItem(i, 'issuerName', e.target.value)}
-                                                className="w-full p-2 h-full bg-transparent text-[11px] font-black uppercase outline-none border-none resize-none"
+                                                className="w-full p-2 min-h-[40px] bg-transparent text-[11px] font-black text-slate-900 uppercase outline-none border-none resize-none overflow-hidden"
+                                                onInput={(e) => {
+                                                    const target = e.target as HTMLTextAreaElement;
+                                                    target.style.height = 'auto';
+                                                    target.style.height = target.scrollHeight + 'px';
+                                                }}
                                             />
                                         </td>
-                                        <td className="p-0">
+                                        <td className="p-0 align-middle">
                                             <textarea
                                                 rows={1}
-                                                value={item.issuerAddress}
+                                                value={item.issuerAddress || ''}
                                                 onChange={(e) => updateItem(i, 'issuerAddress', e.target.value)}
-                                                className="w-full p-2 h-full bg-transparent text-[9px] font-bold text-slate-600 uppercase outline-none border-none resize-none leading-tight"
+                                                className="w-full p-2 min-h-[40px] bg-transparent text-[9px] font-bold text-slate-700 uppercase outline-none border-none resize-none overflow-hidden leading-tight"
+                                                onInput={(e) => {
+                                                    const target = e.target as HTMLTextAreaElement;
+                                                    target.style.height = 'auto';
+                                                    target.style.height = target.scrollHeight + 'px';
+                                                }}
                                             />
                                         </td>
-                                        <td className="p-2 text-center print:hidden">
+                                        <td className="p-2 text-center print:hidden align-middle" data-html2canvas-ignore="true">
                                             <button onClick={() => removeRow(i)} className="text-slate-300 hover:text-red-500 transition-colors">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                                                     <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75V4H3a1 1 0 0 0 0 2h.708l.694 10.392A3 3 0 0 0 7.398 19h5.204a3 3 0 0 0 2.996-2.608L16.292 6H17a1 1 0 0 0 0-2h-3v-.25A2.75 2.75 0 0 0 11.25 1h-2.5ZM8 4v-.25c0-.414.336-.75.75-.75h2.5c.414 0 .75.336.75.75V4H8Z" clipRule="evenodd" />
@@ -272,17 +293,17 @@ export const BudgetPage: FC<BudgetPageProps> = ({ activeCompany }) => {
                             <tfoot>
                                 <tr className="bg-slate-50 border-t-4" style={{ borderColor: '#f97316' }}>
                                     <td colSpan={4} className="p-3 text-right text-[11px] font-black uppercase text-slate-700 border-r-2" style={{ borderColor: '#f97316' }}>VALOR 1 CESTA:</td>
-                                    <td colSpan={3} className="p-3 text-sm font-black text-indigo-800">
+                                    <td colSpan={3} className="p-3 text-sm font-black text-indigo-800 border-r-2" style={{ borderColor: '#f97316' }}>
                                         {totalSum.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                     </td>
-                                    <td className="print:hidden"></td>
+                                    <td className="print:hidden" data-html2canvas-ignore="true"></td>
                                 </tr>
                                 <tr className="bg-orange-50 border-t-2" style={{ borderColor: '#f97316' }}>
                                     <td colSpan={4} className="p-3 text-right text-[11px] font-black uppercase text-orange-800 border-r-2" style={{ borderColor: '#f97316' }}>VALOR 13 CESTAS:</td>
-                                    <td colSpan={3} className="p-3 text-base font-black text-orange-600">
+                                    <td colSpan={3} className="p-3 text-base font-black text-orange-600 border-r-2" style={{ borderColor: '#f97316' }}>
                                         {total13Baskets.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                     </td>
-                                    <td className="print:hidden"></td>
+                                    <td className="print:hidden" data-html2canvas-ignore="true"></td>
                                 </tr>
                             </tfoot>
                         </table>
