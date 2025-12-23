@@ -70,45 +70,51 @@ export const Comparator: React.FC = () => {
         "observations": "Comentários"
       }
     ` : `
-      ### PIPELINE DE AUDITORIA DE ALTA PRECISÃO (FOCO 100% ACERTIVIDADE) ###
-      Você atuará como um Ensemble OCR de Auditoria Financeira e Logística. 
-      Sua tarefa é comparar ${sourceA.label} e ${sourceB.label} seguindo o protocolo:
+      ### PROTOCOLO DE RECONCILIAÇÃO "ZERO DÚVIDA" (AUDITORIA 100% ACERTIVA) ###
+      Você é um Auditor Sênior de Elite. Seu objetivo é o ERRO ZERO. 
+      Siga rigorosamente estas fases para comparar ${sourceA.label} e ${sourceB.label}:
 
-      1. MAPEAMENTO E NORMALIZAÇÃO:
-         - Campo Data: "Data desp." equivale a "Dt. emissão" (Normalizar dd/mm/aaaa).
-         - Campo Cliente: "Cliente" equivale a "Pessoa" (Normalizar nomes, remover ruídos).
-         - Campo Valor: "Valor R$" equivale a "Vl.OE" (Normalizar separadores decimais).
+      FASE 1: INDEXAÇÃO INDIVIDUAL (SCAN COMPULSÓRIO)
+      - Liste mentalmente cada linha da Planilha e cada linha das Notas Fiscais.
+      - Não pule nenhuma linha, mesmo que pareçam repetidas.
+      - Atribua um ID temporário em sua memória para cada registro extraído.
 
-      2. VALIDAÇÃO MATEMÁTICA ESTRITA:
-         - Regra: Valor ≈ Prod(kg) × Preço (Tolerância: 0.5% para arredondamentos).
-         - Se |(Prod*Preço) - Valor| / (Prod*Preço) > 0.005, use a flag "inconsistencia_valor".
+      FASE 2: TRAVA MATEMÁTICA E NORMALIZAÇÃO
+      - Toda linha da Planilha DEVE satisfazer: Prod(kg) * Preço = Valor R$.
+      - Tolerância máxima para arredondamento: 0.5%.
+      - Se Valor Planilha != (Prod * Preço), aplique a flag "inconsistencia_valor".
+      - Normalize Datas (DD/MM/AAAA) e Nomes (Remova "LTDA", "EPP", etc).
 
-      3. REGRAS DE INTERVENÇÃO (FLAGS):
-         - "biometria_fora_faixa": Se Biometria(g) < 8 ou > 30.
-         - "baixo_conf": Se houver ambiguidade no OCR ou rasuras.
-         - "data_invalida": Se a data for futura ou fora do esperado.
+      FASE 3: IDENTIDADE SEMÂNTICA (MATCHING DE ELITE)
+      - Resolva nomes abreviados por contexto. 
+      - Exemplo: "BAIANO" na planilha é IDENTIDADE COMPLETA com "JOSÉ JURANDI DOS SANTOS-BAIANO".
+      - Compare: [Data] + [Pessoa/Cliente] + [Valor Total].
 
-      4. PROTOCOLO DE CONCORDÂNCIA:
-         - Simule um Ensemble de 3 motores. Aceite o valor apenas se houver concordância majoritária.
-         - Se houver divergência entre as fontes ou falha nas regras matemáticas, a discrepância deve ser marcada como "divergent".
+      FASE 4: VARREDURA DE OMISSÕES E DISCREPÂNCIAS
+      - Um registro é "OK" apenas se houver Match 1:1 total nas fontes e passar na Trava Matemática.
+      - Registros ausentes em uma das partes devem ser listados como "AUSENTE" e "divergent".
+      - Flags obrigatórias:
+        * "inconsistencia_valor": Erro na conta Peso x Preço.
+        * "biometria_fora_faixa": Se Biometria(g) < 8 ou > 30.
+        * "baixo_conf": Ambiguidade no OCR ou rasuras.
 
       Responda EXCLUSIVAMENTE em formato JSON:
       {
         "status": "divergent" | "equal",
-        "summary": "Resumo executivo com métricas de confiança",
+        "summary": "Relatório Executivo detalhando o volume auditado (ex: X linhas conferidas, Y divergências)",
         "divergences": [{ 
-            "documentNumber": "Data do Lançamento", 
-            "cnpj": "Cliente/Pessoa", 
-            "companyName": "Valor",
+            "documentNumber": "Data do Lançamento (Ex: 03/Nov)", 
+            "cnpj": "Cliente/Pessoa (Nome Normalizado)", 
+            "companyName": "Valor R$",
             "statusSourceA": "PRESENTE" | "AUSENTE", 
             "statusSourceB": "PRESENTE" | "AUSENTE",
             "severity": "high" | "medium" | "low", 
-            "date": "Data ISO", 
+            "date": "Data ISO (YYYY-MM-DD)", 
             "isMissing": boolean,
             "confidence": 0.0 a 1.0,
             "flags": ["inconsistencia_valor", "baixo_conf", "biometria_fora_faixa", etc]
         }],
-        "observations": "Lista de inconsistências encontradas e sugestões de correção"
+        "observations": "Lista detalhada de cada inconsistência e prova matemática do erro se houver."
       }
     `;
 
