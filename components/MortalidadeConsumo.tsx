@@ -237,7 +237,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 type="number"
                                                 value={record.area || ''}
                                                 onChange={(e) => handleUpdateHeader(idx, 'area', parseFloat(e.target.value) || 0)}
-                                                className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100"
+                                                className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
                                             />
                                         </td>
                                         <td className="p-0 border border-slate-100 text-center" rowSpan={2}>
@@ -245,7 +245,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 type="number"
                                                 value={record.initialPopulation || ''}
                                                 onChange={(e) => handleUpdateHeader(idx, 'initialPopulation', parseInt(e.target.value) || 0)}
-                                                className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100"
+                                                className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
                                             />
                                         </td>
                                         <td className="p-0 border border-slate-100 text-center" rowSpan={2}>
@@ -254,7 +254,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 step="0.01"
                                                 value={record.density || ''}
                                                 onChange={(e) => handleUpdateHeader(idx, 'density', parseFloat(e.target.value) || 0)}
-                                                className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100"
+                                                className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
                                             />
                                         </td>
                                         <td className="p-0 border border-slate-100 sticky left-[70px] z-10 bg-slate-50">
