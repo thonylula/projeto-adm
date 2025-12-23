@@ -17,6 +17,7 @@ export const Comparator: React.FC = () => {
     const [analysisType, setAnalysisType] = useState<'nf' | 'spreadsheet'>('nf');
     const [result, setResult] = useState<any>(null);
     const [history, setHistory] = useState<ComparisonRecord[]>([]);
+    const [queuedDivergences, setQueuedDivergences] = useState<any[]>([]);
     const { processFiles, isProcessing } = useGeminiParser();
 
     useEffect(() => {
@@ -181,6 +182,94 @@ export const Comparator: React.FC = () => {
         }
     };
 
+    const addToQueue = (div: any) => {
+        setQueuedDivergences(prev => [...prev, { ...div, timestamp: new Date().toISOString() }]);
+    };
+
+    const removeFromQueue = (index: number) => {
+        setQueuedDivergences(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const exportHTML = () => {
+        const content = `
+            <html>
+                <head>
+                    <style>
+                        body { font-family: sans-serif; padding: 20px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+                        th { bg-color: #f8f9fa; }
+                        .header { text-align: center; margin-bottom: 30px; }
+                        .tag { padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Relatório de Divergências Consolidadas</h1>
+                        <p>Total de itens: ${queuedDivergences.length}</p>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data/ID</th>
+                                <th>Cliente/Pessoa</th>
+                                <th>Divergência / Flags</th>
+                                <th>Status A</th>
+                                <th>Status B</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${queuedDivergences.map(d => `
+                                <tr>
+                                    <td>${d.documentNumber || 'N/A'}</td>
+                                    <td>${d.cnpj || 'N/A'}</td>
+                                    <td>${d.companyName || 'N/A'} ${d.flags ? d.flags.join(', ') : ''}</td>
+                                    <td>${d.statusSourceA}</td>
+                                    <td>${d.statusSourceB}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </body>
+            </html>
+        `;
+        const blob = new Blob([content], { type: 'text/html' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `divergencias_${Date.now()}.html`;
+        link.click();
+    };
+
+    const exportPDF = () => {
+        const element = document.getElementById('divergence-report');
+        if (element && (window as any).html2pdf) {
+            const opt = {
+                margin: 10,
+                filename: `relatorio_divergencias_${Date.now()}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            (window as any).html2pdf().from(element).set(opt).save();
+        } else {
+            alert('Biblioteca de exportação não carregada.');
+        }
+    };
+
+    const exportPNG = () => {
+        const element = document.getElementById('divergence-report');
+        if (element && (window as any).html2canvas) {
+            (window as any).html2canvas(element).then((canvas: any) => {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = `divergencias_${Date.now()}.png`;
+                link.click();
+            });
+        } else {
+            alert('Biblioteca de captura não carregada.');
+        }
+    };
+
     return (
         <div className="w-full max-w-6xl mx-auto pb-20">
             <header className="mb-8">
@@ -326,6 +415,7 @@ export const Comparator: React.FC = () => {
                                                 <th className="pb-4">{analysisType === 'nf' ? 'Nome da Empresa' : 'Divergência / Flags'}</th>
                                                 <th className="pb-4 text-center">{sourceA.label}</th>
                                                 <th className="pb-4 text-center">{sourceB.label}</th>
+                                                <th className="pb-4 text-right">Ação</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
@@ -353,7 +443,7 @@ export const Comparator: React.FC = () => {
                                                                 {div.statusSourceA}
                                                             </span>
                                                             {div.confidence !== undefined && (
-                                                                <span className="text-[8px] mt-1 font-bold text-slate-400">CONF: {(div.confidence * 100).toFixed(0)}%</span>
+                                                                <span className="text-[8px] mt-1 font-bold text-slate-400">{(div.confidence * 100).toFixed(0)}%</span>
                                                             )}
                                                         </div>
                                                     </td>
@@ -363,9 +453,17 @@ export const Comparator: React.FC = () => {
                                                                 {div.statusSourceB}
                                                             </span>
                                                             {div.confidence !== undefined && (
-                                                                <span className="text-[8px] mt-1 font-bold text-slate-400">CONF: {(div.confidence * 100).toFixed(0)}%</span>
+                                                                <span className="text-[8px] mt-1 font-bold text-slate-400">{(div.confidence * 100).toFixed(0)}%</span>
                                                             )}
                                                         </div>
+                                                    </td>
+                                                    <td className="py-4 text-right">
+                                                        <button
+                                                            onClick={() => addToQueue(div)}
+                                                            className="px-3 py-1 bg-red-600 text-white text-[9px] font-black uppercase rounded-lg hover:bg-black transition-colors"
+                                                        >
+                                                            + Adicionar
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -528,6 +626,71 @@ export const Comparator: React.FC = () => {
                 </div>
             )
             }
+
+            {/* FILA DE DIVERGÊNCIAS PARA EXPORTAÇÃO */}
+            {queuedDivergences.length > 0 && (
+                <div className="mt-12 bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden animate-fade-in mb-20" id="divergence-section">
+                    <div className="p-6 bg-slate-900 text-white flex justify-between items-center">
+                        <div>
+                            <h3 className="text-lg font-bold uppercase tracking-widest">Relatório Consolidado de Divergências</h3>
+                            <p className="text-slate-400 text-xs mt-1">Acumulando {queuedDivergences.length} divergências para exportação</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={exportPDF} className="bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all shadow-lg">PDF</button>
+                            <button onClick={exportPNG} className="bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all shadow-lg">PNG</button>
+                            <button onClick={exportHTML} className="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all shadow-lg">HTML</button>
+                        </div>
+                    </div>
+
+                    <div className="p-8" id="divergence-report">
+                        <div className="mb-6 pb-6 border-b border-slate-100">
+                            <h2 className="text-2xl font-black text-slate-900 uppercase">Relatório de Auditoria</h2>
+                            <p className="text-slate-500 text-sm">Gerado em: {new Date().toLocaleString('pt-BR')}</p>
+                        </div>
+
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                    <th className="pb-4">Data/Referência</th>
+                                    <th className="pb-4">Cliente / Pessoa</th>
+                                    <th className="pb-4">Detalhamento da Divergência</th>
+                                    <th className="pb-4 text-center">Situação Final</th>
+                                    <th className="pb-4 text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {queuedDivergences.map((div, idx) => (
+                                    <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                                        <td className="py-4 font-bold text-slate-900 text-sm">{div.documentNumber}</td>
+                                        <td className="py-4 text-xs text-slate-600">{div.cnpj}</td>
+                                        <td className="py-4">
+                                            <p className="text-xs font-medium text-slate-800">{div.companyName}</p>
+                                            {div.flags && div.flags.map((f: string) => (
+                                                <span key={f} className="inline-block bg-red-50 text-red-600 text-[7px] font-black px-1 py-0.5 rounded border border-red-100 uppercase mr-1 mt-1">
+                                                    {f}
+                                                </span>
+                                            ))}
+                                        </td>
+                                        <td className="py-4 text-center">
+                                            <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-[9px] font-black uppercase rounded">DIVERGENTE</span>
+                                        </td>
+                                        <td className="py-4 text-right">
+                                            <button onClick={() => removeFromQueue(idx)} className="text-red-400 hover:text-red-700 p-2 transition-colors">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        <div className="mt-8 pt-6 border-t border-slate-100 flex justify-between items-center opacity-50">
+                            <p className="text-[10px] font-bold text-slate-500 uppercase">Sistema de Auditoria Inteligente v2.0</p>
+                            <p className="text-[10px] font-bold text-slate-500 uppercase">Total: {queuedDivergences.length} Divergências</p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* HISTÓRICO RECENTE */}
             {
