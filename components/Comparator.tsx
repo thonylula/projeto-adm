@@ -309,18 +309,35 @@ export const Comparator: React.FC = () => {
         }
     };
 
-    const renderSafeContent = (content: any) => {
-        if (!content) return null;
+    const renderSafeContent = (content: any): string => {
+        if (!content) return '';
         if (typeof content === 'string') return content;
+        if (typeof content === 'number' || typeof content === 'boolean') return String(content);
+
         if (typeof content === 'object') {
-            // Se for um objeto com campo text ou summary, tente pegar ele
+            // Handle nested objects that might have summary-like fields
+            if (content.text && typeof content.text === 'string') return content.text;
+            if (content.summary && typeof content.summary === 'string') return content.summary;
+            if (content.executive_summary && typeof content.executive_summary === 'string') return content.executive_summary;
+            if (content.reconciliation && typeof content.reconciliation === 'string') return content.reconciliation;
+
+            // If object has source_a, source_b, reconciliation, executive_summary - extract relevant text
+            if (content.source_a || content.source_b || content.reconciliation || content.executive_summary) {
+                const parts = [];
+                if (content.executive_summary) parts.push(renderSafeContent(content.executive_summary));
+                if (content.reconciliation) parts.push(renderSafeContent(content.reconciliation));
+                if (parts.length > 0) return parts.join(' - ');
+            }
+
+            // Recursively check nested properties
             if (content.text) return renderSafeContent(content.text);
             if (content.summary) return renderSafeContent(content.summary);
-            if (content.executive_summary) return renderSafeContent(content.executive_summary);
 
-            // Caso contrário, mostra chaves ou stringify amigável
+            // Last resort: stringify
             try {
-                return JSON.stringify(content);
+                const str = JSON.stringify(content);
+                // Avoid showing very long JSON strings
+                return str.length > 200 ? "[Objeto complexo]" : str;
             } catch (e) {
                 return "[Objeto complexo]";
             }
@@ -328,9 +345,33 @@ export const Comparator: React.FC = () => {
         return String(content);
     };
 
-    const getBestSummary = (res: any) => {
+    const getBestSummary = (res: any): string => {
         if (!res) return '';
-        return renderSafeContent(res.summary || res.executive_summary || res.summary_text || '');
+
+        // Try different possible summary fields
+        const possibleFields = [
+            res.summary,
+            res.executive_summary,
+            res.summary_text,
+            res.reconciliation,
+            res.observations
+        ];
+
+        for (const field of possibleFields) {
+            if (field) {
+                const rendered = renderSafeContent(field);
+                if (rendered && rendered !== '[Objeto complexo]' && rendered !== '{}') {
+                    return rendered;
+                }
+            }
+        }
+
+        // If res itself looks like it has a nested structure, process it
+        if (res.source_a || res.source_b || res.reconciliation || res.executive_summary) {
+            return renderSafeContent(res);
+        }
+
+        return '';
     };
 
     return (
@@ -610,11 +651,11 @@ export const Comparator: React.FC = () => {
                                             <div className="grid grid-cols-2 gap-4 mb-3">
                                                 <div>
                                                     <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">CNPJ</p>
-                                                    <p className="text-xs text-black font-medium">{div.cnpj || 'N/A'}</p>
+                                                    <p className="text-xs text-black font-medium">{renderSafeContent(div.cnpj) || 'N/A'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Empresa</p>
-                                                    <p className="text-xs text-black font-medium">{div.companyName || 'N/A'}</p>
+                                                    <p className="text-xs text-black font-medium">{renderSafeContent(div.companyName) || 'N/A'}</p>
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-4 pt-3 border-t border-indigo-100">
@@ -646,18 +687,18 @@ export const Comparator: React.FC = () => {
                                             <div className="flex justify-between items-start mb-3">
                                                 <div>
                                                     <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Nº Nota Fiscal</p>
-                                                    <p className="text-sm font-bold text-slate-700">{div.documentNumber || 'N/A'}</p>
+                                                    <p className="text-sm font-bold text-slate-700">{renderSafeContent(div.documentNumber) || 'N/A'}</p>
                                                 </div>
                                                 <span className="text-[9px] font-black text-slate-400 uppercase bg-white border border-slate-200 px-2 py-0.5 rounded">Cancelada/Invisível</span>
                                             </div>
                                             <div className="grid grid-cols-2 gap-4 mb-3">
                                                 <div>
                                                     <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">CNPJ</p>
-                                                    <p className="text-xs text-black font-medium">{div.cnpj || 'N/A'}</p>
+                                                    <p className="text-xs text-black font-medium">{renderSafeContent(div.cnpj) || 'N/A'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-[9px] text-slate-500 uppercase font-bold mb-1">Empresa</p>
-                                                    <p className="text-xs text-black font-medium">{div.companyName || 'N/A'}</p>
+                                                    <p className="text-xs text-black font-medium">{renderSafeContent(div.companyName) || 'N/A'}</p>
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-200">

@@ -200,6 +200,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 <th className="p-1 border border-slate-700 min-w-[65px]" rowSpan={2}>Pop. Ini</th>
                                 <th className="p-1 border border-slate-700 min-w-[55px]" rowSpan={2}>Dens.</th>
                                 <th className="p-1 border border-slate-700 z-10 sticky left-[70px] bg-slate-900 min-w-[80px]" rowSpan={2}>Biometria</th>
+                                <th className="p-1 border border-slate-700 min-w-[50px]"></th>
                                 <th className="p-0.5 border border-slate-700 text-center" colSpan={daysInMonth}>DIAS DO MÊS</th>
                                 <th className="p-1 border border-slate-700 min-w-[55px]" rowSpan={2}>Total</th>
                                 <th className="p-1 border border-slate-700 print:hidden" rowSpan={2}>Ações</th>
@@ -257,13 +258,16 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
                                             />
                                         </td>
-                                        <td className="p-0 border border-slate-100 sticky left-[70px] z-10 bg-slate-50">
+                                        <td className="p-0 border border-slate-100 sticky left-[70px] z-10 bg-slate-50" rowSpan={2}>
                                             <input
                                                 type="text"
-                                                value={record.biometry || 'RAÇÃO'}
+                                                value={record.biometry}
                                                 onChange={(e) => handleUpdateHeader(idx, 'biometry', e.target.value)}
-                                                className="w-full p-1 text-center font-bold text-slate-600 bg-transparent border-none outline-none uppercase italic"
+                                                className="w-full p-1 text-center font-bold text-slate-600 bg-transparent border-none outline-none text-[9px]"
                                             />
+                                        </td>
+                                        <td className="p-1 border border-slate-100 text-center font-bold text-slate-600 bg-slate-50 uppercase italic text-[9px]">
+                                            RAÇÃO
                                         </td>
                                         {daysArray.map(d => (
                                             <td key={d} className="p-0 border border-slate-100">
@@ -286,7 +290,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     </tr>
                                     {/* Linha Mortalidade */}
                                     <tr className="bg-pink-50/30 hover:bg-pink-100/50 transition-colors">
-                                        <td className="p-1 border border-slate-100 sticky left-[70px] z-10 bg-pink-50 font-bold text-center text-pink-700 italic uppercase">Mort.</td>
+                                        <td className="p-1 border border-slate-100 text-center font-bold text-pink-700 bg-pink-50 uppercase italic text-[9px]">MORT.</td>
                                         {daysArray.map(d => (
                                             <td key={d} className="p-0 border border-slate-100">
                                                 <input
@@ -306,7 +310,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                         </tbody>
                         <tfoot>
                             <tr className="bg-slate-900 text-white font-black uppercase">
-                                <td colSpan={6} className="p-2 text-right sticky left-0 z-10 bg-slate-900 border-r border-slate-700">TOTAIS DO DIA</td>
+                                <td colSpan={7} className="p-2 text-right sticky left-0 z-10 bg-slate-900 border-r border-slate-700">TOTAIS DO DIA</td>
                                 {daysArray.map(d => (
                                     <td key={d} className="p-0.5 border-r border-slate-700 text-center">
                                         <div className="flex flex-col gap-0">
