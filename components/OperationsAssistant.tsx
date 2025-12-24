@@ -131,6 +131,16 @@ export const OperationsAssistant: React.FC = () => {
         - "message": Texto amigável e curto explicando o que você está fazendo.
         - "actions": Lista de ações.
 
+        REGRAS CRÍTICAS DE CONTEXTO (MUITO IMPORTANTE):
+        1. VERIFIQUE SEMPRE "appState.activeTab" ANTES DE AGIR.
+        2. SE activeTab == "mortalidade":
+           - QUALQUER pedido para "preencher tabela", "lançar dados", "atualizar VE", "biometria", "ração" ou "mortalidade" DEVE SER FEITO NA PRÓPRIA ABA MORTALIDADE.
+           - AÇÃO: Use UPDATE_DATABASE com key="mortality_data".
+           - PROIBIDO: Não navegue para "delivery-order" ou "Ordem de Entrega" se o usuário já estiver em "mortalidade", a menos que ele peça EXPLICITAMENTE para "ir para entrega".
+           - O contexto "mortality_data" contém os dados atuais. Edite-os e devolva a estrutura completa.
+        3. SE activeTab == "delivery-order":
+           - Aí sim, menções a "VE" e "Peso" referem-se a "delivery_order_db".
+
         EXEMPLO PARA MUDAR DE TELA E ATUALIZAR UM NOME:
         \`\`\`json
         {
