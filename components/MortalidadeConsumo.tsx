@@ -14,268 +14,58 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     const [year, setYear] = useState(new Date().getFullYear());
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
     const [tankQuantity, setTankQuantity] = useState(1);
-    const [companyLogo, setCompanyLogo] = useState<string | null>(null);
-    const scrollRef = React.useRef<HTMLDivElement>(null);
-    const topScrollRef = React.useRef<HTMLDivElement>(null);
+    const [isExporting, setIsExporting] = useState(false);
 
-    const daysInMonth = new Date(year, month, 0).getDate();
-    const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-
-    const loadData = useCallback(async () => {
-        if (!activeCompany) return;
-        setIsLoading(true);
-        try {
-            const savedData = await SupabaseService.getMortalityData(activeCompany.id, month, year);
-            if (savedData) {
-                setData(savedData);
-            } else {
-                // Initial empty state
-                const defaultRecords: MortalityTankRecord[] = Array.from({ length: 5 }, (_, i) => ({
-                    id: crypto.randomUUID(),
-                    ve: `${i + 1}`,
-                    stockingDate: '',
-                    area: 0,
-                    initialPopulation: 0,
-                    density: 0,
-                    biometry: '',
-                    dailyRecords: daysArray.map(d => ({ day: d, feed: 0, mortality: 0 }))
-                }));
-
-                setData({
-                    id: crypto.randomUUID(),
-                    companyId: activeCompany.id,
-                    month,
-                    year,
-                    records: defaultRecords
-                });
-            }
-        } catch (e) {
-            console.error(e);
-            setMessage({ text: 'Erro ao carregar dados.', type: 'error' });
-        } finally {
-            setIsLoading(false);
-        }
-    }, [activeCompany, month, year, daysArray.length]);
-
-    useEffect(() => {
-        loadData();
-    }, [loadData]);
-
-    useEffect(() => {
-        // Carregar logo do localStorage ou do activeCompany
-        // Limpa URLs "blob:" do localStorage para evitar erros 404
-        const validateLogo = (logo: string | null | undefined) => {
-            if (!logo) return null;
-            if (logo.startsWith('blob:')) {
-                console.warn('Found stale blob URL, cleaning up...');
-                localStorage.removeItem('company_logo');
-                return null;
-            }
-            return logo;
-        };
-
-        const savedLogo = validateLogo(localStorage.getItem('company_logo'));
-        const companyLogo = validateLogo(activeCompany?.logoUrl);
-
-        if (savedLogo) {
-            setCompanyLogo(savedLogo);
-        } else if (companyLogo) {
-            setCompanyLogo(companyLogo);
-        }
-    }, [activeCompany]);
-
-    const handleUpdateDay = (tankIndex: number, day: number, field: 'feed' | 'mortality', value: string) => {
-        if (!data) return;
-        const numValue = parseFloat(value) || 0;
-        const newData = { ...data };
-        const record = newData.records[tankIndex];
-        const dayRecord = record.dailyRecords.find(dr => dr.day === day);
-        if (dayRecord) {
-            dayRecord[field] = numValue;
-        } else {
-            record.dailyRecords.push({
-                day,
-                feed: field === 'feed' ? numValue : 0,
-                mortality: field === 'mortality' ? numValue : 0
-            });
-        }
-        setData(newData);
-    };
-
-    const handleUpdateHeader = (tankIndex: number, field: keyof MortalityTankRecord, value: any) => {
-        if (!data) return;
-        const newData = { ...data };
-        const record = newData.records[tankIndex];
-        (record as any)[field] = value;
-        setData(newData);
-    };
-
-    const addTank = () => {
-        if (!data) return;
-        const newRecords: MortalityTankRecord[] = [];
-
-        for (let i = 0; i < tankQuantity; i++) {
-            newRecords.push({
-                id: crypto.randomUUID(),
-                ve: `${data.records.length + i + 1}`,
-                stockingDate: '',
-                area: 0,
-                initialPopulation: 0,
-                density: 0,
-                biometry: '',
-                dailyRecords: daysArray.map(d => ({ day: d, feed: 0, mortality: 0 }))
-            });
-        }
-
-        setData({ ...data, records: [...data.records, ...newRecords] });
-        setTankQuantity(1); // Reset to 1 after adding
-    };
-
-    const removeTank = (index: number) => {
-        if (!data) return;
-        if (!confirm('Deseja remover este viveiro?')) return;
-        const newRecords = [...data.records];
-        newRecords.splice(index, 1);
-        setData({ ...data, records: newRecords });
-    };
-
-    const handleSave = async () => {
-        if (!data || !activeCompany) return;
-        setIsLoading(true);
-        const success = await SupabaseService.saveMortalityData(activeCompany.id, month, year, data);
-        setIsLoading(false);
-        if (success) {
-            setMessage({ text: 'Dados salvos com sucesso!', type: 'success' });
-            setTimeout(() => setMessage(null), 3000);
-        } else {
-            setMessage({ text: 'Erro ao salvar dados.', type: 'error' });
-        }
-    };
-
-    const calculateRowTotal = (record: MortalityTankRecord, field: 'feed' | 'mortality') => {
-        return record.dailyRecords.reduce((sum, dr) => sum + (dr[field] || 0), 0);
-    };
-
-    const calculateDayTotal = (field: 'feed' | 'mortality', day: number) => {
-        if (!data) return 0;
-        return data.records.reduce((sum, record) => {
-            const dr = record.dailyRecords.find(d => d.day === day);
-            return sum + (dr?.[field] || 0);
-        }, 0);
-    };
-
-    const handlePaste = (e: React.ClipboardEvent, tankIndex: number, day: number, field: 'feed' | 'mortality') => {
-        const pastedText = e.clipboardData.getData('text');
-        const rows = pastedText.split('\n').filter(row => row.trim());
-
-        if (rows.length === 0) return;
-
-        e.preventDefault();
-
-        if (!data) return;
-        const newData = { ...data };
-
-        // Se colar múltiplas linhas/colunas (dados do Excel)
-        rows.forEach((row, rowOffset) => {
-            const values = row.split('\t').filter(v => v.trim());
-            const currentTankIndex = tankIndex + rowOffset;
-
-            if (currentTankIndex >= newData.records.length) return;
-
-            const record = newData.records[currentTankIndex];
-
-            values.forEach((value, colOffset) => {
-                const currentDay = day + colOffset;
-                if (currentDay > daysArray.length) return;
-
-                const numValue = parseFloat(value.replace(',', '.')) || 0;
-                const dayRecord = record.dailyRecords.find(dr => dr.day === currentDay);
-
-                if (dayRecord) {
-                    dayRecord[field] = numValue;
-                } else {
-                    record.dailyRecords.push({
-                        day: currentDay,
-                        feed: field === 'feed' ? numValue : 0,
-                        mortality: field === 'mortality' ? numValue : 0
-                    });
-                }
-            });
-        });
-
-        setData(newData);
-    };
-
-    const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const base64 = event.target?.result as string;
-            setCompanyLogo(base64);
-            localStorage.setItem('company_logo', base64);
-            setMessage({ text: 'Logo carregada!', type: 'success' });
-            setTimeout(() => setMessage(null), 2000);
-        };
-        reader.readAsDataURL(file);
-    };
-
-    const handleBackup = () => {
-        if (!data) return;
-        const backup = JSON.stringify(data, null, 2);
-        const blob = new Blob([backup], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `backup_mortalidade_${month}_${year}.json`;
-        link.click();
-        URL.revokeObjectURL(url);
-    };
-
-    const handleLoadBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
+    const performExport = async (type: 'pdf' | 'png' | 'html') => {
+        setIsExporting(true);
+        // Aguarda renderização do elemento visível
+        setTimeout(async () => {
             try {
-                const loadedData = JSON.parse(event.target?.result as string);
-                setData(loadedData);
-                setMessage({ text: 'Backup carregado!', type: 'success' });
-                setTimeout(() => setMessage(null), 2000);
+                if (type === 'pdf') await exportToPdf('export-target', `mortalidade_${month}_${year}`);
+                if (type === 'png') await exportToPng('export-target', `mortalidade_${month}_${year}`);
+                if (type === 'html') exportToHtml('export-target', `mortalidade_${month}_${year}`);
             } catch (error) {
-                setMessage({ text: 'Erro ao carregar!', type: 'error' });
+                console.error('Export failed:', error);
+            } finally {
+                setIsExporting(false);
             }
-        };
-        reader.readAsText(file);
+        }, 100);
     };
 
     const handleShare = async () => {
-        const element = document.getElementById('export-target');
-        if (!element || !(window as any).html2canvas) return;
-        const canvas = await (window as any).html2canvas(element, { scale: 1.5 });
-        canvas.toBlob(async (blob: Blob | null) => {
-            if (!blob) return;
-            const file = new File([blob], `mortalidade_${month}_${year}.png`, { type: 'image/png' });
-            if (navigator.share) {
-                await navigator.share({ files: [file], title: 'Mortalidade' });
-            } else {
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `mortalidade_${month}_${year}.png`;
-                link.click();
+        setIsExporting(true);
+        setTimeout(async () => {
+            try {
+                const element = document.getElementById('export-target');
+                if (!element || !(window as any).html2canvas) return;
+                const canvas = await (window as any).html2canvas(element, { scale: 1.5 });
+                canvas.toBlob(async (blob: Blob | null) => {
+                    if (!blob) return;
+                    const file = new File([blob], `mortalidade_${month}_${year}.png`, { type: 'image/png' });
+                    if (navigator.share) {
+                        await navigator.share({ files: [file], title: 'Mortalidade' });
+                    } else {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `mortalidade_${month}_${year}.png`;
+                        link.click();
+                    }
+                });
+            } finally {
+                setIsExporting(false);
             }
-        });
+        }, 100);
     };
 
     const ActionBar = () => (
         <div className="flex flex-wrap gap-2 mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100 print:hidden">
-            <button onClick={() => exportToPdf('export-target', `mortalidade_${month}_${year}`)} className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase flex items-center gap-2 hover:bg-red-700 transition-all shadow-lg active:scale-95">
+            <button onClick={() => performExport('pdf')} className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase flex items-center gap-2 hover:bg-red-700 transition-all shadow-lg active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                 PDF
             </button>
-            <button onClick={() => exportToPng('export-target', `mortalidade_${month}_${year}`)} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition-all shadow-lg active:scale-95">PNG</button>
-            <button onClick={() => exportToHtml('export-target', `mortalidade_${month}_${year}`)} className="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-800 transition-all shadow-lg active:scale-95">HTML</button>
+            <button onClick={() => performExport('png')} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition-all shadow-lg active:scale-95">PNG</button>
+            <button onClick={() => performExport('html')} className="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-800 transition-all shadow-lg active:scale-95">HTML</button>
             <div className="w-px h-8 bg-slate-200 mx-2" />
             <button onClick={handleShare} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-700 transition-all shadow-lg active:scale-95">Compartilhar</button>
             <div className="w-px h-8 bg-slate-200 mx-2" />
@@ -543,7 +333,13 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     </div>
 
                     {/* --- VISÃO DE EXPORTAÇÃO (Oculta, usada apenas para gerar PDF/PNG) --- */}
-                    <div id="export-target" className="fixed top-0 left-0 bg-white p-8 opacity-0 pointer-events-none z-[-1] w-[297mm]" style={{ transform: 'translateX(-9999px)' }}>
+                    <div
+                        id="export-target"
+                        className={isExporting
+                            ? "fixed top-0 left-0 bg-white z-[9999] p-8 w-[297mm] min-h-screen shadow-2xl"
+                            : "hidden pointer-events-none fixed top-0 left-0 w-[297mm]"
+                        }
+                    >
                         <div className="flex justify-between items-center mb-6 pb-4 border-b border-black">
                             <div className="flex items-center gap-6">
                                 {companyLogo && !companyLogo.startsWith('blob:') && (
