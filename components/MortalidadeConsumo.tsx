@@ -14,6 +14,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     const [year, setYear] = useState(new Date().getFullYear());
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
     const [tankQuantity, setTankQuantity] = useState(1);
+    const [companyLogo, setCompanyLogo] = useState<string | null>(null);
     const scrollRef = React.useRef<HTMLDivElement>(null);
     const topScrollRef = React.useRef<HTMLDivElement>(null);
 
@@ -59,6 +60,14 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     useEffect(() => {
         loadData();
     }, [loadData]);
+
+    useEffect(() => {
+        // Carregar logo do localStorage
+        const savedLogo = localStorage.getItem('company_logo');
+        if (savedLogo) {
+            setCompanyLogo(savedLogo);
+        }
+    }, []);
 
     const handleUpdateDay = (tankIndex: number, day: number, field: 'feed' | 'mortality', value: string) => {
         if (!data) return;
@@ -182,20 +191,86 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         setData(newData);
     };
 
+    const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const base64 = event.target?.result as string;
+            setCompanyLogo(base64);
+            localStorage.setItem('company_logo', base64);
+            setMessage({ text: 'Logo carregada!', type: 'success' });
+            setTimeout(() => setMessage(null), 2000);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleBackup = () => {
+        if (!data) return;
+        const backup = JSON.stringify(data, null, 2);
+        const blob = new Blob([backup], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `backup_mortalidade_${month}_${year}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleLoadBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const loadedData = JSON.parse(event.target?.result as string);
+                setData(loadedData);
+                setMessage({ text: 'Backup carregado!', type: 'success' });
+                setTimeout(() => setMessage(null), 2000);
+            } catch (error) {
+                setMessage({ text: 'Erro ao carregar!', type: 'error' });
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    const handleShare = async () => {
+        const element = document.getElementById('mortality-table-export');
+        if (!element || !(window as any).html2canvas) return;
+        const canvas = await (window as any).html2canvas(element, { scale: 1.5 });
+        canvas.toBlob(async (blob: Blob | null) => {
+            if (!blob) return;
+            const file = new File([blob], `mortalidade_${month}_${year}.png`, { type: 'image/png' });
+            if (navigator.share) {
+                await navigator.share({ files: [file], title: 'Mortalidade' });
+            } else {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `mortalidade_${month}_${year}.png`;
+                link.click();
+            }
+        });
+    };
+
     const ActionBar = () => (
         <div className="flex flex-wrap gap-2 mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100 print:hidden">
-            <button onClick={() => exportToPdf('mortality-view', `mortalidade_${month}_${year}`)} className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase flex items-center gap-2 hover:bg-red-700 transition-all">
+            <button onClick={() => exportToPdf('mortality-table-export', `mortalidade_${month}_${year}`)} className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase flex items-center gap-2 hover:bg-red-700 transition-all">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                 PDF
             </button>
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition-all">PNG</button>
-            <button className="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-800 transition-all">HTML</button>
+            <button onClick={() => { const el = document.getElementById('mortality-table-export'); if (el && (window as any).html2canvas) { (window as any).html2canvas(el, { scale: 2 }).then((canvas: any) => { const link = document.createElement('a'); link.download = `mortalidade_${month}_${year}.png`; link.href = canvas.toDataURL(); link.click(); }); } }} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition-all">PNG</button>
+            <button onClick={() => { const el = document.getElementById('mortality-table-export'); if (el) { const html = `<!DOCTYPE html><html><head><style>@page {size: landscape; margin: 10mm;} body {font-size: 8px;} table {width: 100%; border-collapse: collapse;} th, td {border: 1px solid #000; padding: 4px;}</style></head><body>${el.innerHTML}</body></html>`; const blob = new Blob([html], { type: 'text/html' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `mortalidade_${month}_${year}.html`; link.click(); } }} className="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-800 transition-all">HTML</button>
             <div className="w-px h-8 bg-slate-200 mx-2" />
-            <button className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-700 transition-all">Compartilhar</button>
+            <button onClick={handleShare} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-700 transition-all">Compartilhar</button>
             <div className="w-px h-8 bg-slate-200 mx-2" />
-            <button className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-800 transition-all">Backup</button>
-            <button onClick={loadData} className="bg-orange-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-orange-600 transition-all">Carregar</button>
+            <button onClick={handleBackup} className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-800 transition-all">Backup</button>
+            <input type="file" id="load-backup-input" accept=".json" onChange={handleLoadBackup} className="hidden" />
+            <button onClick={() => document.getElementById('load-backup-input')?.click()} className="bg-orange-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-orange-600 transition-all">Carregar</button>
             <button onClick={handleSave} className="bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-600 transition-all shadow-lg active:scale-95">Salvar</button>
+            <div className="w-px h-8 bg-slate-200 mx-2" />
+            <input type="file" id="logo-upload-input" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+            <button onClick={() => document.getElementById('logo-upload-input')?.click()} className="bg-purple-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-purple-700 transition-all">📷 Logo</button>
         </div>
     );
 

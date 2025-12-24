@@ -18,6 +18,7 @@ export const Comparator: React.FC = () => {
     const [result, setResult] = useState<any>(null);
     const [history, setHistory] = useState<ComparisonRecord[]>([]);
     const [queuedDivergences, setQueuedDivergences] = useState<any[]>([]);
+    const [reportLogo, setReportLogo] = useState<string | null>(null);
     const { processFiles, isProcessing } = useGeminiParser();
 
     useEffect(() => {
@@ -229,6 +230,17 @@ export const Comparator: React.FC = () => {
         setQueuedDivergences(prev => prev.filter((_, i) => i !== index));
     };
 
+    const handleReportLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setReportLogo(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const exportHTML = () => {
         const content = `
             < html >
@@ -244,6 +256,7 @@ export const Comparator: React.FC = () => {
                 </head>
                 <body>
                     <div class="header">
+                        ${reportLogo ? `<img src="${reportLogo}" style="max-height: 80px; margin-bottom: 20px;" />` : ''}
                         <h1>Relatório de Divergências Consolidadas</h1>
                         <p>Total de itens: ${queuedDivergences.length}</p>
                     </div>
@@ -287,7 +300,7 @@ export const Comparator: React.FC = () => {
                 filename: `relatorio_divergencias_${Date.now()}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
             };
             (window as any).html2pdf().from(element).set(opt).save();
         } else {
@@ -744,13 +757,20 @@ export const Comparator: React.FC = () => {
                             <button onClick={exportPDF} className="bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all shadow-lg">PDF</button>
                             <button onClick={exportPNG} className="bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all shadow-lg">PNG</button>
                             <button onClick={exportHTML} className="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all shadow-lg">HTML</button>
+                            <label className="cursor-pointer bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg text-xs font-black uppercase transition-all shadow-lg flex items-center gap-1 border border-slate-600">
+                                <input type="file" className="hidden" onChange={handleReportLogoChange} accept="image/*" />
+                                {reportLogo ? 'Logo OK' : 'Add Logo'}
+                            </label>
                         </div>
                     </div>
 
                     <div className="p-8" id="divergence-report">
-                        <div className="mb-6 pb-6 border-b border-slate-100">
-                            <h2 className="text-2xl font-black text-slate-900 uppercase">Relatório de Auditoria</h2>
-                            <p className="text-slate-500 text-sm">Gerado em: {new Date().toLocaleString('pt-BR')}</p>
+                        <div className="mb-6 pb-6 border-b border-slate-100 flex justify-between items-start">
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-900 uppercase">Relatório de Auditoria</h2>
+                                <p className="text-slate-500 text-sm">Gerado em: {new Date().toLocaleString('pt-BR')}</p>
+                            </div>
+                            {reportLogo && <img src={reportLogo} alt="Report Logo" className="h-16 w-auto object-contain" />}
                         </div>
 
                         <table className="w-full text-left">
