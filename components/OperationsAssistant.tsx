@@ -68,20 +68,36 @@ export const OperationsAssistant: React.FC = () => {
         const context: any = {
             appState: {
                 activeTab: document.querySelector('[data-active-tab]')?.getAttribute('data-active-tab') || 'payroll',
+                activeCompanyId: localStorage.getItem('activeCompanyId'),
+                activeYear: localStorage.getItem('activeYear'),
+                activeMonth: localStorage.getItem('activeMonth')
             },
             currentDate: new Date().toLocaleDateString('pt-BR'),
             currentTime: new Date().toLocaleTimeString('pt-BR')
         };
 
         try {
-            const [companies, employees, suppliers, clients, configs, doData] = await Promise.all([
+            const promises: any[] = [
                 SupabaseService.getCompanies(),
                 SupabaseService.getEmployees(),
                 SupabaseService.getSuppliers(),
                 SupabaseService.getClients(),
                 SupabaseService.getBasketConfigs(),
                 SupabaseService.getDeliveryOrders()
-            ]);
+            ];
+
+            // If we have detailed context, fetch specific data
+            if (context.appState.activeCompanyId && context.appState.activeYear && context.appState.activeMonth) {
+                promises.push(SupabaseService.getMortalityData(
+                    context.appState.activeCompanyId,
+                    parseInt(context.appState.activeMonth),
+                    parseInt(context.appState.activeYear)
+                ));
+            } else {
+                promises.push(Promise.resolve(null));
+            }
+
+            const [companies, employees, suppliers, clients, configs, doData, mortalityData] = await Promise.all(promises);
 
             context['folha_companies'] = companies;
             context['folha_registry_employees'] = employees;
@@ -89,6 +105,7 @@ export const OperationsAssistant: React.FC = () => {
             context['folha_registry_clients'] = clients;
             context['folha_basket_item_configs'] = configs;
             context['delivery_order_db'] = doData.data;
+            context['mortality_data'] = mortalityData || null;
         } catch (e) {
             console.error("Error fetching context for AI", e);
         }
@@ -102,9 +119,11 @@ export const OperationsAssistant: React.FC = () => {
         CAPACIDADES:
         1. UPDATE_DATABASE: Modificar qualquer dado no sistema (Nuvem/Supabase). 
            - Chaves comuns: folha_companies, folha_registry_employees, folha_registry_suppliers, folha_registry_clients, folha_basket_item_configs, delivery_order_db.
-        2. NAVIGATE: Mudar a aba principal ou abas internas.
-           - Abas Principais (tab): 'payroll', 'biometrics', 'fiscal', 'registrations', 'delivery-order', 'pantry'.
+           - MORTALIDADE: 'mortality_data' (Requer activeCompanyId, activeMonth, activeYear no appState). Estrutura: { id, companyId, month, year, records: [...] }
+        2. NAVIGATE: Mudar a aba principal, abas internas ou Mudar Ano/Mês.
+           - Abas Principais (tab): 'payroll', 'biometrics', 'fiscal', 'registrations', 'delivery-order', 'pantry', 'mortalidade'.
            - Abas Internas de Cestas (cestaTab): 'summary', 'signature', 'pantry'.
+           - Contexto de Tempo: year (2024, 2025...), month (1-12). Envie junto com 'tab' para navegar.
         3. SELECT_COMPANY: Selecionar uma empresa específica (companyId).
 
         REGRAS DE RESPOSTA:
@@ -159,6 +178,15 @@ export const OperationsAssistant: React.FC = () => {
                                 // We fetch the current logo first.
                                 const current = await SupabaseService.getDeliveryOrders();
                                 await SupabaseService.saveDeliveryOrders(value, current.logo);
+                            } else if (key === 'mortality_data') {
+                                // Save mortality data specifically using current context or data internal fields
+                                const companyId = value.companyId || localStorage.getItem('activeCompanyId');
+                                const month = value.month || parseInt(localStorage.getItem('activeMonth') || '0');
+                                const year = value.year || parseInt(localStorage.getItem('activeYear') || '0');
+
+                                if (companyId && month && year) {
+                                    await SupabaseService.saveMortalityData(companyId, month, year, value);
+                                }
                             } else if (key === 'folha_companies') {
                                 // This is complex because companies have IDs. 
                                 // AI might try to replace the whole list. 
@@ -175,7 +203,9 @@ export const OperationsAssistant: React.FC = () => {
                             detail: {
                                 tab: action.tab,
                                 companyId: action.companyId,
-                                cestaTab: action.cestaTab
+                                cestaTab: action.cestaTab,
+                                year: action.year,
+                                month: action.month
                             }
                         }));
                     }

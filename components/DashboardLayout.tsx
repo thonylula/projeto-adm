@@ -239,7 +239,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const navItems = menuItems; // Fixed order, no auto-sort to preserve "below Biometria" request
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row print:bg-white print:block">
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row print:bg-white print:block" data-active-tab={activeTab}>
       {/* Mobile Header */}
       <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center print:hidden">
         <span className="font-bold text-lg truncate max-w-[200px]">Adm: {currentUser}</span>

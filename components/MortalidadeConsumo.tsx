@@ -5,19 +5,26 @@ import { exportToPdf, exportToPng, exportToHtml } from '../utils/exportUtils';
 
 interface MortalidadeConsumoProps {
     activeCompany?: Company | null;
+    activeYear: number;
+    activeMonth: number;
 }
 
-export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCompany }) => {
+export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCompany, activeYear, activeMonth }) => {
     const [data, setData] = useState<MonthlyMortalityData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [month, setMonth] = useState(new Date().getMonth() + 1);
-    const [year, setYear] = useState(new Date().getFullYear());
+    const [month, setMonth] = useState(activeMonth);
+    const [year, setYear] = useState(activeYear);
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
     const [tankQuantity, setTankQuantity] = useState(1);
     const [isExporting, setIsExporting] = useState(false);
     const [companyLogo, setCompanyLogo] = useState<string | null>(null);
     const topScrollRef = React.useRef<HTMLDivElement>(null);
     const scrollRef = React.useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        setMonth(activeMonth);
+        setYear(activeYear);
+    }, [activeMonth, activeYear]);
 
     const daysInMonth = new Date(year, month, 0).getDate();
     const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
@@ -321,7 +328,13 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     <div className="flex gap-3 print:hidden" data-html2canvas-ignore>
                         <select
                             value={month}
-                            onChange={(e) => setMonth(parseInt(e.target.value))}
+                            onChange={(e) => {
+                                const newMonth = parseInt(e.target.value);
+                                setMonth(newMonth);
+                                window.dispatchEvent(new CustomEvent('app-navigation', {
+                                    detail: { tab: 'mortalidade', year, month: newMonth }
+                                }));
+                            }}
                             className="bg-slate-50 border-none rounded-xl px-4 py-2 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-orange-500"
                         >
                             {Array.from({ length: 12 }, (_, i) => (
@@ -332,7 +345,13 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                         </select>
                         <select
                             value={year}
-                            onChange={(e) => setYear(parseInt(e.target.value))}
+                            onChange={(e) => {
+                                const newYear = parseInt(e.target.value);
+                                setYear(newYear);
+                                window.dispatchEvent(new CustomEvent('app-navigation', {
+                                    detail: { tab: 'mortalidade', year: newYear, month }
+                                }));
+                            }}
                             className="bg-slate-50 border-none rounded-xl px-4 py-2 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-orange-500"
                         >
                             {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
