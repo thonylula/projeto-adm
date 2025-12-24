@@ -63,10 +63,14 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
     useEffect(() => {
         // Carregar logo do localStorage ou do activeCompany
-        // Ignora URLs "blob:" pois elas expiram ao recarregar a página
+        // Limpa URLs "blob:" do localStorage para evitar erros 404
         const validateLogo = (logo: string | null | undefined) => {
             if (!logo) return null;
-            if (logo.startsWith('blob:')) return null;
+            if (logo.startsWith('blob:')) {
+                console.warn('Found stale blob URL, cleaning up...');
+                localStorage.removeItem('company_logo');
+                return null;
+            }
             return logo;
         };
 
@@ -465,7 +469,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         value={record.dailyRecords.find(dr => dr.day === d)?.feed || ''}
                                                         onChange={(e) => handleUpdateDay(idx, d, 'feed', e.target.value)}
                                                         onPaste={(e) => handlePaste(e, idx, d, 'feed')}
-                                                        className="w-full h-full px-0 py-0.5 bg-transparent text-center focus:bg-orange-100 outline-none border-none font-bold text-slate-700"
+                                                        className="w-full h-full px-0 py-0.5 bg-transparent text-center focus:bg-orange-100 outline-none border-none font-medium text-slate-700 text-[9px]"
                                                     />
                                                 </td>
                                             ))}
@@ -488,7 +492,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         value={record.dailyRecords.find(dr => dr.day === d)?.mortality || ''}
                                                         onChange={(e) => handleUpdateDay(idx, d, 'mortality', e.target.value)}
                                                         onPaste={(e) => handlePaste(e, idx, d, 'mortality')}
-                                                        className="w-full h-full px-0 py-0.5 bg-transparent text-center focus:bg-pink-100 outline-none border-none text-pink-600 font-bold"
+                                                        className="w-full h-full px-0 py-0.5 bg-transparent text-center focus:bg-pink-100 outline-none border-none text-pink-600 font-medium text-[9px]"
                                                     />
                                                 </td>
                                             ))}
