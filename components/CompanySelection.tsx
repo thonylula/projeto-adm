@@ -31,8 +31,11 @@ export const CompanySelection: React.FC<CompanySelectionProps> = ({
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const logoUrl = URL.createObjectURL(file);
-      setNewCompanyLogo(logoUrl);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewCompanyLogo(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 

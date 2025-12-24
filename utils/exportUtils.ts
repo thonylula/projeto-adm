@@ -19,7 +19,7 @@ export const exportToPdf = async (elementId: string, fileName: string) => {
             letterRendering: true,
             logging: false
         },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' as const },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] as const }
     };
 

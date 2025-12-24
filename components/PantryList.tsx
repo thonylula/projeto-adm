@@ -68,9 +68,14 @@ export const PantryList: React.FC<PantryListProps> = ({
 
                         {/* Header */}
                         <div className="p-2 border-b-2 flex justify-between items-center" style={{ borderColor: '#f97316' }}>
-                            <div className="space-y-1 text-left">
-                                <h1 className="text-2xl font-black uppercase text-slate-900 leading-none">{companyName}</h1>
-                                <p className="text-sm text-slate-700 font-extrabold">CNPJ: {recipientCnpj || '---'}</p>
+                            <div className="space-y-1 text-left flex items-center gap-4">
+                                {companyLogo && (
+                                    <img src={companyLogo} alt="Logo" className="h-16 w-auto object-contain" />
+                                )}
+                                <div>
+                                    <h1 className="text-2xl font-black uppercase text-slate-900 leading-none">{companyName}</h1>
+                                    <p className="text-sm text-slate-700 font-extrabold">CNPJ: {recipientCnpj || '---'}</p>
+                                </div>
                             </div>
                             <div className="text-right">
                                 <p className="text-base font-black text-slate-900">Data: {new Date().toLocaleDateString('pt-BR')}</p>
