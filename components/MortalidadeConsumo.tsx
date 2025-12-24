@@ -83,6 +83,203 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         }
     }, [activeCompany?.id, activeCompany?.logoUrl]);
 
+    // --- EXPORT & ACTIONS HANDLERS ---
+    const performExport = async (type: 'pdf' | 'png' | 'html') => {
+        setIsExporting(true);
+        setTimeout(async () => {
+            try {
+                const suffix = `mortalidade_${month}_${year}`;
+                if (type === 'pdf') await exportToPdf('export-target', suffix);
+                if (type === 'png') await exportToPng('export-target', suffix);
+                if (type === 'html') exportToHtml('export-target', suffix);
+            } catch (error) {
+                console.error('Export failed:', error);
+            } finally {
+                setIsExporting(false);
+            }
+        }, 100);
+    };
+
+    const handleShare = async () => {
+        setIsExporting(true);
+        setTimeout(async () => {
+            try {
+                const element = document.getElementById('export-target');
+                if (!element || !(window as any).html2canvas) return;
+                const canvas = await (window as any).html2canvas(element, { scale: 1.5 });
+                canvas.toBlob(async (blob: Blob | null) => {
+                    if (!blob) return;
+                    const file = new File([blob], `mortalidade_${month}_${year}.png`, { type: 'image/png' });
+                    if (navigator.share) {
+                        await navigator.share({ files: [file], title: 'Mortalidade' });
+                    } else {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `mortalidade_${month}_${year}.png`;
+                        link.click();
+                    }
+                });
+            } finally {
+                setIsExporting(false);
+            }
+        }, 100);
+    };
+
+    const handleBackup = () => {
+        if (!data) return;
+        const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup_mortalidade_${activeCompany?.name}_${month}_${year}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleLoadBackup = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const json = JSON.parse(e.target?.result as string);
+                setData(json);
+                setMessage({ text: 'Backup carregado com sucesso!', type: 'success' });
+            } catch (err) {
+                setMessage({ text: 'Erro ao carregar backup.', type: 'error' });
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    const handleSave = async () => {
+        if (!activeCompany?.id || !data) return;
+        const success = await SupabaseService.saveMortalityData(activeCompany.id, month, year, data);
+        if (success) {
+            setMessage({ text: 'Dados salvos com sucesso!', type: 'success' });
+            setTimeout(() => setMessage(null), 3000);
+        } else {
+            setMessage({ text: 'Erro ao salvar dados.', type: 'error' });
+        }
+    };
+
+    const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64 = reader.result as string;
+                localStorage.setItem('company_logo', base64);
+                setCompanyLogo(base64);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // --- LOGIC HELPERS ---
+
+    const handleUpdateHeader = (index: number, field: keyof MortalityTankRecord, value: any) => {
+        if (!data) return;
+        const newRecords = [...data.records];
+        newRecords[index] = { ...newRecords[index], [field]: value };
+        setData({ ...data, records: newRecords });
+    };
+
+    const handleUpdateDay = (tankIndex: number, day: number, type: 'feed' | 'mortality', value: string) => {
+        if (!data) return;
+        const numValue = parseFloat(value) || 0;
+        const newRecords = [...data.records];
+        const tank = newRecords[tankIndex];
+        const dayRecordIndex = tank.dailyRecords.findIndex(r => r.day === day);
+
+        if (dayRecordIndex >= 0) {
+            const newDaily = [...tank.dailyRecords];
+            newDaily[dayRecordIndex] = { ...newDaily[dayRecordIndex], [type]: numValue };
+            newRecords[tankIndex] = { ...tank, dailyRecords: newDaily };
+            setData({ ...data, records: newRecords });
+        }
+    };
+
+    const handlePaste = (e: React.ClipboardEvent, tankIndex: number, startDay: number, type: 'feed' | 'mortality') => {
+        e.preventDefault();
+        const text = e.clipboardData.getData('text');
+        const values = text.split(/[\t\n\s]+/).map(v => parseFloat(v.replace(',', '.'))).filter(v => !isNaN(v));
+
+        if (values.length === 0 || !data) return;
+
+        const newRecords = [...data.records];
+        const tank = newRecords[tankIndex];
+        const newDaily = [...tank.dailyRecords];
+
+        values.forEach((val, i) => {
+            const currentDay = startDay + i;
+            const recordIdx = newDaily.findIndex(r => r.day === currentDay);
+            if (recordIdx >= 0) {
+                newDaily[recordIdx] = { ...newDaily[recordIdx], [type]: val };
+            }
+        });
+
+        newRecords[tankIndex] = { ...tank, dailyRecords: newDaily };
+        setData({ ...data, records: newRecords });
+    };
+
+    const addTank = () => {
+        if (!data || !activeCompany?.id) return;
+        const newTanks: MortalityTankRecord[] = Array.from({ length: tankQuantity }, (_, i) => ({
+            id: crypto.randomUUID(),
+            ve: `${data.records.length + i + 1}`,
+            stockingDate: '',
+            area: 0,
+            initialPopulation: 0,
+            density: 0,
+            biometry: '',
+            dailyRecords: daysArray.map(d => ({ day: d, feed: 0, mortality: 0 }))
+        }));
+        setData({ ...data, records: [...data.records, ...newTanks] });
+    };
+
+    const removeTank = (index: number) => {
+        if (!data) return;
+        if (window.confirm('Remover este viveiro?')) {
+            const newRecords = data.records.filter((_, i) => i !== index);
+            setData({ ...data, records: newRecords });
+        }
+    };
+
+    const calculateRowTotal = (record: MortalityTankRecord, type: 'feed' | 'mortality') => {
+        return record.dailyRecords.reduce((sum, curr) => sum + (curr[type] || 0), 0);
+    };
+
+    const calculateDayTotal = (type: 'feed' | 'mortality', day: number) => {
+        if (!data) return 0;
+        return data.records.reduce((sum, tank) => {
+            const dayRec = tank.dailyRecords.find(r => r.day === day);
+            return sum + (dayRec ? (dayRec[type] || 0) : 0);
+        }, 0);
+    };
+
+    const ActionBar = () => (
+        <div className="flex flex-wrap gap-2 mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100 print:hidden">
+            <button onClick={() => performExport('pdf')} className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase flex items-center gap-2 hover:bg-red-700 transition-all shadow-lg active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                PDF
+            </button>
+            <button onClick={() => performExport('png')} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition-all shadow-lg active:scale-95">PNG</button>
+            <button onClick={() => performExport('html')} className="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-800 transition-all shadow-lg active:scale-95">HTML</button>
+            <div className="w-px h-8 bg-slate-200 mx-2" />
+            <button onClick={handleShare} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-700 transition-all shadow-lg active:scale-95">Compartilhar</button>
+            <div className="w-px h-8 bg-slate-200 mx-2" />
+            <button onClick={handleBackup} className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-800 transition-all shadow-lg active:scale-95">Backup</button>
+            <input type="file" id="load-backup-input" accept=".json" onChange={handleLoadBackup} className="hidden" />
+            <button onClick={() => document.getElementById('load-backup-input')?.click()} className="bg-orange-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-orange-600 transition-all shadow-lg active:scale-95">Carregar</button>
+            <button onClick={handleSave} className="bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-600 transition-all shadow-lg active:scale-95">Salvar</button>
+            <div className="w-px h-8 bg-slate-200 mx-2" />
+            <input type="file" id="logo-upload-input" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+            <button onClick={() => document.getElementById('logo-upload-input')?.click()} className="bg-purple-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-purple-700 transition-all shadow-lg active:scale-95">📷 Logo</button>
+        </div>
+    );
+
     if (isLoading && !data) {
         return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div></div>;
     }
