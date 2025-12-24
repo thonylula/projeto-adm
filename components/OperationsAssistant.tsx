@@ -77,11 +77,15 @@ export const OperationsAssistant: React.FC = () => {
         };
 
         try {
+            const isMortalityTab = context.appState.activeTab === 'mortalidade';
+
+            // Core promises that are always needed
             const promises: any[] = [
                 SupabaseService.getCompanies(),
-                SupabaseService.getEmployees(),
-                SupabaseService.getSuppliers(),
-                SupabaseService.getClients(),
+                // Only fetch heavy registries if NOT in mortality tab or if explicitly needed
+                !isMortalityTab ? SupabaseService.getEmployees() : Promise.resolve([]),
+                !isMortalityTab ? SupabaseService.getSuppliers() : Promise.resolve([]),
+                !isMortalityTab ? SupabaseService.getClients() : Promise.resolve([]),
                 SupabaseService.getBasketConfigs(),
                 SupabaseService.getDeliveryOrders()
             ];
@@ -100,9 +104,9 @@ export const OperationsAssistant: React.FC = () => {
             const [companies, employees, suppliers, clients, configs, doData, mortalityData] = await Promise.all(promises);
 
             context['folha_companies'] = companies;
-            context['folha_registry_employees'] = employees;
-            context['folha_registry_suppliers'] = suppliers;
-            context['folha_registry_clients'] = clients;
+            context['folha_registry_employees'] = employees; // Empty array if optimized
+            context['folha_registry_suppliers'] = suppliers; // Empty array if optimized
+            context['folha_registry_clients'] = clients;     // Empty array if optimized
             context['folha_basket_item_configs'] = configs;
             context['delivery_order_db'] = doData.data;
             context['mortality_data'] = mortalityData || null;
@@ -131,7 +135,12 @@ export const OperationsAssistant: React.FC = () => {
         - "message": Texto amigável e curto explicando o que você está fazendo.
         - "actions": Lista de ações.
 
-        REGRAS CRÍTICAS DE CONTEXTO (MUITO IMPORTANTE):
+        REGRAS PARA LEITURA DE IMAGENS (OCR) - CRÍTICO:
+        1. MAPEAMENTO EXATO: Ao ler tabelas (como Mortalidade), preserve a posição exata das colunas.
+        2. CÉLULAS VAZIAS: Se visualmente uma casa/dia não tem anotação, O VALOR É NULL ou "". NÃO PULE para o próximo número. Se o dia 1 está vazio e o dia 2 tem "50", o array deve ser [null, 50, ...].
+        3. DIAS DO MÊS: Garanta que os valores correspondam ao dia correto (1 a 31). Conte as colunas vazias como dias sem registro.
+
+        REGRAS CRÍTICAS DE CONTEXTO:
         1. VERIFIQUE SEMPRE "appState.activeTab" ANTES DE AGIR.
         2. SE activeTab == "mortalidade":
            - QUALQUER pedido para "preencher tabela", "lançar dados", "atualizar VE", "biometria", "ração" ou "mortalidade" DEVE SER FEITO NA PRÓPRIA ABA MORTALIDADE.
