@@ -331,7 +331,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <div className="absolute bottom-[5%] left-[10%] w-[30%] h-[30%] rounded-full bg-blue-50/50 blur-3xl" />
         </div>
 
-        <div className="relative z-10 p-4 sm:p-8 lg:p-10 max-w-7xl mx-auto print:p-0 print:max-w-none">
+        <div id="active-view" className="relative z-10 p-4 sm:p-8 lg:p-10 max-w-7xl mx-auto print:p-0 print:max-w-none">
           {children}
         </div>
       </main>

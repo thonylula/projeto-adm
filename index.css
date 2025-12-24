@@ -31,7 +31,8 @@ body {
   }
 
   /* Reset the active view to be visible and positioned at top */
-  #active-view {
+  #active-view,
+  #export-target {
     visibility: visible;
     position: absolute;
     left: 0;
@@ -41,7 +42,8 @@ body {
     padding: 0 !important;
   }
 
-  #active-view * {
+  #active-view *,
+  #export-target * {
     visibility: visible;
   }
 
