@@ -422,31 +422,31 @@ export const BiometricsManager: React.FC = () => {
                 const doc = item.diasCultivo;
                 const targets = calculateTargets(doc);
 
-                // CLASSIFICAÇÃO ATUALIZADA (6 NÍVEIS)
+                // CLASSIFICAÇÃO ATUALIZADA (6 NÍVEIS) - TEMA LARANJA TOM SOBRE TOM
                 if (pMed >= targets.espetacular) {
-                    analysisStatus = `🟣 ESPETACULAR: Topo de Linha! (> ${targets.espetacular.toFixed(2)}g)`;
-                    rowBgColor = "bg-purple-50 hover:bg-purple-100";
-                    statusTextColor = "text-purple-900 font-extrabold";
+                    analysisStatus = `💥 ESPETACULAR: Topo de Linha! (> ${targets.espetacular.toFixed(2)}g)`;
+                    rowBgColor = "bg-[#FFEDD5] hover:bg-[#FED7AA]"; // orange-100 -> orange-200
+                    statusTextColor = "text-[#7C2D12] font-extrabold"; // orange-950
                 } else if (pMed >= targets.otimo) {
-                    analysisStatus = `🟢 ÓTIMO: Acima da meta (${targets.otimo.toFixed(2)}g)`;
-                    rowBgColor = "bg-[#d1e7dd] hover:bg-green-200";
-                    statusTextColor = "text-green-900 font-bold";
+                    analysisStatus = `🔥 ÓTIMO: Acima da meta (${targets.otimo.toFixed(2)}g)`;
+                    rowBgColor = "bg-[#FFF7ED] hover:bg-[#FFEDD5]"; // orange-50 -> orange-100
+                    statusTextColor = "text-[#9A3412] font-bold"; // orange-900
                 } else if (pMed >= targets.bom) {
-                    analysisStatus = `🔵 BOM: Dentro do esperado.`;
-                    rowBgColor = "bg-blue-50 hover:bg-blue-100";
-                    statusTextColor = "text-blue-900 font-bold";
+                    analysisStatus = `💪 BOM: Dentro do esperado.`;
+                    rowBgColor = "bg-white hover:bg-[#FFF7ED]";
+                    statusTextColor = "text-[#C2410C] font-bold"; // orange-700
                 } else if (pMed >= targets.regular) {
-                    analysisStatus = `🟡 REGULAR: Atenção (${targets.regular.toFixed(2)}g)`;
-                    rowBgColor = "bg-yellow-50 hover:bg-yellow-100";
-                    statusTextColor = "text-yellow-800 font-bold";
+                    analysisStatus = `⚡ REGULAR: Atenção (${targets.regular.toFixed(2)}g)`;
+                    rowBgColor = "bg-white hover:bg-orange-50/50";
+                    statusTextColor = "text-[#EA580C] font-bold"; // orange-600
                 } else if (pMed >= targets.ruim) {
-                    analysisStatus = `🟠 RUIM: Abaixo da média (< ${targets.regular.toFixed(2)}g)`;
-                    rowBgColor = "bg-orange-50 hover:bg-orange-100";
-                    statusTextColor = "text-orange-800 font-bold";
+                    analysisStatus = `⚠️ RUIM: Abaixo da média (< ${targets.regular.toFixed(2)}g)`;
+                    rowBgColor = "bg-white hover:bg-orange-50/30";
+                    statusTextColor = "text-[#F97316] font-bold"; // orange-500
                 } else {
-                    analysisStatus = `⚫ PÉSSIMO: Crítico (< ${targets.ruim.toFixed(2)}g)`;
-                    rowBgColor = "bg-[#f8d7da] hover:bg-red-200";
-                    statusTextColor = "text-red-900 font-bold";
+                    analysisStatus = `🚨 PÉSSIMO: Crítico (< ${targets.ruim.toFixed(2)}g)`;
+                    rowBgColor = "bg-[#FEF2F2] hover:bg-[#FEE2E2]"; // Mantém um tom de alerta leve
+                    statusTextColor = "text-[#B91C1C] font-bold"; // Vermelho para crítico
                 }
 
             } else if (pMed === null) {
@@ -678,10 +678,10 @@ export const BiometricsManager: React.FC = () => {
                             <span className="text-[10px] text-gray-300">•</span>
                             <span className="text-[10px] text-gray-400">{new Date().toLocaleDateString('pt-BR')}</span>
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-[#0F1B2D] tracking-tight leading-none mb-2" style={{ fontFamily: "'Poppins', 'Montserrat', sans-serif" }}>
+                        <h1 className="text-3xl md:text-4xl font-bold text-[#431407] tracking-tight leading-none mb-2" style={{ fontFamily: "'Poppins', 'Montserrat', sans-serif" }}>
                             BIOMETRIA
                         </h1>
-                        <p className="text-sm md:text-base font-semibold text-[#FF8A4B] uppercase tracking-wide" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                        <p className="text-sm md:text-base font-semibold text-[#9A3412] uppercase tracking-wide" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                             Análise de Performance
                         </p>
                     </div>
@@ -705,7 +705,7 @@ export const BiometricsManager: React.FC = () => {
                 <main className="p-6 bg-white">
                     <div className="rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                         <table className="w-full text-xs text-left">
-                            <thead className="bg-orange-50 text-orange-800 uppercase font-bold border-b border-orange-100">
+                            <thead className="bg-[#FFEDD5] text-[#7C2D12] uppercase font-bold border-b border-[#FED7AA]">
                                 <tr>
                                     <th className="px-4 py-3 min-w-[80px]">
                                         <div className="flex flex-col gap-1">
@@ -725,8 +725,8 @@ export const BiometricsManager: React.FC = () => {
                                     <th className="px-4 py-3 text-right">QUANT.</th>
                                     <th className="px-4 py-3 text-right text-gray-600 bg-gray-50">PESO TOTAL</th>
                                     <th className="px-4 py-3 text-right text-gray-400">P.M ANT</th>
-                                    <th className="px-4 py-3 text-right text-gray-700 bg-gray-50" title="Incremento Semanal">Inc. Sem.</th>
-                                    <th className="px-4 py-3 text-right text-indigo-700">GPD (g/dia)</th>
+                                    <th className="px-4 py-3 text-right text-[#C2410C] bg-orange-50/30" title="Incremento Semanal">Inc. Sem.</th>
+                                    <th className="px-4 py-3 text-right text-[#9A3412] bg-orange-50/50">GPD (g/dia)</th>
                                     <th className="px-4 py-3 w-1/3">Status Analysis</th>
                                 </tr>
                             </thead>
@@ -815,8 +815,8 @@ export const BiometricsManager: React.FC = () => {
                                             />
                                             <span className="print-visible hidden">{item.pAntDisplay}</span>
                                         </td>
-                                        <td className="px-4 py-3 text-right font-mono font-bold text-gray-700 bg-gray-50/50">{item.incSemanalStr}</td>
-                                        <td className="px-4 py-3 text-right font-mono font-black text-indigo-700 text-sm">{item.gpdDisplay}</td>
+                                        <td className="px-4 py-3 text-right font-mono font-bold text-gray-700 bg-orange-50/10">{item.incSemanalStr}</td>
+                                        <td className="px-4 py-3 text-right font-mono font-black text-[#9A3412] text-sm bg-orange-50/20">{item.gpdDisplay}</td>
                                         <td className="px-4 py-3">
                                             <span className={`text-[10px] uppercase tracking-wide font-bold ${item.statusTextColor}`}>
                                                 {item.analysisStatus}
@@ -834,12 +834,12 @@ export const BiometricsManager: React.FC = () => {
                             <div>
                                 <p className="font-bold text-gray-700 mb-1">Legenda de Status</p>
                                 <div className="flex flex-wrap gap-3">
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-purple-200 border border-purple-400"></div> Espetacular</span>
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#d1e7dd] border border-green-300"></div> Ótimo</span>
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-blue-100 border border-blue-300"></div> Bom</span>
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-yellow-100 border border-yellow-300"></div> Regular</span>
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-orange-100 border border-orange-300"></div> Ruim</span>
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-100 border border-red-300"></div> Péssimo</span>
+                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#FFEDD5] border border-orange-300"></div> Espetacular</span>
+                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#FFF7ED] border border-orange-200"></div> Ótimo</span>
+                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-white border border-gray-200"></div> Bom</span>
+                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-white border border-gray-200 opacity-80"></div> Regular</span>
+                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-white border border-gray-200 opacity-60"></div> Ruim</span>
+                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-50 border border-red-200"></div> Péssimo</span>
                                 </div>
                             </div>
                         </div>
@@ -863,12 +863,12 @@ export const BiometricsManager: React.FC = () => {
                                     <thead className="bg-gray-100 text-gray-600">
                                         <tr>
                                             <th className="border border-gray-200 p-1">Dias</th>
-                                            <th className="border border-gray-200 p-1 bg-purple-50 text-purple-800">Espetacular</th>
-                                            <th className="border border-gray-200 p-1 bg-green-50 text-green-800">Ótimo</th>
-                                            <th className="border border-gray-200 p-1 bg-blue-50 text-blue-800">Bom</th>
-                                            <th className="border border-gray-200 p-1 bg-yellow-50 text-yellow-800">Regular</th>
-                                            <th className="border border-gray-200 p-1 bg-orange-50 text-orange-800">Ruim</th>
-                                            <th className="border border-gray-200 p-1 bg-red-50 text-red-800">Péssimo</th>
+                                            <th className="border border-orange-100 p-1 bg-[#FFEDD5] text-[#7C2D12]">Espetacular</th>
+                                            <th className="border border-orange-100 p-1 bg-[#FFF7ED] text-[#9A3412]">Ótimo</th>
+                                            <th className="border border-orange-100 p-1 bg-white text-[#C2410C]">Bom</th>
+                                            <th className="border border-orange-100 p-1 bg-white text-[#EA580C]">Regular</th>
+                                            <th className="border border-orange-100 p-1 bg-white text-[#F97316]">Ruim</th>
+                                            <th className="border border-orange-100 p-1 bg-red-50 text-[#B91C1C]">Péssimo</th>
                                         </tr>
                                     </thead>
                                     <tbody>
