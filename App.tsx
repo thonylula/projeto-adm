@@ -29,16 +29,37 @@ const generateId = () => {
 
 export default function App() {
   // Authentication State
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState('admin');
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('currentUser'));
+  const [currentUser, setCurrentUser] = useState(localStorage.getItem('currentUser') || 'admin');
 
   // Navigation State
-  const [activeTab, setActiveTab] = useState('payroll');
+  const [activeTab, setActiveTab] = useState(localStorage.getItem('activeTab') || 'payroll');
   const [activeYear, setActiveYear] = useState<number | null>(null);
   const [activeMonth, setActiveMonth] = useState<number | null>(null);
 
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(null);
+  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(localStorage.getItem('activeCompanyId'));
+
+  // Persistence Effects
+  useEffect(() => {
+    if (isAuthenticated) {
+      localStorage.setItem('currentUser', currentUser);
+    } else {
+      localStorage.removeItem('currentUser');
+    }
+  }, [isAuthenticated, currentUser]);
+
+  useEffect(() => {
+    localStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeCompanyId) {
+      localStorage.setItem('activeCompanyId', activeCompanyId);
+    } else {
+      localStorage.removeItem('activeCompanyId');
+    }
+  }, [activeCompanyId]);
 
   // Load initial state from Supabase on mount
   useEffect(() => {
