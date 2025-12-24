@@ -189,13 +189,16 @@ export const OperationsAssistant: React.FC = () => {
                                 const current = await SupabaseService.getDeliveryOrders();
                                 await SupabaseService.saveDeliveryOrders(value, current.logo);
                             } else if (key === 'mortality_data') {
-                                // Save mortality data specifically using current context or data internal fields
+                                console.log('[AI Debug] Saving Mortality Data:', value);
                                 const companyId = value.companyId || localStorage.getItem('activeCompanyId');
                                 const month = value.month || parseInt(localStorage.getItem('activeMonth') || '0');
                                 const year = value.year || parseInt(localStorage.getItem('activeYear') || '0');
 
                                 if (companyId && month && year) {
-                                    await SupabaseService.saveMortalityData(companyId, month, year, value);
+                                    const success = await SupabaseService.saveMortalityData(companyId, month, year, value);
+                                    console.log('[AI Debug] Save Success:', success);
+                                } else {
+                                    console.error('[AI Debug] Missing context for mortality save:', { companyId, month, year });
                                 }
                             } else if (key === 'folha_companies') {
                                 // This is complex because companies have IDs. 
