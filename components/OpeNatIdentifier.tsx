@@ -1,4 +1,4 @@
-
+// [AI-LOCK: CLOSED]
 import React, { useState, useEffect } from 'react';
 
 import { safeIncludes } from '../utils';

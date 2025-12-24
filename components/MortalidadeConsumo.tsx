@@ -1,3 +1,4 @@
+// [AI-LOCK: OPEN]
 import React, { useState, useEffect, useCallback } from 'react';
 import { Company, MonthlyMortalityData, MortalityTankRecord, MortalityDailyRecord } from '../types';
 import { SupabaseService } from '../services/supabaseService';

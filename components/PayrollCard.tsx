@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+// [AI-LOCK: CLOSED]
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { PayrollInput, PayrollResult, PayrollHistoryItem, Company, RegistryEmployee } from '../types';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';

@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
+// [AI-LOCK: CLOSED]
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { extractInvoiceData, generateMotivationalMessages } from '../services/geminiService';
 import type { InvoiceData, ItemAllocationConfig, ItemConfiguration } from '../types';
 import { ImageUploader } from './ImageUploader';
@@ -400,8 +401,8 @@ export const CestasBasicas: React.FC = () => {
         <button
             onClick={() => setActiveTab(tabName)}
             className={`flex items-center gap-2 px-6 py-3 text-sm font-black uppercase rounded-none transition-all duration-200 border-b-4 ${activeTab === tabName
-                ? (appMode === 'CHRISTMAS' ? 'border-red-600 bg-red-50 text-red-700' : 'border-orange-500 bg-orange-50 text-orange-700')
-                : 'border-transparent text-gray-400 hover:text-gray-600'
+                    ? (appMode === 'CHRISTMAS' ? 'border-red-600 bg-red-50 text-red-700' : 'border-orange-500 bg-orange-50 text-orange-700')
+                    : 'border-transparent text-gray-400 hover:text-gray-600'
                 }`}
         >
             {icon}
@@ -559,8 +560,8 @@ export const CestasBasicas: React.FC = () => {
                                             key={idx}
                                             onClick={() => toggleMonthlyExclusion(name)}
                                             className={`p-3 text-left border-2 rounded-lg transition-all flex items-center justify-between ${isExcluded
-                                                ? 'bg-red-50 border-red-500 text-red-700'
-                                                : 'bg-white border-slate-200 hover:border-slate-300'
+                                                    ? 'bg-red-50 border-red-500 text-red-700'
+                                                    : 'bg-white border-slate-200 hover:border-slate-300'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-2">
@@ -655,8 +656,8 @@ export const CestasBasicas: React.FC = () => {
                                                 key={idx}
                                                 onClick={() => toggleEmployeeDrinking(idx)}
                                                 className={`p-3 text-[9px] font-black uppercase text-center border-2 transition-all rounded-sm flex flex-col items-center justify-between min-h-[70px] ${isNonDrinker
-                                                    ? (appMode === 'CHRISTMAS' ? 'bg-red-50 border-red-600 text-red-700' : 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-inner')
-                                                    : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300'
+                                                        ? (appMode === 'CHRISTMAS' ? 'bg-red-50 border-red-600 text-red-700' : 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-inner')
+                                                        : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300'
                                                     }`}
                                             >
                                                 <div className="text-xl mb-1">{isNonDrinker ? '🥤' : '🍺'}</div>
@@ -776,94 +777,56 @@ export const CestasBasicas: React.FC = () => {
                                     })}
                                 </div>
                             </div>
-
-                            {/* --- Active Rules Panel (Debug/Visibility) --- */}
-                            {Object.values(itemAllocation).some((config) => (config as ItemAllocationConfig).mode === 'CUSTOM') && (
-                                <div className="mb-8 p-4 bg-amber-50 border-2 border-amber-200 rounded-sm">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xl">⚙️</span>
-                                            <div>
-                                                <h3 className="text-sm font-black text-amber-800 uppercase tracking-tighter">Regras Ativas de Distribuição</h3>
-                                                <p className="text-[10px] text-amber-600 font-bold uppercase tracking-widest text-left">Ajustes manuais ou via I.A.</p>
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={() => {
-                                                SupabaseService.saveBasketConfigs([]);
-                                                window.dispatchEvent(new Event('app-data-updated'));
-                                            }}
-                                            className="px-3 py-1 bg-amber-600 text-white text-[9px] font-black uppercase rounded-sm hover:bg-amber-700 transition-all"
-                                        >
-                                            Limpar Todas as Regras
-                                        </button>
-                                    </div>
-                                    <div className="space-y-2">
-                                        {invoiceData.items.filter(item => itemAllocation[item.id]?.mode === 'CUSTOM').map(item => {
-                                            const config = itemAllocation[item.id];
-                                            return (
-                                                <div key={item.id} className="flex justify-between items-center bg-white p-2 border border-amber-200 text-[10px]">
-                                                    <span className="font-bold text-slate-700 uppercase">{item.description}</span>
-                                                    <div className="flex gap-4 font-black">
-                                                        <span className="text-indigo-600">🥤 {config.customQtyNonDrinker} p/ Abstêmio</span>
-                                                        <span className="text-orange-600">🍺 {config.customQtyDrinker} p/ Padrão</span>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     )}
                 </div>
 
-                {invoiceData && (
-                    <div className="space-y-6">
-                        <div className="flex justify-center bg-white border-b-2 border-slate-100 sticky top-0 z-40 shadow-sm print:hidden">
-                            <TabButton tabName="summary" icon={<ReceiptIcon className="w-5 h-5" />} label="Resumo" />
-                            <TabButton tabName="signature" icon={<SignatureIcon className="w-5 h-5" />} label="Assinaturas" />
-                            <TabButton tabName="pantry" icon={<BasketIcon className="w-5 h-5" />} label="Lista p/ Funcionário" />
-                        </div>
-
-                        <div id="active-view" className="animate-in fade-in duration-700">
-                            {activeTab === 'summary' && <InvoiceSummary data={invoiceData} companyName={companyName} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
-                            {activeTab === 'signature' && <SignatureSheet employeeNames={activeEmployees} companyName={companyName} recipientCnpj={invoiceData.recipientCnpj} sloganImage={sloganImageBase64} companyLogo={companyLogoBase64} />}
-                            {activeTab === 'pantry' && (
-                                <PantryList
-                                    data={invoiceData}
-                                    employeeNames={activeEmployees}
-                                    motivationalMessages={motivationalMessages}
-                                    sloganImage={sloganImageBase64}
-                                    companyName={companyName}
-                                    recipientCnpj={invoiceData.recipientCnpj}
-                                    companyLogo={companyLogoBase64}
-                                    selectedNonDrinkers={selectedNonDrinkers}
-                                    itemAllocation={itemAllocation}
-                                    appMode={appMode}
-                                />
-                            )}
-                        </div>
+                {invoiceData && motivationalMessages.length > 0 && (
+                    <div id="active-view" className="animate-in slide-in-from-bottom-4 duration-700">
+                        {activeTab === 'summary' && (
+                            <InvoiceSummary
+                                data={invoiceData}
+                                slogans={motivationalMessages}
+                                companyName={companyName}
+                                companyLogo={companyLogoBase64}
+                                sloganImage={sloganImageBase64}
+                                isChristmas={appMode === 'CHRISTMAS'}
+                                selectedNonDrinkers={selectedNonDrinkers}
+                                activeEmployees={activeEmployees}
+                                itemAllocation={itemAllocation}
+                            />
+                        )}
+                        {activeTab === 'signature' && (
+                            <SignatureSheet
+                                employees={activeEmployees}
+                                companyName={companyName}
+                                companyLogo={companyLogoBase64}
+                                isChristmas={appMode === 'CHRISTMAS'}
+                            />
+                        )}
+                        {activeTab === 'pantry' && (
+                            <PantryList
+                                items={invoiceData.items}
+                                employees={activeEmployees}
+                                selectedNonDrinkers={selectedNonDrinkers}
+                                itemAllocation={itemAllocation}
+                                companyName={companyName}
+                                companyLogo={companyLogoBase64}
+                                isChristmas={appMode === 'CHRISTMAS'}
+                            />
+                        )}
                     </div>
                 )}
             </main>
 
-            <style dangerouslySetInnerHTML={{
-                __html: `
-                    .christmas-theme {
-                        --brand-color: #dc2626;
-                        --secondary-color: #166534;
-                    }
-                    @media print {
-                        .christmas-theme header, .christmas-theme .print\\:hidden { display: none !important; }
-                        .christmas-theme .border-orange-500 { border-color: #dc2626 !important; }
-                        .christmas-theme .bg-orange-500 { background-color: #dc2626 !important; }
-                        .christmas-theme .text-indigo-600 { color: #dc2626 !important; }
-                    }
-                `
-            }} />
+            {/* Sticky Navigation Tabs */}
+            {invoiceData && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-md border-2 border-slate-200 rounded-sm shadow-2xl flex overflow-hidden z-40 print:hidden">
+                    <TabButton tabName="summary" icon={<ReceiptIcon className="w-4 h-4" />} label="Resumo" />
+                    <TabButton tabName="signature" icon={<SignatureIcon className="w-4 h-4" />} label="Assinaturas" />
+                    <TabButton tabName="pantry" icon={<BasketIcon className="w-4 h-4" />} label="Dispensa" />
+                </div>
+            )}
         </div>
     );
 };
-
-export default CestasBasicas;

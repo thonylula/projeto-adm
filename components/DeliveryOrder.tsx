@@ -1,3 +1,4 @@
+// [AI-LOCK: CLOSED]
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useGeminiParser } from '../hooks/useGeminiParser';
 import html2canvas from 'html2canvas';

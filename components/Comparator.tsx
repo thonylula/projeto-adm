@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
+// [AI-LOCK: CLOSED]
+import React, { useState, useEffect, useRef } from 'react';
 import { useGeminiParser } from '../hooks/useGeminiParser';
 import { SupabaseService } from '../services/supabaseService';
 
