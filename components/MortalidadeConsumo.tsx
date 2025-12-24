@@ -67,6 +67,15 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
     useEffect(() => {
         loadData();
+
+        const handleDataUpdate = () => {
+            loadData();
+        };
+
+        window.addEventListener('app-data-updated', handleDataUpdate);
+        return () => {
+            window.removeEventListener('app-data-updated', handleDataUpdate);
+        };
     }, [loadData]);
 
     useEffect(() => {
