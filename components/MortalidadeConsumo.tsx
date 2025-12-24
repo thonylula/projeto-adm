@@ -113,7 +113,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             } finally {
                 setIsExporting(false);
             }
-        }, 100);
+        }, 500);
     };
 
     const handleShare = async () => {
