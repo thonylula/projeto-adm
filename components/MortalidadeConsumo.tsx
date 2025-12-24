@@ -8,76 +8,69 @@ interface MortalidadeConsumoProps {
 }
 
 export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCompany }) => {
-    const [data, setData] = useState<MonthlyMortalityData | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [month, setMonth] = useState(new Date().getMonth() + 1);
-    const [year, setYear] = useState(new Date().getFullYear());
-    const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
-    const [tankQuantity, setTankQuantity] = useState(1);
-    const [isExporting, setIsExporting] = useState(false);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
-    const performExport = async (type: 'pdf' | 'png' | 'html') => {
-        setIsExporting(true);
-        // Aguarda renderização do elemento visível
-        setTimeout(async () => {
-            try {
-                if (type === 'pdf') await exportToPdf('export-target', `mortalidade_${month}_${year}`);
-                if (type === 'png') await exportToPng('export-target', `mortalidade_${month}_${year}`);
-                if (type === 'html') exportToHtml('export-target', `mortalidade_${month}_${year}`);
-            } catch (error) {
-                console.error('Export failed:', error);
-            } finally {
-                setIsExporting(false);
-            }
-        }, 100);
-    };
+    const loadData = useCallback(async () => {
+        if (!activeCompany?.id) return;
+        setIsLoading(true);
+        try {
+            const savedData = await SupabaseService.getMortalityData(activeCompany.id, month, year);
+            if (savedData) {
+                setData(savedData);
+            } else {
+                // Initial empty state
+                const defaultRecords: MortalityTankRecord[] = Array.from({ length: 5 }, (_, i) => ({
+                    id: crypto.randomUUID(),
+                    ve: `${i + 1}`,
+                    stockingDate: '',
+                    area: 0,
+                    initialPopulation: 0,
+                    density: 0,
+                    biometry: '',
+                    dailyRecords: daysArray.map(d => ({ day: d, feed: 0, mortality: 0 }))
+                }));
 
-    const handleShare = async () => {
-        setIsExporting(true);
-        setTimeout(async () => {
-            try {
-                const element = document.getElementById('export-target');
-                if (!element || !(window as any).html2canvas) return;
-                const canvas = await (window as any).html2canvas(element, { scale: 1.5 });
-                canvas.toBlob(async (blob: Blob | null) => {
-                    if (!blob) return;
-                    const file = new File([blob], `mortalidade_${month}_${year}.png`, { type: 'image/png' });
-                    if (navigator.share) {
-                        await navigator.share({ files: [file], title: 'Mortalidade' });
-                    } else {
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = `mortalidade_${month}_${year}.png`;
-                        link.click();
-                    }
+                setData({
+                    id: crypto.randomUUID(),
+                    companyId: activeCompany.id,
+                    month,
+                    year,
+                    records: defaultRecords
                 });
-            } finally {
-                setIsExporting(false);
             }
-        }, 100);
-    };
+        } catch (e) {
+            console.error(e);
+            setMessage({ text: 'Erro ao carregar dados.', type: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [activeCompany?.id, month, year, daysArray.length]);
 
-    const ActionBar = () => (
-        <div className="flex flex-wrap gap-2 mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100 print:hidden">
-            <button onClick={() => performExport('pdf')} className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase flex items-center gap-2 hover:bg-red-700 transition-all shadow-lg active:scale-95">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
-                PDF
-            </button>
-            <button onClick={() => performExport('png')} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition-all shadow-lg active:scale-95">PNG</button>
-            <button onClick={() => performExport('html')} className="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-800 transition-all shadow-lg active:scale-95">HTML</button>
-            <div className="w-px h-8 bg-slate-200 mx-2" />
-            <button onClick={handleShare} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-700 transition-all shadow-lg active:scale-95">Compartilhar</button>
-            <div className="w-px h-8 bg-slate-200 mx-2" />
-            <button onClick={handleBackup} className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-800 transition-all shadow-lg active:scale-95">Backup</button>
-            <input type="file" id="load-backup-input" accept=".json" onChange={handleLoadBackup} className="hidden" />
-            <button onClick={() => document.getElementById('load-backup-input')?.click()} className="bg-orange-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-orange-600 transition-all shadow-lg active:scale-95">Carregar</button>
-            <button onClick={handleSave} className="bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-600 transition-all shadow-lg active:scale-95">Salvar</button>
-            <div className="w-px h-8 bg-slate-200 mx-2" />
-            <input type="file" id="logo-upload-input" accept="image/*" onChange={handleLogoUpload} className="hidden" />
-            <button onClick={() => document.getElementById('logo-upload-input')?.click()} className="bg-purple-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-purple-700 transition-all shadow-lg active:scale-95">📷 Logo</button>
-        </div>
-    );
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
+
+    useEffect(() => {
+        // Safe logo loading logic
+        const savedLogo = localStorage.getItem('company_logo');
+        const companyLogoUrl = activeCompany?.logoUrl;
+
+        // 1. Priority: Valid saved logo (that is NOT a blob)
+        if (savedLogo && !savedLogo.startsWith('blob:')) {
+            setCompanyLogo(savedLogo);
+        }
+        // 2. Fallback: Company logo from DB (that is NOT a blob)
+        else if (companyLogoUrl && !companyLogoUrl.startsWith('blob:')) {
+            setCompanyLogo(companyLogoUrl);
+        } else {
+            // Cleanup stale blobs if found
+            if (savedLogo?.startsWith('blob:')) {
+                localStorage.removeItem('company_logo');
+            }
+            setCompanyLogo(null);
+        }
+    }, [activeCompany?.id, activeCompany?.logoUrl]);
 
     if (isLoading && !data) {
         return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div></div>;
