@@ -707,41 +707,41 @@ export const BiometricsManager: React.FC = () => {
                         <table className="w-full text-xs text-left">
                             <thead className="bg-[#FFEDD5] text-[#7C2D12] uppercase font-bold border-b border-[#FED7AA]">
                                 <tr>
-                                    <th className="px-4 py-3 min-w-[80px]">
+                                    <th className="px-2 py-3 min-w-[70px]">
                                         <div className="flex flex-col gap-1">
                                             <span>VIV.</span>
                                             <input
                                                 type="text"
                                                 placeholder="Filtrar..."
-                                                className="w-full text-[10px] p-1 rounded border border-orange-200 focus:outline-none focus:border-orange-500 font-normal normal-case text-gray-600 placeholder-gray-400 print-hidden"
+                                                className="w-full text-[9px] p-1 rounded border border-orange-200 focus:outline-none focus:border-orange-500 font-normal normal-case text-gray-600 placeholder-gray-400 print-hidden"
                                                 value={filterText}
                                                 onChange={(e) => setFilterText(e.target.value)}
                                             />
                                         </div>
                                     </th>
-                                    <th className="px-4 py-3 text-center bg-orange-100/50 min-w-[110px]">D. POV</th>
-                                    <th className="px-4 py-3 text-center">DIAS</th>
-                                    <th className="px-4 py-3 text-right min-w-[100px]">P.M (g)</th>
-                                    <th className="px-4 py-3 text-right">QUANT.</th>
-                                    <th className="px-4 py-3 text-right text-gray-600 bg-gray-50">PESO TOTAL</th>
-                                    <th className="px-4 py-3 text-right text-gray-400">P.M ANT</th>
-                                    <th className="px-4 py-3 text-right text-[#C2410C] bg-orange-50/30" title="Incremento Semanal">Inc. Sem.</th>
-                                    <th className="px-4 py-3 text-right text-[#9A3412] bg-orange-50/50">GPD (g/dia)</th>
-                                    <th className="px-4 py-3 w-1/3">Status Analysis</th>
+                                    <th className="px-2 py-3 text-center bg-orange-100/50 min-w-[95px]">D. POV</th>
+                                    <th className="px-2 py-3 text-center min-w-[45px]">DIAS</th>
+                                    <th className="px-2 py-3 text-right min-w-[85px]">P.M (g)</th>
+                                    <th className="px-2 py-3 text-right min-w-[75px]">QUANT.</th>
+                                    <th className="px-2 py-3 text-right text-gray-600 bg-gray-50 min-w-[95px]">PESO TOTAL</th>
+                                    <th className="px-2 py-3 text-right text-gray-400 min-w-[75px]">P.M ANT</th>
+                                    <th className="px-2 py-3 text-right text-[#C2410C] bg-orange-50/30 min-w-[75px]" title="Incremento Semanal">Inc. Sem.</th>
+                                    <th className="px-2 py-3 text-right text-[#9A3412] bg-orange-50/50 min-w-[85px]">GPD (g/dia)</th>
+                                    <th className="px-4 py-3 min-w-[200px]">Status Analysis</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {processedData.map((item, idx) => (
                                     <tr key={idx} className={`${item.rowBgColor} transition-colors border-b border-gray-50 last:border-0`}>
-                                        <td className="px-4 py-3 font-bold text-gray-800">{item.viveiro}</td>
+                                        <td className="px-2 py-3 font-bold text-gray-800">{item.viveiro}</td>
 
                                         {/* DATA POVOAMENTO (Novo Input) */}
-                                        <td className="px-2 py-3 text-center bg-orange-50/30">
+                                        <td className="px-1 py-3 text-center bg-orange-50/30">
                                             <input
                                                 type="text"
                                                 placeholder="DD/MM/AAAA"
                                                 maxLength={10}
-                                                className="w-full text-center bg-white text-sm font-bold text-gray-900 border border-gray-400 rounded focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none h-9 px-1 shadow-sm placeholder-gray-300"
+                                                className="w-[90px] text-center bg-white text-xs font-bold text-gray-900 border border-gray-400 rounded focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none h-8 px-1 shadow-sm placeholder-gray-300"
                                                 value={item.dataPovoamento ? item.dataPovoamento.split('-').reverse().join('/') : ''}
                                                 onChange={(e) => {
                                                     let val = e.target.value.replace(/\D/g, '');
@@ -763,10 +763,10 @@ export const BiometricsManager: React.FC = () => {
                                             />
                                         </td>
 
-                                        <td className="px-4 py-3 text-center font-mono font-bold text-gray-600 bg-gray-50">{item.diasCultivo}</td>
+                                        <td className="px-2 py-3 text-center font-mono font-bold text-gray-600 bg-gray-50">{item.diasCultivo}</td>
 
                                         {/* Input Editável Peso */}
-                                        <td className="px-4 py-3 text-right">
+                                        <td className="px-2 py-3 text-right">
                                             <div className="print-visible font-mono font-extrabold text-black text-sm">
                                                 {item.pMedInputValue}
                                             </div>
@@ -779,7 +779,7 @@ export const BiometricsManager: React.FC = () => {
                                         </td>
 
                                         {/* QUANTIDADE (Input Editável) */}
-                                        <td className="px-4 py-3 text-right">
+                                        <td className="px-2 py-3 text-right">
                                             <div className="print-visible font-mono font-bold text-gray-700 text-sm">
                                                 {item.quatInputValue}
                                             </div>
@@ -792,7 +792,7 @@ export const BiometricsManager: React.FC = () => {
                                         </td>
 
                                         {/* PESO TOTAL (Editável) */}
-                                        <td className="px-4 py-3 text-right bg-gray-50/50">
+                                        <td className="px-2 py-3 text-right bg-gray-50/50">
                                             <div className="print-visible font-mono font-bold text-gray-600 text-sm">
                                                 {item.pesoTotal}
                                             </div>
@@ -805,7 +805,7 @@ export const BiometricsManager: React.FC = () => {
                                         </td>
 
                                         {/* P.M ANTERIOR (Agora Editável) */}
-                                        <td className="px-4 py-3 text-right">
+                                        <td className="px-2 py-3 text-right">
                                             <input
                                                 type="text"
                                                 value={item.pAntStr || ''}
@@ -815,10 +815,10 @@ export const BiometricsManager: React.FC = () => {
                                             />
                                             <span className="print-visible hidden">{item.pAntDisplay}</span>
                                         </td>
-                                        <td className="px-4 py-3 text-right font-mono font-bold text-gray-700 bg-orange-50/10">{item.incSemanalStr}</td>
-                                        <td className="px-4 py-3 text-right font-mono font-black text-[#9A3412] text-sm bg-orange-50/20">{item.gpdDisplay}</td>
+                                        <td className="px-2 py-3 text-right font-mono font-bold text-gray-700 bg-orange-50/10">{item.incSemanalStr}</td>
+                                        <td className="px-2 py-3 text-right font-mono font-black text-[#9A3412] text-sm bg-orange-50/20">{item.gpdDisplay}</td>
                                         <td className="px-4 py-3">
-                                            <span className={`text-[10px] uppercase tracking-wide font-bold ${item.statusTextColor}`}>
+                                            <span className={`text-[9px] uppercase tracking-wide font-bold ${item.statusTextColor}`}>
                                                 {item.analysisStatus}
                                             </span>
                                         </td>
