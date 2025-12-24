@@ -1,4 +1,4 @@
-
+// [AI-LOCK: CLOSED]
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { RegistryEmployee, RegistrySupplier, RegistryClient } from '../types';
