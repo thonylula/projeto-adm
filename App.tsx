@@ -33,9 +33,19 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(localStorage.getItem('currentUser') || 'admin');
 
   // Navigation State
+  // Navigation State
   const [activeTab, setActiveTab] = useState(localStorage.getItem('activeTab') || 'payroll');
-  const [activeYear, setActiveYear] = useState<number | null>(null);
-  const [activeMonth, setActiveMonth] = useState<number | null>(null);
+
+  // Year/Month with persistence
+  const [activeYear, setActiveYear] = useState<number | null>(() => {
+    const saved = localStorage.getItem('activeYear');
+    return saved ? parseInt(saved) : new Date().getFullYear();
+  });
+
+  const [activeMonth, setActiveMonth] = useState<number | null>(() => {
+    const saved = localStorage.getItem('activeMonth');
+    return saved ? parseInt(saved) : new Date().getMonth() + 1;
+  });
 
   const [companies, setCompanies] = useState<Company[]>([]);
   const [activeCompanyId, setActiveCompanyId] = useState<string | null>(localStorage.getItem('activeCompanyId'));
@@ -52,6 +62,14 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('activeTab', activeTab);
   }, [activeTab]);
+
+  useEffect(() => {
+    if (activeYear) localStorage.setItem('activeYear', activeYear.toString());
+  }, [activeYear]);
+
+  useEffect(() => {
+    if (activeMonth) localStorage.setItem('activeMonth', activeMonth.toString());
+  }, [activeMonth]);
 
   useEffect(() => {
     if (activeCompanyId) {
@@ -332,7 +350,11 @@ export default function App() {
         {activeTab === 'mortalidade' && (
           <>
             {activeCompany ? (
-              <MortalidadeConsumo activeCompany={activeCompany} />
+              <MortalidadeConsumo
+                activeCompany={activeCompany}
+                activeYear={activeYear || new Date().getFullYear()}
+                activeMonth={activeMonth || new Date().getMonth() + 1}
+              />
             ) : (
               <CompanySelection
                 companies={companies}
