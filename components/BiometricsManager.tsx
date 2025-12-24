@@ -774,40 +774,40 @@ export const BiometricsManager: React.FC = () => {
 
                                         {/* Input Editável Peso */}
                                         <td className="px-1.5 py-1.5 text-right">
-                                            <div className="print-visible font-mono font-extrabold text-black text-[10.5px]">
+                                            <div className="print-visible font-mono font-bold text-black text-[10px]">
                                                 {item.pMedInputValue}
                                             </div>
                                             <input
                                                 type="text"
                                                 value={item.pMedInputValue}
                                                 onChange={(e) => handleUpdateRow(item.viveiro, 'pMedStr', e.target.value)}
-                                                className="print-hidden w-full text-right bg-transparent font-extrabold text-black outline-none border-b border-transparent focus:border-orange-500"
+                                                className="print-hidden w-full text-right bg-transparent font-bold text-black text-[10px] outline-none border-b border-transparent focus:border-orange-500"
                                             />
                                         </td>
 
                                         {/* QUANTIDADE (Input Editável) */}
                                         <td className="px-1.5 py-1.5 text-right">
-                                            <div className="print-visible font-mono font-bold text-gray-700 text-[10.5px]">
+                                            <div className="print-visible font-mono font-bold text-gray-700 text-[10px]">
                                                 {item.quatInputValue}
                                             </div>
                                             <input
                                                 type="text"
                                                 value={item.quatInputValue}
                                                 onChange={(e) => handleUpdateRow(item.viveiro, 'quat', e.target.value)}
-                                                className="print-hidden w-full text-right bg-transparent font-bold text-gray-700 outline-none border-b border-transparent focus:border-orange-500"
+                                                className="print-hidden w-full text-right bg-transparent font-bold text-gray-700 text-[10px] outline-none border-b border-transparent focus:border-orange-500"
                                             />
                                         </td>
 
                                         {/* PESO TOTAL (Editável) */}
                                         <td className="px-1.5 py-1.5 text-right bg-gray-50/50">
-                                            <div className="print-visible font-mono font-bold text-gray-600 text-[10.5px]">
+                                            <div className="print-visible font-mono font-bold text-gray-600 text-[10px]">
                                                 {item.pesoTotal}
                                             </div>
                                             <input
                                                 type="text"
                                                 value={item.pesoTotalInputValue}
                                                 onChange={(e) => handleUpdateRow(item.viveiro, 'pesoTotalStr', e.target.value)}
-                                                className="print-hidden w-full text-right bg-transparent font-bold text-gray-600 outline-none border-b border-transparent focus:border-orange-500"
+                                                className="print-hidden w-full text-right bg-transparent font-bold text-gray-600 text-[10px] outline-none border-b border-transparent focus:border-orange-500"
                                             />
                                         </td>
 
@@ -817,13 +817,13 @@ export const BiometricsManager: React.FC = () => {
                                                 type="text"
                                                 value={item.pAntStr || ''}
                                                 onChange={(e) => handleUpdateRow(item.viveiro, 'pAntStr', e.target.value)}
-                                                className="print-hidden w-full text-right bg-transparent font-mono text-gray-500 outline-none border-b border-transparent focus:border-orange-500 hover:border-gray-200 transaction-colors"
+                                                className="print-hidden w-full text-right bg-transparent font-mono text-gray-500 text-[10px] outline-none border-b border-transparent focus:border-orange-500 hover:border-gray-200 transaction-colors"
                                                 placeholder="-"
                                             />
-                                            <div className="print-visible hidden font-mono text-gray-500">{item.pAntDisplay}</div>
+                                            <div className="print-visible hidden font-mono text-gray-500 text-[10px]">{item.pAntDisplay}</div>
                                         </td>
-                                        <td className="px-1.5 py-1.5 text-right font-mono font-bold text-gray-700 bg-orange-50/10">{item.incSemanalStr}</td>
-                                        <td className="px-1.5 py-1.5 text-right font-mono font-black text-[#9A3412] text-[10.5px] bg-orange-50/20">{item.gpdDisplay}</td>
+                                        <td className="px-1.5 py-1.5 text-right font-mono font-bold text-gray-700 text-[10px] bg-orange-50/10">{item.incSemanalStr}</td>
+                                        <td className="px-1.5 py-1.5 text-right font-mono font-black text-[#9A3412] text-[10px] bg-orange-50/20">{item.gpdDisplay}</td>
                                         <td className="px-3 py-1.5 text-right">
                                             <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[8.5px] font-bold uppercase tracking-wider ${item.statusTextColor} ${item.rowBgColor.replace('bg-', 'bg-opacity-50 min-w-[160px] justify-center ')} border border-current/10 shadow-sm print:min-w-[140px]`}>
                                                 {item.analysisStatus}
