@@ -641,13 +641,13 @@ export const BiometricsManager: React.FC = () => {
             <style>{`
 @media print {
     @page { margin: 3mm; size: auto; }
-                body { zoom: 0.9!important; -webkit - print - color - adjust: exact; }
-                .printing.print - visible { display: block!important; visibility: visible!important; opacity: 1!important; }
-                .printing.print - hidden { display: none!important; }
-                * { - webkit - print - color - adjust: exact!important; color - adjust: exact!important;
+    body { zoom: 0.9!important; -webkit - print - color - adjust: exact; }
+    .printing.print - visible { display: block!important; visibility: visible!important; opacity: 1!important; }
+    .printing.print - hidden { display: none!important; }
+    * { - webkit - print - color - adjust: exact!important; color - adjust: exact!important;
 }
-            }
-            .print - visible { display: none; }
+}
+.print - visible { display: none; }
 `}</style>
 
             <div className="mb-6 flex justify-between items-center no-print">
@@ -827,8 +827,8 @@ export const BiometricsManager: React.FC = () => {
                                         </td>
                                         <td className="px-1.5 py-1.5 text-right font-mono font-bold text-gray-700 text-[10px] bg-orange-50/10">{item.incSemanalStr}</td>
                                         <td className="px-1.5 py-1.5 text-right font-mono font-black text-[#9A3412] text-[10px] bg-orange-50/20">{item.gpdDisplay}</td>
-                                        <td className="px-3 py-1.5 text-right">
-                                            <span className={`inline - flex items - center px - 1.5 py - 0.5 rounded - full text - [8.5px] font - bold uppercase tracking - wider ${ item.statusTextColor } ${ item.rowBgColor.replace('bg-', 'bg-opacity-50 min-w-[160px] justify-center ') } border border - current / 10 shadow - sm print: min - w - [140px]`}>
+                                        <td className="px-3 py-1.5 text-right flex justify-end">
+                                            <span className={`inline - flex items - center px - 2 py - 0.5 rounded - full text - [8.5px] font - bold uppercase tracking - wider ${ item.statusTextColor } ${ item.rowBgColor.replace('bg-', 'bg-opacity-50 min-w-[180px] justify-end ') } border border - current / 10 shadow - sm print: min - w - [140px]`}>
                                                 {item.analysisStatus}
                                             </span>
                                         </td>
