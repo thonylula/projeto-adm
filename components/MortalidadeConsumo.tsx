@@ -62,12 +62,23 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     }, [loadData]);
 
     useEffect(() => {
-        // Carregar logo do localStorage
-        const savedLogo = localStorage.getItem('company_logo');
+        // Carregar logo do localStorage ou do activeCompany
+        // Ignora URLs "blob:" pois elas expiram ao recarregar a página
+        const validateLogo = (logo: string | null | undefined) => {
+            if (!logo) return null;
+            if (logo.startsWith('blob:')) return null;
+            return logo;
+        };
+
+        const savedLogo = validateLogo(localStorage.getItem('company_logo'));
+        const companyLogo = validateLogo(activeCompany?.logoUrl);
+
         if (savedLogo) {
             setCompanyLogo(savedLogo);
+        } else if (companyLogo) {
+            setCompanyLogo(companyLogo);
         }
-    }, []);
+    }, [activeCompany]);
 
     const handleUpdateDay = (tankIndex: number, day: number, field: 'feed' | 'mortality', value: string) => {
         if (!data) return;
@@ -291,8 +302,16 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             <div id="mortality-table-export" className="bg-white p-4">
                 <header className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
                     <div className="flex items-center gap-6">
-                        {companyLogo && (
-                            <img src={companyLogo} alt="Logo" className="h-16 w-auto object-contain" />
+                        {companyLogo && !companyLogo.startsWith('blob:') && (
+                            <img
+                                src={companyLogo}
+                                alt="Logo"
+                                className="h-16 w-auto object-contain"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                    console.warn('Logo image failed to load, hiding from export.');
+                                }}
+                            />
                         )}
                         <div>
                             <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Mortalidade e Consumo</h1>
@@ -326,6 +345,16 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     </div>
                 </header>
 
+                <style>{`
+                    input[type=number]::-webkit-inner-spin-button, 
+                    input[type=number]::-webkit-outer-spin-button { 
+                        -webkit-appearance: none; 
+                        margin: 0; 
+                    }
+                    input[type=number] {
+                        -moz-appearance: textfield;
+                    }
+                `}</style>
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                     {/* Scroll horizontal superior */}
                     <div
@@ -354,20 +383,20 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                         <table className="w-full text-[9px] border-collapse">
                             <thead>
                                 <tr className="bg-slate-900 text-white uppercase font-bold">
-                                    <th className="p-1 border border-slate-700 sticky left-0 z-20 bg-slate-900 min-w-[60px]" rowSpan={2}>VE</th>
-                                    <th className="p-1 border border-slate-700 min-w-[90px]" rowSpan={2}>Data Povoa</th>
-                                    <th className="p-1 border border-slate-700 min-w-[45px]" rowSpan={2}>Área</th>
-                                    <th className="p-1 border border-slate-700 min-w-[55px]" rowSpan={2}>Pop. Ini</th>
-                                    <th className="p-1 border border-slate-700 min-w-[50px]" rowSpan={2}>Dens.</th>
-                                    <th className="p-1 border border-slate-700 z-10 sticky left-[60px] bg-slate-900 min-w-[70px]" rowSpan={2}>Biometria</th>
-                                    <th className="p-1 border border-slate-700 min-w-[45px]" rowSpan={2}></th>
+                                    <th className="p-1 border border-slate-700 sticky left-0 z-20 bg-slate-900 min-w-[40px]" rowSpan={2}>VE</th>
+                                    <th className="p-1 border border-slate-700 min-w-[70px]" rowSpan={2}>Data Povoa</th>
+                                    <th className="p-1 border border-slate-700 min-w-[40px]" rowSpan={2}>Área</th>
+                                    <th className="p-1 border border-slate-700 min-w-[50px]" rowSpan={2}>Pop. Ini</th>
+                                    <th className="p-1 border border-slate-700 min-w-[40px]" rowSpan={2}>Dens.</th>
+                                    <th className="p-1 border border-slate-700 z-10 sticky left-[40px] bg-slate-900 min-w-[60px]" rowSpan={2}>Biometria</th>
+                                    <th className="p-1 border border-slate-700 min-w-[25px]" rowSpan={2}></th>
                                     <th className="p-0.5 border border-slate-700 text-center" colSpan={daysInMonth}>DIAS DO MÊS</th>
-                                    <th className="p-1 border border-slate-700 min-w-[50px]" rowSpan={2}>Total</th>
+                                    <th className="p-1 border border-slate-700 min-w-[45px]" rowSpan={2}>Total</th>
                                     <th className="p-1 border border-slate-700 print:hidden" rowSpan={2}>Ações</th>
                                 </tr>
                                 <tr className="bg-slate-800 text-slate-400">
                                     {daysArray.map(d => (
-                                        <th key={d} className="p-0.5 border border-slate-700 text-center min-w-[38px]">{d}</th>
+                                        <th key={d} className="p-0.5 border border-slate-700 text-center min-w-[34px]">{d}</th>
                                     ))}
                                 </tr>
                             </thead>
@@ -418,7 +447,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                     className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
                                                 />
                                             </td>
-                                            <td className="p-0 border border-slate-100 sticky left-[60px] z-10 bg-slate-50" rowSpan={2}>
+                                            <td className="p-0 border border-slate-100 sticky left-[40px] z-10 bg-slate-50" rowSpan={2}>
                                                 <input
                                                     type="text"
                                                     value={record.biometry}
@@ -436,7 +465,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         value={record.dailyRecords.find(dr => dr.day === d)?.feed || ''}
                                                         onChange={(e) => handleUpdateDay(idx, d, 'feed', e.target.value)}
                                                         onPaste={(e) => handlePaste(e, idx, d, 'feed')}
-                                                        className="w-full h-full p-0.5 bg-transparent text-center focus:bg-orange-100 outline-none border-none font-bold text-slate-700"
+                                                        className="w-full h-full px-0 py-0.5 bg-transparent text-center focus:bg-orange-100 outline-none border-none font-bold text-slate-700"
                                                     />
                                                 </td>
                                             ))}
@@ -459,7 +488,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         value={record.dailyRecords.find(dr => dr.day === d)?.mortality || ''}
                                                         onChange={(e) => handleUpdateDay(idx, d, 'mortality', e.target.value)}
                                                         onPaste={(e) => handlePaste(e, idx, d, 'mortality')}
-                                                        className="w-full h-full p-0.5 bg-transparent text-center focus:bg-pink-100 outline-none border-none text-pink-600 font-bold"
+                                                        className="w-full h-full px-0 py-0.5 bg-transparent text-center focus:bg-pink-100 outline-none border-none text-pink-600 font-bold"
                                                     />
                                                 </td>
                                             ))}

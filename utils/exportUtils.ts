@@ -13,12 +13,11 @@ export const exportToPdf = async (elementId: string, fileName: string) => {
         margin: [2, 2] as [number, number],
         filename: `${fileName}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: {
-            scale: 2,
-            useCORS: true,
-            letterRendering: true,
-            logging: false
-        },
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        letterRendering: true,
+        logging: true // Temporarily enabled for debugging
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' as const },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] as const }
     };
