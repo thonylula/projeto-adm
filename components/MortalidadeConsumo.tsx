@@ -13,6 +13,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     const [month, setMonth] = useState(new Date().getMonth() + 1);
     const [year, setYear] = useState(new Date().getFullYear());
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+    const [tankQuantity, setTankQuantity] = useState(1);
 
     const daysInMonth = new Date(year, month, 0).getDate();
     const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
@@ -85,17 +86,23 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
     const addTank = () => {
         if (!data) return;
-        const newRecord: MortalityTankRecord = {
-            id: crypto.randomUUID(),
-            ve: `${data.records.length + 1}`,
-            stockingDate: '',
-            area: 0,
-            initialPopulation: 0,
-            density: 0,
-            biometry: '',
-            dailyRecords: daysArray.map(d => ({ day: d, feed: 0, mortality: 0 }))
-        };
-        setData({ ...data, records: [...data.records, newRecord] });
+        const newRecords: MortalityTankRecord[] = [];
+
+        for (let i = 0; i < tankQuantity; i++) {
+            newRecords.push({
+                id: crypto.randomUUID(),
+                ve: `${data.records.length + i + 1}`,
+                stockingDate: '',
+                area: 0,
+                initialPopulation: 0,
+                density: 0,
+                biometry: '',
+                dailyRecords: daysArray.map(d => ({ day: d, feed: 0, mortality: 0 }))
+            });
+        }
+
+        setData({ ...data, records: [...data.records, ...newRecords] });
+        setTankQuantity(1); // Reset to 1 after adding
     };
 
     const removeTank = (index: number) => {
@@ -129,6 +136,48 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             const dr = record.dailyRecords.find(d => d.day === day);
             return sum + (dr?.[field] || 0);
         }, 0);
+    };
+
+    const handlePaste = (e: React.ClipboardEvent, tankIndex: number, day: number, field: 'feed' | 'mortality') => {
+        const pastedText = e.clipboardData.getData('text');
+        const rows = pastedText.split('\n').filter(row => row.trim());
+
+        if (rows.length === 0) return;
+
+        e.preventDefault();
+
+        if (!data) return;
+        const newData = { ...data };
+
+        // Se colar múltiplas linhas/colunas (dados do Excel)
+        rows.forEach((row, rowOffset) => {
+            const values = row.split('\t').filter(v => v.trim());
+            const currentTankIndex = tankIndex + rowOffset;
+
+            if (currentTankIndex >= newData.records.length) return;
+
+            const record = newData.records[currentTankIndex];
+
+            values.forEach((value, colOffset) => {
+                const currentDay = day + colOffset;
+                if (currentDay > daysArray.length) return;
+
+                const numValue = parseFloat(value.replace(',', '.')) || 0;
+                const dayRecord = record.dailyRecords.find(dr => dr.day === currentDay);
+
+                if (dayRecord) {
+                    dayRecord[field] = numValue;
+                } else {
+                    record.dailyRecords.push({
+                        day: currentDay,
+                        feed: field === 'feed' ? numValue : 0,
+                        mortality: field === 'mortality' ? numValue : 0
+                    });
+                }
+            });
+        });
+
+        setData(newData);
     };
 
     const ActionBar = () => (
@@ -194,20 +243,20 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     <table className="w-full text-[9px] border-collapse">
                         <thead>
                             <tr className="bg-slate-900 text-white uppercase font-bold">
-                                <th className="p-1 border border-slate-700 sticky left-0 z-20 bg-slate-900 min-w-[70px]" rowSpan={2}>VE</th>
-                                <th className="p-1 border border-slate-700 min-w-[100px]" rowSpan={2}>Data Povoa</th>
-                                <th className="p-1 border border-slate-700 min-w-[50px]" rowSpan={2}>Área</th>
-                                <th className="p-1 border border-slate-700 min-w-[65px]" rowSpan={2}>Pop. Ini</th>
-                                <th className="p-1 border border-slate-700 min-w-[55px]" rowSpan={2}>Dens.</th>
-                                <th className="p-1 border border-slate-700 z-10 sticky left-[70px] bg-slate-900 min-w-[80px]" rowSpan={2}>Biometria</th>
-                                <th className="p-1 border border-slate-700 min-w-[50px]"></th>
+                                <th className="p-1 border border-slate-700 sticky left-0 z-20 bg-slate-900 min-w-[60px]" rowSpan={2}>VE</th>
+                                <th className="p-1 border border-slate-700 min-w-[90px]" rowSpan={2}>Data Povoa</th>
+                                <th className="p-1 border border-slate-700 min-w-[45px]" rowSpan={2}>Área</th>
+                                <th className="p-1 border border-slate-700 min-w-[55px]" rowSpan={2}>Pop. Ini</th>
+                                <th className="p-1 border border-slate-700 min-w-[50px]" rowSpan={2}>Dens.</th>
+                                <th className="p-1 border border-slate-700 z-10 sticky left-[60px] bg-slate-900 min-w-[70px]" rowSpan={2}>Biometria</th>
+                                <th className="p-1 border border-slate-700 min-w-[45px]" rowSpan={2}></th>
                                 <th className="p-0.5 border border-slate-700 text-center" colSpan={daysInMonth}>DIAS DO MÊS</th>
-                                <th className="p-1 border border-slate-700 min-w-[55px]" rowSpan={2}>Total</th>
+                                <th className="p-1 border border-slate-700 min-w-[50px]" rowSpan={2}>Total</th>
                                 <th className="p-1 border border-slate-700 print:hidden" rowSpan={2}>Ações</th>
                             </tr>
                             <tr className="bg-slate-800 text-slate-400">
                                 {daysArray.map(d => (
-                                    <th key={d} className="p-0.5 border border-slate-700 text-center min-w-[28px]">{d}</th>
+                                    <th key={d} className="p-0.5 border border-slate-700 text-center min-w-[26px]">{d}</th>
                                 ))}
                             </tr>
                         </thead>
@@ -258,7 +307,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
                                             />
                                         </td>
-                                        <td className="p-0 border border-slate-100 sticky left-[70px] z-10 bg-slate-50" rowSpan={2}>
+                                        <td className="p-0 border border-slate-100 sticky left-[60px] z-10 bg-slate-50" rowSpan={2}>
                                             <input
                                                 type="text"
                                                 value={record.biometry}
@@ -275,6 +324,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                     type="number"
                                                     value={record.dailyRecords.find(dr => dr.day === d)?.feed || ''}
                                                     onChange={(e) => handleUpdateDay(idx, d, 'feed', e.target.value)}
+                                                    onPaste={(e) => handlePaste(e, idx, d, 'feed')}
                                                     className="w-full h-full p-0.5 bg-transparent text-center focus:bg-orange-100 outline-none border-none font-bold text-slate-700"
                                                 />
                                             </td>
@@ -297,6 +347,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                     type="number"
                                                     value={record.dailyRecords.find(dr => dr.day === d)?.mortality || ''}
                                                     onChange={(e) => handleUpdateDay(idx, d, 'mortality', e.target.value)}
+                                                    onPaste={(e) => handlePaste(e, idx, d, 'mortality')}
                                                     className="w-full h-full p-0.5 bg-transparent text-center focus:bg-pink-100 outline-none border-none text-pink-600 font-bold"
                                                 />
                                             </td>
@@ -328,13 +379,24 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     </table>
                 </div>
 
-                <div className="p-3 bg-slate-50 border-t border-slate-100 print:hidden text-center md:text-left">
-                    <button
-                        onClick={addTank}
-                        className="w-full md:w-auto px-6 py-2 bg-slate-800 text-white rounded-xl text-xs font-black uppercase hover:bg-slate-900 transition-all flex items-center justify-center gap-2"
-                    >
-                        <span>+</span> Adicionar Novo Viveiro
-                    </button>
+                <div className="p-3 bg-slate-50 border-t border-slate-100 print:hidden">
+                    <div className="flex flex-col md:flex-row gap-3 items-center justify-center md:justify-start">
+                        <label className="text-xs font-bold text-slate-600 uppercase">Quantidade:</label>
+                        <input
+                            type="number"
+                            min="1"
+                            max="50"
+                            value={tankQuantity}
+                            onChange={(e) => setTankQuantity(Math.max(1, Math.min(50, parseInt(e.target.value) || 1)))}
+                            className="w-20 px-3 py-2 border border-slate-300 rounded-lg text-center font-bold text-slate-700 focus:ring-2 focus:ring-orange-500 outline-none"
+                        />
+                        <button
+                            onClick={addTank}
+                            className="px-6 py-2 bg-slate-800 text-white rounded-xl text-xs font-black uppercase hover:bg-slate-900 transition-all flex items-center gap-2 shadow-lg active:scale-95"
+                        >
+                            <span>+</span> Adicionar {tankQuantity > 1 ? `${tankQuantity} Viveiros` : 'Novo Viveiro'}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
