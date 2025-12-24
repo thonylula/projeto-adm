@@ -8,6 +8,17 @@ interface MortalidadeConsumoProps {
 }
 
 export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCompany }) => {
+    const [data, setData] = useState<MonthlyMortalityData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [month, setMonth] = useState(new Date().getMonth() + 1);
+    const [year, setYear] = useState(new Date().getFullYear());
+    const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+    const [tankQuantity, setTankQuantity] = useState(1);
+    const [isExporting, setIsExporting] = useState(false);
+    const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+    const topScrollRef = React.useRef<HTMLDivElement>(null);
+    const scrollRef = React.useRef<HTMLDivElement>(null);
+
     const daysInMonth = new Date(year, month, 0).getDate();
     const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
