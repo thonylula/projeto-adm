@@ -14,6 +14,8 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     const [year, setYear] = useState(new Date().getFullYear());
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
     const [tankQuantity, setTankQuantity] = useState(1);
+    const scrollRef = React.useRef<HTMLDivElement>(null);
+    const topScrollRef = React.useRef<HTMLDivElement>(null);
 
     const daysInMonth = new Date(year, month, 0).getDate();
     const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
@@ -239,7 +241,30 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             </header>
 
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                <div className="overflow-x-auto">
+                {/* Scroll horizontal superior */}
+                <div
+                    ref={topScrollRef}
+                    className="overflow-x-auto print:hidden"
+                    onScroll={(e) => {
+                        if (scrollRef.current) {
+                            scrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+                        }
+                    }}
+                >
+                    <div style={{ width: 'fit-content', height: '8px' }}>
+                        <div style={{ width: `${(daysArray.length * 38) + 600}px`, height: '1px' }}></div>
+                    </div>
+                </div>
+
+                <div
+                    ref={scrollRef}
+                    className="overflow-x-auto"
+                    onScroll={(e) => {
+                        if (topScrollRef.current) {
+                            topScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+                        }
+                    }}
+                >
                     <table className="w-full text-[9px] border-collapse">
                         <thead>
                             <tr className="bg-slate-900 text-white uppercase font-bold">
@@ -256,7 +281,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             </tr>
                             <tr className="bg-slate-800 text-slate-400">
                                 {daysArray.map(d => (
-                                    <th key={d} className="p-0.5 border border-slate-700 text-center min-w-[26px]">{d}</th>
+                                    <th key={d} className="p-0.5 border border-slate-700 text-center min-w-[38px]">{d}</th>
                                 ))}
                             </tr>
                         </thead>
