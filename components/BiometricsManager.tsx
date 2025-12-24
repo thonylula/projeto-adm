@@ -521,7 +521,7 @@ export const BiometricsManager: React.FC = () => {
                     return hasIgnoreClass;
                 }
             },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' as const }
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
         };
 
         html2pdf().set(opt).from(dashboardRef.current).save().then(() => {
@@ -660,7 +660,7 @@ export const BiometricsManager: React.FC = () => {
 
                 {/* --- HEADER --- */}
                 {/* --- HEADER (SPEC COMPLIANT) --- */}
-                <header className="bg-[#FFF8F2] px-[12mm] py-[12mm] border-b border-orange-100 flex items-center justify-between h-[80mm] md:h-auto box-border gap-4 print:px-[8mm] print:py-[6mm] print:h-auto">
+                <header className="bg-[#FFF8F2] px-[8mm] py-[8mm] border-b border-orange-100 flex items-center justify-between h-auto box-border gap-4 print:px-[5mm] print:py-[4mm]">
 
                     {/* 1. Coluna Esquerda: Logo (25%) */}
                     <div className="flex-1 flex justify-start items-center min-w-0">
@@ -726,15 +726,15 @@ export const BiometricsManager: React.FC = () => {
                                             />
                                         </div>
                                     </th>
-                                    <th className="px-1.5 py-2 text-center bg-orange-100/30 min-w-[105px]">D. POV</th>
-                                    <th className="px-1.5 py-2 text-center min-w-[45px]">DIAS</th>
-                                    <th className="px-1.5 py-2 text-right min-w-[80px]">P.M (g)</th>
-                                    <th className="px-1.5 py-2 text-right min-w-[70px]">QUANT.</th>
-                                    <th className="px-1.5 py-2 text-right text-gray-600 bg-gray-50 min-w-[95px]">PESO TOTAL</th>
-                                    <th className="px-1.5 py-2 text-right text-gray-400 min-w-[75px]">P.M ANT</th>
-                                    <th className="px-1.5 py-2 text-right text-[#C2410C] bg-orange-50/30 min-w-[75px]" title="Incremento Semanal">Inc. Sem.</th>
-                                    <th className="px-1.5 py-2 text-right text-[#9A3412] bg-orange-50/50 min-w-[85px]">GPD (g/dia)</th>
-                                    <th className="px-3 py-2 w-1/4">Status Analysis</th>
+                                    <th className="px-1.5 py-2 text-center bg-orange-100/30 min-w-[75px] print:min-w-[65px]">D. POV</th>
+                                    <th className="px-1.5 py-2 text-center min-w-[35px] print:min-w-[30px]">DIAS</th>
+                                    <th className="px-1.5 py-2 text-right min-w-[60px] print:min-w-[50px]">P.M (g)</th>
+                                    <th className="px-1.5 py-2 text-right min-w-[55px] print:min-w-[45px]">QUANT.</th>
+                                    <th className="px-1.5 py-2 text-right text-gray-600 bg-gray-50 min-w-[80px] print:min-w-[70px]">PESO TOTAL</th>
+                                    <th className="px-1.5 py-2 text-right text-gray-400 min-w-[60px] print:min-w-[50px]">P.M ANT</th>
+                                    <th className="px-1.5 py-2 text-right text-[#C2410C] bg-orange-50/30 min-w-[60px] print:min-w-[50px]" title="Incremento Semanal">Inc. Sem.</th>
+                                    <th className="px-1.5 py-2 text-right text-[#9A3412] bg-orange-50/50 min-w-[70px] print:min-w-[60px]">GPD</th>
+                                    <th className="px-3 py-2 text-left">Status Analysis</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -744,14 +744,14 @@ export const BiometricsManager: React.FC = () => {
 
                                         {/* DATA POVOAMENTO (Novo Input) */}
                                         <td className="px-1 py-1 text-center bg-orange-50/20 print:bg-transparent">
-                                            <div className="print-visible font-bold text-[#0F1B2D] text-[9.5px]">
+                                            <div className="print-visible font-bold text-slate-900 text-[9.5px]">
                                                 {item.dataPovoamento ? item.dataPovoamento.split('-').reverse().join('/') : '-'}
                                             </div>
                                             <input
                                                 type="text"
                                                 placeholder="DD/MM/AAAA"
                                                 maxLength={10}
-                                                className="print-hidden w-[85px] text-center bg-white text-[10px] font-bold text-gray-900 border border-gray-300 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none h-7 px-1 shadow-sm placeholder-gray-300"
+                                                className="print-hidden w-[75px] text-center bg-white text-[10px] font-bold text-gray-900 border border-gray-300 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none h-7 px-1 shadow-sm placeholder-gray-300"
                                                 value={item.dataPovoamento ? item.dataPovoamento.split('-').reverse().join('/') : ''}
                                                 onChange={(e) => {
                                                     let val = e.target.value.replace(/\D/g, '');
@@ -827,8 +827,8 @@ export const BiometricsManager: React.FC = () => {
                                         </td>
                                         <td className="px-1.5 py-1.5 text-right font-mono font-bold text-gray-700 text-[10px] bg-orange-50/10">{item.incSemanalStr}</td>
                                         <td className="px-1.5 py-1.5 text-right font-mono font-black text-[#9A3412] text-[10px] bg-orange-50/20">{item.gpdDisplay}</td>
-                                        <td className="px-3 py-1.5 text-right flex justify-end">
-                                            <span className={`inline - flex items - center px - 2 py - 0.5 rounded - full text - [8.5px] font - bold uppercase tracking - wider ${ item.statusTextColor } ${ item.rowBgColor.replace('bg-', 'bg-opacity-50 min-w-[180px] justify-end ') } border border - current / 10 shadow - sm print: min - w - [140px]`}>
+                                        <td className="px-2 py-1.5 text-left flex justify-start">
+                                            <span className={`inline - flex items - center px - 1.5 py - 0.5 rounded - full text - [8.5px] font - bold uppercase tracking - wider ${ item.statusTextColor } ${ item.rowBgColor.replace('bg-', 'bg-opacity-50 min-w-[110px] justify-start ') } border border - current / 10 shadow - sm print: min - w - [100px]`}>
                                                 {item.analysisStatus}
                                             </span>
                                         </td>
