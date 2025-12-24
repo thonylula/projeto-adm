@@ -702,49 +702,49 @@ export const BiometricsManager: React.FC = () => {
                 </header>
 
                 {/* Tabela Principal */}
-                <main className="p-6 bg-white">
+                <main className="p-4 bg-white">
                     <div className="rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                        <table className="w-full text-xs text-left">
+                        <table className="w-full text-[11px] text-left">
                             <thead className="bg-[#FFEDD5] text-[#7C2D12] uppercase font-bold border-b border-[#FED7AA]">
                                 <tr>
-                                    <th className="px-2 py-3 min-w-[70px]">
+                                    <th className="px-1.5 py-3 min-w-[65px]">
                                         <div className="flex flex-col gap-1">
                                             <span>VIV.</span>
                                             <input
                                                 type="text"
                                                 placeholder="Filtrar..."
-                                                className="w-full text-[9px] p-1 rounded border border-orange-200 focus:outline-none focus:border-orange-500 font-normal normal-case text-gray-600 placeholder-gray-400 print-hidden"
+                                                className="w-full text-[8.5px] p-0.5 rounded border border-orange-200 focus:outline-none focus:border-orange-500 font-normal normal-case text-gray-600 placeholder-gray-400 print-hidden"
                                                 value={filterText}
                                                 onChange={(e) => setFilterText(e.target.value)}
                                             />
                                         </div>
                                     </th>
-                                    <th className="px-2 py-4 text-center bg-orange-100/30 min-w-[115px]">D. POV</th>
-                                    <th className="px-2 py-4 text-center min-w-[50px]">DIAS</th>
-                                    <th className="px-2 py-4 text-right min-w-[90px]">P.M (g)</th>
-                                    <th className="px-2 py-4 text-right min-w-[80px]">QUANT.</th>
-                                    <th className="px-2 py-4 text-right text-gray-600 bg-gray-50 min-w-[105px]">PESO TOTAL</th>
-                                    <th className="px-2 py-4 text-right text-gray-400 min-w-[85px]">P.M ANT</th>
-                                    <th className="px-2 py-4 text-right text-[#C2410C] bg-orange-50/30 min-w-[85px]" title="Incremento Semanal">Inc. Sem.</th>
-                                    <th className="px-2 py-4 text-right text-[#9A3412] bg-orange-50/50 min-w-[95px]">GPD (g/dia)</th>
-                                    <th className="px-4 py-4 min-w-[240px]">Status Analysis</th>
+                                    <th className="px-1.5 py-3 text-center bg-orange-100/30 min-w-[105px]">D. POV</th>
+                                    <th className="px-1.5 py-3 text-center min-w-[45px]">DIAS</th>
+                                    <th className="px-1.5 py-3 text-right min-w-[80px]">P.M (g)</th>
+                                    <th className="px-1.5 py-3 text-right min-w-[70px]">QUANT.</th>
+                                    <th className="px-1.5 py-3 text-right text-gray-600 bg-gray-50 min-w-[95px]">PESO TOTAL</th>
+                                    <th className="px-1.5 py-3 text-right text-gray-400 min-w-[75px]">P.M ANT</th>
+                                    <th className="px-1.5 py-3 text-right text-[#C2410C] bg-orange-50/30 min-w-[75px]" title="Incremento Semanal">Inc. Sem.</th>
+                                    <th className="px-1.5 py-3 text-right text-[#9A3412] bg-orange-50/50 min-w-[85px]">GPD (g/dia)</th>
+                                    <th className="px-3 py-3 w-1/4">Status Analysis</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {processedData.map((item, idx) => (
                                     <tr key={idx} className={`${item.rowBgColor} transition-colors border-b border-gray-50 last:border-0`}>
-                                        <td className="px-2 py-3 font-bold text-gray-800">{item.viveiro}</td>
+                                        <td className="px-1.5 py-2 font-bold text-gray-800">{item.viveiro}</td>
 
                                         {/* DATA POVOAMENTO (Novo Input) */}
-                                        <td className="px-1 py-3 text-center bg-orange-50/20">
-                                            <div className="print-visible font-bold text-[#0F1B2D] text-xs">
+                                        <td className="px-1 py-1.5 text-center bg-orange-50/20">
+                                            <div className="print-visible font-bold text-[#0F1B2D] text-[10px]">
                                                 {item.dataPovoamento ? item.dataPovoamento.split('-').reverse().join('/') : '-'}
                                             </div>
                                             <input
                                                 type="text"
                                                 placeholder="DD/MM/AAAA"
                                                 maxLength={10}
-                                                className="print-hidden w-[95px] text-center bg-white text-xs font-bold text-gray-900 border border-gray-300 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none h-8 px-1 shadow-sm placeholder-gray-300"
+                                                className="print-hidden w-[85px] text-center bg-white text-[10px] font-bold text-gray-900 border border-gray-300 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none h-7 px-1 shadow-sm placeholder-gray-300"
                                                 value={item.dataPovoamento ? item.dataPovoamento.split('-').reverse().join('/') : ''}
                                                 onChange={(e) => {
                                                     let val = e.target.value.replace(/\D/g, '');
@@ -766,11 +766,11 @@ export const BiometricsManager: React.FC = () => {
                                             />
                                         </td>
 
-                                        <td className="px-2 py-3 text-center font-mono font-bold text-gray-600 bg-gray-50">{item.diasCultivo}</td>
+                                        <td className="px-1.5 py-2 text-center font-mono font-bold text-gray-600 bg-gray-50">{item.diasCultivo}</td>
 
                                         {/* Input Editável Peso */}
-                                        <td className="px-2 py-3 text-right">
-                                            <div className="print-visible font-mono font-extrabold text-black text-sm">
+                                        <td className="px-1.5 py-2 text-right">
+                                            <div className="print-visible font-mono font-extrabold text-black text-[11px]">
                                                 {item.pMedInputValue}
                                             </div>
                                             <input
@@ -782,8 +782,8 @@ export const BiometricsManager: React.FC = () => {
                                         </td>
 
                                         {/* QUANTIDADE (Input Editável) */}
-                                        <td className="px-2 py-3 text-right">
-                                            <div className="print-visible font-mono font-bold text-gray-700 text-sm">
+                                        <td className="px-1.5 py-2 text-right">
+                                            <div className="print-visible font-mono font-bold text-gray-700 text-[11px]">
                                                 {item.quatInputValue}
                                             </div>
                                             <input
@@ -795,8 +795,8 @@ export const BiometricsManager: React.FC = () => {
                                         </td>
 
                                         {/* PESO TOTAL (Editável) */}
-                                        <td className="px-2 py-3 text-right bg-gray-50/50">
-                                            <div className="print-visible font-mono font-bold text-gray-600 text-sm">
+                                        <td className="px-1.5 py-2 text-right bg-gray-50/50">
+                                            <div className="print-visible font-mono font-bold text-gray-600 text-[11px]">
                                                 {item.pesoTotal}
                                             </div>
                                             <input
@@ -808,7 +808,7 @@ export const BiometricsManager: React.FC = () => {
                                         </td>
 
                                         {/* P.M ANTERIOR (Agora Editável) */}
-                                        <td className="px-2 py-3 text-right">
+                                        <td className="px-1.5 py-2 text-right">
                                             <input
                                                 type="text"
                                                 value={item.pAntStr || ''}
@@ -818,10 +818,10 @@ export const BiometricsManager: React.FC = () => {
                                             />
                                             <span className="print-visible hidden">{item.pAntDisplay}</span>
                                         </td>
-                                        <td className="px-2 py-3 text-right font-mono font-bold text-gray-700 bg-orange-50/10">{item.incSemanalStr}</td>
-                                        <td className="px-2 py-3 text-right font-mono font-black text-[#9A3412] text-sm bg-orange-50/20">{item.gpdDisplay}</td>
-                                        <td className="px-4 py-3 text-right">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${item.statusTextColor} ${item.rowBgColor.replace('bg-', 'bg-opacity-50 min-w-[180px] justify-center ')} border border-current/10 shadow-sm`}>
+                                        <td className="px-1.5 py-2 text-right font-mono font-bold text-gray-700 bg-orange-50/10">{item.incSemanalStr}</td>
+                                        <td className="px-1.5 py-2 text-right font-mono font-black text-[#9A3412] text-[11px] bg-orange-50/20">{item.gpdDisplay}</td>
+                                        <td className="px-3 py-2 text-right">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${item.statusTextColor} ${item.rowBgColor.replace('bg-', 'bg-opacity-50 min-w-[170px] justify-center ')} border border-current/10 shadow-sm`}>
                                                 {item.analysisStatus}
                                             </span>
                                         </td>
