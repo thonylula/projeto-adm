@@ -181,46 +181,62 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         if (!file || !data) return;
 
         const systemPrompt = `
-        Aja como um especialista em extração de dados de aquicultura de alta precisão. 
-        Analise a imagem da tabela de "Mortalidade e Consumo" e extraia TODOS os dados para o formato JSON.
+        PROMPT DETALHADO — Extrator de Tabelas Pericial (Alta Velocidade)
 
-        ESTRUTURA DA TABELA NA IMAGEM:
-        - Cada "Viveiro" (VE) ocupa DUAS LINHAS horizontais consecutivas.
-        - Linha superior do VE: Contém os dados de "RAÇÃO".
-        - Linha inferior do VE: Contém os dados de "MORTALIDADE".
-        - Colunas: Dias do mês (1 a 31) no topo.
+        Você é um Extrator de Tabelas Pericial. Sua tarefa é ler a imagem anexada da planilha de "Mortalidade e Consumo" (Aquicultura) e extrair todos os dados rigorosamente, linha por linha e coluna por coluna, sem pular nada.
 
-        ESTRUTURA JSON ESPERADA (ARRAY de objetos):
-        [{
-          "ve": "1", (String - Nome/Número do Viveiro)
-          "stockingDate": "30/09/2025", (String no formato DD/MM/AAAA)
-          "area": 15.23, (Number)
-          "initialPopulation": 530, (Number - Pop. Ini)
-          "density": 15.97, (Number - Dens.)
-          "biometry": "6.58", (String - Peso médio/Biometria)
-          "dailyRecords": [
-            { "day": 1, "feed": 210, "mortality": 3 },
-            { "day": 2, "feed": 210, "mortality": 0 }
-            ... (mapeie todos os dias visíveis na imagem)
-          ]
-        }]
+        --- 1) DETECÇÃO E SEGMENTAÇÃO ---
+        - Detecte o grid/tabulação. Cada viveiro (VE) tem DUAS LINHAS: Ração (superior) e Mortalidade (inferior).
+        - Colunas: Viveiro (VE), Data Povoa, Área, Pop. Ini, Dens., Biometria, e DIAS (1 a 31).
 
-        REGRAS DE OURO PARA LÓGICA INFALÍVEL:
-        1. PROCESSAMENTO LINHA POR LINHA: Observe atentamente o par de linhas de cada viveiro. Não confunda a linha de ração com a de mortalidade.
-        2. ESPAÇOS VAZIOS = 0: Se uma célula para um dia específico estiver em branco, vazia ou sem anotação, você DEVE retornar 0 para esse campo (feed ou mortality).
-        3. PRECISÃO NUMÉRICA: Extraia exatamente o que está escrito. Se houver dúvida sobre um dígito, use o contexto das linhas vizinhas.
-        4. MAPEAMENTO DE DIAS: Verifique o número do dia no cabeçalho da coluna para garantir que o valor seja atribuído ao dia correto.
-        5. VIVEIROS ESPECIAIS: Extraia todos, incluindo nomes como "VP01", "VP02", "VP03", etc.
-        6. DATA DE POVOAMENTO: Formate como DD/MM/AAAA. Se a imagem mostrar apenas dia/mês, assuma o ano como ${year}.
-        7. VALIDAÇÃO: Verifique se o total somado por você no JSON bate visualmente com a coluna "Total/Semana" da imagem (se visível).
+        --- 2) OCR E LEITURA SEQUENCIAL (REGRA RÍGIDA) ---
+        - Leia na ordem: Viveiro 1 Ração -> Viveiro 1 Mortalidade -> Viveiro 2 Ração ...
+        - Processe células vazias ou ilegíveis como 0 para os campos de feed e mortality.
 
-        Retorne APENAS o JSON válido, sem explicações adicionais.
+        --- 3) NORMALIZAÇÃO ---
+        - Datas: DD/MM/AAAA (use ${year} se o ano estiver ausente).
+        - Números: Ponto como separador decimal. Remova símbolos (R$, kg, %).
+
+        --- 4) VALIDAÇÃO E INTEGRIDADE ---
+        - Calcule somas e compare com os totais da imagem. Se houver divergência, informe no log.
+
+        --- 5) ACELERAÇÃO E PROCESSAMENTO (VELOCIDADE MÁXIMA) ---
+        - Processe a tabela em BLOCOS DE 10 LINHAS para otimizar o tempo de resposta.
+        - Não suponha valores. Se não houver dado, use 0.
+
+        --- SAÍDA FINAL (Obrigatória: JSON Válido) ---
+        Retorne um JSON contendo um objeto com a chave "data" sendo o array de registros para o aplicativo.
+        
+        FORMATO JSON:
+        {
+          "data": [
+            {
+              "ve": "1",
+              "stockingDate": "30/09/2025",
+              "area": 15.23,
+              "initialPopulation": 530,
+              "density": 15.97,
+              "biometry": "6.58",
+              "dailyRecords": [
+                { "day": 1, "feed": 210, "mortality": 3 },
+                { "day": 2, "feed": 210, "mortality": 0 }
+              ]
+            }
+          ],
+          "summary": { "extractedTotalLines": 10, "avgConfidence": 0.98 },
+          "log": "Células vazias tratadas como 0..."
+        }
+
+        Retorne APENAS o JSON.
         `;
 
         try {
+            // Usando Gemini 3 Pro conforme solicitado para inteligência pericial
             const result = await processFile(file, systemPrompt, 'gemini-3-pro');
-            if (result && Array.isArray(result)) {
-                const newRecords = result.map((dr: any) => ({
+            const parsedData = result?.data || result; // Suporta tanto o objeto envelopado quanto o array direto
+
+            if (parsedData && Array.isArray(parsedData)) {
+                const newRecords = parsedData.map((dr: any) => ({
                     id: crypto.randomUUID(),
                     ve: dr.ve || '',
                     stockingDate: dr.stockingDate || '',
@@ -240,10 +256,11 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                 }));
 
                 setData({ ...data, records: newRecords });
-                setMessage({ text: 'Dados extraídos com sucesso via IA!', type: 'success' });
+                setMessage({ text: 'Dados extraídos com perfeição pericial via IA!', type: 'success' });
             }
         } catch (err) {
             console.error("Erro no preenchimento IA:", err);
+            setMessage({ text: 'Erro na extração pericial. Verifique o console.', type: 'error' });
         } finally {
             if (fileInputRef.current) fileInputRef.current.value = '';
         }
