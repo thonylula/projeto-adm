@@ -312,9 +312,9 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             )}
 
             <div id="mortality-table-export" className="bg-white p-4">
-                <header className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
-                    <div className="flex items-center gap-6">
-                        {companyLogo && !companyLogo.startsWith('blob:') && (
+                <header className="flex flex-col items-center mb-6 pb-4 border-b border-slate-100 text-center">
+                    {companyLogo && !companyLogo.startsWith('blob:') && (
+                        <div className="mb-4">
                             <img
                                 src={companyLogo}
                                 alt="Logo"
@@ -324,50 +324,50 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     console.warn('Logo image failed to load, hiding from export.');
                                 }}
                             />
-                        )}
-                        <div>
-                            <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Mortalidade e Consumo</h1>
-                            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">
-                                {activeCompany?.name || 'Controle diário de ração e perdas por tanque'}
-                            </p>
-                            <p className="text-xs text-slate-400 mt-0.5">
-                                {new Date(year, month - 1).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()} / {year}
-                            </p>
                         </div>
-                    </div>
-                    <div className="flex gap-3 print:hidden" data-html2canvas-ignore>
-                        <select
-                            value={month}
-                            onChange={(e) => {
-                                const newMonth = parseInt(e.target.value);
-                                setMonth(newMonth);
-                                window.dispatchEvent(new CustomEvent('app-navigation', {
-                                    detail: { tab: 'mortalidade', year, month: newMonth }
-                                }));
-                            }}
-                            className="bg-slate-50 border-none rounded-xl px-4 py-2 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-orange-500"
-                        >
-                            {Array.from({ length: 12 }, (_, i) => (
-                                <option key={i + 1} value={i + 1}>
-                                    {new Date(2000, i).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            value={year}
-                            onChange={(e) => {
-                                const newYear = parseInt(e.target.value);
-                                setYear(newYear);
-                                window.dispatchEvent(new CustomEvent('app-navigation', {
-                                    detail: { tab: 'mortalidade', year: newYear, month }
-                                }));
-                            }}
-                            className="bg-slate-50 border-none rounded-xl px-4 py-2 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-orange-500"
-                        >
-                            {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
-                        </select>
+                    )}
+                    <div>
+                        <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Mortalidade e Consumo</h1>
+                        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">
+                            {activeCompany?.name || 'Controle diário de ração e perdas por tanque'}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-0.5 font-bold">
+                            {new Date(year, month - 1).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()} / {year}
+                        </p>
                     </div>
                 </header>
+                <div className="flex gap-3 print:hidden" data-html2canvas-ignore>
+                    <select
+                        value={month}
+                        onChange={(e) => {
+                            const newMonth = parseInt(e.target.value);
+                            setMonth(newMonth);
+                            window.dispatchEvent(new CustomEvent('app-navigation', {
+                                detail: { tab: 'mortalidade', year, month: newMonth }
+                            }));
+                        }}
+                        className="bg-slate-50 border-none rounded-xl px-4 py-2 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-orange-500"
+                    >
+                        {Array.from({ length: 12 }, (_, i) => (
+                            <option key={i + 1} value={i + 1}>
+                                {new Date(2000, i).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()}
+                            </option>
+                        ))}
+                    </select>
+                    <select
+                        value={year}
+                        onChange={(e) => {
+                            const newYear = parseInt(e.target.value);
+                            setYear(newYear);
+                            window.dispatchEvent(new CustomEvent('app-navigation', {
+                                detail: { tab: 'mortalidade', year: newYear, month }
+                            }));
+                        }}
+                        className="bg-slate-50 border-none rounded-xl px-4 py-2 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-orange-500"
+                    >
+                        {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                </div>
 
                 <style>{`
                     input[type=number]::-webkit-inner-spin-button, 
@@ -477,6 +477,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         value={record.biometry}
                                                         onChange={(e) => handleUpdateHeader(idx, 'biometry', e.target.value)}
                                                         className="w-full p-1 text-center font-bold text-slate-600 bg-transparent border-none outline-none text-[9px]"
+                                                        placeholder="BIO"
                                                     />
                                                 </td>
                                                 <td className="p-1 border border-slate-100 text-center font-bold text-slate-600 bg-slate-50 uppercase italic text-[9px]">
@@ -486,10 +487,11 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                     <td key={d} className="p-0 border border-slate-100">
                                                         <input
                                                             type="number"
-                                                            value={record.dailyRecords.find(dr => dr.day === d)?.feed || ''}
+                                                            value={record.dailyRecords.find(dr => dr.day === d)?.feed ?? ''}
                                                             onChange={(e) => handleUpdateDay(idx, d, 'feed', e.target.value)}
                                                             onPaste={(e) => handlePaste(e, idx, d, 'feed')}
                                                             className="w-full h-full px-0 py-0.5 bg-transparent text-center focus:bg-orange-100 outline-none border-none font-medium text-slate-700 text-[9px]"
+                                                            placeholder="0"
                                                         />
                                                     </td>
                                                 ))}
@@ -508,10 +510,11 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                     <td key={d} className="p-0 border border-slate-100">
                                                         <input
                                                             type="number"
-                                                            value={record.dailyRecords.find(dr => dr.day === d)?.mortality || ''}
+                                                            value={record.dailyRecords.find(dr => dr.day === d)?.mortality ?? ''}
                                                             onChange={(e) => handleUpdateDay(idx, d, 'mortality', e.target.value)}
                                                             onPaste={(e) => handlePaste(e, idx, d, 'mortality')}
                                                             className="w-full h-full px-0 py-0.5 bg-transparent text-center focus:bg-pink-100 outline-none border-none text-pink-600 font-medium text-[9px]"
+                                                            placeholder="0"
                                                         />
                                                     </td>
                                                 ))}
@@ -570,82 +573,82 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             : "hidden pointer-events-none fixed top-0 left-0 w-[297mm]"
                         }
                     >
-                        <div className="flex justify-between items-center mb-6 pb-4 border-b border-black">
-                            <div className="flex items-center gap-6">
-                                {companyLogo && !companyLogo.startsWith('blob:') && (
-                                    <img src={companyLogo} alt="Logo" className="h-20 w-auto object-contain" />
-                                )}
-                                <div>
-                                    <h1 className="text-3xl font-black text-black uppercase tracking-tight">Mortalidade e Consumo</h1>
-                                    <p className="text-black text-xs font-bold uppercase tracking-widest mt-1">
-                                        {activeCompany?.name || 'Controle diário'}
-                                    </p>
-                                    <p className="text-sm text-black mt-1 font-bold">
-                                        {new Date(year, month - 1).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()} / {year}
-                                    </p>
+                        <header className="flex flex-col items-center mb-6 pb-4 border-b border-slate-200 text-center">
+                            {companyLogo && !companyLogo.startsWith('blob:') && (
+                                <div className="mb-4">
+                                    <img src={companyLogo} alt="Logo" className="h-16 w-auto object-contain" />
                                 </div>
+                            )}
+                            <div>
+                                <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Mortalidade e Consumo</h1>
+                                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">
+                                    {activeCompany?.name || 'Controle diário'}
+                                </p>
+                                <p className="text-xs text-slate-400 mt-1 font-bold">
+                                    {new Date(year, month - 1).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()} / {year}
+                                </p>
                             </div>
-                        </div>
+                        </header>
 
-                        <table className="w-full text-[8px] border-collapse border border-black">
+                        <table className="w-full text-[9px] border-collapse">
                             <thead>
-                                <tr className="bg-slate-200 text-black uppercase font-bold">
-                                    <th className="p-1 border border-black text-center w-[40px]" rowSpan={2}>VE</th>
-                                    <th className="p-1 border border-black text-center w-[60px]" rowSpan={2}>Data</th>
-                                    <th className="p-1 border border-black text-center w-[40px]" rowSpan={2}>Área</th>
-                                    <th className="p-1 border border-black text-center w-[50px]" rowSpan={2}>Pop.</th>
-                                    <th className="p-1 border border-black text-center w-[40px]" rowSpan={2}>Dens.</th>
-                                    <th className="p-1 border border-black text-center w-[60px]" rowSpan={2}>Bio</th>
-                                    <th className="p-1 border border-black min-w-[30px]" rowSpan={2}></th>
-                                    <th className="p-0.5 border border-black text-center" colSpan={daysInMonth}>Dias</th>
-                                    <th className="p-1 border border-black w-[50px]" rowSpan={2}>Total</th>
+                                <tr className="bg-slate-900 text-white uppercase font-bold text-center">
+                                    <th className="p-1 border border-slate-700 min-w-[40px] text-center" rowSpan={2}>VE</th>
+                                    <th className="p-1 border border-slate-700 min-w-[70px] text-center" rowSpan={2}>Data Povoa</th>
+                                    <th className="p-1 border border-slate-700 min-w-[40px] text-center" rowSpan={2}>Área</th>
+                                    <th className="p-1 border border-slate-700 min-w-[50px] text-center" rowSpan={2}>Pop. Ini</th>
+                                    <th className="p-1 border border-slate-700 min-w-[40px] text-center" rowSpan={2}>Dens.</th>
+                                    <th className="p-1 border border-slate-700 min-w-[60px] text-center" rowSpan={2}>Biometria</th>
+                                    <th className="p-1 border border-slate-700 min-w-[25px]" rowSpan={2}></th>
+                                    <th className="p-0.5 border border-slate-700 text-center" colSpan={daysInMonth}>DIAS DO MÊS</th>
+                                    <th className="p-1 border border-slate-700 min-w-[45px] text-center" rowSpan={2}>Total</th>
                                 </tr>
-                                <tr className="bg-slate-100 text-black">
+                                <tr className="bg-slate-800 text-slate-400">
                                     {daysArray.map(d => (
-                                        <th key={d} className="p-0.5 border border-black text-center w-[25px]">{d}</th>
+                                        <th key={d} className="p-0.5 border border-slate-700 text-center min-w-[34px]">{d}</th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody>
                                 {data?.records.map((record) => (
                                     <React.Fragment key={record.id}>
-                                        <tr className="border-b border-black/20">
-                                            <td className="p-1 border border-black text-center font-bold" rowSpan={2}>{record.ve}</td>
-                                            <td className="p-1 border border-black text-center" rowSpan={2}>{record.stockingDate}</td>
-                                            <td className="p-1 border border-black text-center" rowSpan={2}>{record.area}</td>
-                                            <td className="p-1 border border-black text-center" rowSpan={2}>{record.initialPopulation}</td>
-                                            <td className="p-1 border border-black text-center" rowSpan={2}>{record.density}</td>
-                                            <td className="p-1 border border-black text-center font-bold" rowSpan={2}>{record.biometry}</td>
-                                            <td className="p-1 border border-black text-center font-bold text-[7px] uppercase bg-slate-50">RAÇÃO</td>
+                                        <tr className="hover:bg-orange-50/50 transition-colors border-b border-slate-100">
+                                            <td className="p-1 border border-slate-100 text-center font-black text-[10px]" rowSpan={2}>{record.ve}</td>
+                                            <td className="p-1 border border-slate-100 text-center text-[10px]" rowSpan={2}>{record.stockingDate}</td>
+                                            <td className="p-1 border border-slate-100 text-center text-[10px]" rowSpan={2}>{record.area || 0}</td>
+                                            <td className="p-1 border border-slate-100 text-center text-[10px]" rowSpan={2}>{record.initialPopulation || 0}</td>
+                                            <td className="p-1 border border-slate-100 text-center text-[10px]" rowSpan={2}>{record.density || 0}</td>
+                                            <td className="p-1 border border-slate-100 text-center font-bold text-slate-600 text-[9px]" rowSpan={2}>{record.biometry}</td>
+                                            <td className="p-1 border border-slate-100 text-center font-bold text-slate-600 bg-slate-50 uppercase italic text-[9px]">RAÇÃO</td>
                                             {daysArray.map(d => {
                                                 const val = record.dailyRecords.find(dr => dr.day === d)?.feed;
-                                                return <td key={d} className="border border-black text-center font-medium">{val || ''}</td>;
+                                                return <td key={d} className="border border-slate-100 text-center font-medium text-slate-700 text-[9px]">{val ?? 0}</td>;
                                             })}
-                                            <td className="p-1 border border-black text-center font-bold bg-slate-50">{calculateRowTotal(record, 'feed')}</td>
+                                            <td className="p-1 border border-slate-100 text-center font-black bg-orange-50 text-orange-800 text-[10px]">{calculateRowTotal(record, 'feed')}</td>
                                         </tr>
-                                        <tr>
-                                            <td className="p-1 border border-black text-center font-bold text-[7px] uppercase bg-slate-50">MORT.</td>
+                                        <tr className="bg-pink-50/20">
+                                            <td className="p-1 border border-slate-100 text-center font-bold text-pink-700 bg-pink-50 uppercase italic text-[9px]">MORT.</td>
                                             {daysArray.map(d => {
                                                 const val = record.dailyRecords.find(dr => dr.day === d)?.mortality;
-                                                return <td key={d} className="border border-black text-center text-red-600 font-medium">{val || ''}</td>;
+                                                return <td key={d} className="border border-slate-100 text-center text-pink-600 font-medium text-[9px]">{val ?? 0}</td>;
                                             })}
-                                            <td className="p-1 border border-black text-center font-bold text-red-600 bg-slate-50">{calculateRowTotal(record, 'mortality')}</td>
+                                            <td className="p-1 border border-slate-100 text-center font-black bg-pink-100 text-pink-700 text-[10px]">{calculateRowTotal(record, 'mortality')}</td>
                                         </tr>
                                     </React.Fragment>
                                 ))}
                             </tbody>
                             <tfoot>
-                                <tr className="bg-slate-800 text-white font-bold uppercase text-[7px]">
-                                    <td colSpan={7} className="p-1 text-right border border-black">TOTAIS</td>
+                                <tr className="bg-slate-900 text-white font-black uppercase">
+                                    <td colSpan={7} className="p-2 text-right border-r border-slate-700">TOTAIS DO DIA</td>
                                     {daysArray.map(d => (
-                                        <td key={d} className="p-0.5 border border-black text-center">
+                                        <td key={d} className="p-0.5 border-r border-slate-700 text-center">
                                             <div className="flex flex-col">
-                                                <span>{calculateDayTotal('feed', d) || ''}</span>
-                                                <span className="text-red-300">{calculateDayTotal('mortality', d) || ''}</span>
+                                                <span className="text-orange-400 leading-tight text-[8px]">{calculateDayTotal('feed', d) ?? 0}</span>
+                                                <span className="text-pink-400 leading-tight text-[8px]">{calculateDayTotal('mortality', d) ?? 0}</span>
                                             </div>
                                         </td>
                                     ))}
-                                    <td className="p-1 text-center bg-orange-600 border border-black font-bold text-[9px]">
+                                    <td className="p-1 text-center bg-orange-600 border-l border-orange-500 text-[10px]">
                                         {data?.records.reduce((sum, r) => sum + calculateRowTotal(r, 'feed'), 0)}
                                     </td>
                                 </tr>
