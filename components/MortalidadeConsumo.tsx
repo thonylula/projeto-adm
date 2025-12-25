@@ -181,12 +181,18 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         if (!file || !data) return;
 
         const systemPrompt = `
-        Aja como um especialista em extração de dados de aquicultura. 
+        Aja como um especialista em extração de dados de aquicultura de alta precisão. 
         Analise a imagem da tabela de "Mortalidade e Consumo" e extraia TODOS os dados para o formato JSON.
 
-        ESTRUTURA ESPERADA (JSON ARRAY de registros):
+        ESTRUTURA DA TABELA NA IMAGEM:
+        - Cada "Viveiro" (VE) ocupa DUAS LINHAS horizontais consecutivas.
+        - Linha superior do VE: Contém os dados de "RAÇÃO".
+        - Linha inferior do VE: Contém os dados de "MORTALIDADE".
+        - Colunas: Dias do mês (1 a 31) no topo.
+
+        ESTRUTURA JSON ESPERADA (ARRAY de objetos):
         [{
-          "ve": "1", (String)
+          "ve": "1", (String - Nome/Número do Viveiro)
           "stockingDate": "30/09/2025", (String no formato DD/MM/AAAA)
           "area": 15.23, (Number)
           "initialPopulation": 530, (Number - Pop. Ini)
@@ -194,21 +200,25 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
           "biometry": "6.58", (String - Peso médio/Biometria)
           "dailyRecords": [
             { "day": 1, "feed": 210, "mortality": 3 },
-            ... (até o dia 31)
+            { "day": 2, "feed": 210, "mortality": 0 }
+            ... (mapeie todos os dias visíveis na imagem)
           ]
         }]
 
-        REGRAS CRÍTICAS:
-        1. PRECISÃO TOTAL: Se a imagem mostra dia 1 com ração 210 e mortalidade 3, o JSON deve refletir isso exatamente.
-        2. MAPEAMENTO DE DIAS: A tabela tem dias de 1 a 31 no topo. Mapeie cada coluna corretamente.
-        3. RAÇÃO vs MORTALIDADE: Cada viveiro (VE) tem DUAS linhas: a de cima é RAÇÃO e a de baixo é MORTALIDADE.
-        4. VALORES VAZIOS: Se uma célula estiver vazia ou sem anotação, use 0.
-        5. VIVEIROS: Extraia todos os viveiros visíveis (1, 2, 3... e VP01, VP02...).
-        6. DATA POVOA: Formate sempre como DD/MM/AAAA. Se o ano não estiver claro, use ${year}.
+        REGRAS DE OURO PARA LÓGICA INFALÍVEL:
+        1. PROCESSAMENTO LINHA POR LINHA: Observe atentamente o par de linhas de cada viveiro. Não confunda a linha de ração com a de mortalidade.
+        2. ESPAÇOS VAZIOS = 0: Se uma célula para um dia específico estiver em branco, vazia ou sem anotação, você DEVE retornar 0 para esse campo (feed ou mortality).
+        3. PRECISÃO NUMÉRICA: Extraia exatamente o que está escrito. Se houver dúvida sobre um dígito, use o contexto das linhas vizinhas.
+        4. MAPEAMENTO DE DIAS: Verifique o número do dia no cabeçalho da coluna para garantir que o valor seja atribuído ao dia correto.
+        5. VIVEIROS ESPECIAIS: Extraia todos, incluindo nomes como "VP01", "VP02", "VP03", etc.
+        6. DATA DE POVOAMENTO: Formate como DD/MM/AAAA. Se a imagem mostrar apenas dia/mês, assuma o ano como ${year}.
+        7. VALIDAÇÃO: Verifique se o total somado por você no JSON bate visualmente com a coluna "Total/Semana" da imagem (se visível).
+
+        Retorne APENAS o JSON válido, sem explicações adicionais.
         `;
 
         try {
-            const result = await processFile(file, systemPrompt);
+            const result = await processFile(file, systemPrompt, 'gemini-3-pro');
             if (result && Array.isArray(result)) {
                 const newRecords = result.map((dr: any) => ({
                     id: crypto.randomUUID(),
