@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Company, MonthlyMortalityData, MortalityTankRecord, MortalityDailyRecord } from '../types';
 import { SupabaseService } from '../services/supabaseService';
 import { exportToPdf, exportToPng, exportToHtml } from '../utils/exportUtils';
+import { useGeminiParser } from '../hooks/useGeminiParser';
 
 interface MortalidadeConsumoProps {
     activeCompany?: Company | null;
@@ -21,6 +22,11 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     const [companyLogo, setCompanyLogo] = useState<string | null>(null);
     const topScrollRef = React.useRef<HTMLDivElement>(null);
     const scrollRef = React.useRef<HTMLDivElement>(null);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    const { processFile, isProcessing: isAIProcessing } = useGeminiParser({
+        onError: (err) => setMessage({ text: `Erro na IA: ${err.message}`, type: 'error' })
+    });
 
     useEffect(() => {
         setMonth(activeMonth);
@@ -170,6 +176,69 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         reader.readAsText(file);
     };
 
+    const handleAIPreencher = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !data) return;
+
+        const systemPrompt = `
+        Aja como um especialista em extração de dados de aquicultura. 
+        Analise a imagem da tabela de "Mortalidade e Consumo" e extraia TODOS os dados para o formato JSON.
+
+        ESTRUTURA ESPERADA (JSON ARRAY de registros):
+        [{
+          "ve": "1", (String)
+          "stockingDate": "30/09/2025", (String no formato DD/MM/AAAA)
+          "area": 15.23, (Number)
+          "initialPopulation": 530, (Number - Pop. Ini)
+          "density": 15.97, (Number - Dens.)
+          "biometry": "6.58", (String - Peso médio/Biometria)
+          "dailyRecords": [
+            { "day": 1, "feed": 210, "mortality": 3 },
+            ... (até o dia 31)
+          ]
+        }]
+
+        REGRAS CRÍTICAS:
+        1. PRECISÃO TOTAL: Se a imagem mostra dia 1 com ração 210 e mortalidade 3, o JSON deve refletir isso exatamente.
+        2. MAPEAMENTO DE DIAS: A tabela tem dias de 1 a 31 no topo. Mapeie cada coluna corretamente.
+        3. RAÇÃO vs MORTALIDADE: Cada viveiro (VE) tem DUAS linhas: a de cima é RAÇÃO e a de baixo é MORTALIDADE.
+        4. VALORES VAZIOS: Se uma célula estiver vazia ou sem anotação, use 0.
+        5. VIVEIROS: Extraia todos os viveiros visíveis (1, 2, 3... e VP01, VP02...).
+        6. DATA POVOA: Formate sempre como DD/MM/AAAA. Se o ano não estiver claro, use ${year}.
+        `;
+
+        try {
+            const result = await processFile(file, systemPrompt);
+            if (result && Array.isArray(result)) {
+                const newRecords = result.map((dr: any) => ({
+                    id: crypto.randomUUID(),
+                    ve: dr.ve || '',
+                    stockingDate: dr.stockingDate || '',
+                    area: parseFloat(dr.area) || 0,
+                    initialPopulation: parseInt(dr.initialPopulation) || 0,
+                    density: parseFloat(dr.density) || 0,
+                    biometry: dr.biometry || '',
+                    dailyRecords: Array.from({ length: daysInMonth }, (_, i) => {
+                        const day = i + 1;
+                        const record = dr.dailyRecords?.find((r: any) => r.day === day);
+                        return {
+                            day,
+                            feed: parseFloat(record?.feed) || 0,
+                            mortality: parseInt(record?.mortality) || 0
+                        };
+                    })
+                }));
+
+                setData({ ...data, records: newRecords });
+                setMessage({ text: 'Dados extraídos com sucesso via IA!', type: 'success' });
+            }
+        } catch (err) {
+            console.error("Erro no preenchimento IA:", err);
+        } finally {
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
     const handleSave = async () => {
         if (!activeCompany?.id || !data) return;
         const success = await SupabaseService.saveMortalityData(activeCompany.id, month, year, data);
@@ -285,6 +354,20 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             <button onClick={() => performExport('png')} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition-all shadow-lg active:scale-95">PNG</button>
             <button onClick={() => performExport('html')} className="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-800 transition-all shadow-lg active:scale-95">HTML</button>
             <div className="w-px h-8 bg-slate-200 mx-2" />
+            <input type="file" ref={fileInputRef} onChange={handleAIPreencher} accept="image/*" className="hidden" />
+            <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isAIProcessing}
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg text-xs font-black uppercase hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg active:scale-95 flex items-center gap-2 disabled:opacity-50"
+            >
+                {isAIProcessing ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                    <span>🪄</span>
+                )}
+                {isAIProcessing ? 'Processando...' : 'IA Preencher Tudo'}
+            </button>
+            <div className="w-px h-8 bg-slate-200 mx-2" />
             <button onClick={handleShare} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-700 transition-all shadow-lg active:scale-95">Compartilhar</button>
             <div className="w-px h-8 bg-slate-200 mx-2" />
             <button onClick={handleBackup} className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-800 transition-all shadow-lg active:scale-95">Backup</button>
@@ -312,9 +395,9 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             )}
 
             <div id="mortality-table-export" className="bg-white p-4">
-                <header className="flex flex-col items-center mb-6 pb-4 border-b border-slate-100 text-center">
-                    {companyLogo && !companyLogo.startsWith('blob:') && (
-                        <div className="mb-4">
+                <header className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
+                    <div className="flex items-center gap-6">
+                        {companyLogo && !companyLogo.startsWith('blob:') && (
                             <img
                                 src={companyLogo}
                                 alt="Logo"
@@ -324,16 +407,16 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     console.warn('Logo image failed to load, hiding from export.');
                                 }}
                             />
+                        )}
+                        <div className="text-left">
+                            <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Mortalidade e Consumo</h1>
+                            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">
+                                {activeCompany?.name || 'Controle diário de ração e perdas por tanque'}
+                            </p>
+                            <p className="text-xs text-slate-400 mt-0.5 font-bold">
+                                {new Date(year, month - 1).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()} / {year}
+                            </p>
                         </div>
-                    )}
-                    <div>
-                        <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Mortalidade e Consumo</h1>
-                        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">
-                            {activeCompany?.name || 'Controle diário de ração e perdas por tanque'}
-                        </p>
-                        <p className="text-xs text-slate-400 mt-0.5 font-bold">
-                            {new Date(year, month - 1).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()} / {year}
-                        </p>
                     </div>
                 </header>
                 <div className="flex gap-3 print:hidden" data-html2canvas-ignore>
@@ -408,18 +491,18 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             <table className="w-full text-[9px] border-collapse">
                                 <thead>
                                     <tr className="bg-slate-900 text-white uppercase font-bold">
-                                        <th className="p-1 border border-slate-700 sticky left-0 z-20 bg-slate-900 min-w-[40px]" rowSpan={2}>VE</th>
-                                        <th className="p-1 border border-slate-700 min-w-[70px]" rowSpan={2}>Data Povoa</th>
-                                        <th className="p-1 border border-slate-700 min-w-[40px]" rowSpan={2}>Área</th>
-                                        <th className="p-1 border border-slate-700 min-w-[50px]" rowSpan={2}>Pop. Ini</th>
-                                        <th className="p-1 border border-slate-700 min-w-[40px]" rowSpan={2}>Dens.</th>
-                                        <th className="p-1 border border-slate-700 z-10 sticky left-[40px] bg-slate-900 min-w-[60px]" rowSpan={2}>Biometria</th>
-                                        <th className="p-1 border border-slate-700 min-w-[25px]" rowSpan={2}></th>
+                                        <th className="p-1 border border-slate-700 sticky left-0 z-20 bg-slate-900 min-w-[40px] text-center" rowSpan={2}>VE</th>
+                                        <th className="p-1 border border-slate-700 min-w-[70px] text-center" rowSpan={2}>Data Povoa</th>
+                                        <th className="p-1 border border-slate-700 min-w-[40px] text-center" rowSpan={2}>Área</th>
+                                        <th className="p-1 border border-slate-700 min-w-[50px] text-center" rowSpan={2}>Pop. Ini</th>
+                                        <th className="p-1 border border-slate-700 min-w-[40px] text-center" rowSpan={2}>Dens.</th>
+                                        <th className="p-1 border border-slate-700 z-10 sticky left-[40px] bg-slate-900 min-w-[60px] text-center" rowSpan={2}>Biometria</th>
+                                        <th className="p-1 border border-slate-700 min-w-[25px] text-center" rowSpan={2}></th>
                                         <th className="p-0.5 border border-slate-700 text-center" colSpan={daysInMonth}>DIAS DO MÊS</th>
-                                        <th className="p-1 border border-slate-700 min-w-[45px]" rowSpan={2}>Total</th>
-                                        <th className="p-1 border border-slate-700 print:hidden" rowSpan={2}>Ações</th>
+                                        <th className="p-1 border border-slate-700 min-w-[45px] text-center" rowSpan={2}>Total</th>
+                                        <th className="p-1 border border-slate-700 print:hidden text-center" rowSpan={2}>Ações</th>
                                     </tr>
-                                    <tr className="bg-slate-800 text-slate-400">
+                                    <tr className="bg-slate-800 text-slate-400 text-center">
                                         {daysArray.map(d => (
                                             <th key={d} className="p-0.5 border border-slate-700 text-center min-w-[34px]">{d}</th>
                                         ))}
@@ -573,20 +656,20 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             : "hidden pointer-events-none fixed top-0 left-0 w-[297mm]"
                         }
                     >
-                        <header className="flex flex-col items-center mb-6 pb-4 border-b border-slate-200 text-center">
-                            {companyLogo && !companyLogo.startsWith('blob:') && (
-                                <div className="mb-4">
+                        <header className="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
+                            <div className="flex items-center gap-6">
+                                {companyLogo && !companyLogo.startsWith('blob:') && (
                                     <img src={companyLogo} alt="Logo" className="h-16 w-auto object-contain" />
+                                )}
+                                <div className="text-left">
+                                    <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Mortalidade e Consumo</h1>
+                                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">
+                                        {activeCompany?.name || 'Controle diário'}
+                                    </p>
+                                    <p className="text-xs text-slate-400 mt-1 font-bold">
+                                        {new Date(year, month - 1).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()} / {year}
+                                    </p>
                                 </div>
-                            )}
-                            <div>
-                                <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Mortalidade e Consumo</h1>
-                                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">
-                                    {activeCompany?.name || 'Controle diário'}
-                                </p>
-                                <p className="text-xs text-slate-400 mt-1 font-bold">
-                                    {new Date(year, month - 1).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()} / {year}
-                                </p>
                             </div>
                         </header>
 
@@ -657,6 +740,6 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
