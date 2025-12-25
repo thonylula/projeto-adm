@@ -266,6 +266,24 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         }
     };
 
+    const handleClearData = () => {
+        if (!data) return;
+        if (window.confirm('Deseja realmente limpar todos os dados lançados deste mês? Esta ação não pode ser desfeita.')) {
+            const clearedRecords = data.records.map(record => ({
+                ...record,
+                stockingDate: '',
+                area: 0,
+                initialPopulation: 0,
+                density: 0,
+                biometry: '',
+                dailyRecords: record.dailyRecords.map(dr => ({ ...dr, feed: 0, mortality: 0 }))
+            }));
+            setData({ ...data, records: clearedRecords });
+            setMessage({ text: 'Dados limpos com sucesso!', type: 'success' });
+            setTimeout(() => setMessage(null), 3000);
+        }
+    };
+
     const handleSave = async () => {
         if (!activeCompany?.id || !data) return;
         const success = await SupabaseService.saveMortalityData(activeCompany.id, month, year, data);
@@ -314,7 +332,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         }
     };
 
-    const handlePaste = (e: React.ClipboardEvent, startTankIndex: number, startDay: number, startType: 'feed' | 'mortality') => {
+    const handlePaste = (e: React.ClipboardEvent, startTankIndex: number, startColumn: number | 'feed' | 'mortality', dayOffset: number = 0) => {
         e.preventDefault();
         if (!data) return;
 
@@ -323,18 +341,22 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
         const newRecords = [...data.records];
         let currentTankIdx = startTankIndex;
-        let currentType = startType;
+        let currentMode: 'header' | 'daily' = typeof startColumn === 'number' ? 'header' : 'daily';
+        let currentType: 'feed' | 'mortality' = typeof startColumn === 'string' ? startColumn : 'feed';
 
         rows.forEach((row, rowIdx) => {
             const cells = row.split(/\t/);
 
-            // Se mudou de linha no Excel, precisamos decidir se pulamos para o próximo VE ou mudamos de Ração para Mortalidade
             if (rowIdx > 0) {
-                if (currentType === 'feed') {
-                    currentType = 'mortality';
-                } else {
-                    currentType = 'feed';
+                if (currentMode === 'header') {
                     currentTankIdx++;
+                } else {
+                    if (currentType === 'feed') {
+                        currentType = 'mortality';
+                    } else {
+                        currentType = 'feed';
+                        currentTankIdx++;
+                    }
                 }
             }
 
@@ -344,18 +366,33 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             const newDaily = [...tank.dailyRecords];
 
             cells.forEach((cell, cellIdx) => {
-                const day = startDay + cellIdx;
-                const recordIdx = newDaily.findIndex(r => r.day === day);
+                const cleanVal = cell.trim();
 
-                if (recordIdx >= 0) {
-                    // Valor limpo: remove espaços, troca vírgula por ponto, se vazio vira "0"
-                    const cleanVal = cell.trim().replace(',', '.');
-                    const val = cleanVal === '' ? 0 : (parseFloat(cleanVal) || 0);
+                if (currentMode === 'header') {
+                    // Mapeia colunas do cabeçalho
+                    const targetCol = (startColumn as number) + cellIdx;
+                    if (targetCol === 1) tank.stockingDate = cleanVal;
+                    if (targetCol === 2) tank.area = parseFloat(cleanVal.replace(',', '.')) || 0;
+                    if (targetCol === 3) tank.initialPopulation = parseInt(cleanVal) || 0;
+                    if (targetCol === 4) tank.density = parseFloat(cleanVal.replace(',', '.')) || 0;
+                    if (targetCol === 5) tank.biometry = cleanVal;
 
-                    newDaily[recordIdx] = {
-                        ...newDaily[recordIdx],
-                        [currentType]: val
-                    };
+                    // Se a colagem for longa o suficiente para entrar nos dias (col 7 em diante)
+                    if (targetCol >= 7) {
+                        const day = targetCol - 6; // 7=dia 1, 8=dia 2...
+                        const recordIdx = newDaily.findIndex(r => r.day === day);
+                        if (recordIdx >= 0) {
+                            newDaily[recordIdx] = { ...newDaily[recordIdx], feed: parseFloat(cleanVal.replace(',', '.')) || 0 };
+                        }
+                    }
+                } else {
+                    // Modo Diário (Ração ou Mortalidade)
+                    const day = dayOffset + cellIdx;
+                    const recordIdx = newDaily.findIndex(r => r.day === day);
+                    if (recordIdx >= 0) {
+                        const val = cleanVal.replace(',', '.') === '' ? 0 : (parseFloat(cleanVal.replace(',', '.')) || 0);
+                        newDaily[recordIdx] = { ...newDaily[recordIdx], [currentType]: val };
+                    }
                 }
             });
 
@@ -363,7 +400,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         });
 
         setData({ ...data, records: newRecords });
-        setMessage({ text: 'Bloco de dados colado com sucesso!', type: 'success' });
+        setMessage({ text: 'Bloco de dados processado com sucesso!', type: 'success' });
         setTimeout(() => setMessage(null), 3000);
     };
 
@@ -431,6 +468,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             <input type="file" id="load-backup-input" accept=".json" onChange={handleLoadBackup} className="hidden" />
             <button onClick={() => document.getElementById('load-backup-input')?.click()} className="bg-orange-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-orange-600 transition-all shadow-lg active:scale-95">Carregar</button>
             <button onClick={handleSave} className="bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-600 transition-all shadow-lg active:scale-95">Salvar</button>
+            <button onClick={handleClearData} className="bg-slate-400 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-500 transition-all shadow-lg active:scale-95">Limpar Tudo</button>
             <div className="w-px h-8 bg-slate-200 mx-2" />
             <input type="file" id="logo-upload-input" accept="image/*" onChange={handleLogoUpload} className="hidden" />
             <button onClick={() => document.getElementById('logo-upload-input')?.click()} className="bg-purple-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-purple-700 transition-all shadow-lg active:scale-95">📷 Logo</button>
@@ -582,6 +620,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         type="text"
                                                         value={record.stockingDate}
                                                         onChange={(e) => handleUpdateHeader(idx, 'stockingDate', e.target.value)}
+                                                        onPaste={(e) => handlePaste(e, idx, 1)}
                                                         placeholder="DD/MM/AAAA"
                                                         className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
                                                     />
@@ -591,6 +630,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         type="number"
                                                         value={record.area || ''}
                                                         onChange={(e) => handleUpdateHeader(idx, 'area', parseFloat(e.target.value) || 0)}
+                                                        onPaste={(e) => handlePaste(e, idx, 2)}
                                                         className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
                                                     />
                                                 </td>
@@ -599,6 +639,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         type="number"
                                                         value={record.initialPopulation || ''}
                                                         onChange={(e) => handleUpdateHeader(idx, 'initialPopulation', parseInt(e.target.value) || 0)}
+                                                        onPaste={(e) => handlePaste(e, idx, 3)}
                                                         className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
                                                     />
                                                 </td>
@@ -608,6 +649,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         step="0.01"
                                                         value={record.density || ''}
                                                         onChange={(e) => handleUpdateHeader(idx, 'density', parseFloat(e.target.value) || 0)}
+                                                        onPaste={(e) => handlePaste(e, idx, 4)}
                                                         className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
                                                     />
                                                 </td>
@@ -616,6 +658,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         type="text"
                                                         value={record.biometry}
                                                         onChange={(e) => handleUpdateHeader(idx, 'biometry', e.target.value)}
+                                                        onPaste={(e) => handlePaste(e, idx, 5)}
                                                         className="w-full p-1 text-center font-bold text-slate-600 bg-transparent border-none outline-none text-[9px]"
                                                         placeholder="BIO"
                                                     />
@@ -629,7 +672,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                             type="number"
                                                             value={record.dailyRecords.find(dr => dr.day === d)?.feed ?? ''}
                                                             onChange={(e) => handleUpdateDay(idx, d, 'feed', e.target.value)}
-                                                            onPaste={(e) => handlePaste(e, idx, d, 'feed')}
+                                                            onPaste={(e) => handlePaste(e, idx, 'feed', d)}
                                                             className="w-full h-full px-0 py-0.5 bg-transparent text-center focus:bg-orange-100 outline-none border-none font-medium text-slate-700 text-[9px]"
                                                             placeholder="0"
                                                         />
@@ -652,7 +695,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                             type="number"
                                                             value={record.dailyRecords.find(dr => dr.day === d)?.mortality ?? ''}
                                                             onChange={(e) => handleUpdateDay(idx, d, 'mortality', e.target.value)}
-                                                            onPaste={(e) => handlePaste(e, idx, d, 'mortality')}
+                                                            onPaste={(e) => handlePaste(e, idx, 'mortality', d)}
                                                             className="w-full h-full px-0 py-0.5 bg-transparent text-center focus:bg-pink-100 outline-none border-none text-pink-600 font-medium text-[9px]"
                                                             placeholder="0"
                                                         />
