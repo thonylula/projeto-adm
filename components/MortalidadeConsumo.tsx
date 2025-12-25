@@ -20,6 +20,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     const [tankQuantity, setTankQuantity] = useState(1);
     const [isExporting, setIsExporting] = useState(false);
     const [companyLogo, setCompanyLogo] = useState<string | null>(null);
+    const [selectedWeek, setSelectedWeek] = useState<number>(0); // 0 = Mes Inteiro, 1-5 = Semanas
     const topScrollRef = React.useRef<HTMLDivElement>(null);
     const scrollRef = React.useRef<HTMLDivElement>(null);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -34,7 +35,14 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     }, [activeMonth, activeYear]);
 
     const daysInMonth = new Date(year, month, 0).getDate();
-    const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+    // Filtro de dias por semana
+    const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1).filter(d => {
+        if (selectedWeek === 0) return true;
+        const start = (selectedWeek - 1) * 7 + 1;
+        const end = Math.min(selectedWeek * 7, daysInMonth);
+        return d >= start && d <= end;
+    });
 
     const loadData = useCallback(async () => {
         if (!activeCompany?.id) return;
@@ -469,6 +477,24 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             <button onClick={() => document.getElementById('load-backup-input')?.click()} className="bg-orange-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-orange-600 transition-all shadow-lg active:scale-95">Carregar</button>
             <button onClick={handleSave} className="bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-600 transition-all shadow-lg active:scale-95">Salvar</button>
             <button onClick={handleClearData} className="bg-slate-400 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-500 transition-all shadow-lg active:scale-95">Limpar Tudo</button>
+
+            <div className="w-px h-8 bg-slate-200 mx-2" />
+
+            <div className="flex bg-slate-100 p-1 rounded-lg">
+                {[0, 1, 2, 3, 4, 5].map(w => (
+                    <button
+                        key={w}
+                        onClick={() => setSelectedWeek(w)}
+                        className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${selectedWeek === w
+                                ? 'bg-white text-blue-600 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
+                            }`}
+                    >
+                        {w === 0 ? 'MÊS' : `S${w}`}
+                    </button>
+                ))}
+            </div>
+
             <div className="w-px h-8 bg-slate-200 mx-2" />
             <input type="file" id="logo-upload-input" accept="image/*" onChange={handleLogoUpload} className="hidden" />
             <button onClick={() => document.getElementById('logo-upload-input')?.click()} className="bg-purple-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-purple-700 transition-all shadow-lg active:scale-95">📷 Logo</button>
