@@ -1,4 +1,3 @@
-```
 // [AI-LOCK: OPEN]
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import html2canvas from 'html2canvas';
@@ -95,7 +94,7 @@ export const BiometricsManager: React.FC = () => {
         const a = document.createElement("a");
         a.href = url;
         const dateStr = new Date().toLocaleDateString('pt-BR').replace(/\//g, '_');
-        a.download = `backup_biometria_${ dateStr }.json`;
+        a.download = 'backup_biometria_' + dateStr + '.json';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -190,14 +189,14 @@ export const BiometricsManager: React.FC = () => {
                     setCurrentData(sortData(result));
                     setTimeout(() => {
                         setStep('DASHBOARD');
-                        showToast(`Sucesso: ${ result.length } linhas extraídas.`);
+                        showToast(`Sucesso: ${result.length} linhas extraídas.`);
                     }, 2000);
                 } else {
                     throw new Error("Resposta da IA não é um array válido.");
                 }
             } catch (error: any) {
                 console.error("Erro AI:", error);
-                showToast(`Erro: ${ error.message || 'Falha ao processar arquivo' } `);
+                showToast(`Erro: ${error.message || 'Falha ao processar arquivo'}`);
                 setStep('UPLOAD');
             }
         }
@@ -285,7 +284,7 @@ export const BiometricsManager: React.FC = () => {
         if (!text || text === '-' || text === 'N/A') return;
         const val = String(text);
         navigator.clipboard.writeText(val).then(() => {
-            showToast(`${ label } copiado: ${ val } `);
+            showToast(`${label} copiado: ${val}`);
         });
     };
 
@@ -426,11 +425,11 @@ export const BiometricsManager: React.FC = () => {
 
                 // CLASSIFICAÇÃO ATUALIZADA (6 NÍVEIS) - TEMA LARANJA TOM SOBRE TOM
                 if (pMed >= targets.espetacular) {
-                    analysisStatus = `💥 ESPETACULAR: Topo de Linha!(> ${ targets.espetacular.toFixed(2) }g)`;
+                    analysisStatus = `💥 ESPETACULAR: Topo de Linha!(> ${targets.espetacular.toFixed(2)}g)`;
                     rowBgColor = "bg-[#FFEDD5] hover:bg-[#FED7AA]"; // orange-100 -> orange-200
                     statusTextColor = "text-[#7C2D12] font-extrabold"; // orange-950
                 } else if (pMed >= targets.otimo) {
-                    analysisStatus = `🔥 ÓTIMO: Acima da meta(${ targets.otimo.toFixed(2) }g)`;
+                    analysisStatus = `🔥 ÓTIMO: Acima da meta(${targets.otimo.toFixed(2)}g)`;
                     rowBgColor = "bg-[#FFF7ED] hover:bg-[#FFEDD5]"; // orange-50 -> orange-100
                     statusTextColor = "text-[#9A3412] font-bold"; // orange-900
                 } else if (pMed >= targets.bom) {
@@ -438,7 +437,7 @@ export const BiometricsManager: React.FC = () => {
                     rowBgColor = "bg-white hover:bg-[#FFF7ED]";
                     statusTextColor = "text-[#C2410C] font-bold"; // orange-700
                 } else if (pMed >= targets.regular) {
-                    analysisStatus = `⚡ REGULAR: Atenção(${ targets.regular.toFixed(2) }g)`;
+                    analysisStatus = `⚡ REGULAR: Atenção(${targets.regular.toFixed(2)}g)`;
                     rowBgColor = "bg-white hover:bg-orange-50/50";
                     statusTextColor = "text-[#EA580C] font-bold"; // orange-600
                 } else if (pMed >= targets.ruim) {
@@ -462,7 +461,7 @@ export const BiometricsManager: React.FC = () => {
                 pesoTotal = (pMed * quat).toFixed(2);
             }
 
-            const incSemanalStr = incSemanal !== 0 ? (incSemanal > 0 ? `+ ${ incSemanal.toFixed(2) } ` : incSemanal.toFixed(2)) : "-";
+            const incSemanalStr = incSemanal !== 0 ? (incSemanal > 0 ? `+ ${incSemanal.toFixed(2)}` : incSemanal.toFixed(2)) : "-";
 
             return {
                 ...item,
@@ -510,7 +509,7 @@ export const BiometricsManager: React.FC = () => {
 
         const opt = {
             margin: [5, 5, 5, 5] as [number, number, number, number],
-            filename: `Relatorio_Bio_${ new Date().toLocaleDateString('pt-BR').replace(/\//g, '-') }.pdf`,
+            filename: `Relatorio_Bio_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`,
             image: { type: 'jpeg' as const, quality: 0.98 },
             html2canvas: {
                 scale: 2,
@@ -547,7 +546,7 @@ export const BiometricsManager: React.FC = () => {
             }
         }).then(canvas => {
             const link = document.createElement('a');
-            link.download = `Relatorio_Bio_${ new Date().toLocaleDateString('pt-BR') }.png`;
+            link.download = `Relatorio_Bio_${new Date().toLocaleDateString('pt-BR')}.png`;
             link.href = canvas.toDataURL('image/png', 1.0);
             link.click();
             dashboardRef.current?.classList.remove('printing');
@@ -627,7 +626,7 @@ export const BiometricsManager: React.FC = () => {
                 </h2>
                 <div className="flex gap-2 justify-center mt-8">
                     {newsList.slice(0, 5).map((_, idx) => (
-                        <div key={idx} className={`h - 1.5 rounded - full transition - all duration - 500 ${ idx === (newsIndex % 5) ? 'w-8 bg-orange-500' : 'w-2 bg-gray-200' } `} />
+                        <div key={idx} className={`h-1.5 rounded-full transition-all duration-500 ${idx === (newsIndex % 5) ? 'w-8 bg-orange-500' : 'w-2 bg-gray-200'}`} />
                     ))}
                 </div>
                 <p className="text-gray-400 text-xs mt-8 font-medium">Calculando curvas de crescimento, Incremento Semanal e GPD...</p>
@@ -641,13 +640,12 @@ export const BiometricsManager: React.FC = () => {
             <style>{`
 @media print {
     @page { margin: 3mm; size: auto; }
-    body { zoom: 0.9!important; -webkit - print - color - adjust: exact; }
-    .printing.print - visible { display: block!important; visibility: visible!important; opacity: 1!important; }
-    .printing.print - hidden { display: none!important; }
-    * { - webkit - print - color - adjust: exact!important; color - adjust: exact!important;
+    body { zoom: 0.9!important; -webkit-print-color-adjust: exact; }
+    .printing .print-visible { display: block!important; visibility: visible!important; opacity: 1!important; }
+    .printing .print-hidden { display: none!important; }
+    * { -webkit-print-color-adjust: exact!important; color-adjust: exact!important; }
 }
-}
-.print - visible { display: none; }
+.print-visible { display: none; }
 `}</style>
 
             <div className="mb-6 flex justify-between items-center no-print">
@@ -739,7 +737,7 @@ export const BiometricsManager: React.FC = () => {
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {processedData.map((item, idx) => (
-                                    <tr key={idx} className={`${ item.rowBgColor } transition - colors border - b border - gray - 50 last: border - 0`}>
+                                    <tr key={idx} className={`${item.rowBgColor} transition-colors border-b border-gray-50 last:border-0`}>
                                         <td className="px-1.5 py-1.5 font-bold text-gray-800 print:py-0.5">{item.viveiro}</td>
 
                                         {/* DATA POVOAMENTO (Novo Input) */}
@@ -760,7 +758,7 @@ export const BiometricsManager: React.FC = () => {
 
                                                     if (val.length === 10) {
                                                         const [d, m, y] = val.split('/');
-                                                        const iso = `${ y } -${ m } -${ d } `;
+                                                        const iso = `${y}-${m}-${d}`;
                                                         if (!isNaN(new Date(iso).getTime())) {
                                                             handleUpdateRow(item.viveiro, 'dataPovoamento', iso);
                                                         } else {
@@ -828,7 +826,7 @@ export const BiometricsManager: React.FC = () => {
                                         <td className="px-1.5 py-1.5 text-right font-mono font-bold text-gray-700 text-[10px] bg-orange-50/10">{item.incSemanalStr}</td>
                                         <td className="px-1.5 py-1.5 text-right font-mono font-black text-[#9A3412] text-[10px] bg-orange-50/20">{item.gpdDisplay}</td>
                                         <td className="px-2 py-1.5 text-left flex justify-start">
-                                            <span className={`inline - flex items - center px - 1.5 py - 0.5 rounded - full text - [8.5px] font - bold uppercase tracking - wider ${ item.statusTextColor } ${ item.rowBgColor.replace('bg-', 'bg-opacity-50 min-w-[110px] justify-start ') } border border - current / 10 shadow - sm print: min - w - [100px]`}>
+                                            <span className={`inline - flex items - center px - 1.5 py - 0.5 rounded - full text - [8.5px] font - bold uppercase tracking - wider ${item.statusTextColor} ${item.rowBgColor.replace('bg-', 'bg-opacity-50 min-w-[110px] justify-start ')} border border - current / 10 shadow - sm print: min - w - [100px]`}>
                                                 {item.analysisStatus}
                                             </span>
                                         </td>
