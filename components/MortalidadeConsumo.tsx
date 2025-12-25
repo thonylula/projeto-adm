@@ -314,27 +314,57 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         }
     };
 
-    const handlePaste = (e: React.ClipboardEvent, tankIndex: number, startDay: number, type: 'feed' | 'mortality') => {
+    const handlePaste = (e: React.ClipboardEvent, startTankIndex: number, startDay: number, startType: 'feed' | 'mortality') => {
         e.preventDefault();
-        const text = e.clipboardData.getData('text');
-        const values = text.split(/[\t\n\s]+/).map(v => parseFloat(v.replace(',', '.'))).filter(v => !isNaN(v));
+        if (!data) return;
 
-        if (values.length === 0 || !data) return;
+        const clipboardText = e.clipboardData.getData('text');
+        const rows = clipboardText.split(/\r?\n/).filter(line => line.trim() !== '');
 
         const newRecords = [...data.records];
-        const tank = newRecords[tankIndex];
-        const newDaily = [...tank.dailyRecords];
+        let currentTankIdx = startTankIndex;
+        let currentType = startType;
 
-        values.forEach((val, i) => {
-            const currentDay = startDay + i;
-            const recordIdx = newDaily.findIndex(r => r.day === currentDay);
-            if (recordIdx >= 0) {
-                newDaily[recordIdx] = { ...newDaily[recordIdx], [type]: val };
+        rows.forEach((row, rowIdx) => {
+            const cells = row.split(/\t/);
+
+            // Se mudou de linha no Excel, precisamos decidir se pulamos para o próximo VE ou mudamos de Ração para Mortalidade
+            if (rowIdx > 0) {
+                if (currentType === 'feed') {
+                    currentType = 'mortality';
+                } else {
+                    currentType = 'feed';
+                    currentTankIdx++;
+                }
             }
+
+            if (currentTankIdx >= newRecords.length) return;
+
+            const tank = { ...newRecords[currentTankIdx] };
+            const newDaily = [...tank.dailyRecords];
+
+            cells.forEach((cell, cellIdx) => {
+                const day = startDay + cellIdx;
+                const recordIdx = newDaily.findIndex(r => r.day === day);
+
+                if (recordIdx >= 0) {
+                    // Valor limpo: remove espaços, troca vírgula por ponto, se vazio vira "0"
+                    const cleanVal = cell.trim().replace(',', '.');
+                    const val = cleanVal === '' ? 0 : (parseFloat(cleanVal) || 0);
+
+                    newDaily[recordIdx] = {
+                        ...newDaily[recordIdx],
+                        [currentType]: val
+                    };
+                }
+            });
+
+            newRecords[currentTankIdx] = { ...tank, dailyRecords: newDaily };
         });
 
-        newRecords[tankIndex] = { ...tank, dailyRecords: newDaily };
         setData({ ...data, records: newRecords });
+        setMessage({ text: 'Bloco de dados colado com sucesso!', type: 'success' });
+        setTimeout(() => setMessage(null), 3000);
     };
 
     const addTank = () => {
