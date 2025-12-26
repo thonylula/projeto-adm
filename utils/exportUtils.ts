@@ -44,7 +44,28 @@ export const exportToPng = async (elementId: string, fileName: string) => {
     const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        logging: true,
+        onclone: (clonedDoc) => {
+            const el = clonedDoc.getElementById(elementId);
+            if (el) {
+                el.style.left = '0';
+                el.style.visibility = 'visible';
+                el.style.opacity = '1';
+                el.style.display = 'block';
+                // Force headers to be white and visible
+                const spans = el.getElementsByTagName('span');
+                for (let i = 0; i < spans.length; i++) {
+                    const parent = spans[i].parentElement;
+                    if (parent && (parent.tagName === 'TH' || parent.tagName === 'TD')) {
+                        spans[i].style.color = '#ffffff';
+                        spans[i].style.setProperty('color', '#ffffff', 'important');
+                        spans[i].style.opacity = '1';
+                        spans[i].style.visibility = 'visible';
+                    }
+                }
+            }
+        }
     });
 
     const link = document.createElement('a');
