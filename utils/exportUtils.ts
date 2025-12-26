@@ -42,44 +42,29 @@ export const exportToPng = async (elementId: string, fileName: string) => {
     if (!element) return;
 
     try {
-        // Log font loading status
-        console.log('🔄 Verificando fontes...');
+        console.log('🔄 Sincronizando fontes para alta fidelidade...');
         await checkFonts();
         await document.fonts.ready;
-        console.log('✅ Fontes prontas.');
+        console.log('✅ Fontes sincronizadas.');
 
         const canvas = await html2canvas(element, {
-            scale: 2,
+            scale: 3, // Ultra-HD Resolution
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
-            logging: true,
+            logging: false,
             onclone: (clonedDoc) => {
                 const el = clonedDoc.getElementById(elementId);
                 if (el) {
-                    // Force the element to stay rendered and visible during capture
-                    el.style.position = 'relative';
-                    el.style.left = '0';
-                    el.style.top = '0';
                     el.style.visibility = 'visible';
                     el.style.opacity = '1';
+                    el.style.position = 'relative';
+                    el.style.left = '0';
                     el.style.display = 'block';
 
-                    // Deep force for text visibility
-                    const allElements = el.getElementsByTagName('*');
-                    for (let i = 0; i < allElements.length; i++) {
-                        const item = allElements[i] as HTMLElement;
-                        if (item.tagName === 'SPAN' || item.tagName === 'TH' || item.tagName === 'TD') {
-                            const style = window.getComputedStyle(item);
-                            // If it's a header cell or a child of one, force white text
-                            if (item.closest('thead') || (item.style.backgroundColor === '#0f172a' || item.style.backgroundColor === 'rgb(15, 23, 42)')) {
-                                item.style.color = '#ffffff';
-                                item.style.setProperty('color', '#ffffff', 'important');
-                            }
-                            item.style.opacity = '1';
-                            item.style.visibility = 'visible';
-                        }
-                    }
+                    // Remove scroll and ensure full width
+                    const scrollable = el.querySelector('.overflow-x-auto');
+                    if (scrollable) (scrollable as HTMLElement).style.overflow = 'visible';
                 }
             }
         });
@@ -117,10 +102,9 @@ export const exportToPngPuppeteer = async (elementId: string, fileName: string) 
     if (!element) return;
 
     try {
-        console.log('🚀 Iniciando exportação de Alta Fidelidade (Cloud)...');
+        console.log('🚀 Iniciando exportação UI-Mirror (Cloud)...');
         const html = element.innerHTML;
 
-        // Coleta todos os estilos relevantes, incluindo os novos arquivos strict
         const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
             .map(s => s.outerHTML)
             .join('\n');
@@ -130,10 +114,19 @@ export const exportToPngPuppeteer = async (elementId: string, fileName: string) 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 html: `
-                    ${styles}
-                    <div id="${elementId}" style="visibility: visible !important; position: relative !important; left: 0 !important; opacity: 1 !important;">
-                        ${html}
-                    </div>
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <script src="https://cdn.tailwindcss.com"></script>
+                        ${styles}
+                    </head>
+                    <body style="margin:0; padding:0; background: white;">
+                        <div id="${elementId}" style="visibility: visible !important; position: relative !important; width: fit-content !important;">
+                            ${html}
+                        </div>
+                    </body>
+                    </html>
                 `,
                 fileName
             })
@@ -147,10 +140,10 @@ export const exportToPngPuppeteer = async (elementId: string, fileName: string) 
         link.href = url;
         link.download = `${fileName}.png`;
         link.click();
-        console.log('✅ Exportação concluída com sucesso!');
+        console.log('✅ Exportação UI-Mirror concluída!');
     } catch (error) {
         console.error('❌ Erro no Puppeteer Cloud:', error);
-        console.log('🔄 Tentando fallback para capture local...');
+        console.log('🔄 Fallback: Capture Local Ultra-HD...');
         return exportToPng(elementId, fileName);
     }
 };
