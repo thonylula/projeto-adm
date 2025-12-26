@@ -583,7 +583,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     <span className="text-indigo-600">{tableConfig.lineHeight}px</span>
                                 </label>
                                 <input
-                                    type="range" min="5" max="80"
+                                    type="range" min="1" max="80"
                                     value={tableConfig.lineHeight}
                                     onChange={e => setTableConfig({ ...tableConfig, lineHeight: parseInt(e.target.value) })}
                                     className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
