@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Company, MonthlyMortalityData, MortalityTankRecord, MortalityDailyRecord } from '../types';
 import { SupabaseService } from '../services/supabaseService';
-import { exportToPdf, exportToPngPuppeteer, exportToHtml } from '../utils/exportUtils';
+import { exportToPdf, exportToPngPuppeteer, exportToHtml, shareAsImage } from '../utils/exportUtils';
 import { useGeminiParser } from '../hooks/useGeminiParser';
 
 interface MortalidadeConsumoProps {
@@ -159,28 +159,15 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
     const handleShare = async () => {
         setIsExporting(true);
+        // Pequeno delay para garantir que o estado de isExporting seja refletido (ajustes de padding/esconde botões)
         setTimeout(async () => {
             try {
-                const element = document.getElementById('export-target');
-                if (!element || !(window as any).html2canvas) return;
-                const canvas = await (window as any).html2canvas(element, { scale: 1.5 });
-                canvas.toBlob(async (blob: Blob | null) => {
-                    if (!blob) return;
-                    const file = new File([blob], `mortalidade_${month}_${year}.png`, { type: 'image/png' });
-                    if (navigator.share) {
-                        await navigator.share({ files: [file], title: 'Mortalidade' });
-                    } else {
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = `mortalidade_${month}_${year}.png`;
-                        link.click();
-                    }
-                });
+                const suffix = `mortalidade_${month}_${year}`;
+                await shareAsImage('export-target', suffix);
             } finally {
                 setIsExporting(false);
             }
-        }, 100);
+        }, 300);
     };
 
     const handleBackup = () => {
