@@ -24,21 +24,31 @@ export default async function handler(req, res) {
 
         const page = await browser.newPage();
 
+        // Define viewport para A4 Landscape em HQ (Scale 2)
         await page.setViewport({
             width: 1200,
-            height: 800,
-            deviceScaleFactor: 2
+            height: 900,
+            deviceScaleFactor: 2,
+            isLandscape: true
         });
 
-        // Inject high-res styles
+        // HTML base com reset e fontes injetadas
         const fullHtml = `
             <!DOCTYPE html>
-            <html>
+            <html lang="pt-BR">
                 <head>
                     <meta charset="UTF-8">
                     <style>
-                        body { margin: 0; padding: 20px; background: white; font-family: 'Inter', sans-serif; }
-                        #export-target { transform: scale(1); transform-origin: top left; }
+                        body { 
+                            margin: 0; 
+                            background: white; 
+                            -webkit-print-color-adjust: exact !important;
+                            print-color-adjust: exact !important;
+                        }
+                        /* Reset de escala para garantir captura 1:1 */
+                        #export-target { 
+                            transform: scale(1) !important;
+                        }
                     </style>
                 </head>
                 <body>
@@ -48,14 +58,19 @@ export default async function handler(req, res) {
         `;
 
         await page.setContent(fullHtml, { waitUntil: 'networkidle0' });
-        await page.evaluateHandle('document.fonts.ready');
+
+        // BLOQUEIO OBRIGATÓRIO: Aguarda fontes
+        await page.evaluate(async () => {
+            await document.fonts.ready;
+        });
 
         const element = await page.$('#export-target');
         const buffer = element
-            ? await element.screenshot({ type: 'png' })
+            ? await element.screenshot({ type: 'png', omitBackground: false })
             : await page.screenshot({ type: 'png', fullPage: true });
 
         res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Cache-Control', 'no-cache');
         res.send(buffer);
 
     } catch (error) {
