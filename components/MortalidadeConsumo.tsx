@@ -24,6 +24,21 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     const topScrollRef = React.useRef<HTMLDivElement>(null);
     const scrollRef = React.useRef<HTMLDivElement>(null);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const [showLayoutSettings, setShowLayoutSettings] = useState(false);
+    const [tableConfig, setTableConfig] = useState(() => {
+        const saved = localStorage.getItem(`mortalidade_layout_${activeCompany?.id || 'default'}`);
+        return saved ? JSON.parse(saved) : {
+            dayColWidth: 55,
+            headerColWidth: 65,
+            fontSize: 10,
+            rowHeight: 6, // padding in px
+            veWidth: 56
+        };
+    });
+
+    useEffect(() => {
+        localStorage.setItem(`mortalidade_layout_${activeCompany?.id || 'default'}`, JSON.stringify(tableConfig));
+    }, [tableConfig, activeCompany?.id]);
 
     const { processFile, isProcessing: isAIProcessing } = useGeminiParser({
         onError: (err) => setMessage({ text: `Erro na IA: ${err.message}`, type: 'error' })
@@ -506,6 +521,85 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             </div>
 
             <div className="w-px h-8 bg-slate-200 mx-2" />
+            <div className="relative">
+                <button
+                    onClick={() => setShowLayoutSettings(!showLayoutSettings)}
+                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-lg active:scale-95 flex items-center gap-2 ${showLayoutSettings ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                >
+                    <span>⚙️</span> Ajustar Layout
+                </button>
+
+                {showLayoutSettings && (
+                    <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 p-4 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+                            <h3 className="font-black text-[10px] text-slate-900 uppercase">Ajustes de Tabela</h3>
+                            <button onClick={() => setShowLayoutSettings(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
+                                    <span>Largura Col. Dias</span>
+                                    <span className="text-indigo-600">{tableConfig.dayColWidth}px</span>
+                                </label>
+                                <input
+                                    type="range" min="35" max="100"
+                                    value={tableConfig.dayColWidth}
+                                    onChange={e => setTableConfig({ ...tableConfig, dayColWidth: parseInt(e.target.value) })}
+                                    className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
+                                    <span>Largura Col. Fixas</span>
+                                    <span className="text-indigo-600">{tableConfig.headerColWidth}px</span>
+                                </label>
+                                <input
+                                    type="range" min="40" max="120"
+                                    value={tableConfig.headerColWidth}
+                                    onChange={e => setTableConfig({ ...tableConfig, headerColWidth: parseInt(e.target.value) })}
+                                    className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
+                                    <span>Tamanho da Fonte</span>
+                                    <span className="text-indigo-600">{tableConfig.fontSize}px</span>
+                                </label>
+                                <input
+                                    type="range" min="8" max="14"
+                                    value={tableConfig.fontSize}
+                                    onChange={e => setTableConfig({ ...tableConfig, fontSize: parseInt(e.target.value) })}
+                                    className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
+                                    <span>Espaçamento (Altura)</span>
+                                    <span className="text-indigo-600">{tableConfig.rowHeight}px</span>
+                                </label>
+                                <input
+                                    type="range" min="2" max="15"
+                                    value={tableConfig.rowHeight}
+                                    onChange={e => setTableConfig({ ...tableConfig, rowHeight: parseInt(e.target.value) })}
+                                    className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                />
+                            </div>
+
+                            <button
+                                onClick={() => setTableConfig({ dayColWidth: 55, headerColWidth: 65, fontSize: 10, rowHeight: 6, veWidth: 56 })}
+                                className="w-full py-2 bg-slate-50 text-slate-500 text-[9px] font-bold rounded-lg hover:bg-slate-100 transition-colors uppercase"
+                            >
+                                Resetar para Padrão
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+            <div className="w-px h-8 bg-slate-200 mx-2" />
             <input type="file" id="logo-upload-input" accept="image/*" onChange={handleLogoUpload} className="hidden" />
             <button onClick={() => document.getElementById('logo-upload-input')?.click()} className="bg-purple-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-purple-700 transition-all shadow-lg active:scale-95">📷 Logo</button>
         </div>
@@ -611,7 +705,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             }}
                             data-html2canvas-ignore
                         >
-                            <div style={{ width: `${420 + (daysArray.length * 55)}px`, height: '1px' }} />
+                            <div style={{ width: `${(tableConfig.veWidth + 100 + (tableConfig.headerColWidth * 4) + 70 + 20) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '1px' }} />
                         </div>
                         <div
                             ref={scrollRef}
@@ -620,21 +714,24 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 if (topScrollRef.current) topScrollRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
                             }}
                         >
-                            <table className="w-full text-[10px] border-collapse" style={{ minWidth: `${380 + (daysArray.length * 55)}px` }}>
+                            <table className="w-full border-collapse" style={{
+                                minWidth: `${(tableConfig.veWidth + 100 + (tableConfig.headerColWidth * 4) + 70 + 20) + (daysArray.length * tableConfig.dayColWidth)}px`,
+                                fontSize: `${tableConfig.fontSize}px`
+                            }}>
                                 <thead>
-                                    <tr className="bg-slate-900">
-                                        <th className="p-2 text-white border border-slate-800 font-black uppercase tracking-wider sticky left-0 z-20 bg-slate-900 w-14 text-center" rowSpan={2}>VE</th>
-                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase sticky left-[56px] z-20 bg-slate-900 w-[100px] text-center" rowSpan={2}>Data Povoa</th>
-                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase w-16 text-center" rowSpan={2}>Área</th>
-                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase w-16 text-center" rowSpan={2}>Pop.Ini</th>
-                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase w-14 text-center" rowSpan={2}>Dens.</th>
-                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase w-16 text-center" rowSpan={2}>Biom..</th>
-                                        <th className="p-1 border border-slate-800 text-center text-slate-400 font-black uppercase tracking-widest text-[9px]" colSpan={daysArray.length}>Dias do Mês</th>
+                                    <tr className="bg-slate-900" style={{ height: `${tableConfig.rowHeight * 6}px` }}>
+                                        <th className="p-2 text-white border border-slate-800 font-black uppercase tracking-wider sticky left-0 z-20 bg-slate-900 text-center" style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>VE</th>
+                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase sticky z-20 bg-slate-900 w-[100px] text-center" style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>Data Povoa</th>
+                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Área</th>
+                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Pop.Ini</th>
+                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Dens.</th>
+                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Biom..</th>
+                                        <th className="p-1 border border-slate-800 text-center text-slate-400 font-black uppercase tracking-widest text-[0.9em]" colSpan={daysArray.length}>Dias do Mês</th>
                                         <th className="p-2 text-white border border-slate-800 font-black uppercase sticky right-0 z-20 bg-slate-900 w-20 text-center" rowSpan={2}>Total</th>
                                     </tr>
-                                    <tr className="bg-slate-800">
+                                    <tr className="bg-slate-800" style={{ height: `${tableConfig.rowHeight * 4}px` }}>
                                         {daysArray.map(d => (
-                                            <th key={d} className="p-1 text-[9px] text-slate-300 border border-slate-700 font-bold text-center min-w-[55px]">{d}</th>
+                                            <th key={d} className="p-1 text-[0.9em] text-slate-300 border border-slate-700 font-bold text-center" style={{ minWidth: `${tableConfig.dayColWidth}px` }}>{d}</th>
                                         ))}
                                     </tr>
                                 </thead>
@@ -642,13 +739,13 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     {data?.records.map((record, index) => (
                                         <React.Fragment key={record.id}>
                                             <tr className="group hover:bg-slate-50 transition-all">
-                                                <td className="p-0 border border-slate-100 sticky left-0 z-10 bg-white w-14" rowSpan={2}>
-                                                    <div className="relative h-full flex items-center justify-center font-black text-slate-900 bg-slate-50 border-r border-slate-200 min-h-[60px]">
+                                                <td className="p-0 border border-slate-100 sticky left-0 z-10 bg-white" style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>
+                                                    <div className="relative h-full flex items-center justify-center font-black text-slate-900 bg-slate-50 border-r border-slate-200" style={{ minHeight: `${tableConfig.rowHeight * 10}px` }}>
                                                         <input
                                                             type="text"
                                                             value={record.ve}
                                                             onChange={e => handleUpdateHeader(index, 've', e.target.value)}
-                                                            className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-slate-900 outline-none text-xs"
+                                                            className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-slate-900 outline-none text-[1.1em]"
                                                         />
                                                         <button
                                                             onClick={() => removeTank(index)}
@@ -659,32 +756,33 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         </button>
                                                     </div>
                                                 </td>
-                                                <td className="p-1 border border-slate-100 sticky left-[56px] z-10 bg-white w-[100px]" rowSpan={2}>
-                                                    <input type="text" value={record.stockingDate} onChange={e => handleUpdateHeader(index, 'stockingDate', e.target.value)} onPaste={e => handlePaste(e, index, 1)} className="w-full text-center bg-transparent border-none focus:ring-0 text-[10px] font-bold text-slate-600 outline-none" placeholder="00/00/0000" />
+                                                <td className="p-1 border border-slate-100 sticky z-10 bg-white w-[100px]" style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>
+                                                    <input type="text" value={record.stockingDate} onChange={e => handleUpdateHeader(index, 'stockingDate', e.target.value)} onPaste={e => handlePaste(e, index, 1)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-600 outline-none text-[1em]" placeholder="00/00/0000" />
                                                 </td>
-                                                <td className="p-1 border border-slate-100" rowSpan={2}>
-                                                    <input type="number" value={record.area || ''} onChange={e => handleUpdateHeader(index, 'area', parseFloat(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 2)} className="w-full text-center bg-transparent border-none focus:ring-0 text-[10px] font-bold text-slate-500 outline-none" />
+                                                <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
+                                                    <input type="number" value={record.area || ''} onChange={e => handleUpdateHeader(index, 'area', parseFloat(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 2)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-500 outline-none text-[1em]" />
                                                 </td>
-                                                <td className="p-1 border border-slate-100" rowSpan={2}>
-                                                    <input type="number" value={record.initialPopulation || ''} onChange={e => handleUpdateHeader(index, 'initialPopulation', parseInt(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 3)} className="w-full text-center bg-transparent border-none focus:ring-0 text-[10px] font-bold text-slate-500 outline-none" />
+                                                <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
+                                                    <input type="number" value={record.initialPopulation || ''} onChange={e => handleUpdateHeader(index, 'initialPopulation', parseInt(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 3)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-500 outline-none text-[1em]" />
                                                 </td>
-                                                <td className="p-1 border border-slate-100" rowSpan={2}>
-                                                    <input type="number" value={record.density || ''} onChange={e => handleUpdateHeader(index, 'density', parseFloat(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 4)} className="w-full text-center bg-transparent border-none focus:ring-0 text-[10px] font-bold text-slate-500 outline-none" />
+                                                <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
+                                                    <input type="number" value={record.density || ''} onChange={e => handleUpdateHeader(index, 'density', parseFloat(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 4)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-500 outline-none text-[1em]" />
                                                 </td>
-                                                <td className="p-1 border border-slate-100 bg-indigo-50/10" rowSpan={2}>
-                                                    <input type="text" value={record.biometry} onChange={e => handleUpdateHeader(index, 'biometry', e.target.value)} onPaste={e => handlePaste(e, index, 5)} className="w-full text-center bg-transparent border-none focus:ring-0 text-[10px] font-black text-indigo-600 outline-none" placeholder="..." />
+                                                <td className="border border-slate-100 bg-indigo-50/10" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
+                                                    <input type="text" value={record.biometry} onChange={e => handleUpdateHeader(index, 'biometry', e.target.value)} onPaste={e => handlePaste(e, index, 5)} className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-indigo-600 outline-none text-[1em]" placeholder="..." />
                                                 </td>
-                                                <td className="p-1 border border-slate-100 bg-slate-50/50 text-[9px] font-black text-slate-400 text-center tracking-tighter italic border-r-2 border-r-slate-200 uppercase min-w-[50px]">Ração</td>
+                                                <td className="border border-slate-100 bg-slate-50/50 font-black text-slate-400 text-center tracking-tighter italic border-r-2 border-r-slate-200 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px`, minWidth: '45px' }}>Ração</td>
                                                 {daysArray.map(d => {
                                                     const val = record.dailyRecords.find(dr => dr.day === d)?.feed;
                                                     return (
-                                                        <td key={d} className="p-0 border border-slate-100 hover:bg-orange-50/30">
+                                                        <td key={d} className="p-0 border border-slate-100 hover:bg-orange-50/30" style={{ minWidth: `${tableConfig.dayColWidth}px` }}>
                                                             <input
                                                                 type="number"
                                                                 value={val === 0 ? '' : val}
                                                                 onChange={e => handleUpdateDay(index, d, 'feed', e.target.value)}
                                                                 onPaste={e => handlePaste(e, index, 'feed', d)}
-                                                                className="w-full py-1.5 text-center bg-transparent border-none focus:ring-0 text-[10px] font-bold text-slate-700 outline-none"
+                                                                className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-700 outline-none text-[1em]"
+                                                                style={{ padding: `${tableConfig.rowHeight}px 2px` }}
                                                             />
                                                         </td>
                                                     );
@@ -698,7 +796,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 </td>
                                             </tr>
                                             <tr className="bg-pink-50/10">
-                                                <td className="p-1 border border-slate-100 text-[9px] font-black text-pink-400 text-center tracking-tighter italic border-r-2 border-r-pink-100 uppercase">Mort.</td>
+                                                <td className="border border-slate-100 text-pink-400 text-center tracking-tighter italic border-r-2 border-r-pink-100 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px` }}>Mort.</td>
                                                 {daysArray.map(d => {
                                                     const val = record.dailyRecords.find(dr => dr.day === d)?.mortality;
                                                     return (
@@ -708,7 +806,8 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                                 value={val === 0 ? '' : val}
                                                                 onChange={e => handleUpdateDay(index, d, 'mortality', e.target.value)}
                                                                 onPaste={e => handlePaste(e, index, 'mortality', d)}
-                                                                className="w-full py-1.5 text-center bg-transparent border-none focus:ring-0 text-[10px] font-black text-pink-600 outline-none"
+                                                                className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-pink-600 outline-none text-[1em]"
+                                                                style={{ padding: `${tableConfig.rowHeight}px 2px` }}
                                                             />
                                                         </td>
                                                     );
@@ -742,8 +841,8 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 </tbody>
                                 <tfoot>
                                     <tr className="bg-slate-900 shadow-[0_-10px_20px_rgba(0,0,0,0.1)] relative z-30">
-                                        <td colSpan={7} className="p-3 text-right border-r border-slate-800 sticky left-0 z-20 bg-slate-900">
-                                            <span className="text-white font-black uppercase tracking-widest text-[10px]">Total do Dia</span>
+                                        <td colSpan={7} className="p-3 text-right border-r border-slate-800 sticky left-0 z-20 bg-slate-900" style={{ left: 0 }}>
+                                            <span className="text-white font-black uppercase tracking-widest text-[1em]">Total do Dia</span>
                                         </td>
                                         {daysArray.map(d => (
                                             <td key={d} className="p-1 border-r border-slate-800">
