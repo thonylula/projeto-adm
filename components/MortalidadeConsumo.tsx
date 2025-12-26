@@ -813,19 +813,19 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             <table className="w-full text-[9px] border-collapse">
                                 <thead>
                                     <tr className="bg-slate-900 text-white uppercase font-bold text-center">
-                                        <th className="p-1 border border-slate-700 min-w-[40px] text-center" rowSpan={2}>VE</th>
-                                        <th className="p-1 border border-slate-700 min-w-[70px] text-center" rowSpan={2}>Data Povoa</th>
-                                        <th className="p-1 border border-slate-700 min-w-[40px] text-center" rowSpan={2}>Área</th>
-                                        <th className="p-1 border border-slate-700 min-w-[50px] text-center" rowSpan={2}>Pop. Ini</th>
-                                        <th className="p-1 border border-slate-700 min-w-[40px] text-center" rowSpan={2}>Dens.</th>
-                                        <th className="p-1 border border-slate-700 min-w-[60px] text-center" rowSpan={2}>Biometria</th>
-                                        <th className="p-1 border border-slate-700 min-w-[25px]" rowSpan={2}></th>
-                                        <th className="p-0.5 border border-slate-700 text-center" colSpan={daysInMonth}>DIAS DO MÊS</th>
-                                        <th className="p-1 border border-slate-700 min-w-[45px] text-center" rowSpan={2}>Total</th>
+                                        <th className="p-1 border border-slate-700 min-w-[40px] text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}>VE</th>
+                                        <th className="p-1 border border-slate-700 min-w-[70px] text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}>Data Povoa</th>
+                                        <th className="p-1 border border-slate-700 min-w-[40px] text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}>Área</th>
+                                        <th className="p-1 border border-slate-700 min-w-[50px] text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}>Pop. Ini</th>
+                                        <th className="p-1 border border-slate-700 min-w-[40px] text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}>Dens.</th>
+                                        <th className="p-1 border border-slate-700 min-w-[60px] text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}>Biometria</th>
+                                        <th className="p-1 border border-slate-700 min-w-[25px]" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}></th>
+                                        <th className="p-0.5 border border-slate-700 text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} colSpan={daysInMonth}>DIAS DO MÊS</th>
+                                        <th className="p-1 border border-slate-700 min-w-[45px] text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}>Total</th>
                                     </tr>
                                     <tr className="bg-slate-800 text-slate-400">
                                         {daysArray.map(d => (
-                                            <th key={d} className="p-0.5 border border-slate-700 text-center min-w-[34px]">{d}</th>
+                                            <th key={d} className="p-0.5 border border-slate-700 text-center min-w-[24px]">{d}</th>
                                         ))}
                                     </tr>
                                 </thead>
