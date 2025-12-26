@@ -108,11 +108,16 @@ body {
 
 #export-target {
   background: white !important;
+  width: fit-content !important;
+  min-width: 1120px !important;
+  /* Approx width for A4 landscape at 96dpi */
+  display: block !important;
+  visibility: visible !important;
 }
 
 #export-target table {
   table-layout: auto !important;
-  min-width: 1400px !important;
+  min-width: 100% !important;
   background: white !important;
   border-collapse: collapse !important;
 }
