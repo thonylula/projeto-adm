@@ -163,7 +163,16 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         setTimeout(async () => {
             try {
                 const suffix = `mortalidade_${month}_${year}`;
-                await shareAsImage('export-target', suffix);
+                const result = await shareAsImage('export-target', suffix);
+
+                if (result?.success) {
+                    if (result.method === 'clipboard') {
+                        alert('✅ Imagem copiada! Cole (Ctrl+V) no WhatsApp Web');
+                    } else if (result.method === 'download') {
+                        alert('✅ Download concluído! Envie o arquivo para o WhatsApp');
+                    }
+                    // Share API doesn't need an alert, the user sees the native dialog
+                }
             } finally {
                 setIsExporting(false);
             }
