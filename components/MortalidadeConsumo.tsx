@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Company, MonthlyMortalityData, MortalityTankRecord, MortalityDailyRecord } from '../types';
 import { SupabaseService } from '../services/supabaseService';
-import { exportToPdf, exportToPng, exportToHtml } from '../utils/exportUtils';
+import { exportToPdf, exportToPngPuppeteer, exportToHtml } from '../utils/exportUtils';
 import { useGeminiParser } from '../hooks/useGeminiParser';
 
 interface MortalidadeConsumoProps {
@@ -128,7 +128,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                 if (container) container.style.overflow = 'visible'; // Remove scroll temporariamente
 
                 if (type === 'pdf') await exportToPdf('export-target', suffix);
-                if (type === 'png') await exportToPng('export-target', suffix);
+                if (type === 'png') await exportToPngPuppeteer('export-target', suffix);
                 if (type === 'html') exportToHtml('export-target', suffix);
 
                 if (container) container.style.overflow = ''; // Restaura scroll
