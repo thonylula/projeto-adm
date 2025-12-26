@@ -32,6 +32,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             headerColWidth: 65,
             fontSize: 10,
             rowHeight: 6, // padding in px
+            lineHeight: 30, // base height for records
             veWidth: 56
         };
     });
@@ -578,7 +579,20 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
                             <div className="space-y-1.5">
                                 <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
-                                    <span>Espaçamento (Altura)</span>
+                                    <span>Altura da Linha</span>
+                                    <span className="text-indigo-600">{tableConfig.lineHeight}px</span>
+                                </label>
+                                <input
+                                    type="range" min="20" max="80"
+                                    value={tableConfig.lineHeight}
+                                    onChange={e => setTableConfig({ ...tableConfig, lineHeight: parseInt(e.target.value) })}
+                                    className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                />
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
+                                    <span>Respiro (Padding)</span>
                                     <span className="text-indigo-600">{tableConfig.rowHeight}px</span>
                                 </label>
                                 <input
@@ -590,7 +604,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             </div>
 
                             <button
-                                onClick={() => setTableConfig({ dayColWidth: 55, headerColWidth: 65, fontSize: 10, rowHeight: 6, veWidth: 56 })}
+                                onClick={() => setTableConfig({ dayColWidth: 55, headerColWidth: 65, fontSize: 10, rowHeight: 6, lineHeight: 30, veWidth: 56 })}
                                 className="w-full py-2 bg-slate-50 text-slate-500 text-[9px] font-bold rounded-lg hover:bg-slate-100 transition-colors uppercase"
                             >
                                 Resetar para Padrão
@@ -738,9 +752,9 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 <tbody>
                                     {data?.records.map((record, index) => (
                                         <React.Fragment key={record.id}>
-                                            <tr className="group hover:bg-slate-50 transition-all">
+                                            <tr className="group hover:bg-slate-50 transition-all font-bold text-slate-700" style={{ height: `${tableConfig.lineHeight}px` }}>
                                                 <td className="p-0 border border-slate-100 sticky left-0 z-10 bg-white" style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>
-                                                    <div className="relative h-full flex items-center justify-center font-black text-slate-900 bg-slate-50 border-r border-slate-200" style={{ minHeight: `${tableConfig.rowHeight * 10}px` }}>
+                                                    <div className="relative h-full flex items-center justify-center font-black text-slate-900 bg-slate-50 border-r border-slate-200" style={{ minHeight: `${tableConfig.lineHeight * 2}px` }}>
                                                         <input
                                                             type="text"
                                                             value={record.ve}
@@ -795,7 +809,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                     </div>
                                                 </td>
                                             </tr>
-                                            <tr className="bg-pink-50/10">
+                                            <tr className="bg-pink-50/10" style={{ height: `${tableConfig.lineHeight}px` }}>
                                                 <td className="border border-slate-100 text-pink-400 text-center tracking-tighter italic border-r-2 border-r-pink-100 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px` }}>Mort.</td>
                                                 {daysArray.map(d => {
                                                     const val = record.dailyRecords.find(dr => dr.day === d)?.mortality;
