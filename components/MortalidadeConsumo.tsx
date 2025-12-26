@@ -525,32 +525,25 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                 </div>
             )}
 
-            <div id="mortality-table-export" className="bg-white p-4">
-                <header className="flex justify-between items-center mb-6 pb-4 border-b border-slate-100">
-                    <div className="flex items-center gap-6">
+            <div id="export-target" className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden">
+                <header className="flex justify-between items-center mb-10 pb-6 border-b border-slate-100">
+                    <div className="flex items-center gap-8">
                         {companyLogo && !companyLogo.startsWith('blob:') && (
-                            <img
-                                src={companyLogo}
-                                alt="Logo"
-                                className="h-16 w-auto object-contain"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                    console.warn('Logo image failed to load, hiding from export.');
-                                }}
-                            />
+                            <img src={companyLogo} alt="Logo" className="h-20 w-auto object-contain" />
                         )}
                         <div className="text-left">
-                            <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Mortalidade e Consumo</h1>
-                            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">
-                                {activeCompany?.name || 'Controle diário de ração e perdas por tanque'}
+                            <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Mortalidade e Consumo</h1>
+                            <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mt-1">
+                                {activeCompany?.name || 'Controle diário de ração e perdas'}
                             </p>
-                            <p className="text-xs text-slate-400 mt-0.5 font-bold">
+                            <p className="text-sm text-slate-400 mt-1 font-bold">
                                 {new Date(year, month - 1).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()} / {year}
                             </p>
                         </div>
                     </div>
                 </header>
-                <div className="flex gap-3 print:hidden" data-html2canvas-ignore>
+
+                <div className="flex gap-3 mb-6 print:hidden" data-html2canvas-ignore>
                     <select
                         value={month}
                         onChange={(e) => {
@@ -592,299 +585,172 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     input[type=number] {
                         -moz-appearance: textfield;
                     }
+                    /* Ensure table doesn't scroll during export */
+                    #export-target .overflow-x-auto {
+                        overflow: visible !important;
+                    }
                 `}</style>
+
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    {/* --- VISÃO INTERATIVA (Edição) --- */}
                     <div id="interactive-table-container">
                         <div
                             ref={topScrollRef}
-                            className="overflow-x-auto print:hidden"
+                            className="overflow-x-auto border-b border-slate-100 print:hidden"
                             onScroll={(e) => {
-                                if (scrollRef.current) {
-                                    scrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
-                                }
+                                if (scrollRef.current) scrollRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
                             }}
+                            data-html2canvas-ignore
                         >
-                            <div style={{ width: 'fit-content', height: '8px' }}>
-                                <div style={{ width: `${(daysArray.length * 38) + 600}px`, height: '1px' }}></div>
-                            </div>
+                            <div style={{ width: `${600 + (daysArray.length * 60)}px`, height: '1px' }} />
                         </div>
-
                         <div
                             ref={scrollRef}
                             className="overflow-x-auto"
                             onScroll={(e) => {
-                                if (topScrollRef.current) {
-                                    topScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
-                                }
+                                if (topScrollRef.current) topScrollRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
                             }}
                         >
-                            <table className="w-full text-[9px] border-collapse">
+                            <table className="w-full text-xs border-collapse" style={{ minWidth: `${500 + (daysArray.length * 60)}px` }}>
                                 <thead>
-                                    <tr className="bg-slate-900 text-white uppercase font-bold">
-                                        <th className="p-1 border border-slate-700 sticky left-0 z-20 bg-slate-900 min-w-[40px] text-center" rowSpan={2}>VE</th>
-                                        <th className="p-1 border border-slate-700 min-w-[70px] text-center" rowSpan={2}>Data Povoa</th>
-                                        <th className="p-1 border border-slate-700 min-w-[40px] text-center" rowSpan={2}>Área</th>
-                                        <th className="p-1 border border-slate-700 min-w-[50px] text-center" rowSpan={2}>Pop. Ini</th>
-                                        <th className="p-1 border border-slate-700 min-w-[40px] text-center" rowSpan={2}>Dens.</th>
-                                        <th className="p-1 border border-slate-700 z-10 sticky left-[40px] bg-slate-900 min-w-[60px] text-center" rowSpan={2}>Biometria</th>
-                                        <th className="p-1 border border-slate-700 min-w-[25px] text-center" rowSpan={2}></th>
-                                        <th className="p-0.5 border border-slate-700 text-center" colSpan={daysInMonth}>DIAS DO MÊS</th>
-                                        <th className="p-1 border border-slate-700 min-w-[45px] text-center" rowSpan={2}>Total</th>
-                                        <th className="p-1 border border-slate-700 print:hidden text-center" rowSpan={2}>Ações</th>
+                                    <tr className="bg-slate-900">
+                                        <th className="p-3 text-white border border-slate-800 font-black uppercase tracking-wider sticky left-0 z-20 bg-slate-900" rowSpan={2}>VE</th>
+                                        <th className="p-3 text-white border border-slate-800 font-bold uppercase sticky left-[60px] z-20 bg-slate-900" rowSpan={2}>Data Povoa</th>
+                                        <th className="p-3 text-white border border-slate-800 font-bold uppercase" rowSpan={2}>Área</th>
+                                        <th className="p-3 text-white border border-slate-800 font-bold uppercase" rowSpan={2}>Pop.Ini</th>
+                                        <th className="p-3 text-white border border-slate-800 font-bold uppercase" rowSpan={2}>Dens.</th>
+                                        <th className="p-3 text-white border border-slate-800 font-bold uppercase" rowSpan={2}>Biometria</th>
+                                        <th className="p-2 border border-slate-800 text-center text-slate-400 font-black uppercase tracking-widest text-[10px]" colSpan={daysArray.length}>Dias do Mês</th>
+                                        <th className="p-3 text-white border border-slate-800 font-black uppercase sticky right-0 z-20 bg-slate-900" rowSpan={2}>Total</th>
                                     </tr>
-                                    <tr className="bg-slate-800 text-slate-400 text-center">
+                                    <tr className="bg-slate-800">
                                         {daysArray.map(d => (
-                                            <th key={d} className="p-0.5 border border-slate-700 text-center min-w-[34px]">{d}</th>
+                                            <th key={d} className="p-1 text-[10px] text-slate-300 border border-slate-700 font-bold text-center min-w-[50px]">{d}</th>
                                         ))}
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {data?.records.map((record, idx) => (
+                                    {data?.records.map((record, index) => (
                                         <React.Fragment key={record.id}>
-                                            <tr className="hover:bg-orange-50 transition-colors">
+                                            <tr className="group hover:bg-slate-50/80 transition-all">
                                                 <td className="p-0 border border-slate-100 sticky left-0 z-10 bg-white" rowSpan={2}>
-                                                    <input
-                                                        type="text"
-                                                        value={record.ve}
-                                                        onChange={(e) => handleUpdateHeader(idx, 've', e.target.value)}
-                                                        className="w-full p-1 text-center font-black bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
-                                                    />
-                                                </td>
-                                                <td className="p-0 border border-slate-100 text-center" rowSpan={2}>
-                                                    <input
-                                                        type="text"
-                                                        value={record.stockingDate}
-                                                        onChange={(e) => handleUpdateHeader(idx, 'stockingDate', e.target.value)}
-                                                        onPaste={(e) => handlePaste(e, idx, 1)}
-                                                        placeholder="DD/MM/AAAA"
-                                                        className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
-                                                    />
-                                                </td>
-                                                <td className="p-0 border border-slate-100 text-center" rowSpan={2}>
-                                                    <input
-                                                        type="number"
-                                                        value={record.area || ''}
-                                                        onChange={(e) => handleUpdateHeader(idx, 'area', parseFloat(e.target.value) || 0)}
-                                                        onPaste={(e) => handlePaste(e, idx, 2)}
-                                                        className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
-                                                    />
-                                                </td>
-                                                <td className="p-0 border border-slate-100 text-center" rowSpan={2}>
-                                                    <input
-                                                        type="number"
-                                                        value={record.initialPopulation || ''}
-                                                        onChange={(e) => handleUpdateHeader(idx, 'initialPopulation', parseInt(e.target.value) || 0)}
-                                                        onPaste={(e) => handlePaste(e, idx, 3)}
-                                                        className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
-                                                    />
-                                                </td>
-                                                <td className="p-0 border border-slate-100 text-center" rowSpan={2}>
-                                                    <input
-                                                        type="number"
-                                                        step="0.01"
-                                                        value={record.density || ''}
-                                                        onChange={(e) => handleUpdateHeader(idx, 'density', parseFloat(e.target.value) || 0)}
-                                                        onPaste={(e) => handlePaste(e, idx, 4)}
-                                                        className="w-full p-1 text-center bg-transparent border-none outline-none focus:bg-orange-100 text-[10px]"
-                                                    />
-                                                </td>
-                                                <td className="p-0 border border-slate-100 sticky left-[40px] z-10 bg-slate-50" rowSpan={2}>
-                                                    <input
-                                                        type="text"
-                                                        value={record.biometry}
-                                                        onChange={(e) => handleUpdateHeader(idx, 'biometry', e.target.value)}
-                                                        onPaste={(e) => handlePaste(e, idx, 5)}
-                                                        className="w-full p-1 text-center font-bold text-slate-600 bg-transparent border-none outline-none text-[9px]"
-                                                        placeholder="BIO"
-                                                    />
-                                                </td>
-                                                <td className="p-1 border border-slate-100 text-center font-bold text-slate-600 bg-slate-50 uppercase italic text-[9px]">
-                                                    RAÇÃO
-                                                </td>
-                                                {daysArray.map(d => (
-                                                    <td key={d} className="p-0 border border-slate-100">
+                                                    <div className="relative h-full flex items-center justify-center font-black text-slate-900 bg-slate-50 border-r border-slate-200">
                                                         <input
-                                                            type="number"
-                                                            value={record.dailyRecords.find(dr => dr.day === d)?.feed ?? ''}
-                                                            onChange={(e) => handleUpdateDay(idx, d, 'feed', e.target.value)}
-                                                            onPaste={(e) => handlePaste(e, idx, 'feed', d)}
-                                                            className="w-full h-full px-0 py-0.5 bg-transparent text-center focus:bg-orange-100 outline-none border-none font-medium text-slate-700 text-[9px]"
-                                                            placeholder="0"
+                                                            type="text"
+                                                            value={record.ve}
+                                                            onChange={e => handleUpdateHeader(index, 've', e.target.value)}
+                                                            className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-slate-900 outline-none"
                                                         />
-                                                    </td>
-                                                ))}
-                                                <td className="p-1 border border-slate-100 text-center font-black bg-orange-50 text-orange-800 text-[10px]">
-                                                    {calculateRowTotal(record, 'feed')}
+                                                        <button
+                                                            onClick={() => removeTank(index)}
+                                                            className="absolute -left-2 top-1/2 -translate-y-1/2 bg-red-50 text-red-400 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white print:hidden shadow-sm z-30"
+                                                            data-html2canvas-ignore
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" /></svg>
+                                                        </button>
+                                                    </div>
                                                 </td>
-                                                <td className="p-1 border border-slate-100 text-center print:hidden" rowSpan={2}>
-                                                    <button onClick={() => removeTank(idx)} className="text-slate-300 hover:text-red-500 transition-colors p-0.5">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
-                                                    </button>
+                                                <td className="p-1 border border-slate-100 sticky left-[60px] z-10 bg-white" rowSpan={2}>
+                                                    <input type="text" value={record.stockingDate} onChange={e => handleUpdateHeader(index, 'stockingDate', e.target.value)} onPaste={e => handlePaste(e, index, 1)} className="w-full text-center bg-transparent border-none focus:ring-0 text-[11px] font-bold text-slate-600 outline-none" placeholder="00/00/0000" />
                                                 </td>
-                                            </tr>
-                                            <tr className="bg-pink-50/30 hover:bg-pink-100/50 transition-colors">
-                                                <td className="p-1 border border-slate-100 text-center font-bold text-pink-700 bg-pink-50 uppercase italic text-[9px]">MORT.</td>
-                                                {daysArray.map(d => (
-                                                    <td key={d} className="p-0 border border-slate-100">
-                                                        <input
-                                                            type="number"
-                                                            value={record.dailyRecords.find(dr => dr.day === d)?.mortality ?? ''}
-                                                            onChange={(e) => handleUpdateDay(idx, d, 'mortality', e.target.value)}
-                                                            onPaste={(e) => handlePaste(e, idx, 'mortality', d)}
-                                                            className="w-full h-full px-0 py-0.5 bg-transparent text-center focus:bg-pink-100 outline-none border-none text-pink-600 font-medium text-[9px]"
-                                                            placeholder="0"
-                                                        />
-                                                    </td>
-                                                ))}
-                                                <td className="p-1 border border-slate-100 text-center font-black bg-pink-100 text-pink-700 text-[10px]">
-                                                    {calculateRowTotal(record, 'mortality')}
+                                                <td className="p-1 border border-slate-100" rowSpan={2}>
+                                                    <input type="number" value={record.area || ''} onChange={e => handleUpdateHeader(index, 'area', parseFloat(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 2)} className="w-full text-center bg-transparent border-none focus:ring-0 text-[11px] font-bold text-slate-600 outline-none" />
                                                 </td>
-                                            </tr>
-                                        </React.Fragment>
-                                    ))}
-                                </tbody>
-                                <tfoot>
-                                    <tr className="bg-slate-900 text-white font-black uppercase">
-                                        <td colSpan={7} className="p-2 text-right sticky left-0 z-10 bg-slate-900 border-r border-slate-700">TOTAIS DO DIA</td>
-                                        {daysArray.map(d => (
-                                            <td key={d} className="p-0.5 border-r border-slate-700 text-center">
-                                                <div className="flex flex-col gap-0">
-                                                    <span className="text-orange-400 leading-tight text-[8px]">{calculateDayTotal('feed', d) || 0}</span>
-                                                    <span className="text-pink-400 leading-tight text-[8px]">{calculateDayTotal('mortality', d) || 0}</span>
-                                                </div>
-                                            </td>
-                                        ))}
-                                        <td className="p-1 text-center bg-orange-600 border-l border-orange-500 text-[10px]">
-                                            {data?.records.reduce((sum, r) => sum + calculateRowTotal(r, 'feed'), 0)}
-                                        </td>
-                                        <td className="print:hidden"></td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                            <div className="p-3 bg-slate-50 border-t border-slate-100 print:hidden">
-                                <div className="flex flex-col md:flex-row gap-3 items-center justify-center md:justify-start">
-                                    <label className="text-xs font-bold text-slate-600 uppercase">Quantidade:</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="50"
-                                        value={tankQuantity}
-                                        onChange={(e) => setTankQuantity(Math.max(1, Math.min(50, parseInt(e.target.value) || 1)))}
-                                        className="w-20 px-3 py-2 border border-slate-300 rounded-lg text-center font-bold text-slate-700 focus:ring-2 focus:ring-orange-500 outline-none"
-                                    />
-                                    <button
-                                        onClick={addTank}
-                                        className="px-6 py-2 bg-slate-800 text-white rounded-xl text-xs font-black uppercase hover:bg-slate-900 transition-all flex items-center gap-2 shadow-lg active:scale-95"
-                                    >
-                                        <span>+</span> Adicionar {tankQuantity > 1 ? `${tankQuantity} Viveiros` : 'Novo Viveiro'}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* --- VISÃO DE EXPORTAÇÃO (Oculta, usada apenas para gerar PDF/PNG) --- */}
-                    <div
-                        id="export-target"
-                        style={{
-                            position: 'fixed',
-                            top: 0,
-                            left: isExporting ? '0' : '-9999px',
-                            backgroundColor: 'white',
-                            zIndex: 9999,
-                            padding: '32px',
-                            width: '297mm',
-                            minHeight: '100vh',
-                            boxShadow: isExporting ? '0 25px 50px -12px rgb(0 0 0 / 0.25)' : 'none',
-                            visibility: isExporting ? 'visible' : 'hidden',
-                            opacity: isExporting ? 1 : 0,
-                            pointerEvents: 'none'
-                        }}
-                    >
-                        {/* Link para estilos restritos de exportação */}
-                        <link rel="stylesheet" href="/export_strict.css" />
-
-                        <header className="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
-                            <div className="flex items-center gap-6">
-                                {activeCompany?.logoUrl && (
-                                    <img src={activeCompany.logoUrl} alt="Logo" className="h-16 w-auto object-contain" />
-                                )}
-                                <div>
-                                    <h1 className="report-title">MORTALIDADE E CONSUMO</h1>
-                                    <p className="report-subtitle">
-                                        {activeCompany?.name || 'CARAPITANGA INDUSTIA DE PESCADOS DO BRASIL LTDA'}
-                                    </p>
-                                    <div className="flex gap-4 mt-1">
-                                        <span className="text-sm font-bold text-slate-500">
-                                            {new Date(year, month - 1).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()} / {year}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </header>
-
-                        <div id="export-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th className="col-ve" rowSpan={2}>VE</th>
-                                        <th className="col-date" rowSpan={2}>DATA POVOA</th>
-                                        <th className="col-area" rowSpan={2}>ÁREA</th>
-                                        <th className="col-pop" rowSpan={2}>POP.INI</th>
-                                        <th className="col-dens" rowSpan={2}>DENS.</th>
-                                        <th className="col-bio" rowSpan={2}>BIOMETRIA</th>
-                                        <th className="col-type" rowSpan={2}>TIPO</th>
-                                        <th colSpan={daysArray.length}>DIAS DO MÊS</th>
-                                        <th className="col-total" rowSpan={2}>TOTAL</th>
-                                    </tr>
-                                    <tr>
-                                        {daysArray.map(d => (
-                                            <th key={d} className="col-day">{d}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {data?.records.map((record) => (
-                                        <React.Fragment key={record.id}>
-                                            <tr className="row-feed">
-                                                <td rowSpan={2} className="font-bold">{record.ve}</td>
-                                                <td rowSpan={2}>{record.stockingDate}</td>
-                                                <td rowSpan={2}>{record.area || 0}</td>
-                                                <td rowSpan={2}>{record.initialPopulation || 0}</td>
-                                                <td rowSpan={2}>{record.density || 0}</td>
-                                                <td rowSpan={2} className="font-semibold text-slate-500">{record.biometry}</td>
-                                                <td className="cell-label">RAÇÃO</td>
+                                                <td className="p-1 border border-slate-100" rowSpan={2}>
+                                                    <input type="number" value={record.initialPopulation || ''} onChange={e => handleUpdateHeader(index, 'initialPopulation', parseInt(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 3)} className="w-full text-center bg-transparent border-none focus:ring-0 text-[11px] font-bold text-slate-600 outline-none" />
+                                                </td>
+                                                <td className="p-1 border border-slate-100" rowSpan={2}>
+                                                    <input type="number" value={record.density || ''} onChange={e => handleUpdateHeader(index, 'density', parseFloat(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 4)} className="w-full text-center bg-transparent border-none focus:ring-0 text-[11px] font-bold text-slate-600 outline-none" />
+                                                </td>
+                                                <td className="p-1 border border-slate-100" rowSpan={2}>
+                                                    <input type="text" value={record.biometry} onChange={e => handleUpdateHeader(index, 'biometry', e.target.value)} onPaste={e => handlePaste(e, index, 5)} className="w-full text-center bg-transparent border-none focus:ring-0 text-[10px] font-black text-indigo-600 outline-none" placeholder="..." />
+                                                </td>
+                                                <td className="p-1 border border-slate-100 bg-slate-50/50 text-[10px] font-black text-slate-400 text-center tracking-tighter italic border-r-2 border-r-slate-200">RAÇÃO</td>
                                                 {daysArray.map(d => {
                                                     const val = record.dailyRecords.find(dr => dr.day === d)?.feed;
-                                                    return <td key={d} className="col-day">{val ?? 0}</td>;
+                                                    return (
+                                                        <td key={d} className="p-0 border border-slate-100 hover:bg-white transition-colors">
+                                                            <input
+                                                                type="number"
+                                                                value={val === 0 ? '' : val}
+                                                                onChange={e => handleUpdateDay(index, d, 'feed', e.target.value)}
+                                                                onPaste={e => handlePaste(e, index, 'feed', d)}
+                                                                className="w-full py-2 text-center bg-transparent border-none focus:ring-0 text-[11px] font-bold text-slate-700 outline-none"
+                                                            />
+                                                        </td>
+                                                    );
                                                 })}
-                                                <td className="cell-total">{calculateRowTotal(record, 'feed')}</td>
+                                                <td className="p-1 border border-slate-100 sticky right-0 z-10 bg-orange-50 font-black text-orange-700 text-center text-[13px] shadow-[-4px_0_10px_rgba(0,0,0,0.02)]" rowSpan={2}>
+                                                    <div className="flex flex-col gap-1 items-center justify-center italic">
+                                                        <span className="text-[14px]">{calculateRowTotal(record, 'feed')}</span>
+                                                        <div className="w-8 h-px bg-orange-200" />
+                                                        <span className="text-pink-600 text-[11px]">{calculateRowTotal(record, 'mortality')}</span>
+                                                    </div>
+                                                </td>
                                             </tr>
-                                            <tr className="row-mortality">
-                                                <td className="cell-label mort">MORT.</td>
+                                            <tr className="bg-pink-50/30">
+                                                <td className="p-1 border border-slate-100 text-[10px] font-black text-pink-400 text-center tracking-tighter italic border-r-2 border-r-pink-100">MORT.</td>
                                                 {daysArray.map(d => {
                                                     const val = record.dailyRecords.find(dr => dr.day === d)?.mortality;
-                                                    return <td key={d} className="col-day text-pink-600">{val ?? 0}</td>;
+                                                    return (
+                                                        <td key={d} className="p-0 border border-slate-100">
+                                                            <input
+                                                                type="number"
+                                                                value={val === 0 ? '' : val}
+                                                                onChange={e => handleUpdateDay(index, d, 'mortality', e.target.value)}
+                                                                onPaste={e => handlePaste(e, index, 'mortality', d)}
+                                                                className="w-full py-2 text-center bg-transparent border-none focus:ring-0 text-[11px] font-black text-pink-600 focus:bg-white outline-none"
+                                                            />
+                                                        </td>
+                                                    );
                                                 })}
-                                                <td className="cell-total mort">{calculateRowTotal(record, 'mortality')}</td>
                                             </tr>
                                         </React.Fragment>
                                     ))}
+
+                                    <tr className="bg-slate-50 border-t-4 border-slate-200" data-html2canvas-ignore>
+                                        <td colSpan={7} className="p-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex bg-white rounded-xl shadow-sm border border-slate-200 p-1">
+                                                    <input
+                                                        type="number"
+                                                        value={tankQuantity}
+                                                        onChange={(e) => setTankQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                                        className="w-12 text-center bg-transparent border-none focus:ring-0 font-bold text-slate-600 text-sm"
+                                                    />
+                                                </div>
+                                                <button
+                                                    onClick={addTank}
+                                                    className="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-black uppercase hover:bg-slate-800 transition-all flex items-center gap-2 shadow-lg shadow-slate-200 active:scale-95"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                                                    Adicionar Viveiros
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td colSpan={daysArray.length + 1}></td>
+                                    </tr>
                                 </tbody>
                                 <tfoot>
-                                    <tr>
-                                        <td colSpan={7} className="text-right pr-4 uppercase tracking-wider">TOTAIS DO DIA</td>
+                                    <tr className="bg-slate-900 shadow-[0_-10px_20px_rgba(0,0,0,0.1)] relative z-30">
+                                        <td colSpan={7} className="p-4 text-right border-r border-slate-800 sticky left-0 z-20 bg-slate-900">
+                                            <span className="text-white font-black uppercase tracking-widest text-xs">Total Consolidado do Dia</span>
+                                        </td>
                                         {daysArray.map(d => (
-                                            <td key={d} className="col-day p-0">
-                                                <div className="flex flex-col text-[7pt] leading-none">
-                                                    <span className="text-orange-400 font-black">{calculateDayTotal('feed', d) ?? 0}</span>
-                                                    <span className="text-pink-400 font-black">{calculateDayTotal('mortality', d) ?? 0}</span>
+                                            <td key={d} className="p-2 border-r border-slate-800">
+                                                <div className="flex flex-col items-center justify-center gap-0.5">
+                                                    <span className="text-orange-400 font-black text-[11px] leading-none">{calculateDayTotal('feed', d) || 0}</span>
+                                                    <div className="w-4 h-[1px] bg-slate-700" />
+                                                    <span className="text-pink-400 font-bold text-[9px] leading-none">{calculateDayTotal('mortality', d) || 0}</span>
                                                 </div>
                                             </td>
                                         ))}
-                                        <td className="footer-total-box font-black">
-                                            {data?.records.reduce((sum, r) => sum + calculateRowTotal(r, 'feed'), 0)}
+                                        <td className="p-4 bg-orange-600 text-center shadow-[-10px_0_30px_rgba(234,88,12,0.3)] sticky right-0 z-20">
+                                            <div className="flex flex-col items-center gap-0.5">
+                                                <span className="text-white font-black text-lg leading-none">
+                                                    {data ? data.records.reduce((sum, tank) => sum + calculateRowTotal(tank, 'feed'), 0).toLocaleString('pt-BR') : 0}
+                                                </span>
+                                                <span className="text-orange-200 text-[10px] font-bold uppercase tracking-tighter">Total Geral KG</span>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tfoot>
