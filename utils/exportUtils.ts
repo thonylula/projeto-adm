@@ -120,6 +120,12 @@ export const exportToPngPuppeteer = async (elementId: string, fileName: string) 
                         <meta charset="UTF-8">
                         <script src="https://cdn.tailwindcss.com"></script>
                         ${styles}
+                        <style>
+                            [data-html2canvas-ignore], .print\\:hidden, .hidden-in-export { 
+                                display: none !important; 
+                            }
+                            body { margin: 0; padding: 0; }
+                        </style>
                     </head>
                     <body style="margin:0; padding:0; background: white;">
                         <div id="${elementId}" style="visibility: visible !important; position: relative !important; width: fit-content !important;">
@@ -167,6 +173,11 @@ export const exportToHtml = (elementId: string, fileName: string) => {
             <title>${fileName}</title>
             <script src="https://cdn.tailwindcss.com"></script>
             ${styles}
+            <style>
+                [data-html2canvas-ignore], .print\\:hidden, .hidden-in-export { 
+                    display: none !important; 
+                }
+            </style>
         </head>
         <body class="p-8 bg-gray-100">
             <div class="max-w-4xl mx-auto bg-white shadow-lg p-6">
