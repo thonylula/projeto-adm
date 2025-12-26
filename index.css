@@ -111,8 +111,6 @@ body {
   width: fit-content !important;
   min-width: 1120px !important;
   /* Approx width for A4 landscape at 96dpi */
-  display: block !important;
-  visibility: visible !important;
 }
 
 #export-target table {
