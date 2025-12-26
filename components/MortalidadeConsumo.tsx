@@ -544,7 +544,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     <span className="text-indigo-600">{tableConfig.dayColWidth}px</span>
                                 </label>
                                 <input
-                                    type="range" min="35" max="100"
+                                    type="range" min="20" max="100"
                                     value={tableConfig.dayColWidth}
                                     onChange={e => setTableConfig({ ...tableConfig, dayColWidth: parseInt(e.target.value) })}
                                     className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
@@ -596,7 +596,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     <span className="text-indigo-600">{tableConfig.rowHeight}px</span>
                                 </label>
                                 <input
-                                    type="range" min="-10" max="15"
+                                    type="range" min="-25" max="15"
                                     value={tableConfig.rowHeight}
                                     onChange={e => setTableConfig({ ...tableConfig, rowHeight: parseInt(e.target.value) })}
                                     className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
