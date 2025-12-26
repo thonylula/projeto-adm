@@ -789,7 +789,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                         id="export-target"
                         className={isExporting
                             ? "fixed top-0 left-0 bg-white z-[9999] p-8 w-[297mm] min-h-screen shadow-2xl"
-                            : "hidden pointer-events-none fixed top-0 left-0 w-[297mm]"
+                            : "hidden !opacity-0 !pointer-events-none !invisible fixed top-0 left-0 w-[297mm]"
                         }
                     >
                         <header className="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
