@@ -596,7 +596,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     <span className="text-indigo-600">{tableConfig.rowHeight}px</span>
                                 </label>
                                 <input
-                                    type="range" min="0" max="15"
+                                    type="range" min="-10" max="15"
                                     value={tableConfig.rowHeight}
                                     onChange={e => setTableConfig({ ...tableConfig, rowHeight: parseInt(e.target.value) })}
                                     className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
@@ -796,7 +796,11 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                                 onChange={e => handleUpdateDay(index, d, 'feed', e.target.value)}
                                                                 onPaste={e => handlePaste(e, index, 'feed', d)}
                                                                 className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-700 outline-none text-[1em]"
-                                                                style={{ padding: `${tableConfig.rowHeight}px 2px` }}
+                                                                style={{
+                                                                    padding: `${Math.max(0, tableConfig.rowHeight)}px 2px`,
+                                                                    marginTop: `${Math.min(0, tableConfig.rowHeight)}px`,
+                                                                    marginBottom: `${Math.min(0, tableConfig.rowHeight)}px`
+                                                                }}
                                                             />
                                                         </td>
                                                     );
@@ -821,7 +825,11 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                                 onChange={e => handleUpdateDay(index, d, 'mortality', e.target.value)}
                                                                 onPaste={e => handlePaste(e, index, 'mortality', d)}
                                                                 className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-pink-600 outline-none text-[1em]"
-                                                                style={{ padding: `${tableConfig.rowHeight}px 2px` }}
+                                                                style={{
+                                                                    padding: `${Math.max(0, tableConfig.rowHeight)}px 2px`,
+                                                                    marginTop: `${Math.min(0, tableConfig.rowHeight)}px`,
+                                                                    marginBottom: `${Math.min(0, tableConfig.rowHeight)}px`
+                                                                }}
                                                             />
                                                         </td>
                                                     );
