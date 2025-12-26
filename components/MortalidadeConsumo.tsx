@@ -53,7 +53,16 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     const daysInMonth = new Date(year, month, 0).getDate();
 
     // Filtro de dias por semana
-    const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1).filter(d => {
+    const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+    // Função para verificar se um dia é sábado ou domingo
+    const isWeekend = (day: number): boolean => {
+        const date = new Date(year, month - 1, day);
+        const dayOfWeek = date.getDay();
+        return dayOfWeek === 0 || dayOfWeek === 6; // 0 = Domingo, 6 = Sábado
+    };
+
+    const filteredDaysArray = daysArray.filter(d => {
         if (selectedWeek === 0) return true;
         const start = (selectedWeek - 1) * 7 + 1;
         const end = Math.min(selectedWeek * 7, daysInMonth);
@@ -742,7 +751,16 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     </tr>
                                     <tr className="bg-slate-800" style={{ height: `${tableConfig.rowHeight * 4}px` }}>
                                         {daysArray.map(d => (
-                                            <th key={d} className="p-1 text-[0.9em] text-slate-300 border border-slate-700 font-bold text-center" style={{ minWidth: `${tableConfig.dayColWidth}px` }}>{d}</th>
+                                            <th
+                                                key={d}
+                                                className={`p-1 text-[0.9em] border border-slate-700 text-center ${isWeekend(d)
+                                                        ? 'text-red-500 font-black'
+                                                        : 'text-slate-300 font-bold'
+                                                    }`}
+                                                style={{ minWidth: `${tableConfig.dayColWidth}px` }}
+                                            >
+                                                {d}
+                                            </th>
                                         ))}
                                     </tr>
                                 </thead>
