@@ -119,6 +119,8 @@ export const exportToPngPuppeteer = async (elementId: string, fileName: string) 
     try {
         console.log('🚀 Iniciando exportação de Alta Fidelidade (Cloud)...');
         const html = element.innerHTML;
+
+        // Coleta todos os estilos relevantes, incluindo os novos arquivos strict
         const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
             .map(s => s.outerHTML)
             .join('\n');
@@ -127,7 +129,12 @@ export const exportToPngPuppeteer = async (elementId: string, fileName: string) 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                html: `${styles}<div id="${elementId}">${html}</div>`,
+                html: `
+                    ${styles}
+                    <div id="${elementId}" style="visibility: visible !important; position: relative !important; left: 0 !important; opacity: 1 !important;">
+                        ${html}
+                    </div>
+                `,
                 fileName
             })
         });

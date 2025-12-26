@@ -802,19 +802,24 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             pointerEvents: 'none'
                         }}
                     >
+                        {/* Link para estilos restritos de exportação */}
+                        <link rel="stylesheet" href="/export_strict.css" />
+
                         <header className="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
                             <div className="flex items-center gap-6">
-                                {companyLogo && !companyLogo.startsWith('blob:') && (
-                                    <img src={companyLogo} alt="Logo" className="h-16 w-auto object-contain" />
+                                {activeCompany?.logoUrl && (
+                                    <img src={activeCompany.logoUrl} alt="Logo" className="h-16 w-auto object-contain" />
                                 )}
-                                <div className="text-left">
-                                    <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Mortalidade e Consumo</h1>
-                                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">
-                                        {activeCompany?.name || 'Controle diário'}
+                                <div>
+                                    <h1 className="report-title">MORTALIDADE E CONSUMO</h1>
+                                    <p className="report-subtitle">
+                                        {activeCompany?.name || 'CARAPITANGA INDUSTIA DE PESCADOS DO BRASIL LTDA'}
                                     </p>
-                                    <p className="text-xs text-slate-400 mt-1 font-bold">
-                                        {new Date(year, month - 1).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()} / {year}
-                                    </p>
+                                    <div className="flex gap-4 mt-1">
+                                        <span className="text-sm font-bold text-slate-500">
+                                            {new Date(year, month - 1).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()} / {year}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </header>
