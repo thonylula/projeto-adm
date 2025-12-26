@@ -719,7 +719,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             }}
                             data-html2canvas-ignore
                         >
-                            <div style={{ width: `${(tableConfig.veWidth + 100 + (tableConfig.headerColWidth * 4) + 70 + 20) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '1px' }} />
+                            <div style={{ width: `${(tableConfig.veWidth + 100 + (tableConfig.headerColWidth * 4) + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '1px' }} />
                         </div>
                         <div
                             ref={scrollRef}
@@ -729,7 +729,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             }}
                         >
                             <table className="w-full border-collapse" style={{
-                                minWidth: `${(tableConfig.veWidth + 100 + (tableConfig.headerColWidth * 4) + 70 + 20) + (daysArray.length * tableConfig.dayColWidth)}px`,
+                                minWidth: `${(tableConfig.veWidth + 100 + (tableConfig.headerColWidth * 4) + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`,
                                 fontSize: `${tableConfig.fontSize}px`
                             }}>
                                 <thead>
@@ -740,6 +740,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                         <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Pop.Ini</th>
                                         <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Dens.</th>
                                         <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Biom..</th>
+                                        <th className="p-1 text-slate-400 bg-slate-900 border border-slate-800 font-black text-[0.8em] uppercase text-center min-w-[50px]" rowSpan={2}>Tipo</th>
                                         <th className="p-1 border border-slate-800 text-center text-slate-400 font-black uppercase tracking-widest text-[0.9em]" colSpan={daysArray.length}>Dias do Mês</th>
                                         <th className="p-2 text-white border border-slate-800 font-black uppercase sticky right-0 z-20 bg-slate-900 w-20 text-center" rowSpan={2}>Total</th>
                                     </tr>
@@ -805,7 +806,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         </td>
                                                     );
                                                 })}
-                                                <td className="p-1 border border-slate-100 sticky right-0 z-10 bg-orange-50 font-black text-orange-700 text-center shadow-[-4px_0_10px_rgba(0,0,0,0.02)] min-w-[70px]" rowSpan={2}>
+                                                <td className="p-1 border border-slate-100 sticky right-0 z-10 bg-orange-50 font-black text-orange-700 text-center shadow-[-4px_0_10px_rgba(0,0,0,0.02)] min-w-[75px]" rowSpan={2}>
                                                     <div className="flex flex-col gap-0.5 items-center justify-center italic">
                                                         <span className="text-[11px]">{calculateRowTotal(record, 'feed')} kg</span>
                                                         <div className="w-6 h-px bg-orange-200" />
