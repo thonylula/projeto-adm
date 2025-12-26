@@ -120,7 +120,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         setIsExporting(true);
         setSelectedWeek(0); // Força visão mensal para exportação completa
 
-        // Pequeno delay para o React renderizar a visão mensal antes da captura
+        // Aumentado para 800ms para garantir renderização completa em dispositivos mais lentos
         setTimeout(async () => {
             try {
                 const suffix = `mortalidade_${month}_${year}`;
@@ -812,20 +812,38 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                         <div id="export-container">
                             <table className="w-full text-[9px] border-collapse">
                                 <thead>
-                                    <tr className="bg-slate-900 text-white uppercase font-bold text-center">
-                                        <th className="p-1 border border-slate-700 min-w-[40px] text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}>VE</th>
-                                        <th className="p-1 border border-slate-700 min-w-[70px] text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}>Data Povoa</th>
-                                        <th className="p-1 border border-slate-700 min-w-[40px] text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}>Área</th>
-                                        <th className="p-1 border border-slate-700 min-w-[50px] text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}>Pop. Ini</th>
-                                        <th className="p-1 border border-slate-700 min-w-[40px] text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}>Dens.</th>
-                                        <th className="p-1 border border-slate-700 min-w-[60px] text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}>Biometria</th>
-                                        <th className="p-1 border border-slate-700 min-w-[25px]" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}></th>
-                                        <th className="p-0.5 border border-slate-700 text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} colSpan={daysInMonth}>DIAS DO MÊS</th>
-                                        <th className="p-1 border border-slate-700 min-w-[45px] text-center" style={{ backgroundColor: '#0f172a', color: 'white' }} rowSpan={2}>Total</th>
+                                    <tr style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+                                        <th className="border border-slate-700 min-w-[40px] text-center" style={{ backgroundColor: '#0f172a' }} rowSpan={2}>
+                                            <span style={{ color: '#ffffff', display: 'block', padding: '4px' }}>VE</span>
+                                        </th>
+                                        <th className="border border-slate-700 min-w-[75px] text-center" style={{ backgroundColor: '#0f172a' }} rowSpan={2}>
+                                            <span style={{ color: '#ffffff', display: 'block', padding: '4px' }}>DATA POVOA</span>
+                                        </th>
+                                        <th className="border border-slate-700 min-w-[45px] text-center" style={{ backgroundColor: '#0f172a' }} rowSpan={2}>
+                                            <span style={{ color: '#ffffff', display: 'block', padding: '4px' }}>ÁREA</span>
+                                        </th>
+                                        <th className="border border-slate-700 min-w-[55px] text-center" style={{ backgroundColor: '#0f172a' }} rowSpan={2}>
+                                            <span style={{ color: '#ffffff', display: 'block', padding: '4px' }}>POP.INI</span>
+                                        </th>
+                                        <th className="border border-slate-700 min-w-[45px] text-center" style={{ backgroundColor: '#0f172a' }} rowSpan={2}>
+                                            <span style={{ color: '#ffffff', display: 'block', padding: '4px' }}>DENS.</span>
+                                        </th>
+                                        <th className="border border-slate-700 min-w-[65px] text-center" style={{ backgroundColor: '#0f172a' }} rowSpan={2}>
+                                            <span style={{ color: '#ffffff', display: 'block', padding: '4px' }}>BIOMETRIA</span>
+                                        </th>
+                                        <th className="border border-slate-700 min-w-[25px]" style={{ backgroundColor: '#0f172a' }} rowSpan={2}></th>
+                                        <th className="border border-slate-700 text-center" style={{ backgroundColor: '#0f172a' }} colSpan={daysInMonth}>
+                                            <span style={{ color: '#ffffff', display: 'block', padding: '2px' }}>DIAS DO MÊS</span>
+                                        </th>
+                                        <th className="border border-slate-700 min-w-[45px] text-center" style={{ backgroundColor: '#0f172a' }} rowSpan={2}>
+                                            <span style={{ color: '#ffffff', display: 'block', padding: '4px' }}>TOTAL</span>
+                                        </th>
                                     </tr>
-                                    <tr className="bg-slate-800 text-slate-400">
+                                    <tr style={{ backgroundColor: '#1e293b' }}>
                                         {daysArray.map(d => (
-                                            <th key={d} className="p-0.5 border border-slate-700 text-center min-w-[24px]">{d}</th>
+                                            <th key={d} className="border border-slate-700 text-center min-w-[24px]" style={{ backgroundColor: '#1e293b' }}>
+                                                <span style={{ color: '#cbd5e1', fontSize: '8px' }}>{d}</span>
+                                            </th>
                                         ))}
                                     </tr>
                                 </thead>
@@ -858,18 +876,22 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     ))}
                                 </tbody>
                                 <tfoot>
-                                    <tr className="bg-slate-900 text-white font-black uppercase">
-                                        <td colSpan={7} className="p-2 text-right border-r border-slate-700">TOTAIS DO DIA</td>
+                                    <tr style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+                                        <td colSpan={7} className="p-2 text-right border-r border-slate-700" style={{ backgroundColor: '#0f172a' }}>
+                                            <span style={{ color: '#ffffff', fontWeight: '900' }}>TOTAIS DO DIA</span>
+                                        </td>
                                         {daysArray.map(d => (
-                                            <td key={d} className="p-0.5 border-r border-slate-700 text-center">
+                                            <td key={d} className="p-0.5 border-r border-slate-700 text-center" style={{ backgroundColor: '#0f172a' }}>
                                                 <div className="flex flex-col">
-                                                    <span className="text-orange-400 leading-tight text-[8px]">{calculateDayTotal('feed', d) ?? 0}</span>
-                                                    <span className="text-pink-400 leading-tight text-[8px]">{calculateDayTotal('mortality', d) ?? 0}</span>
+                                                    <span style={{ color: '#fb923c', fontWeight: 'bold', lineHeight: '1', fontSize: '8px' }}>{calculateDayTotal('feed', d) ?? 0}</span>
+                                                    <span style={{ color: '#f472b6', fontWeight: 'bold', lineHeight: '1', fontSize: '8px' }}>{calculateDayTotal('mortality', d) ?? 0}</span>
                                                 </div>
                                             </td>
                                         ))}
-                                        <td className="p-1 text-center bg-orange-600 border-l border-orange-500 text-[10px]">
-                                            {data?.records.reduce((sum, r) => sum + calculateRowTotal(r, 'feed'), 0)}
+                                        <td className="p-1 text-center border-l border-orange-500" style={{ backgroundColor: '#ea580c' }}>
+                                            <span style={{ color: '#ffffff', fontWeight: '900', fontSize: '10px' }}>
+                                                {data?.records.reduce((sum, r) => sum + calculateRowTotal(r, 'feed'), 0)}
+                                            </span>
                                         </td>
                                     </tr>
                                 </tfoot>
