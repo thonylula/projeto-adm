@@ -825,88 +825,66 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                         </header>
 
                         <div id="export-container">
-                            <table className="w-full text-[9px] border-collapse">
+                            <table>
                                 <thead>
-                                    <tr style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
-                                        <th className="border border-slate-700 min-w-[40px] text-center" style={{ backgroundColor: '#0f172a' }} rowSpan={2}>
-                                            <span style={{ color: '#ffffff', display: 'block', padding: '4px' }}>VE</span>
-                                        </th>
-                                        <th className="border border-slate-700 min-w-[75px] text-center" style={{ backgroundColor: '#0f172a' }} rowSpan={2}>
-                                            <span style={{ color: '#ffffff', display: 'block', padding: '4px' }}>DATA POVOA</span>
-                                        </th>
-                                        <th className="border border-slate-700 min-w-[45px] text-center" style={{ backgroundColor: '#0f172a' }} rowSpan={2}>
-                                            <span style={{ color: '#ffffff', display: 'block', padding: '4px' }}>ÁREA</span>
-                                        </th>
-                                        <th className="border border-slate-700 min-w-[55px] text-center" style={{ backgroundColor: '#0f172a' }} rowSpan={2}>
-                                            <span style={{ color: '#ffffff', display: 'block', padding: '4px' }}>POP.INI</span>
-                                        </th>
-                                        <th className="border border-slate-700 min-w-[45px] text-center" style={{ backgroundColor: '#0f172a' }} rowSpan={2}>
-                                            <span style={{ color: '#ffffff', display: 'block', padding: '4px' }}>DENS.</span>
-                                        </th>
-                                        <th className="border border-slate-700 min-w-[65px] text-center" style={{ backgroundColor: '#0f172a' }} rowSpan={2}>
-                                            <span style={{ color: '#ffffff', display: 'block', padding: '4px' }}>BIOMETRIA</span>
-                                        </th>
-                                        <th className="border border-slate-700 min-w-[25px]" style={{ backgroundColor: '#0f172a' }} rowSpan={2}></th>
-                                        <th className="border border-slate-700 text-center" style={{ backgroundColor: '#0f172a' }} colSpan={daysInMonth}>
-                                            <span style={{ color: '#ffffff', display: 'block', padding: '2px' }}>DIAS DO MÊS</span>
-                                        </th>
-                                        <th className="border border-slate-700 min-w-[45px] text-center" style={{ backgroundColor: '#0f172a' }} rowSpan={2}>
-                                            <span style={{ color: '#ffffff', display: 'block', padding: '4px' }}>TOTAL</span>
-                                        </th>
+                                    <tr>
+                                        <th className="col-ve" rowSpan={2}>VE</th>
+                                        <th className="col-date" rowSpan={2}>DATA POVOA</th>
+                                        <th className="col-area" rowSpan={2}>ÁREA</th>
+                                        <th className="col-pop" rowSpan={2}>POP.INI</th>
+                                        <th className="col-dens" rowSpan={2}>DENS.</th>
+                                        <th className="col-bio" rowSpan={2}>BIOMETRIA</th>
+                                        <th className="col-type" rowSpan={2}>TIPO</th>
+                                        <th colSpan={daysArray.length}>DIAS DO MÊS</th>
+                                        <th className="col-total" rowSpan={2}>TOTAL</th>
                                     </tr>
-                                    <tr style={{ backgroundColor: '#1e293b' }}>
+                                    <tr>
                                         {daysArray.map(d => (
-                                            <th key={d} className="border border-slate-700 text-center min-w-[24px]" style={{ backgroundColor: '#1e293b' }}>
-                                                <span style={{ color: '#cbd5e1', fontSize: '8px' }}>{d}</span>
-                                            </th>
+                                            <th key={d} className="col-day">{d}</th>
                                         ))}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {data?.records.map((record) => (
                                         <React.Fragment key={record.id}>
-                                            <tr className="hover:bg-orange-50/50 transition-colors border-b border-slate-100">
-                                                <td className="p-1 border border-slate-100 text-center font-black text-[10px]" rowSpan={2}>{record.ve}</td>
-                                                <td className="p-1 border border-slate-100 text-center text-[10px]" rowSpan={2}>{record.stockingDate}</td>
-                                                <td className="p-1 border border-slate-100 text-center text-[10px]" rowSpan={2}>{record.area || 0}</td>
-                                                <td className="p-1 border border-slate-100 text-center text-[10px]" rowSpan={2}>{record.initialPopulation || 0}</td>
-                                                <td className="p-1 border border-slate-100 text-center text-[10px]" rowSpan={2}>{record.density || 0}</td>
-                                                <td className="p-1 border border-slate-100 text-center font-bold text-slate-600 text-[9px]" rowSpan={2}>{record.biometry}</td>
-                                                <td className="p-1 border border-slate-100 text-center font-bold text-slate-600 bg-slate-50 uppercase italic text-[9px]">RAÇÃO</td>
+                                            <tr className="row-feed">
+                                                <td rowSpan={2} className="font-bold">{record.ve}</td>
+                                                <td rowSpan={2}>{record.stockingDate}</td>
+                                                <td rowSpan={2}>{record.area || 0}</td>
+                                                <td rowSpan={2}>{record.initialPopulation || 0}</td>
+                                                <td rowSpan={2}>{record.density || 0}</td>
+                                                <td rowSpan={2} className="font-semibold text-slate-500">{record.biometry}</td>
+                                                <td className="cell-label">RAÇÃO</td>
                                                 {daysArray.map(d => {
                                                     const val = record.dailyRecords.find(dr => dr.day === d)?.feed;
-                                                    return <td key={d} className="border border-slate-100 text-center font-medium text-slate-700 text-[9px]">{val ?? 0}</td>;
+                                                    return <td key={d} className="col-day">{val ?? 0}</td>;
                                                 })}
-                                                <td className="p-1 border border-slate-100 text-center font-black bg-orange-50 text-orange-800 text-[10px]">{calculateRowTotal(record, 'feed')}</td>
+                                                <td className="cell-total">{calculateRowTotal(record, 'feed')}</td>
                                             </tr>
-                                            <tr className="bg-pink-50/20">
-                                                <td className="p-1 border border-slate-100 text-center font-bold text-pink-700 bg-pink-50 uppercase italic text-[9px]">MORT.</td>
+                                            <tr className="row-mortality">
+                                                <td className="cell-label mort">MORT.</td>
                                                 {daysArray.map(d => {
                                                     const val = record.dailyRecords.find(dr => dr.day === d)?.mortality;
-                                                    return <td key={d} className="border border-slate-100 text-center text-pink-600 font-medium text-[9px]">{val ?? 0}</td>;
+                                                    return <td key={d} className="col-day text-pink-600">{val ?? 0}</td>;
                                                 })}
-                                                <td className="p-1 border border-slate-100 text-center font-black bg-pink-100 text-pink-700 text-[10px]">{calculateRowTotal(record, 'mortality')}</td>
+                                                <td className="cell-total mort">{calculateRowTotal(record, 'mortality')}</td>
                                             </tr>
                                         </React.Fragment>
                                     ))}
                                 </tbody>
                                 <tfoot>
-                                    <tr style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
-                                        <td colSpan={7} className="p-2 text-right border-r border-slate-700" style={{ backgroundColor: '#0f172a' }}>
-                                            <span style={{ color: '#ffffff', fontWeight: '900' }}>TOTAIS DO DIA</span>
-                                        </td>
+                                    <tr>
+                                        <td colSpan={7} className="text-right pr-4 uppercase tracking-wider">TOTAIS DO DIA</td>
                                         {daysArray.map(d => (
-                                            <td key={d} className="p-0.5 border-r border-slate-700 text-center" style={{ backgroundColor: '#0f172a' }}>
-                                                <div className="flex flex-col">
-                                                    <span style={{ color: '#fb923c', fontWeight: 'bold', lineHeight: '1', fontSize: '8px' }}>{calculateDayTotal('feed', d) ?? 0}</span>
-                                                    <span style={{ color: '#f472b6', fontWeight: 'bold', lineHeight: '1', fontSize: '8px' }}>{calculateDayTotal('mortality', d) ?? 0}</span>
+                                            <td key={d} className="col-day p-0">
+                                                <div className="flex flex-col text-[7pt] leading-none">
+                                                    <span className="text-orange-400 font-black">{calculateDayTotal('feed', d) ?? 0}</span>
+                                                    <span className="text-pink-400 font-black">{calculateDayTotal('mortality', d) ?? 0}</span>
                                                 </div>
                                             </td>
                                         ))}
-                                        <td className="p-1 text-center border-l border-orange-500" style={{ backgroundColor: '#ea580c' }}>
-                                            <span style={{ color: '#ffffff', fontWeight: '900', fontSize: '10px' }}>
-                                                {data?.records.reduce((sum, r) => sum + calculateRowTotal(r, 'feed'), 0)}
-                                            </span>
+                                        <td className="footer-total-box font-black">
+                                            {data?.records.reduce((sum, r) => sum + calculateRowTotal(r, 'feed'), 0)}
                                         </td>
                                     </tr>
                                 </tfoot>
