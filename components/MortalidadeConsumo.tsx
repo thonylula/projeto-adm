@@ -787,10 +787,20 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     {/* --- VISÃO DE EXPORTAÇÃO (Oculta, usada apenas para gerar PDF/PNG) --- */}
                     <div
                         id="export-target"
-                        className={isExporting
-                            ? "fixed top-0 left-0 bg-white z-[9999] p-8 w-[297mm] min-h-screen shadow-2xl"
-                            : "hidden !opacity-0 !pointer-events-none !invisible fixed top-0 left-0 w-[297mm]"
-                        }
+                        style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: isExporting ? '0' : '-9999px',
+                            backgroundColor: 'white',
+                            zIndex: 9999,
+                            padding: '32px',
+                            width: '297mm',
+                            minHeight: '100vh',
+                            boxShadow: isExporting ? '0 25px 50px -12px rgb(0 0 0 / 0.25)' : 'none',
+                            visibility: isExporting ? 'visible' : 'hidden',
+                            opacity: isExporting ? 1 : 0,
+                            pointerEvents: 'none'
+                        }}
                     >
                         <header className="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
                             <div className="flex items-center gap-6">
