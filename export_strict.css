@@ -1,42 +1,43 @@
-/* export_strict.css - Forças de Renderização Pericial */
+/* export_strict.css - Forças de Renderização Pericial (V2 Harmony) */
 
 #export-target {
     font-family: 'Inter', sans-serif !important;
     background: white !important;
     width: 297mm !important;
-    /* A4 Landscape Width */
     min-height: 210mm !important;
-    padding: 32px !important;
+    padding: 24pt !important;
     box-sizing: border-box !important;
-    line-height: 1.5 !important;
     color: #0f172a !important;
     -webkit-font-smoothing: antialiased !important;
-    -moz-osx-font-smoothing: grayscale !important;
 }
 
 #export-target .report-title {
     font-family: 'Poppins', sans-serif !important;
-    font-weight: 700 !important;
-    font-size: 24pt !important;
-    margin-bottom: 8pt !important;
-    text-transform: uppercase !important;
+    font-weight: 800 !important;
+    font-size: 26pt !important;
+    margin-bottom: 4pt !important;
+    color: #0f172a !important;
+    letter-spacing: -0.02em !important;
 }
 
 #export-target .report-subtitle {
     font-family: 'Inter', sans-serif !important;
     font-weight: 600 !important;
-    font-size: 14pt !important;
+    font-size: 12pt !important;
     color: #64748b !important;
-    margin-bottom: 24pt !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    margin-bottom: 20pt !important;
 }
 
 #export-target table {
     table-layout: fixed !important;
     width: 100% !important;
     border-collapse: collapse !important;
-    border: 1.5pt solid #cbd5e1 !important;
+    border: 1.5pt solid #0f172a !important;
 }
 
+/* Base Headers */
 #export-target th {
     background-color: #0f172a !important;
     color: #ffffff !important;
@@ -44,56 +45,107 @@
     font-size: 7.5pt !important;
     text-align: center !important;
     white-space: nowrap !important;
-    padding: 6pt 2pt !important;
+    padding: 4pt 2pt !important;
     border: 0.5pt solid #334155 !important;
-    height: 35pt !important;
     vertical-align: middle !important;
 }
 
+/* Secondary Headers (Days) */
+#export-target thead tr:nth-child(2) th {
+    background-color: #1e293b !important;
+    color: #cbd5e1 !important;
+    font-size: 7pt !important;
+}
+
+/* Data Cells */
 #export-target td {
-    font-size: 8pt !important;
-    padding: 4pt 2pt !important;
+    font-size: 8.5pt !important;
+    padding: 3pt 2pt !important;
     border: 0.5pt solid #e2e8f0 !important;
     text-align: center !important;
     white-space: nowrap !important;
+    line-height: 1.2 !important;
 }
 
-#export-target .bg-slate-900 {
-    background-color: #0f172a !important;
+/* Logical Row Grouping (Zebra Stripes for pairs) */
+/* Every pair of rows (RAÇÃO + MORT) gets a subtle background on the second row */
+#export-target tbody tr.row-mortality {
+    background-color: #f8fafc !important;
 }
 
-#export-target .text-white {
-    color: #ffffff !important;
+/* Highlights */
+#export-target .cell-label {
+    font-weight: 800 !important;
+    font-style: italic !important;
+    font-size: 7pt !important;
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
 }
 
-/* Force specific column widths to match visually */
-#export-target th:nth-child(1) {
-    width: 35pt !important;
+#export-target .cell-label.mort {
+    color: #be123c !important;
+    background-color: #fff1f2 !important;
 }
 
-/* VE */
-#export-target th:nth-child(2) {
-    width: 65pt !important;
+#export-target .cell-total {
+    font-weight: 900 !important;
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
+    font-size: 9pt !important;
 }
 
-/* DATA POVOA */
-#export-target th:nth-child(3) {
-    width: 40pt !important;
+#export-target .cell-total.mort {
+    background-color: #ffe4e6 !important;
+    color: #9f1239 !important;
 }
 
-/* ÁREA */
-#export-target th:nth-child(4) {
-    width: 50pt !important;
+/* Column Widths (A4 Landscape Harmony - ~840pt total) */
+#export-target .col-ve {
+    width: 25pt !important;
 }
 
-/* POP.INI */
-#export-target th:nth-child(5) {
-    width: 40pt !important;
-}
-
-/* DENS. */
-#export-target th:nth-child(6) {
+#export-target .col-date {
     width: 60pt !important;
 }
 
-/* BIOMETRIA */
+#export-target .col-area {
+    width: 35pt !important;
+}
+
+#export-target .col-pop {
+    width: 40pt !important;
+}
+
+#export-target .col-dens {
+    width: 35pt !important;
+}
+
+#export-target .col-bio {
+    width: 50pt !important;
+}
+
+#export-target .col-type {
+    width: 35pt !important;
+}
+
+#export-target .col-day {
+    width: 15.5pt !important;
+}
+
+#export-target .col-total {
+    width: 45pt !important;
+}
+
+/* Footer Harmony */
+#export-target tfoot td {
+    background-color: #0f172a !important;
+    color: white !important;
+    font-weight: 800 !important;
+    border-top: 1.5pt solid #0f172a !important;
+}
+
+#export-target .footer-total-box {
+    background-color: #f97316 !important;
+    color: white !important;
+    font-size: 11pt !important;
+}
