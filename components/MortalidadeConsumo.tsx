@@ -611,7 +611,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             }}
                             data-html2canvas-ignore
                         >
-                            <div style={{ width: `${400 + (daysArray.length * 45)}px`, height: '1px' }} />
+                            <div style={{ width: `${420 + (daysArray.length * 55)}px`, height: '1px' }} />
                         </div>
                         <div
                             ref={scrollRef}
@@ -620,21 +620,21 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 if (topScrollRef.current) topScrollRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
                             }}
                         >
-                            <table className="w-full text-[10px] border-collapse" style={{ minWidth: `${350 + (daysArray.length * 45)}px` }}>
+                            <table className="w-full text-[10px] border-collapse" style={{ minWidth: `${380 + (daysArray.length * 55)}px` }}>
                                 <thead>
                                     <tr className="bg-slate-900">
-                                        <th className="p-2 text-white border border-slate-800 font-black uppercase tracking-wider sticky left-0 z-20 bg-slate-900 w-12 text-center" rowSpan={2}>VE</th>
-                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase sticky left-[48px] z-20 bg-slate-900 w-[100px] text-center" rowSpan={2}>Data Povoa</th>
+                                        <th className="p-2 text-white border border-slate-800 font-black uppercase tracking-wider sticky left-0 z-20 bg-slate-900 w-14 text-center" rowSpan={2}>VE</th>
+                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase sticky left-[56px] z-20 bg-slate-900 w-[100px] text-center" rowSpan={2}>Data Povoa</th>
                                         <th className="p-2 text-white border border-slate-800 font-bold uppercase w-16 text-center" rowSpan={2}>Área</th>
                                         <th className="p-2 text-white border border-slate-800 font-bold uppercase w-16 text-center" rowSpan={2}>Pop.Ini</th>
                                         <th className="p-2 text-white border border-slate-800 font-bold uppercase w-14 text-center" rowSpan={2}>Dens.</th>
-                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase w-16 text-center" rowSpan={2}>Biom.</th>
+                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase w-16 text-center" rowSpan={2}>Biom..</th>
                                         <th className="p-1 border border-slate-800 text-center text-slate-400 font-black uppercase tracking-widest text-[9px]" colSpan={daysArray.length}>Dias do Mês</th>
                                         <th className="p-2 text-white border border-slate-800 font-black uppercase sticky right-0 z-20 bg-slate-900 w-20 text-center" rowSpan={2}>Total</th>
                                     </tr>
                                     <tr className="bg-slate-800">
                                         {daysArray.map(d => (
-                                            <th key={d} className="p-1 text-[9px] text-slate-300 border border-slate-700 font-bold text-center min-w-[38px]">{d}</th>
+                                            <th key={d} className="p-1 text-[9px] text-slate-300 border border-slate-700 font-bold text-center min-w-[55px]">{d}</th>
                                         ))}
                                     </tr>
                                 </thead>
@@ -642,7 +642,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     {data?.records.map((record, index) => (
                                         <React.Fragment key={record.id}>
                                             <tr className="group hover:bg-slate-50 transition-all">
-                                                <td className="p-0 border border-slate-100 sticky left-0 z-10 bg-white w-12" rowSpan={2}>
+                                                <td className="p-0 border border-slate-100 sticky left-0 z-10 bg-white w-14" rowSpan={2}>
                                                     <div className="relative h-full flex items-center justify-center font-black text-slate-900 bg-slate-50 border-r border-slate-200 min-h-[60px]">
                                                         <input
                                                             type="text"
@@ -652,14 +652,14 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         />
                                                         <button
                                                             onClick={() => removeTank(index)}
-                                                            className="absolute -left-1 top-1/2 -translate-y-1/2 bg-red-50 text-red-400 p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white print:hidden shadow-sm z-30"
+                                                            className="absolute left-1 top-1/2 -translate-y-1/2 bg-red-50 text-red-400 p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white print:hidden shadow-sm z-30"
                                                             data-html2canvas-ignore
                                                         >
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-2.5 h-2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" /></svg>
                                                         </button>
                                                     </div>
                                                 </td>
-                                                <td className="p-1 border border-slate-100 sticky left-[48px] z-10 bg-white w-[100px]" rowSpan={2}>
+                                                <td className="p-1 border border-slate-100 sticky left-[56px] z-10 bg-white w-[100px]" rowSpan={2}>
                                                     <input type="text" value={record.stockingDate} onChange={e => handleUpdateHeader(index, 'stockingDate', e.target.value)} onPaste={e => handlePaste(e, index, 1)} className="w-full text-center bg-transparent border-none focus:ring-0 text-[10px] font-bold text-slate-600 outline-none" placeholder="00/00/0000" />
                                                 </td>
                                                 <td className="p-1 border border-slate-100" rowSpan={2}>
