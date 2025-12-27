@@ -129,6 +129,16 @@ export interface Company {
   employees: PayrollHistoryItem[];
 }
 
+export interface Viveiro {
+  id: string;
+  company_id: string;
+  name: string;
+  coordinates: { lat: number; lng: number }[];
+  area_m2: number;
+  notes?: string;
+  created_at: string;
+}
+
 export type ViewMode = 'SELECTION' | 'CALCULATOR' | 'COMPARATOR';
 
 // --- NOVOS TIPOS DE CADASTRO ---
