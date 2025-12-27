@@ -37,7 +37,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany }) =
         const name = prompt('Nome do viveiro:');
         if (!name) return;
 
-        const areaInput = prompt('Área do viveiro (em m²):', '1000');
+        const areaInput = prompt('Área do viveiro (em hectares):', '1');
         if (!areaInput) return;
 
         const area = parseFloat(areaInput);
@@ -46,7 +46,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany }) =
             company_id: activeCompany.id,
             name,
             coordinates: [{ lat: y, lng: x }], // Salvamos como % para posicionamento relativo
-            area_m2: area
+            area_m2: area // Usando o mesmo campo mas agora representa hectares
         };
 
         const added = await SupabaseService.addViveiro(newViveiro);
@@ -119,8 +119,8 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany }) =
                                         setEditingArea(v.area_m2.toString());
                                     }}
                                     className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all ${selectedViveiro?.id === v.id
-                                            ? 'scale-125 z-20'
-                                            : 'z-10'
+                                        ? 'scale-125 z-20'
+                                        : 'z-10'
                                         }`}
                                     style={{
                                         left: `${pos.lng}%`,
@@ -128,8 +128,8 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany }) =
                                     }}
                                 >
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-lg ${selectedViveiro?.id === v.id
-                                            ? 'bg-red-500 text-white ring-4 ring-red-300'
-                                            : 'bg-green-500 text-white'
+                                        ? 'bg-red-500 text-white ring-4 ring-red-300'
+                                        : 'bg-green-500 text-white'
                                         }`}>
                                         {v.name.substring(0, 2).toUpperCase()}
                                     </div>
@@ -145,7 +145,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany }) =
                     <ul className="text-sm text-slate-600 space-y-1">
                         <li>1. Clique no mapa onde está o viveiro</li>
                         <li>2. Digite o nome do viveiro</li>
-                        <li>3. Digite a área em m²</li>
+                        <li>3. Digite a área em hectares</li>
                         <li>4. Clique no marcador para editar</li>
                     </ul>
                 </div>
@@ -172,7 +172,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany }) =
                                 }`}
                         >
                             <div className="font-bold text-slate-900">{v.name}</div>
-                            <div className="text-sm text-slate-600">Área: {v.area_m2.toLocaleString('pt-BR')} m²</div>
+                            <div className="text-sm text-slate-600">Área: {v.area_m2.toLocaleString('pt-BR')} ha</div>
                         </div>
                     ))}
                     {viveiros.length === 0 && (
@@ -199,7 +199,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany }) =
                         </label>
 
                         <label className="block mb-2">
-                            <span className="text-sm text-slate-600">Área (m²):</span>
+                            <span className="text-sm text-slate-600">Área (hectares):</span>
                             <input
                                 type="number"
                                 value={editingArea}
