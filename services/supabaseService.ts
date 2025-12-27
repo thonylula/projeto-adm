@@ -1,5 +1,5 @@
 import { supabase } from '../supabaseClient';
-import { Company, PayrollHistoryItem, RegistryEmployee, RegistrySupplier, RegistryClient, ItemConfiguration } from '../types';
+import { Company, PayrollHistoryItem, RegistryEmployee, RegistrySupplier, RegistryClient, ItemConfiguration, Viveiro } from '../types';
 
 /**
  * Service for Supabase database operations.
@@ -393,5 +393,60 @@ export const SupabaseService = {
     async saveMortalityData(companyId: string, month: number, year: number, data: any): Promise<boolean> {
         const id = `mortality_${companyId}_${year}_${month}`;
         return this.saveConfig(id, data);
+    },
+
+    // --- VIVEIROS (FISH PONDS) ---
+    async getViveiros(companyId: string): Promise<any[]> {
+        const { data, error } = await supabase
+            .from('viveiros')
+            .select('*')
+            .eq('company_id', companyId)
+            .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching viveiros:', error);
+            return [];
+        }
+        return data || [];
+    },
+
+    async addViveiro(viveiro: { company_id: string; name: string; coordinates: any[]; area_m2: number; notes?: string }): Promise<any | null> {
+        const { data, error } = await supabase
+            .from('viveiros')
+            .insert([viveiro])
+            .select()
+            .single();
+
+        if (error) {
+            console.error('Error adding viveiro:', error);
+            return null;
+        }
+        return data;
+    },
+
+    async updateViveiro(id: string, updates: { name?: string; coordinates?: any[]; area_m2?: number; notes?: string }): Promise<boolean> {
+        const { error } = await supabase
+            .from('viveiros')
+            .update(updates)
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error updating viveiro:', error);
+            return false;
+        }
+        return true;
+    },
+
+    async deleteViveiro(id: string): Promise<boolean> {
+        const { error } = await supabase
+            .from('viveiros')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error deleting viveiro:', error);
+            return false;
+        }
+        return true;
     }
 };

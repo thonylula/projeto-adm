@@ -12,6 +12,7 @@ import { DeliveryOrder } from './components/DeliveryOrder';
 import { CestasBasicas } from './components/CestasBasicas';
 import { BudgetPage } from './components/BudgetPage';
 import { MortalidadeConsumo } from './components/MortalidadeConsumo';
+import { CampoViveiros } from './components/CampoViveiros';
 import { Comparator } from './components/Comparator';
 import { Company, PayrollHistoryItem } from './types';
 import { SupabaseService } from './services/supabaseService';
@@ -372,6 +373,25 @@ export default function App() {
 
         {activeTab === 'comparator' && (
           <Comparator />
+        )}
+
+        {activeTab === 'campo' && (
+          <>
+            {activeCompany ? (
+              <CampoViveiros activeCompany={activeCompany} />
+            ) : (
+              <CompanySelection
+                companies={companies}
+                onAddCompany={handleAddCompany}
+                onUpdateCompany={handleUpdateCompany}
+                onDeleteCompany={handleDeleteCompany}
+                onSelectCompany={handleSelectCompany}
+                title="Campo/Viveiros"
+                description="Selecione uma empresa para gerenciar os viveiros."
+                buttonText="Gerenciar Viveiros"
+              />
+            )}
+          </>
         )}
       </DashboardLayout>
     );

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { OperationsAssistant } from './OperationsAssistant';
 
-type Tab = 'payroll' | 'settings' | 'biometrics' | 'fiscal' | 'registrations' | 'pantry' | 'delivery-order' | 'comparator' | 'budget' | 'mortalidade';
+type Tab = 'payroll' | 'settings' | 'biometrics' | 'fiscal' | 'registrations' | 'pantry' | 'delivery-order' | 'comparator' | 'budget' | 'mortalidade' | 'campo';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -210,6 +210,15 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M7.875 14.25l1.214 1.942a2.25 2.25 0 001.908 1.058h2.006c.776 0 1.497-.4 1.908-1.058l1.214-1.942M2.41 9h4.636a2.25 2.25 0 011.872 1.002l.164.246a2.25 2.25 0 001.872 1.002h2.092a2.25 2.25 0 001.872-1.002l.164-.246A2.25 2.25 0 0116.954 9h4.636M2.41 9a2.25 2.25 0 00-2.242 2.244l1.793 4.493a2.25 2.25 0 002.09 1.413h15.898a2.25 2.25 0 002.09-1.413l1.793-4.493A2.25 2.25 0 0021.59 9M2.41 9c.381 0 .75.028 1.11.082M21.59 9a14.25 14.25 0 00-1.11.082m-1.285.742a22.511 22.511 0 01-2.903-1.066m-10.584 0a22.511 22.511 0 01-2.903 1.066" />
+        </svg>
+      )
+    },
+    {
+      id: 'campo',
+      label: 'Campo/Viveiros',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z" />
         </svg>
       )
     },
