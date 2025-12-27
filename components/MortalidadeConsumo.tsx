@@ -933,9 +933,9 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 </div>
                             </div>
                         </div>
-                    </div>
-            </>
+                    </>
                 )}
+            </div>
         </div>
     );
 };
