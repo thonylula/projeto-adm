@@ -724,7 +724,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             }}
                             data-html2canvas-ignore
                         >
-                            <div style={{ width: `${(tableConfig.veWidth + 100 + (tableConfig.headerColWidth * 4) + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '1px' }} />
+                            <div style={{ width: `${(tableConfig.veWidth + 140 + (tableConfig.headerColWidth * 4) + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '1px' }} />
                         </div>
                         <div
                             ref={scrollRef}
@@ -734,13 +734,13 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             }}
                         >
                             <table className="w-full border-collapse" style={{
-                                minWidth: `${(tableConfig.veWidth + 100 + (tableConfig.headerColWidth * 4) + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`,
+                                minWidth: `${(tableConfig.veWidth + 140 + (tableConfig.headerColWidth * 4) + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`,
                                 fontSize: `${tableConfig.fontSize}px`
                             }}>
                                 <thead>
                                     <tr className="bg-slate-900" style={{ height: `${tableConfig.rowHeight * 6}px` }}>
                                         <th className="p-2 text-white border border-slate-800 font-black uppercase tracking-wider sticky left-0 z-20 bg-slate-900 text-center" style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>VE</th>
-                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase sticky z-20 bg-slate-900 w-[100px] text-center" style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>Data Povoa</th>
+                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase sticky z-20 bg-slate-900 w-[140px] text-center" style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>Data Povoa</th>
                                         <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Área</th>
                                         <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Pop.Ini</th>
                                         <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Dens.</th>
@@ -754,8 +754,8 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                             <th
                                                 key={d}
                                                 className={`p-1 text-[0.9em] border border-slate-700 text-center ${isWeekend(d)
-                                                        ? 'text-red-500 font-black'
-                                                        : 'text-slate-300 font-bold'
+                                                    ? 'text-red-500 font-black'
+                                                    : 'text-slate-300 font-bold'
                                                     }`}
                                                 style={{ minWidth: `${tableConfig.dayColWidth}px` }}
                                             >
@@ -785,7 +785,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         </button>
                                                     </div>
                                                 </td>
-                                                <td className="p-1 border border-slate-100 sticky z-10 bg-white w-[100px]" style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>
+                                                <td className="p-1 border border-slate-100 sticky z-10 bg-white w-[140px]" style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>
                                                     <input type="text" value={record.stockingDate} onChange={e => handleUpdateHeader(index, 'stockingDate', e.target.value)} onPaste={e => handlePaste(e, index, 1)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-600 outline-none text-[1em]" placeholder="00/00/0000" />
                                                 </td>
                                                 <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
