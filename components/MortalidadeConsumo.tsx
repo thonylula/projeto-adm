@@ -724,7 +724,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             }}
                             data-html2canvas-ignore
                         >
-                            <div style={{ width: `${(tableConfig.veWidth + 140 + 80 + (tableConfig.headerColWidth * 3) + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '1px' }} />
+                            <div style={{ width: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '1px' }} />
                         </div>
                         <div
                             ref={scrollRef}
@@ -734,14 +734,14 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             }}
                         >
                             <table className="w-full border-collapse" style={{
-                                minWidth: `${(tableConfig.veWidth + 140 + 80 + (tableConfig.headerColWidth * 3) + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`,
+                                minWidth: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`,
                                 fontSize: `${tableConfig.fontSize}px`
                             }}>
                                 <thead>
                                     <tr className="bg-slate-900" style={{ height: `${tableConfig.rowHeight * 6}px` }}>
                                         <th className="p-2 text-white border border-slate-800 font-black uppercase tracking-wider sticky left-0 z-20 bg-slate-900 text-center" style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>VE</th>
                                         <th className="p-2 text-white border border-slate-800 font-bold uppercase sticky z-20 bg-slate-900 w-[140px] text-center" style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>Data Povoa</th>
-                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: '80px' }} rowSpan={2}>Área</th>
+                                        <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: '90px' }} rowSpan={2}>Área</th>
                                         <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Pop.Ini</th>
                                         <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Dens.</th>
                                         <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Biom..</th>
