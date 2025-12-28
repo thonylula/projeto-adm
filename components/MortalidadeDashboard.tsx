@@ -22,17 +22,20 @@ export const MortalidadeDashboard: React.FC<MortalidadeDashboardProps> = ({ data
         const tankMetrics = data.records.map(record => {
             const mortality = record.dailyRecords.reduce((s, day) => s + (day.mort || 0), 0);
             const feed = record.dailyRecords.reduce((s, day) => s + (day.feed || 0), 0);
-            const currentPop = record.initialPopulation - mortality;
+            // ADJUST: Population inputs are in thousands (e.g., 372 = 372,000)
+            const realInitialPop = record.initialPopulation * 1000;
+            const currentPop = realInitialPop - mortality;
+
             const avgWeight = parseFloat(record.biometry) || 0; // gramas
             const biomass = (currentPop * avgWeight) / 1000; // kg
-            const survival = (currentPop / record.initialPopulation) * 100;
+            const survival = (currentPop / realInitialPop) * 100;
             const density = record.density || 0;
 
             // Efficiency: kg feed per kg biomass (lower is better, assuming growth)
             // This is a proxy since we don't have exact weight gain without previous month data
             const feedBiomassRatio = biomass > 0 ? feed / biomass : 0;
 
-            totalInitialPop += record.initialPopulation;
+            totalInitialPop += record.initialPopulation * 1000;
             totalCurrentPop += currentPop;
             totalMortality += mortality;
             totalFeed += feed;
