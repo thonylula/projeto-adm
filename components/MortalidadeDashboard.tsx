@@ -26,7 +26,9 @@ export const MortalidadeDashboard: React.FC<MortalidadeDashboardProps> = ({ data
             const realInitialPop = record.initialPopulation * 1000;
             const currentPop = realInitialPop - mortality;
 
-            const avgWeight = parseFloat(record.biometry) || 0; // gramas
+            // ADJUST: Handle biometry string with comma (e.g. "12,5" -> 12.5)
+            const biometryStr = String(record.biometry || '0').replace(',', '.');
+            const avgWeight = parseFloat(biometryStr) || 0; // gramas
             const biomass = (currentPop * avgWeight) / 1000; // kg
             const survival = (currentPop / realInitialPop) * 100;
             const density = record.density || 0;
