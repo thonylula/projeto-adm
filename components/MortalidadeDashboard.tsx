@@ -1,251 +1,233 @@
 import React, { useMemo } from 'react';
 import { MonthlyMortalityData } from '../types';
 import {
-    LineChart, Line, BarChart, Bar, AreaChart, Area, RadarChart, Radar, PolarGrid,
-    PolarAngleAxis, PolarRadiusAxis, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-    ResponsiveContainer, PieChart, Pie, Cell
+    ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+    ResponsiveContainer, ScatterChart, Scatter, ZAxis
 } from 'recharts';
 
 interface MortalidadeDashboardProps {
     data: MonthlyMortalityData | null;
 }
 
-const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#ec4899'];
-
 export const MortalidadeDashboard: React.FC<MortalidadeDashboardProps> = ({ data }) => {
     const analytics = useMemo(() => {
         if (!data || data.records.length === 0) return null;
 
-        // Calcular métricas
-        const totalMortality = data.records.reduce((sum, record) => {
-            return sum + record.dailyRecords.reduce((s, day) => s + (day.mort || 0), 0);
-        }, 0);
+        let totalInitialPop = 0;
+        let totalCurrentPop = 0;
+        let totalMortality = 0;
+        let totalFeed = 0;
+        let totalBiomass = 0;
 
-        const totalFeed = data.records.reduce((sum, record) => {
-            return sum + record.dailyRecords.reduce((s, day) => s + (day.feed || 0), 0);
-        }, 0);
+        const tankMetrics = data.records.map(record => {
+            const mortality = record.dailyRecords.reduce((s, day) => s + (day.mort || 0), 0);
+            const feed = record.dailyRecords.reduce((s, day) => s + (day.feed || 0), 0);
+            const currentPop = record.initialPopulation - mortality;
+            const avgWeight = parseFloat(record.biometry) || 0; // gramas
+            const biomass = (currentPop * avgWeight) / 1000; // kg
+            const survival = (currentPop / record.initialPopulation) * 100;
+            const density = record.density || 0;
 
-        const avgMortality = totalMortality / data.records.length;
+            // Efficiency: kg feed per kg biomass (lower is better, assuming growth)
+            // This is a proxy since we don't have exact weight gain without previous month data
+            const feedBiomassRatio = biomass > 0 ? feed / biomass : 0;
 
-        // Mortalidade por viveiro
-        const mortalityByTank = data.records.map(record => ({
-            name: record.ve,
-            mortality: record.dailyRecords.reduce((s, day) => s + (day.mort || 0), 0),
-            feed: record.dailyRecords.reduce((s, day) => s + (day.feed || 0), 0),
-            survivalRate: ((record.initialPopulation - record.dailyRecords.reduce((s, day) => s + (day.mort || 0), 0)) / record.initialPopulation * 100) || 0,
-            density: record.density || 0,
-            biomass: parseFloat(record.biometry) || 0
-        }));
+            totalInitialPop += record.initialPopulation;
+            totalCurrentPop += currentPop;
+            totalMortality += mortality;
+            totalFeed += feed;
+            totalBiomass += biomass;
 
-        // Evolução diária (média de todos os viveiros)
-        const dailyEvolution = Array.from({ length: 31 }, (_, i) => i + 1).map(day => {
-            const dayData = {
-                day,
-                mortality: 0,
-                feed: 0,
-                count: 0
-            };
-            data.records.forEach(record => {
-                const dayRecord = record.dailyRecords.find(d => d.day === day);
-                if (dayRecord) {
-                    dayData.mortality += dayRecord.mort || 0;
-                    dayData.feed += dayRecord.feed || 0;
-                    dayData.count++;
-                }
-            });
             return {
-                day: `Dia ${day}`,
-                mortalidade: dayData.count > 0 ? Math.round(dayData.mortality / dayData.count) : 0,
-                ração: dayData.count > 0 ? Math.round(dayData.feed / dayData.count) : 0
+                name: record.ve,
+                mortality,
+                feed,
+                currentPop,
+                biomass,
+                survival,
+                density,
+                avgWeight,
+                feedBiomassRatio
             };
-        }).filter(d => d.mortalidade > 0 || d.ração > 0);
+        });
 
-        // Radar Chart data
-        const radarData = mortalityByTank.slice(0, 5).map(tank => ({
-            subject: tank.name,
-            sobrevivência: tank.survivalRate,
-            densidade: (tank.density / 20) * 100, // normalizar
-            biomassa: (tank.biomass / 10) * 100, // normalizar
-            consumo: (tank.feed / 1000) * 100 // normalizar
-        }));
+        const globalSurvival = (totalCurrentPop / totalInitialPop) * 100;
 
-        // Melhores e piores
-        const sorted = [...mortalityByTank].sort((a, b) => b.survivalRate - a.survivalRate);
-        const best = sorted[0];
-        const worst = sorted[sorted.length - 1];
+        // Sort for charts: mainly by biomass
+        const sortedByBiomass = [...tankMetrics].sort((a, b) => b.biomass - a.biomass);
 
         return {
             totalMortality,
             totalFeed,
-            avgMortality,
-            mortalityByTank,
-            dailyEvolution,
-            radarData,
-            best,
-            worst
+            totalBiomass,
+            globalSurvival,
+            tankMetrics,
+            sortedByBiomass
         };
     }, [data]);
 
     if (!data || !analytics) {
         return (
-            <div className="flex items-center justify-center h-[600px]">
-                <p className="text-slate-500">Nenhum dado disponível para análise.</p>
+            <div className="flex items-center justify-center h-96 border-2 border-dashed border-slate-200 rounded-xl">
+                <p className="text-slate-400 font-medium">Nenhum dado disponível para análise.</p>
             </div>
         );
     }
 
+    // Cor personalizada para Tooltip
+    const CustomTooltip = ({ active, payload, label }: any) => {
+        if (active && payload && payload.length) {
+            return (
+                <div className="bg-white p-3 border border-slate-200 shadow-lg rounded-lg">
+                    <p className="font-bold text-slate-800 mb-1">{label}</p>
+                    {payload.map((entry: any, index: number) => (
+                        <p key={index} className="text-sm" style={{ color: entry.color }}>
+                            {entry.name}: <span className="font-medium">
+                                {typeof entry.value === 'number' ? entry.value.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : entry.value}
+                                {entry.unit || ''}
+                            </span>
+                        </p>
+                    ))}
+                </div>
+            );
+        }
+        return null;
+    };
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-8">
-            <div className="max-w-7xl mx-auto space-y-6">
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <h1 className="text-4xl font-black text-white mb-2 bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
-                        📊 Dashboard Analítico
-                    </h1>
-                    <p className="text-slate-400">Análise detalhada de mortalidade e consumo</p>
-                </div>
+        <div className="min-h-screen bg-slate-50 p-6 space-y-6">
 
-                {/* KPI Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-6 shadow-2xl">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-purple-200 text-sm font-medium">Total Mortes</span>
-                            <span className="text-3xl">💀</span>
-                        </div>
-                        <p className="text-4xl font-black text-white">{analytics.totalMortality.toLocaleString('pt-BR')}</p>
-                        <p className="text-purple-200 text-xs mt-1">no mês</p>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-6 shadow-2xl">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-blue-200 text-sm font-medium">Consumo Total</span>
-                            <span className="text-3xl">🐟</span>
-                        </div>
-                        <p className="text-4xl font-black text-white">{analytics.totalFeed.toLocaleString('pt-BR')}</p>
-                        <p className="text-blue-200 text-xs mt-1">kg de ração</p>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-green-500 to-green-700 rounded-2xl p-6 shadow-2xl">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-green-200 text-sm font-medium">Melhor VE</span>
-                            <span className="text-3xl">🏆</span>
-                        </div>
-                        <p className="text-4xl font-black text-white">{analytics.best.name}</p>
-                        <p className="text-green-200 text-xs mt-1">{analytics.best.survivalRate.toFixed(1)}% sobrevivência</p>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-red-500 to-red-700 rounded-2xl p-6 shadow-2xl">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-red-200 text-sm font-medium">Pior VE</span>
-                            <span className="text-3xl">⚠️</span>
-                        </div>
-                        <p className="text-4xl font-black text-white">{analytics.worst.name}</p>
-                        <p className="text-red-200 text-xs mt-1">{analytics.worst.survivalRate.toFixed(1)}% sobrevivência</p>
+            {/* 1. Executive Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Biomassa Estimada</p>
+                    <div className="flex items-baseline gap-2 mt-2">
+                        <h2 className="text-3xl font-black text-slate-800">
+                            {analytics.totalBiomass.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+                        </h2>
+                        <span className="text-sm font-bold text-slate-400">kg</span>
                     </div>
                 </div>
 
-                {/* Charts Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Evolução Diária */}
-                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-white/20">
-                        <h3 className="text-xl font-bold text-white mb-4">📈 Evolução Diária (Média)</h3>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={analytics.dailyEvolution}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
-                                <XAxis dataKey="day" stroke="#fff" />
-                                <YAxis stroke="#fff" />
-                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
-                                <Legend />
-                                <Line type="monotone" dataKey="mortalidade" stroke="#ef4444" strokeWidth={3} dot={{ fill: '#ef4444' }} />
-                                <Line type="monotone" dataKey="ração" stroke="#10b981" strokeWidth={3} dot={{ fill: '#10b981' }} />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-
-                    {/* Mortalidade por Viveiro */}
-                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-white/20">
-                        <h3 className="text-xl font-bold text-white mb-4">🎯 Mortalidade por Viveiro</h3>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={analytics.mortalityByTank}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
-                                <XAxis dataKey="name" stroke="#fff" />
-                                <YAxis stroke="#fff" />
-                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
-                                <Bar dataKey="mortality" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-
-                    {/* Taxa de Sobrevivência */}
-                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-white/20">
-                        <h3 className="text-xl font-bold text-white mb-4">💚 Taxa de Sobrevivência</h3>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <AreaChart data={analytics.mortalityByTank}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
-                                <XAxis dataKey="name" stroke="#fff" />
-                                <YAxis stroke="#fff" domain={[0, 100]} />
-                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
-                                <Area type="monotone" dataKey="survivalRate" stroke="#10b981" fill="url(#colorSurvival)" strokeWidth={2} />
-                                <defs>
-                                    <linearGradient id="colorSurvival" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.1} />
-                                    </linearGradient>
-                                </defs>
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-
-                    {/* Comparação Multi-Métrica */}
-                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-white/20">
-                        <h3 className="text-xl font-bold text-white mb-4">🎨 Comparação Multi-Métrica</h3>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <RadarChart data={analytics.radarData}>
-                                <PolarGrid stroke="#ffffff30" />
-                                <PolarAngleAxis dataKey="subject" stroke="#fff" />
-                                <PolarRadiusAxis stroke="#fff" domain={[0, 100]} />
-                                <Radar name="Performance" dataKey="sobrevivência" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.6} />
-                                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
-                            </RadarChart>
-                        </ResponsiveContainer>
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Ração Consumida</p>
+                    <div className="flex items-baseline gap-2 mt-2">
+                        <h2 className="text-3xl font-black text-slate-800">
+                            {analytics.totalFeed.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+                        </h2>
+                        <span className="text-sm font-bold text-slate-400">kg</span>
                     </div>
                 </div>
 
-                {/* Tabela Resumo */}
-                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border border-white/20">
-                    <h3 className="text-xl font-bold text-white mb-4">📋 Resumo por Viveiro</h3>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-white">
-                            <thead>
-                                <tr className="border-b border-white/20">
-                                    <th className="text-left p-3">Viveiro</th>
-                                    <th className="text-right p-3">Mortalidade</th>
-                                    <th className="text-right p-3">Ração (kg)</th>
-                                    <th className="text-right p-3">Sobrevivência</th>
-                                    <th className="text-right p-3">Densidade</th>
-                                    <th className="text-right p-3">Biomassa</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {analytics.mortalityByTank.map((tank, i) => (
-                                    <tr key={i} className="border-b border-white/10 hover:bg-white/5 transition-colors">
-                                        <td className="p-3 font-bold">{tank.name}</td>
-                                        <td className="p-3 text-right text-red-300">{tank.mortality}</td>
-                                        <td className="p-3 text-right text-green-300">{tank.feed.toLocaleString('pt-BR')}</td>
-                                        <td className="p-3 text-right">
-                                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${tank.survivalRate > 90 ? 'bg-green-500' : tank.survivalRate > 80 ? 'bg-yellow-500' : 'bg-red-500'}`}>
-                                                {tank.survivalRate.toFixed(1)}%
-                                            </span>
-                                        </td>
-                                        <td className="p-3 text-right text-blue-300">{tank.density.toFixed(2)}</td>
-                                        <td className="p-3 text-right text-purple-300">{tank.biomass.toFixed(2)}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Sobrevivência Global</p>
+                    <div className="flex items-baseline gap-2 mt-2">
+                        <h2 className={`text-3xl font-black ${analytics.globalSurvival >= 90 ? 'text-emerald-600' : 'text-amber-500'}`}>
+                            {analytics.globalSurvival.toFixed(1)}%
+                        </h2>
+                    </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Mortalidade Total</p>
+                    <div className="flex items-baseline gap-2 mt-2">
+                        <h2 className="text-3xl font-black text-rose-600">
+                            {analytics.totalMortality.toLocaleString('pt-BR')}
+                        </h2>
+                        <span className="text-sm font-bold text-slate-400">un</span>
                     </div>
                 </div>
             </div>
+
+            {/* 2. Advanced Analytics Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                {/* Efficiency Chart: Biomass vs Feed */}
+                <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-800">Eficiência Alimentar por Viveiro</h3>
+                            <p className="text-sm text-slate-500">Relação entre Volume de Ração (kg) e Biomassa Atual (kg)</p>
+                        </div>
+                    </div>
+                    <div className="h-[350px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <ComposedChart data={analytics.sortedByBiomass}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                                <YAxis yAxisId="left" orientation="left" axisLine={false} tickLine={false} label={{ value: 'Biomassa (kg)', angle: -90, position: 'insideLeft', style: { fill: '#64748b', fontSize: 12 } }} />
+                                <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} label={{ value: 'Ração (kg)', angle: 90, position: 'insideRight', style: { fill: '#64748b', fontSize: 12 } }} />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Legend />
+                                <Bar yAxisId="left" dataKey="biomass" name="Biomassa Atual" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={30} />
+                                <Line yAxisId="right" type="monotone" dataKey="feed" name="Ração Consumida" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} />
+                            </ComposedChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+
+                {/* Correlation: Density vs Survival */}
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 className="text-lg font-bold text-slate-800 mb-2">Densidade vs. Sobrevivência</h3>
+                    <p className="text-sm text-slate-500 mb-6">Correlação entre densidade de estocagem e taxa de sobrevivência.</p>
+                    <div className="h-[350px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                <XAxis type="number" dataKey="density" name="Densidade" unit=" cam/m²" tickLine={false} axisLine={false} label={{ value: 'Densidade (cam/m²)', position: 'bottom', offset: 0, style: { fill: '#64748b', fontSize: 12 } }} />
+                                <YAxis type="number" dataKey="survival" name="Sobrevivência" unit="%" domain={[0, 100]} tickLine={false} axisLine={false} />
+                                <ZAxis type="number" dataKey="biomass" range={[60, 400]} name="Biomassa" />
+                                <Tooltip cursor={{ strokeDasharray: '3 3' }} content={<CustomTooltip />} />
+                                <Scatter name="Viveiros" data={analytics.tankMetrics} fill="#10b981" shape="circle" />
+                            </ScatterChart>
+                        </ResponsiveContainer>
+                        <p className="text-center text-xs text-slate-500 mt-2">* Tamanho do círculo indica volume de biomassa</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* 3. Detailed Data Table */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-slate-200">
+                    <h3 className="text-lg font-bold text-slate-800">Detalhamento Operacional</h3>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                        <thead className="bg-slate-50 text-slate-600 font-semibold uppercase tracking-wider text-xs border-b border-slate-200">
+                            <tr>
+                                <th className="px-6 py-4">Viveiro</th>
+                                <th className="px-6 py-4 text-right">Pop. Atual (un)</th>
+                                <th className="px-6 py-4 text-right">Peso Médio (g)</th>
+                                <th className="px-6 py-4 text-right">Biomassa (kg)</th>
+                                <th className="px-6 py-4 text-right">Ração (kg)</th>
+                                <th className="px-6 py-4 text-right">Rel. Ração/Bio</th>
+                                <th className="px-6 py-4 text-center">Sobrevivência</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {analytics.sortedByBiomass.map((tank) => (
+                                <tr key={tank.name} className="hover:bg-slate-50 transition-colors">
+                                    <td className="px-6 py-4 font-bold text-slate-700">{tank.name}</td>
+                                    <td className="px-6 py-4 text-right font-medium text-slate-600">{tank.currentPop.toLocaleString('pt-BR')}</td>
+                                    <td className="px-6 py-4 text-right text-slate-600">{tank.avgWeight.toFixed(2)} g</td>
+                                    <td className="px-6 py-4 text-right font-bold text-blue-600 bg-blue-50/50 rounded-lg">{tank.biomass.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                                    <td className="px-6 py-4 text-right text-amber-600 font-medium">{tank.feed.toLocaleString('pt-BR')}</td>
+                                    <td className="px-6 py-4 text-right text-slate-500">{tank.feedBiomassRatio.toFixed(2)}</td>
+                                    <td className="px-6 py-4 text-center">
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold
+                                            ${tank.survival >= 90 ? 'bg-emerald-100 text-emerald-800' :
+                                                tank.survival >= 75 ? 'bg-yellow-100 text-yellow-800' :
+                                                    'bg-rose-100 text-rose-800'}`}>
+                                            {tank.survival.toFixed(1)}%
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     );
 };
