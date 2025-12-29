@@ -130,6 +130,17 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false }
         }
     }, [data, logo]);
 
+    // Dynamic document title
+    useEffect(() => {
+        if (view === 'SHOWCASE') {
+            document.title = "Faturamento Carapitanga 019 - Ocean";
+        } else if (view === 'HISTORY') {
+            document.title = "Histórico Financeiro | Carapitanga";
+        } else {
+            document.title = "Acompanhamento de Faturamento | Carapitanga";
+        }
+    }, [view]);
+
     const reportRef = useRef<HTMLDivElement>(null);
 
     // Derived state for summary logic
