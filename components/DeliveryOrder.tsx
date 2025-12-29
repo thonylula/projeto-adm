@@ -680,8 +680,20 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false }
                                 </svg>
                             </button>
 
-                            <label className="w-full py-3 px-6 bg-white border-2 border-orange-500 text-orange-600 hover:bg-orange-50 font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer text-center">
+                            <button
+                                onClick={() => setView('DASHBOARD')}
+                                className="w-full py-3 px-6 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:shadow-slate-200 transition-all flex items-center justify-center gap-2"
+                            >
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                </svg>
+                                <span>Ver Lançamentos Realizados</span>
+                            </button>
+                        </div>
+
+                        <div className="flex justify-center">
+                            <label className="max-w-xs w-full py-2 px-6 bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 font-medium rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer text-xs text-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                                 </svg>
                                 {logo ? 'Alterar Logo' : 'Adicionar Logo'}
