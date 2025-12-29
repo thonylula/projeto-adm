@@ -210,6 +210,31 @@ export const DeliveryOrder: React.FC = () => {
         ));
     };
 
+    // --- EDIT & DELETE ACTIONS ---
+    const [editingItem, setEditingItem] = useState<HarvestData | null>(null);
+
+    const handleDelete = (id: number) => {
+        if (window.confirm("Tem certeza que deseja excluir este registro?")) {
+            setData(prev => prev.filter(item => item.id !== id));
+        }
+    };
+
+    const handleEditClick = (item: HarvestData) => {
+        setEditingItem({ ...item }); // Copy to avoid direct mutation
+    };
+
+    const handleSaveEdit = () => {
+        if (!editingItem) return;
+        setData(prev => prev.map(item => item.id === editingItem.id ? editingItem : item));
+        setEditingItem(null);
+    };
+
+    const handleEditChange = (field: keyof HarvestData, value: string | number) => {
+        if (editingItem) {
+            setEditingItem({ ...editingItem, [field]: value });
+        }
+    };
+
     const handleSmartUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || !e.target.files[0]) return;
         const file = e.target.files[0];
@@ -699,7 +724,8 @@ export const DeliveryOrder: React.FC = () => {
                                         <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">FCA</th>
                                         <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Ciclo</th>
                                         <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Laborat.</th>
-                                        <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider last:rounded-tr-2xl">Obs</th>
+                                        <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Obs</th>
+                                        <th className="p-2 text-center font-bold uppercase text-[0.70rem] tracking-wider last:rounded-tr-2xl" data-html2canvas-ignore>Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-orange-50">
@@ -725,6 +751,20 @@ export const DeliveryOrder: React.FC = () => {
                                             <td className="p-2 text-xs text-gray-600">{row.diasCultivo} d</td>
                                             <td className="p-2 text-xs text-gray-600 font-semibold">{row.laboratorio}</td>
                                             <td className="p-2 text-[0.70rem] text-red-500 font-bold max-w-[100px] truncate">{row.notas}</td>
+                                            <td className="p-2 text-center" data-html2canvas-ignore>
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button onClick={() => handleEditClick(row)} className="text-blue-500 hover:text-blue-700 p-1 hover:bg-blue-50 rounded">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                        </svg>
+                                                    </button>
+                                                    <button onClick={() => handleDelete(row.id)} className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -787,6 +827,68 @@ export const DeliveryOrder: React.FC = () => {
                 </>
             )}
 
+            {/* EDIT MODAL */}
+            {editingItem && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fadeIn">
+                        <div className="flex justify-between items-center p-4 border-b bg-gray-50">
+                            <h4 className="text-lg font-bold text-gray-800">Editar Lançamento</h4>
+                            <button onClick={() => setEditingItem(null)} className="text-gray-400 hover:text-red-500 font-bold text-xl">&times;</button>
+                        </div>
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Data</label>
+                                <input type="text" className="w-full p-2 border rounded" value={editingItem.data} onChange={e => handleEditChange('data', e.target.value)} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cliente</label>
+                                <input type="text" className="w-full p-2 border rounded" value={editingItem.cliente} onChange={e => handleEditChange('cliente', e.target.value)} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Viveiro</label>
+                                <input type="text" className="w-full p-2 border rounded" value={editingItem.viveiro} onChange={e => handleEditChange('viveiro', e.target.value)} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Produção (kg)</label>
+                                <input type="number" className="w-full p-2 border rounded" value={editingItem.producao} onChange={e => handleEditChange('producao', parseFloat(e.target.value))} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Preço (R$)</label>
+                                <input type="number" className="w-full p-2 border rounded" value={editingItem.preco} onChange={e => handleEditChange('preco', parseFloat(e.target.value))} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Peso Médio (g)</label>
+                                <input type="number" className="w-full p-2 border rounded" value={editingItem.pesoMedio} onChange={e => handleEditChange('pesoMedio', parseFloat(e.target.value))} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Sobrevivência</label>
+                                <input type="text" className="w-full p-2 border rounded" value={editingItem.sobrevivencia} onChange={e => handleEditChange('sobrevivencia', e.target.value)} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">FCA</label>
+                                <input type="text" className="w-full p-2 border rounded" value={editingItem.fca} onChange={e => handleEditChange('fca', e.target.value)} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Dias Cultivo</label>
+                                <input type="number" className="w-full p-2 border rounded" value={editingItem.diasCultivo} onChange={e => handleEditChange('diasCultivo', parseFloat(e.target.value))} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Laboratório</label>
+                                <input type="text" className="w-full p-2 border rounded" value={editingItem.laboratorio} onChange={e => handleEditChange('laboratorio', e.target.value)} />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Notas/Obs</label>
+                                <textarea className="w-full p-2 border rounded" value={editingItem.notas} onChange={e => handleEditChange('notas', e.target.value)} />
+                            </div>
+                        </div>
+                        <div className="p-4 bg-gray-50 border-t flex justify-end gap-2">
+                            <button onClick={() => setEditingItem(null)} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded">Cancelar</button>
+                            <button onClick={handleSaveEdit} className="px-4 py-2 bg-[#f26522] text-white font-bold rounded hover:bg-[#d95213]">Salvar Alterações</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* GEMINI MODAL */}
             {modalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setModalOpen(false)}>
@@ -837,6 +939,13 @@ export const DeliveryOrder: React.FC = () => {
 
             {/* --- FOOTER ACTIONS --- */}
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40 border-t border-gray-200 print:hidden flex justify-center gap-4 flex-wrap">
+                <button onClick={clearAllData} className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-red-500 hover:text-white text-gray-700 rounded-lg shadow font-medium transition-all text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Limpar Tudo
+                </button>
+                <div className="w-px h-8 bg-gray-300 mx-2"></div>
                 <button onClick={handleExportPDF} className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow font-medium transition-all text-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
                     PDF
