@@ -133,7 +133,7 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false }
     // Dynamic document title
     useEffect(() => {
         if (view === 'SHOWCASE') {
-            document.title = "Faturamento Carapitanga 019 - Ocean";
+            document.title = "Faturamento";
         } else if (view === 'HISTORY') {
             document.title = "Histórico Financeiro | Carapitanga";
         } else {
@@ -735,14 +735,14 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false }
     // DASHBOARD VIEW
     return (
         <div className="space-y-8 font-inter animate-fadeIn pb-20">
-            <header className="bg-gradient-to-r from-[#f26522] to-[#ff9d6c] p-10 rounded-3xl shadow-2xl text-white flex flex-col items-center gap-8 text-center">
-                <div className="flex flex-col items-center gap-6">
+            <header className="bg-gradient-to-r from-[#f26522] to-[#ff9d6c] p-10 rounded-3xl shadow-2xl text-white flex flex-col md:flex-row justify-between items-center md:items-start gap-8 text-left">
+                <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
                     {logo && (
-                        <div className="w-64 h-32 bg-white p-4 rounded-2xl shadow-inner flex items-center justify-center overflow-hidden border-2 border-orange-100">
+                        <div className="w-64 h-32 bg-white p-4 rounded-2xl shadow-inner flex items-center justify-center overflow-hidden border-2 border-orange-100 shrink-0">
                             <img src={logo} alt="Empresa Logo" className="max-w-full max-h-full object-contain" />
                         </div>
                     )}
-                    <div className="flex flex-col items-center">
+                    <div className="flex flex-col items-center md:items-start">
                         <h2 className="text-5xl font-black tracking-tight mb-2">
                             {view === 'SHOWCASE' ? 'Faturamento' : view === 'HISTORY' ? 'Histórico Financeiro' : 'Resumo de Faturamento'}
                         </h2>
