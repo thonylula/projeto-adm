@@ -158,8 +158,8 @@ export const DeliveryOrder: React.FC = () => {
         if (!inputText.trim()) return;
 
         try {
-            // Limpa dados anteriores explicitamente para evitar acúmulo
-            setData([]);
+            // NÃO limpar dados anteriores para permitir acúmulo (solicitação do usuário)
+            // setData([]);
 
             const results = await processText(HARVEST_PROMPT, inputText);
 
@@ -180,7 +180,7 @@ export const DeliveryOrder: React.FC = () => {
                     visible: true
                 }));
 
-                setData(newItems);
+                setData(prev => [...prev, ...newItems]);
                 setInputText('');
                 setView('DASHBOARD');
             }
@@ -215,7 +215,8 @@ export const DeliveryOrder: React.FC = () => {
         const file = e.target.files[0];
 
         try {
-            setData([]); // Limpa antes de processar novo arquivo
+            // NÃO limpar dados anteriores para permitir acúmulo
+            // setData([]); 
             const results = await processFile(file, HARVEST_PROMPT);
 
             if (results) {
@@ -235,7 +236,7 @@ export const DeliveryOrder: React.FC = () => {
                     visible: true
                 }));
 
-                setData(newItems);
+                setData(prev => [...prev, ...newItems]);
                 setView('DASHBOARD');
             }
         } catch (error) {
