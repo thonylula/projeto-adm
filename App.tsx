@@ -247,6 +247,21 @@ export default function App() {
     }
   };
 
+  // --- Public Showcase View (No login required) ---
+  if (isPublicShowcase) {
+    return (
+      <DashboardLayout
+        activeTab="delivery-order"
+        onTabChange={() => { }} // Disable switching in public mode
+        onLogout={() => { window.location.href = window.location.origin + window.location.pathname; }}
+        currentUser="Visitante"
+        isPublic={true}
+      >
+        <DeliveryOrder isPublic={true} />
+      </DashboardLayout>
+    );
+  }
+
   // Render Login Screen (Wrapped in MainLayout for aesthetics)
   if (!isAuthenticated) {
     return (
@@ -277,20 +292,6 @@ export default function App() {
     );
   }
 
-  // --- Public Showcase View (No login required) ---
-  if (isPublicShowcase) {
-    return (
-      <DashboardLayout
-        activeTab="delivery-order"
-        onTabChange={() => { }} // Disable switching in public mode
-        onLogout={() => { window.location.href = window.location.origin + window.location.pathname; }}
-        currentUser="Visitante"
-        isPublic={true}
-      >
-        <DeliveryOrder isPublic={true} />
-      </DashboardLayout>
-    );
-  }
 
   // Error Boundary for rendering content
   try {

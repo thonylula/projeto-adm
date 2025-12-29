@@ -89,7 +89,7 @@ const safeParseNumber = (val: any): number => {
     return 0;
 };
 
-export const DeliveryOrder: React.FC = () => {
+export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false }) => {
     const [view, setView] = useState<'INPUT' | 'DASHBOARD' | 'HISTORY' | 'SHOWCASE'>('INPUT');
     const [inputText, setInputText] = useState('');
     const [data, setData] = useState<HarvestData[]>(INITIAL_HARVEST_DATA);
