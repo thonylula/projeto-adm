@@ -7,7 +7,7 @@ import { SupabaseService } from '../services/supabaseService';
 
 // --- Interfaces based on User Data ---
 interface HarvestData {
-    id: number;
+    id: string;
     data: string;
     viveiro: string;
     cliente: string;
@@ -25,6 +25,10 @@ interface HarvestData {
 interface ClientInfo {
     codigo: string;
     prazo: string;
+}
+
+interface DeliveryOrderProps {
+    isPublic?: boolean;
 }
 
 // --- Hardcoded Data (Ported from User Source) ---
@@ -753,7 +757,7 @@ export const DeliveryOrder: React.FC = () => {
                         </button>
                     )}
 
-                    {view === 'SHOWCASE' && (
+                    {view === 'SHOWCASE' && !isPublic && (
                         <button
                             onClick={() => {
                                 const url = new URL(window.location.href);
@@ -1113,13 +1117,17 @@ export const DeliveryOrder: React.FC = () => {
 
             {/* --- FOOTER ACTIONS --- */}
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40 border-t border-gray-200 print:hidden flex justify-center gap-4 flex-wrap">
-                <button onClick={clearAllData} className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-red-500 hover:text-white text-gray-700 rounded-lg shadow font-medium transition-all text-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Limpar Tudo
-                </button>
-                <div className="w-px h-8 bg-gray-300 mx-2"></div>
+                {view !== 'SHOWCASE' && (
+                    <>
+                        <button onClick={clearAllData} className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-red-500 hover:text-white text-gray-700 rounded-lg shadow font-medium transition-all text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Limpar Tudo
+                        </button>
+                        <div className="w-px h-8 bg-gray-300 mx-2"></div>
+                    </>
+                )}
                 <button onClick={handleExportPDF} className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow font-medium transition-all text-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
                     PDF
@@ -1133,33 +1141,37 @@ export const DeliveryOrder: React.FC = () => {
                     HTML
                 </button>
 
-                <div className="w-px h-8 bg-gray-300 mx-2"></div>
+                {view !== 'SHOWCASE' && (
+                    <>
+                        <div className="w-px h-8 bg-gray-300 mx-2"></div>
 
-                <button onClick={handleBackup} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow font-medium transition-all text-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                    Salvar Backup
-                </button>
-                <div className="relative">
-                    <input type="file" id="restore-backup" className="hidden" accept=".json" onChange={handleRestore} />
-                    <label htmlFor="restore-backup" className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg shadow font-medium transition-all text-sm cursor-pointer">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                        Restaurar
-                    </label>
-                </div>
+                        <button onClick={handleBackup} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow font-medium transition-all text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            Salvar Backup
+                        </button>
+                        <div className="relative">
+                            <input type="file" id="restore-backup" className="hidden" accept=".json" onChange={handleRestore} />
+                            <label htmlFor="restore-backup" className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg shadow font-medium transition-all text-sm cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                                Restaurar
+                            </label>
+                        </div>
 
-                <div className="w-px h-8 bg-gray-300 mx-2"></div>
+                        <div className="w-px h-8 bg-gray-300 mx-2"></div>
 
-                <button onClick={handleManualSave} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 ${isSaving ? 'bg-purple-400' : 'bg-purple-600 hover:bg-purple-700'} text-white rounded-lg shadow font-medium transition-all text-sm`}>
-                    {isSaving ? (
-                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
-                    )}
-                    {isSaving ? 'Salvando...' : 'Salvar no Banco'}
-                </button>
+                        <button onClick={handleManualSave} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 ${isSaving ? 'bg-purple-400' : 'bg-purple-600 hover:bg-purple-700'} text-white rounded-lg shadow font-medium transition-all text-sm`}>
+                            {isSaving ? (
+                                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+                            )}
+                            {isSaving ? 'Salvando...' : 'Salvar no Banco'}
+                        </button>
+                    </>
+                )}
             </div>
             <div className="h-24"></div> {/* Spacer for fixed footer */}
         </div>

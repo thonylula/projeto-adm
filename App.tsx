@@ -287,7 +287,7 @@ export default function App() {
         currentUser="Visitante"
         isPublic={true}
       >
-        <DeliveryOrder />
+        <DeliveryOrder isPublic={true} />
       </DashboardLayout>
     );
   }
