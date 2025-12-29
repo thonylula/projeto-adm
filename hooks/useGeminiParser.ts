@@ -21,7 +21,7 @@ export const useGeminiParser = ({ onSuccess, onError }: UseGeminiParserProps = {
                 ]
             }];
 
-            console.log(`[Gemini Hook] Processing ${files.length} files via Proxy...`);
+            // console.log(`Processing ${files.length} files via Proxy...`);
 
             const response = await fetch('/api/generative', {
                 method: 'POST',
@@ -38,6 +38,7 @@ export const useGeminiParser = ({ onSuccess, onError }: UseGeminiParserProps = {
 
             if (!response.ok || !payload.ok) {
                 const errorMsg = payload.error?.message || payload.error || 'Unknown error';
+                console.warn("AI Request Failed:", errorMsg); // Use warn instead of throwing immediately to debug
                 throw new Error(`Proxy AI Error: ${response.status} - ${errorMsg}`);
             }
 
@@ -86,7 +87,7 @@ export const useGeminiParser = ({ onSuccess, onError }: UseGeminiParserProps = {
             let success = false;
             let parsedResult = null;
 
-            console.log(`[Gemini Hook] Processing text via Proxy...`);
+            // console.log(`Processing text via Proxy...`);
 
             const response = await fetch('/api/generative', {
                 method: 'POST',
@@ -101,6 +102,7 @@ export const useGeminiParser = ({ onSuccess, onError }: UseGeminiParserProps = {
 
             if (!response.ok || !payload.ok) {
                 const errorMsg = payload.error?.message || payload.error || 'Unknown error';
+                console.warn("AI Request Failed:", errorMsg);
                 throw new Error(`Proxy AI Error: ${response.status} - ${errorMsg}`);
             }
 
