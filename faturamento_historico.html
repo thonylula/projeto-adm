@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumo de Faturamento e Histórico - Carapitanga 0019</title>
+    <!-- Carregando Tailwind CSS para estilização rápida e limpa -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Cores personalizadas baseadas na logo da Carapitanga */
+        :root {
+            --carapitanga-dark: #3a3a3a;
+            /* Cinza escuro da logo */
+            --carapitanga-orange: #f26522;
+            /* Laranja principal da logo */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f6;
+        }
+
+        /* --- INÍCIO: NOVOS ESTILOS PARA O MODAL --- */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.6);
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .modal-content {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .gemini-response-text {
+            white-space: pre-wrap;
+            /* Mantém a formatação do LLM (quebras de linha) */
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            max-height: 40vh;
+            /* Altura máxima para o texto */
+            overflow-y: auto;
+            /* Adiciona scroll se o texto for muito longo */
+        }
+
+        /* Spinner (Carregando) */
+        .loader {
+            border: 4px solid #f3f3f3;
+            /* Cinza claro */
+            border-top: 4px solid var(--carapitanga-orange);
+            /* Laranja */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* --- FIM: NOVOS ESTILOS PARA O MODAL --- */
+
+        /* --- INÍCIO: REGRAS DE IMPRESSÃO A4 --- */
+
+        /* Define o tamanho da página para A4 e margens */
+        @page {
+            size: A4 portrait;
+            /* Define A4 vertical. O usuário pode mudar para horizontal no diálogo de impressão. */
+            margin: 1.5cm;
+        }
+
+        @media print {
+
+            /* Reseta o layout do body para impressão */
+            body {
+                font-size: 10pt;
+                /* Fonte um pouco menor para caber mais */
+                background-color: #fff;
+                margin: 0;
+                padding: 0;
+            }
+
+            /* Remove sombras e ajusta padding do cabeçalho */
+            header.header-bg,
+            section,
+            .summary-card,
+            .footer-style,
+            .history-card {
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
+
+            header.header-bg {
+                padding: 10px 0 !important;
+            }
+
+            /* Força a impressão das cores de fundo e texto (IMPORTANTE) */
+            .header-bg,
+            .footer-style {
+                background-color: var(--carapitanga-orange) !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+                /* Chrome/Safari */
+                print-color-adjust: exact;
+                /* Firefox/Standard */
+            }
+
+            /* Cor do cabeçalho da tabela na impressão */
+            th,
+            .history-bg {
+                background-color: var(--carapitanga-orange) !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .footer-style {
+                background-color: var(--carapitanga-dark) !important;
+            }
+
+            .summary-card,
+            .history-card {
+                border-left: 5px solid var(--carapitanga-orange) !important;
+                border: 1px solid #ddd;
+                /* Adiciona borda leve para separar cards */
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            td.highlight-price {
+                color: #16a34a !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .logo-img {
+                display: none !important;
+                /* Logo removida */
+            }
+
+            /* Oculta modal e botão na impressão */
+            .modal-overlay,
+            .gemini-button {
+                display: none !important;
+            }
+
+            /* Força os cartões de resumo a ficarem em coluna única */
+            .grid {
+                display: block !important;
+            }
+
+            .grid>* {
+                margin-bottom: 20px;
+                page-break-inside: avoid;
+            }
+
+            /* Evita quebras de página ruins */
+            tbody tr,
+            .summary-card,
+            header,
+            .summary-item,
+            .history-card {
+                page-break-inside: avoid;
+            }
+
+            /* Ajusta a tabela para impressão */
+            table {
+                width: 100% !important;
+                box-shadow: none;
+            }
+
+            th,
+            td {
+                padding: 6px 8px;
+                /* Padding menor para caber mais */
+                border-bottom: 1px solid #ddd !important;
+                border-right: none !important;
+            }
+
+            th {
+                font-size: 10pt;
+            }
+
+            td {
+                font-size: 9pt;
+            }
+
+            /* Zebrado na impressão */
+            tbody tr:nth-child(odd) td {
+                background-color: #f9f9f9 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            main {
+                flex-grow: 0;
+                /* Desativa o flex-grow na impressão */
+            }
+
+            footer {
+                position: relative;
+                /* Rodapé fluido na impressão */
+                /* bottom: 0;
+                width: 90%; 
+                left: 5%; */
+                text-align: center;
+                font-size: 8pt;
+                margin-top: 20px;
+            }
+
+            /* MUDANÇA: Oculta a coluna de checkbox na impressão */
+            .col-ocultar {
+                display: none !important;
+            }
+        }
+
+        /* --- FIM: REGRAS DE IMPRESSÃO A4 --- */
+
+
+        /* Estilos para o cabeçalho */
+        .header-bg {
+            background-color: var(--carapitanga-orange);
+            color: white;
+        }
+
+        /* NOVO: Estilo para o botão Gemini (será oculto na impressão) */
+        .gemini-button {
+            background-color: var(--carapitanga-dark);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: background-color 0.2s ease;
+            margin-top: 12px;
+            /* Espaçamento */
+            display: block;
+            /* Ocupa a largura */
+            width: 100%;
+            text-align: center;
+        }
+
+        .gemini-button:hover {
+            background-color: var(--carapitanga-orange);
+        }
+
+        /* Estilos para as tabelas */
+        .table-container {
+            /* Removida a borda laranja grossa */
+            /* border: 3px solid var(--carapitanga-orange); */
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            /* Mantém os cantos arredondados */
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th,
+        td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            /* Borda da linha mais CLARA */
+            border-right: none;
+            /* REMOVIDA borda vertical */
+        }
+
+        th {
+            background-color: var(--carapitanga-orange);
+            /* Fundo LARANJA */
+            font-weight: 700;
+            /* Mais negrito (bold) */
+            color: white;
+            /* Texto BRANCO */
+            font-size: 1rem;
+            /* Fonte maior (16px) */
+            text-transform: uppercase;
+            /* Removida a borda inferior escura */
+            /* border-bottom: 2px solid var(--carapitanga-dark); */
+        }
+
+        /* Aplica borda apenas no primeiro e último TH para cantos arredondados */
+        th:first-child {
+            border-top-left-radius: 8px;
+        }
+
+        th:last-child {
+            border-top-right-radius: 8px;
+        }
+
+        tbody tr:last-child td {
+            /* A borda inferior da última linha é do container */
+            border-bottom: none;
+        }
+
+        /* Fonte dos dados da tabela */
+        tbody td {
+            font-size: 0.875rem;
+            /* Fonte menor (14px) */
+            font-weight: 600;
+            /* Negrito leve (semibold) */
+            color: #374151;
+            /* Tom de cinza escuro */
+            background-color: #ffffff;
+            /* Fundo branco padrão */
+            transition: visibility 0.1s ease;
+            /* Adiciona transição suave */
+        }
+
+        /* Estilo ZEBRADO (linhas alternadas) */
+        tbody tr:nth-child(odd) td {
+            background-color: #f9fafb;
+            /* Cinza bem claro */
+        }
+
+        tbody tr:hover td {
+            background-color: #f0f0f0;
+            /* Um pouco mais escuro no hover */
+        }
+
+        td.highlight {
+            font-weight: 800;
+            /* Extra-bold */
+            color: var(--carapitanga-dark);
+        }
+
+        td.highlight-price {
+            font-weight: 800;
+            /* Extra-bold */
+            color: #16a34a;
+            /* Verde para valor total */
+        }
+
+        /* Estilos para os cartões de resumo */
+        .summary-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid var(--carapitanga-orange);
+        }
+
+        .summary-title {
+            font-size: 1.25rem;
+            /* 20px */
+            font-weight: 700;
+            color: var(--carapitanga-dark);
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            font-size: 0.875rem;
+            /* 14px */
+            color: #525252;
+            font-weight: 600;
+            /* Negrito leve (semibold) */
+        }
+
+        .summary-value {
+            font-size: 1rem;
+            /* 16px */
+            font-weight: 700;
+            /* Negrito (bold) */
+            color: #171717;
+        }
+
+        .summary-value.total {
+            font-size: 1.125rem;
+            /* 18px */
+            font-weight: 800;
+            /* Extra-bold */
+            color: var(--carapitanga-orange);
+        }
+
+        .logo-img {
+            /* Logo foi removida, mas a classe é mantida para não quebrar a regra de impressão */
+            display: none;
+        }
+
+        /* Estilo do Rodapé */
+        .footer-style {
+            background-color: var(--carapitanga-dark);
+            color: white;
+            padding: 1rem;
+            /* 16px */
+            text-align: center;
+            font-size: 0.875rem;
+            /* 14px */
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .footer-style:hover {
+            background-color: var(--carapitanga-orange);
+            color: white;
+        }
+
+        /* --- STYLES FOR HISTORY SECTION --- */
+        .history-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #2563eb;
+            /* Azul para diferenciar do cliente */
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .history-bg {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .history-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            padding: 16px 24px;
+            border-bottom: 2px solid #e5e7eb;
+            background-color: #f8fafc;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 p-4 md:p-8 flex flex-col min-h-screen">
+
+    <!-- Cabeçalho -->
+    <header class="header-bg p-4 rounded-lg shadow-lg mb-8">
+        <!-- Título Centralizado -->
+        <div class="text-center">
+            <h2 class="text-xl md:text-3xl font-semibold text-white">Resumo de Faturamento Carapitanga 0019(Ocean) -
+                Histórico Completo</h2>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+        <!-- Tabela Principal de Despescas -->
+        <section class="bg-white table-container mb-8">
+            <h3 class="text-xl font-bold p-4 text-gray-700 border-b-2 border-gray-300">Detalhes das Entregas
+                (Novembro/Dezembro 2025)</h3>
+            <table class="min-w-full">
+                <thead>
+                    <tr>
+                        <!-- MUDANÇA: Adicionada coluna para o checkbox -->
+                        <th class="text-center w-16 col-ocultar">Ocultar</th>
+                        <th>Data</th>
+                        <th>Viveiro</th>
+                        <th>Cliente</th>
+                        <th>Produção (kg)</th>
+                        <th>Peso Médio (g)</th> <!-- COLUNA MOVIDA PARA CÁ -->
+                        <th>Preço (R$)</th>
+                        <th>Valor Total (R$)</th>
+                        <th>Sobrev. (%)</th>
+                        <th>FCA</th>
+                        <th>Dias Cult.</th>
+                        <th>Laboratório</th>
+                        <th>Notas</th>
+                    </tr>
+                </thead>
+                <tbody id="harvest-table-body">
+                    <!-- Dados serão inseridos pelo JavaScript -->
+                </tbody>
+                <tfoot class="bg-gray-50 border-t-2 border-t-gray-800">
+                    <tr class="font-bold text-gray-800">
+                        <td colspan="4" class="text-right pr-4 text-base">TOTAIS (SELECIONADOS):</td>
+                        <td id="total-biomassa" class="highlight text-base">0 kg</td>
+                        <td>-</td> <!-- Célula vazia para alinhar com Peso Médio -->
+                        <td>-</td> <!-- Célula vazia para alinhar com Preço -->
+                        <td id="total-valor" class="highlight-price text-base">R$ 0,00</td>
+                        <td colspan="5"></td> <!-- Colspan ajustado para 5 colunas restantes -->
+                    </tr>
+                </tfoot>
+            </table>
+        </section>
+
+        <!-- Seção de Resumo por Cliente -->
+        <section class="mb-12">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Resumo por Cliente</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="summary-section">
+                <!-- Resumos dos clientes serão inseridos pelo JavaScript -->
+            </div>
+        </section>
+
+        <!-- Seção de Histórico Financeiro -->
+        <section>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-blue-500">Histórico de Faturamento -
+                Balancetes</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Balancete Mensal -->
+                <div class="history-card">
+                    <div class="history-title">Balancete Mensal</div>
+                    <div class="p-4">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-blue-600 text-white">
+                                    <th class="py-2 px-4 rounded-tl hidden-print-bg history-bg">Mês/Ano</th>
+                                    <th class="py-2 px-4 history-bg">Biomassa (kg)</th>
+                                    <th class="py-2 px-4 rounded-tr history-bg">Faturamento (R$)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monthly-balance-body">
+                                <!-- JS Injects here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Balancete Trimestral -->
+                <div class="history-card">
+                    <div class="history-title">Balancete Trimestral</div>
+                    <div class="p-4">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-blue-600 text-white">
+                                    <th class="py-2 px-4 rounded-tl history-bg">Trimestre</th>
+                                    <th class="py-2 px-4 history-bg">Biomassa (kg)</th>
+                                    <th class="py-2 px-4 rounded-tr history-bg">Faturamento (R$)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quarterly-balance-body">
+                                <!-- JS Injects here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Balancete Semestral -->
+                <div class="history-card">
+                    <div class="history-title">Balancete Semestral</div>
+                    <div class="p-4">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-blue-600 text-white">
+                                    <th class="py-2 px-4 rounded-tl history-bg">Semestre</th>
+                                    <th class="py-2 px-4 history-bg">Biomassa (kg)</th>
+                                    <th class="py-2 px-4 rounded-tr history-bg">Faturamento (R$)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="semesterly-balance-body">
+                                <!-- JS Injects here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Balancete Anual -->
+                <div class="history-card">
+                    <div class="history-title">Balancete Anual</div>
+                    <div class="p-4">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-blue-600 text-white">
+                                    <th class="py-2 px-4 rounded-tl history-bg">Ano</th>
+                                    <th class="py-2 px-4 history-bg">Biomassa (kg)</th>
+                                    <th class="py-2 px-4 rounded-tr history-bg">Faturamento (R$)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="yearly-balance-body">
+                                <!-- JS Injects here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="footer-style mt-8 rounded-lg">
+        Carapitanga Admin System &copy; 2025
+    </footer>
+
+    <!-- --- INÍCIO: HTML DO NOVO MODAL GEMINI --- -->
+    <div id="gemini-modal"
+        class="modal-overlay fixed inset-0 w-full h-full flex items-center justify-center p-4 z-50 hidden"
+        onclick="hideEmailModal()">
+        <div class="modal-content bg-white w-full max-w-2xl rounded-lg shadow-xl p-6" onclick="event.stopPropagation()">
+            <!-- Cabeçalho do Modal -->
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h4 class="text-xl font-bold text-gray-800">✨ Assistente de E-mail Gemini</h4>
+                <button onclick="hideEmailModal()" class="text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+
+            <!-- Conteúdo do Modal -->
+            <div class="py-4">
+                <!-- Estado de Carregamento -->
+                <div id="modal-loading" class="flex flex-col items-center justify-center py-8 hidden">
+                    <div class="loader"></div>
+                    <span class="mt-4 text-gray-600 font-medium">Gerando rascunho...</span>
+                </div>
+
+                <!-- Estado de Conteúdo (Resultado) -->
+                <div id="modal-result">
+                    <p class="mb-3 text-gray-700">A API do Gemini gerou o seguinte rascunho de e-mail. Revise e copie o
+                        texto abaixo:</p>
+                    <div id="gemini-response-text" class="gemini-response-text">
+                        <!-- O texto gerado pela IA aparecerá aqui -->
+                    </div>
+                </div>
+
+                <!-- Estado de Erro -->
+                <div id="modal-error" class="hidden">
+                    <p class="text-red-600 font-medium">Ocorreu um erro ao chamar a API do Gemini. Tente novamente.</p>
+                </div>
+            </div>
+
+            <!-- Rodapé do Modal -->
+            <div class="flex justify-end pt-4 border-t">
+                <button onclick="hideEmailModal()"
+                    class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- --- FIM: HTML DO NOVO MODAL GEMINI --- -->
+
+    <script>
+        // Dados das despescas
+        const harvestData = [
+            {
+                data: "31/10/2025",
+                viveiro: "OC - 002",
+                cliente: "CEAGESP",
+                producao: 765,
+                preco: 23.00,
+                pesoMedio: 12.5,
+                sobrevivencia: "19%",
+                fca: "1,1",
+                diasCultivo: 38,
+                laboratorio: "AQUASUL",
+                notas: ""
+            },
+            {
+                data: "31/10/2025",
+                viveiro: "OC - P09",
+                cliente: "CEAGESP",
+                producao: 675,
+                preco: 22.00,
+                pesoMedio: 10,
+                sobrevivencia: "15%",
+                fca: "3,8",
+                diasCultivo: 168,
+                laboratorio: "AQUASUL",
+                notas: ""
+            },
+            {
+                data: "31/10/2025",
+                viveiro: "OC - 016",
+                cliente: "CEAGESP",
+                producao: 3450,
+                preco: 22.00,
+                pesoMedio: 11,
+                sobrevivencia: "50%",
+                fca: "2.2",
+                diasCultivo: 93,
+                laboratorio: "AQUASUL",
+                notas: ""
+            },
+            {
+                data: "31/10/2025",
+                viveiro: "OC - 005",
+                cliente: "CEAGESP",
+                producao: 1513,
+                preco: 22.00,
+                pesoMedio: 10,
+                sobrevivencia: "-- %",
+                fca: "--",
+                diasCultivo: 102,
+                laboratorio: "AQUASUL",
+                notas: "Despesca PARCIAL"
+            },
+            {
+                data: "31/10/2025",
+                viveiro: "OC - 013",
+                cliente: "CEAGESP",
+                producao: 3285,
+                preco: 22.00,
+                pesoMedio: 11,
+                sobrevivencia: "47%",
+                fca: "2,0",
+                diasCultivo: 93,
+                laboratorio: "AQUASUL",
+                notas: ""
+            },
+            {
+                data: "26/10/2025",
+                viveiro: "OC - 018",
+                cliente: "Funelli",
+                producao: 3616,
+                preco: 22.50,
+                pesoMedio: 10.5,
+                sobrevivencia: "59%",
+                fca: "1,30",
+                diasCultivo: 83,
+                laboratorio: "AQUASUL",
+                notas: ""
+            },
+            {
+                data: "26/10/2025",
+                viveiro: "OC - 011",
+                cliente: "Funelli",
+                producao: 4624,
+                preco: 22.50,
+                pesoMedio: 10.5,
+                sobrevivencia: "51%",
+                fca: "1,55",
+                diasCultivo: 93,
+                laboratorio: "AQUASUL",
+                notas: ""
+            },
+            {
+                data: "10/11/2025",
+                viveiro: "OC - 020",
+                cliente: "CEAGESP",
+                producao: 2140,
+                preco: 23.00,
+                pesoMedio: 12,
+                sobrevivencia: "59%",
+                fca: "0.60",
+                diasCultivo: 46,
+                laboratorio: "AQUASUL",
+                notas: ""
+            },
+            {
+                data: "10/11/2025",
+                viveiro: "OC - 005",
+                cliente: "CEAGESP",
+                producao: 2235,
+                preco: 22.00,
+                pesoMedio: 10,
+                sobrevivencia: "52%",
+                fca: "2,00",
+                diasCultivo: 111,
+                laboratorio: "AQUASUL",
+                notas: ""
+            },
+            // --- INÍCIO DOS NOVOS DADOS DE DEZEMBRO ---
+            {
+                data: "14/12/2025",
+                viveiro: "OC - 003",
+                cliente: "Victor",
+                producao: 2595,
+                preco: 23.00,
+                pesoMedio: 11.5,
+                sobrevivencia: "81%",
+                fca: "0.93",
+                diasCultivo: 72,
+                laboratorio: "AQUASUL",
+                notas: ""
+            },
+            {
+                data: "14/12/2025",
+                viveiro: "OC - 003",
+                cliente: "Henrique",
+                producao: 1133,
+                preco: 23.00,
+                pesoMedio: 11.5,
+                sobrevivencia: "81%",
+                fca: "0.93",
+                diasCultivo: 72,
+                laboratorio: "AQUASUL",
+                notas: ""
+            },
+            {
+                data: "13/12/2025",
+                viveiro: "OC - 015",
+                cliente: "Victor",
+                producao: 3000,
+                preco: 23.00,
+                pesoMedio: 11,
+                sobrevivencia: "83%",
+                fca: "0.96",
+                diasCultivo: 71,
+                laboratorio: "AQUASUL",
+                notas: ""
+            },
+            {
+                data: "13/12/2025",
+                viveiro: "OC - 014",
+                cliente: "Victor",
+                producao: 3675,
+                preco: 22.00, /* PREÇO ATUALIZADO */
+                pesoMedio: 9.1,
+                sobrevivencia: "76%",
+                fca: "1",
+                diasCultivo: 72,
+                laboratorio: "AQUASUL",
+                notas: "" /* NOTA REMOVIDA */
+            }
+            // --- FIM DOS NOVOS DADOS ---
+        ];
+
+        // Informações adicionais dos clientes
+        const clientInfo = {
+            "CEAGESP": { codigo: "8410", prazo: "28 dias" },
+            "Funelli": { codigo: "946", prazo: "18 dias" },
+            "Victor": { codigo: "---", prazo: "---" },
+            "Henrique": { codigo: "---", prazo: "---" }
+        };
+
+        // Função para formatar números como moeda (BRL)
+        function formatCurrency(value) {
+            return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        // Função para formatar números com separador de milhar
+        function formatNumber(value, unit = '') {
+            return value.toLocaleString('pt-BR') + unit;
+        }
+
+        // Função para formatar peso com 'g'
+        function formatGrams(value) {
+            return value.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' g';
+        }
+
+        // --- INÍCIO DA NOVA FUNÇÃO ---
+        // Função para ocultar/mostrar as informações da linha
+        function toggleRow(checkbox) {
+            const tr = checkbox.closest('tr');
+            if (!tr) return;
+
+            // Pega todas as células (td) da linha, exceto a primeira (que contém o checkbox)
+            const cellsToToggle = Array.from(tr.querySelectorAll('td')).slice(1);
+
+            // Define a visibilidade das células com base no estado do checkbox
+            const newVisibility = checkbox.checked ? 'visible' : 'hidden';
+
+            cellsToToggle.forEach(cell => {
+                cell.style.visibility = newVisibility;
+            });
+        }
+
+        // --- INÍCIO: NOVAS FUNÇÕES PARA CÁLCULO DINÂMICO ---
+
+        // Função wrapper que é chamada na mudança do checkbox
+        function handleCheckboxChange(checkbox) {
+            // 1. Oculta/mostra a linha (funcionalidade existente)
+            toggleRow(checkbox);
+            // 2. Recalcula os totais gerais (nova funcionalidade)
+            updateGrandTotals();
+        }
+
+        // Função para recalcular e atualizar os totais gerais no rodapé da tabela
+        function updateGrandTotals() {
+            let newTotalBiomassa = 0;
+            let newTotalValor = 0;
+
+            // Seleciona APENAS os checkboxes que estão MARCADOS
+            const checkedBoxes = document.querySelectorAll('#harvest-table-body input[type="checkbox"]:checked');
+
+            checkedBoxes.forEach(box => {
+                // Soma os valores armazenados nos atributos data-*
+                newTotalBiomassa += parseFloat(box.dataset.producao || 0);
+                newTotalValor += parseFloat(box.dataset.valor || 0);
+            });
+
+            // Atualiza o HTML do rodapé com os novos totais formatados
+            document.getElementById('total-biomassa').textContent = formatNumber(newTotalBiomassa, ' kg');
+            document.getElementById('total-valor').textContent = formatCurrency(newTotalValor);
+        }
+        // --- FIM: NOVAS FUNÇÕES ---
+
+        // --- INÍCIO: NOVAS FUNÇÕES DO MODAL E API GEMINI ---
+
+        const modal = document.getElementById('gemini-modal');
+        const modalLoading = document.getElementById('modal-loading');
+        const modalResult = document.getElementById('modal-result');
+        const modalError = document.getElementById('modal-error');
+        const geminiResponseText = document.getElementById('gemini-response-text');
+
+        // Mostra o modal e inicia a chamada da API
+        function showEmailModal(cliente) {
+            if (!modal) return;
+
+            modal.classList.remove('hidden'); // Mostra o modal (overlay)
+
+            // Reseta os estados
+            modalLoading.classList.remove('hidden');
+            modalResult.classList.add('hidden');
+            modalError.classList.add('hidden');
+            geminiResponseText.textContent = ''; // Limpa texto antigo
+
+            // Chama a função da API
+            generateGeminiEmail(cliente);
+        }
+
+        // Esconde o modal
+        function hideEmailModal() {
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // Função assíncrona para chamar a API do Gemini
+        async function generateGeminiEmail(cliente) {
+            // Pegar os dados já processados do cliente
+            const data = clientDataGlob[cliente]; // Use a global variable to access processed data
+            const info = clientInfo[cliente];
+
+            if (!data || !info) {
+                modalLoading.classList.add('hidden');
+                modalError.classList.remove('hidden');
+                geminiResponseText.textContent = 'Erro: Dados do cliente não encontrados.';
+                return;
+            }
+
+            // Recalcula as médias para enviar no prompt
+            const mediaPreco = data.valor / data.biomassa;
+            const mediaGramatura = data.gramaturas.reduce((a, b) => a + b, 0) / data.count;
+
+            // 1. Defina as instruções do sistema e o prompt do usuário
+            const systemPrompt = "Você é um assistente de faturamento da Carapitanga, uma empresa de aquicultura (criação de camarão). Seu tom é profissional, amigável e conciso. Gere apenas o corpo do e-mail, sem a saudação ('Prezado...') e sem a assinatura final (como 'Atenciosamente'). O e-mail deve ser em Português do Brasil.";
+
+            const userQuery = `
+            Gere um breve e-mail de faturamento para o cliente ${cliente}.
+            
+            Detalhes da Fatura:
+            - Cliente: ${cliente}
+            - Biomassa Total (Faturada): ${formatNumber(data.biomassa, ' kg')}
+            - Valor Total: ${formatCurrency(data.valor)}
+            - Preço Médio Ponderado: ${formatCurrency(mediaPreco)}/kg
+            - Gramatura Média: ${formatGrams(mediaGramatura)}
+            - Prazo de Pagamento: ${info.prazo}
+            
+            O e-mail deve:
+            1. Informar o fechamento do faturamento referente às últimas entregas.
+            2. Listar os totais de forma clara (Biomassa Total e Valor Total).
+            3. Mencionar que o prazo de pagamento é de ${info.prazo}.
+            4. Manter um tom cordial e profissional.
+            `;
+
+            // 2. Configure a API Key e o Endpoint
+            const apiKey = ""; // Deixado em branco, conforme instruções
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            // 3. Monte o Payload
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+
+            // 4. Faça a chamada da API (com exponential backoff)
+            try {
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    const text = candidate.content.parts[0].text;
+                    // Sucesso: Exibe o resultado
+                    geminiResponseText.textContent = text;
+                    modalLoading.classList.add('hidden');
+                    modalResult.classList.remove('hidden');
+                } else {
+                    throw new Error("Resposta da API inválida ou vazia.");
+                }
+            } catch (error) {
+                // Erro: Exibe a mensagem de erro
+                console.error("Erro ao chamar API Gemini:", error);
+                modalLoading.classList.add('hidden');
+                modalError.classList.remove('hidden');
+                modalResult.classList.add('hidden');
+            }
+        }
+
+        // Função utilitária para retentativa com backoff exponencial
+        async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status === 429 || response.status >= 500) { // 429: Too Many Requests, 5xx: Server Error
+                        throw new Error(`Retryable error: ${response.status}`);
+                    }
+                    return response; // Sucesso
+                } catch (error) {
+                    if (i === retries - 1) throw error; // Última tentativa, joga o erro
+                    await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i))); // Espera exponencial
+                }
+            }
+        }
+
+        // --- FIM: NOVAS FUNÇÕES DO MODAL E API GEMINI ---
+
+        let clientDataGlob = {}; // Global variable to store processed client data
+
+        // --- NEW: Financial History Logic ---
+        function processFinancialHistory(data) {
+            const months = {};
+            const quarters = {};
+            const semesters = {};
+            const years = {};
+
+            data.forEach(item => {
+                const [d, m, y] = item.data.split('/');
+                const dateObj = new Date(y, m - 1, d);
+                const valorTotal = item.producao * item.preco;
+
+                // Month Key (e.g. "10/2025")
+                const monthKey = `${m.padStart(2, '0')}/${y}`;
+                if (!months[monthKey]) months[monthKey] = { biomassa: 0, valor: 0 };
+                months[monthKey].biomassa += item.producao;
+                months[monthKey].valor += valorTotal;
+
+                // Quarter Key (e.g., "4T 2025")
+                const q = Math.floor((dateObj.getMonth() + 3) / 3);
+                const quarterKey = `${q}T ${y}`;
+                if (!quarters[querterKey = quarterKey]) quarters[quarterKey] = { biomassa: 0, valor: 0 };
+                quarters[quarterKey].biomassa += item.producao;
+                quarters[quarterKey].valor += valorTotal;
+
+                // Semester Key (e.g., "2S 2025")
+                const s = Math.floor((dateObj.getMonth() + 6) / 6);
+                const semesterKey = `${s}S ${y}`;
+                if (!semesters[semesterKey]) semesters[semesterKey] = { biomassa: 0, valor: 0 };
+                semesters[semesterKey].biomassa += item.producao;
+                semesters[semesterKey].valor += valorTotal;
+
+                // Year Key (e.g., "2025")
+                const yearKey = y;
+                if (!years[yearKey]) years[yearKey] = { biomassa: 0, valor: 0 };
+                years[yearKey].biomassa += item.producao;
+                years[yearKey].valor += valorTotal;
+            });
+
+            return { months, quarters, semesters, years };
+        }
+
+        function renderHistoryTable(id, dataObj) {
+            const tbody = document.getElementById(id);
+            if (!tbody) return;
+
+            // Sort keys to ensure chronological order
+            // Note: simple string sort works for yyyy but for mm/yyyy or quarters we might need better logic if years differ heavily.
+            // Given the dataset is small (late 2025), simple sort or reverse keys logic is usually fine.
+            // Let's rely on standard object iteration or sort keys:
+            const keys = Object.keys(dataObj).sort();
+
+            tbody.innerHTML = '';
+            keys.forEach(key => {
+                const row = dataObj[key];
+                const tr = document.createElement('tr');
+                tr.className = "border-b hover:bg-gray-50";
+                tr.innerHTML = `
+                    <td class="py-2 px-4 text-gray-700 font-medium">${key}</td>
+                    <td class="py-2 px-4 text-gray-600">${formatNumber(row.biomassa, ' kg')}</td>
+                    <td class="py-2 px-4 font-bold text-green-600">${formatCurrency(row.valor)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        // --- END: Financial History Logic ---
+
+        // Processa os dados e preenche a tabela
+        document.addEventListener('DOMContentLoaded', () => {
+            const tableBody = document.getElementById('harvest-table-body');
+            const summarySection = document.getElementById('summary-section');
+
+            let grandTotalBiomassa = 0;
+            let grandTotalValor = 0;
+
+            // Agrupa os dados por cliente
+            const clientData = {};
+
+            harvestData.forEach(row => {
+                const valorTotal = row.producao * row.preco;
+                grandTotalBiomassa += row.producao;
+                grandTotalValor += valorTotal;
+
+                // Adiciona linha na tabela principal
+                const tr = document.createElement('tr');
+
+                tr.innerHTML = `
+                    <td class="text-center col-ocultar">
+                        <input type="checkbox" 
+                               checked 
+                               onchange="handleCheckboxChange(this)" 
+                               class="h-5 w-5 rounded text-orange-600 focus:ring-orange-500"
+                               data-producao="${row.producao}"
+                               data-valor="${valorTotal}">
+                    </td>
+                    <td>${row.data}</td>
+                    <td>${row.viveiro}</td>
+                    <td class="font-medium text-gray-800">${row.cliente}</td>
+                    <td class="highlight">${formatNumber(row.producao, ' kg')}</td>
+                    <td>${formatGrams(row.pesoMedio)}</td> <!-- CÉLULA MOVIDA PARA CÁ -->
+                    <td>${formatCurrency(row.preco)}</td>
+                    <td class="highlight-price">${formatCurrency(valorTotal)}</td>
+                    <td>${row.sobrevivencia}</td>
+                    <td>${row.fca}</td>
+                    <td>${row.diasCultivo}</td>
+                    <td>${row.laboratorio}</td>
+                    <td class="text-red-600 font-medium">${row.notas}</td>
+                `;
+                tableBody.appendChild(tr);
+
+                // Agrega dados para o resumo
+                if (!clientData[row.cliente]) {
+                    clientData[row.cliente] = {
+                        biomassa: 0,
+                        valor: 0,
+                        gramaturas: [],
+                        precos: [],
+                        count: 0
+                    };
+                }
+                clientData[row.cliente].biomassa += row.producao;
+                clientData[row.cliente].valor += valorTotal;
+                clientData[row.cliente].gramaturas.push(row.pesoMedio);
+                clientData[row.cliente].precos.push(row.preco);
+                clientData[row.cliente].count++;
+            });
+
+            clientDataGlob = clientData; // Store in global variable
+
+            // Preenche os totais gerais da tabela
+            document.getElementById('total-biomassa').textContent = formatNumber(grandTotalBiomassa, ' kg');
+            document.getElementById('total-valor').textContent = formatCurrency(grandTotalValor);
+
+            // Cria os cartões de resumo
+            for (const cliente in clientData) {
+                const data = clientData[cliente];
+                const info = clientInfo[cliente];
+
+                // Média simples da gramatura
+                const mediaGramatura = data.gramaturas.reduce((a, b) => a + b, 0) / data.count;
+
+                // Média de preço ponderada pela biomassa (Valor Total / Biomassa Total)
+                const mediaPreco = data.valor / data.biomassa;
+
+                const summaryCard = document.createElement('div');
+                summaryCard.className = 'summary-card';
+                summaryCard.innerHTML = `
+                    <h4 class="summary-title mb-4">${cliente}</h4>
+                    <div class="space-y-2">
+                        <div class="summary-item">
+                            <span class="summary-label">Código do Cliente:</span>
+                            <span class="summary-value">${info.codigo}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Prazo de Pagamento:</span>
+                            <span class="summary-value">${info.prazo}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Biomassa Total:</span>
+                            <span class="summary-value">${formatNumber(data.biomassa, ' kg')}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Gramatura Média:</span>
+                            <span class="summary-value">${formatGrams(mediaGramatura)}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Preço Unitário Médio:</span>
+                            <span class="summary-value">${formatCurrency(mediaPreco)}</span>
+                        </div>
+                        <div class="summary-item pt-4">
+                            <span class="summary-label text-base">Valor Total:</span>
+                            <span class="summary-value total">${formatCurrency(data.valor)}</span>
+                        </div>
+                    </div>
+                    
+                    <button onclick="showEmailModal('${cliente}')" class="gemini-button">
+                        ✨ Gerar E-mail
+                    </button>
+                `;
+                summarySection.appendChild(summaryCard);
+            }
+
+            // --- PROCESS FINANCIAL HISTORY ---
+            const historyData = processFinancialHistory(harvestData);
+            renderHistoryTable('monthly-balance-body', historyData.months);
+            renderHistoryTable('quarterly-balance-body', historyData.quarters);
+            renderHistoryTable('semesterly-balance-body', historyData.semesters);
+            renderHistoryTable('yearly-balance-body', historyData.years);
+        });
+    </script>
+</body>
+
+</html>
