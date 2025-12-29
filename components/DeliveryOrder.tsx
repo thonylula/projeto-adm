@@ -719,17 +719,18 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false }
     return (
         <div className="space-y-8 font-inter animate-fadeIn pb-20">
             <header className="bg-gradient-to-r from-[#f26522] to-[#ff9d6c] p-8 rounded-2xl shadow-xl text-white flex flex-col md:flex-row justify-between items-center gap-6">
-                <div className="flex items-center gap-6">
+                <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
                     {logo && (
-                        <div className="w-24 h-24 bg-white p-2 rounded-xl shadow-inner flex items-center justify-center overflow-hidden">
+                        <div className="w-32 h-32 bg-white p-3 rounded-2xl shadow-inner flex items-center justify-center overflow-hidden border-2 border-orange-100">
                             <img src={logo} alt="Empresa Logo" className="max-w-full max-h-full object-contain" />
                         </div>
                     )}
-                    <div>
-                        <h2 className="text-3xl font-extrabold tracking-tight">
-                            {view === 'HISTORY' ? 'Histórico Financeiro' : view === 'SHOWCASE' ? 'Mostruário de Faturamento' : 'Resumo de Faturamento'}
+                    <div className="flex flex-col justify-center">
+                        <h2 className="text-4xl font-black tracking-tight mb-1">
+                            {view === 'SHOWCASE' ? 'Faturamento' : view === 'HISTORY' ? 'Histórico Financeiro' : 'Resumo de Faturamento'}
                         </h2>
-                        <p className="text-orange-100 font-medium">Carapitanga 0019 (Ocean) — Gestão Inteligente</p>
+                        <p className="text-orange-50/90 font-bold text-lg">Carapitanga 0019 (Ocean)</p>
+                        <p className="text-orange-100/70 text-sm font-medium">Gestão Inteligente</p>
                     </div>
                 </div>
                 <div className="flex gap-4" data-html2canvas-ignore>
@@ -782,30 +783,33 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false }
                             Voltar ao Painel
                         </button>
                     )}
+                    {/* Showcase Info Banner (Hidden for public visitors) */}
+                    {view === 'SHOWCASE' && !isPublic && (
+                        <section className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm animate-fadeIn">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-blue-800 font-bold">Você está no Modo Mostruário</p>
+                                    <p className="text-xs text-blue-600 font-medium">Esta é uma visão executiva ideal para compartilhar com terceiros.</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleShareShowcase}
+                                className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md font-bold transition-all text-sm group"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 group-hover:rotate-12 transition-transform">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                                </svg>
+                                Compartilhar Link
+                            </button>
+                        </section>
+                    )}
                 </div>
             </header>
-
-            {view === 'SHOWCASE' && (
-                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 flex justify-between items-center animate-slideDown" data-html2canvas-ignore>
-                    <div className="flex items-center gap-3">
-                        <svg className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p className="text-blue-700 text-sm font-medium">
-                            Você está no <strong>Modo Mostruário</strong>. Esta é uma visão executiva ideal para compartilhar com terceiros.
-                        </p>
-                    </div>
-                    <button
-                        onClick={handleShareShowcase}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md transition-all text-sm"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
-                        </svg>
-                        Compartilhar Link
-                    </button>
-                </div>
-            )}
 
             {view === 'HISTORY' ? (
                 <div className="space-y-8">
