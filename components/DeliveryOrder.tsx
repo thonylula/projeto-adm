@@ -95,7 +95,18 @@ export const DeliveryOrder: React.FC = () => {
     useEffect(() => {
         const load = async () => {
             const { data, logo } = await SupabaseService.getDeliveryOrders();
-            if (data.length > 0) setData(data);
+            if (data.length > 0) {
+                // Clean up existing duplicates immediately on load
+                const uniqueData = removeDuplicates(data);
+
+                // Se o tamanho mudou, significa que limpamos duplicatas. Vamos persistir essa limpeza no banco.
+                if (uniqueData.length < data.length) {
+                    console.log(`Limpando ${data.length - uniqueData.length} duplicatas do banco de dados...`);
+                    await SupabaseService.saveDeliveryOrders(uniqueData, logo);
+                }
+
+                setData(uniqueData);
+            }
             if (logo) setLogo(logo);
         };
         load();
@@ -117,6 +128,28 @@ export const DeliveryOrder: React.FC = () => {
     const [modalLoading, setModalLoading] = useState(false);
     const [modalError, setModalError] = useState(false);
     const [generatedEmail, setGeneratedEmail] = useState('');
+
+    // --- Deduplication Helper ---
+    const getRecordFingerprint = (item: HarvestData) => {
+        // Unique key based on business fields, normalized to avoid subtle duplicates
+        const date = item.data?.trim() || "";
+        const client = item.cliente?.trim().toLowerCase() || "";
+        const tank = item.viveiro?.trim().toLowerCase() || "";
+        const prod = Number(item.producao) || 0;
+        const price = Number(item.preco) || 0;
+
+        return `${date}-${client}-${tank}-${prod}-${price}`;
+    };
+
+    const removeDuplicates = (items: HarvestData[]) => {
+        const seen = new Set();
+        return items.filter(item => {
+            const fingerprint = getRecordFingerprint(item);
+            if (seen.has(fingerprint)) return false;
+            seen.add(fingerprint);
+            return true;
+        });
+    };
 
     // --- AI SMART UPLOAD ---
     const { processFile, processText, isProcessing } = useGeminiParser({
@@ -180,7 +213,16 @@ export const DeliveryOrder: React.FC = () => {
                     visible: true
                 }));
 
-                setData(prev => [...prev, ...newItems]);
+                setData(prev => {
+                    const existingFingerprints = new Set(prev.map(getRecordFingerprint));
+                    const uniqueNewItems = newItems.filter(item => !existingFingerprints.has(getRecordFingerprint(item)));
+
+                    if (uniqueNewItems.length < newItems.length) {
+                        alert(`${newItems.length - uniqueNewItems.length} itens duplicados foram ignorados.`);
+                    }
+
+                    return [...prev, ...uniqueNewItems];
+                });
                 setInputText('');
                 setView('DASHBOARD');
             }
@@ -225,6 +267,18 @@ export const DeliveryOrder: React.FC = () => {
 
     const handleSaveEdit = () => {
         if (!editingItem) return;
+
+        // Check for duplicate BEFORE saving edit
+        const fingerprint = getRecordFingerprint(editingItem);
+        const isDuplicate = data.some(item =>
+            item.id !== editingItem.id && getRecordFingerprint(item) === fingerprint
+        );
+
+        if (isDuplicate) {
+            alert("Erro: Esta alteração criaria um registro duplicado (Mesma data, cliente, viveiro, produção e preço).");
+            return;
+        }
+
         setData(prev => prev.map(item => item.id === editingItem.id ? editingItem : item));
         setEditingItem(null);
     };
@@ -261,7 +315,16 @@ export const DeliveryOrder: React.FC = () => {
                     visible: true
                 }));
 
-                setData(prev => [...prev, ...newItems]);
+                setData(prev => {
+                    const existingFingerprints = new Set(prev.map(getRecordFingerprint));
+                    const uniqueNewItems = newItems.filter(item => !existingFingerprints.has(getRecordFingerprint(item)));
+
+                    if (uniqueNewItems.length < newItems.length) {
+                        alert(`${newItems.length - uniqueNewItems.length} itens duplicados foram ignorados.`);
+                    }
+
+                    return [...prev, ...uniqueNewItems];
+                });
                 setView('DASHBOARD');
             }
         } catch (error) {
