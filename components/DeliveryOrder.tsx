@@ -412,6 +412,31 @@ export const DeliveryOrder: React.FC = () => {
         });
     };
 
+    // --- MANUAL SAVE ---
+    const [isSaving, setIsSaving] = useState(false);
+
+    const handleManualSave = async () => {
+        if (data.length === 0) {
+            alert("Não há dados para salvar.");
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            const success = await SupabaseService.saveDeliveryOrders(data, logo);
+            if (success) {
+                alert("Dados salvos no banco de dados com sucesso!");
+            } else {
+                alert("Erro ao salvar no banco. Verifique o console.");
+            }
+        } catch (error) {
+            console.error("Manual save error:", error);
+            alert("Erro ao salvar.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     // --- Views ---
 
     if (view === 'INPUT') {
@@ -694,6 +719,20 @@ export const DeliveryOrder: React.FC = () => {
                         Restaurar
                     </label>
                 </div>
+
+                <div className="w-px h-8 bg-gray-300 mx-2"></div>
+
+                <button onClick={handleManualSave} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 ${isSaving ? 'bg-purple-400' : 'bg-purple-600 hover:bg-purple-700'} text-white rounded-lg shadow font-medium transition-all text-sm`}>
+                    {isSaving ? (
+                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+                    )}
+                    {isSaving ? 'Salvando...' : 'Salvar no Banco'}
+                </button>
             </div>
             <div className="h-24"></div> {/* Spacer for fixed footer */}
         </div>
