@@ -33,6 +33,9 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('currentUser'));
   const [currentUser, setCurrentUser] = useState(localStorage.getItem('currentUser') || 'admin');
 
+  // Showcase Mode (Public access)
+  const isPublicShowcase = new URLSearchParams(window.location.search).get('showcase') === 'true';
+
   // Navigation State
   // Navigation State
   const [activeTab, setActiveTab] = useState(localStorage.getItem('activeTab') || 'payroll');
@@ -271,6 +274,21 @@ export default function App() {
         )}
         <LoginScreen onLogin={(user) => handleLogin(user)} />
       </MainLayout>
+    );
+  }
+
+  // --- Public Showcase View (No login required) ---
+  if (isPublicShowcase) {
+    return (
+      <DashboardLayout
+        activeTab="delivery-order"
+        onTabChange={() => { }} // Disable switching in public mode
+        onLogout={() => { window.location.href = window.location.origin + window.location.pathname; }}
+        currentUser="Visitante"
+        isPublic={true}
+      >
+        <DeliveryOrder />
+      </DashboardLayout>
     );
   }
 

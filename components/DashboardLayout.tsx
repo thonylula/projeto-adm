@@ -10,6 +10,7 @@ interface DashboardLayoutProps {
   onTabChange: (tab: string) => void;
   onLogout: () => void;
   currentUser: string;
+  isPublic?: boolean;
 }
 
 const NavItem: React.FC<{
@@ -175,7 +176,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   activeTab,
   onTabChange,
   onLogout,
-  currentUser
+  currentUser,
+  isPublic = false
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tabLocks, setTabLocks] = useState<Record<string, boolean>>({});
@@ -296,88 +298,92 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Mobile Header */}
       <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center print:hidden">
         <span className="font-bold text-lg truncate max-w-[200px]">Adm: {currentUser}</span>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-          </svg>
-        </button>
+        {!isPublic && (
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Sidebar Navigation */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 transform transition-transform duration-300 ease-in-out print:hidden
-        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-        md:relative md:translate-x-0 flex flex-col
-      `}>
-        {/* Sidebar Header */}
-        <div className="p-6 border-b border-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-orange-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-              A
-            </div>
-            <div className="overflow-hidden">
-              <h1 className="text-white font-bold text-sm leading-tight truncate" title={`Adm: ${currentUser}`}>
-                Adm: {currentUser}
-              </h1>
-              <p className="text-xs text-slate-500">Gestão Inteligente</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation Items */}
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {navItems.map((item) => (
-            <NavItem
-              key={item.id}
-              item={item}
-              activeTab={activeTab}
-              onTabChange={onTabChange}
-              setIsMobileMenuOpen={setIsMobileMenuOpen}
-              isLocked={!!tabLocks[item.id]}
-              onToggleLock={toggleLock}
-            />
-          ))}
-        </nav>
-
-        {/* User Footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-900/50">
-          <div className="flex items-center gap-3 mb-4 px-2">
-            <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white uppercase flex-shrink-0">
-              {currentUser.substring(0, 2)}
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-sm text-white font-medium truncate" title={currentUser}>{currentUser}</p>
-              <p className="text-xs text-slate-500">Administrador</p>
+      {!isPublic && (
+        <aside className={`
+          fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 transform transition-transform duration-300 ease-in-out print:hidden
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+          md:relative md:translate-x-0 flex flex-col
+        `}>
+          {/* Sidebar Header */}
+          <div className="p-6 border-b border-slate-800">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded bg-orange-500 flex items-center justify-center text-white font-bold flex-shrink-0">
+                A
+              </div>
+              <div className="overflow-hidden">
+                <h1 className="text-white font-bold text-sm leading-tight truncate" title={`Adm: ${currentUser}`}>
+                  Adm: {currentUser}
+                </h1>
+                <p className="text-xs text-slate-500">Gestão Inteligente</p>
+              </div>
             </div>
           </div>
 
-          <button
-            onClick={onLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-red-900/30 hover:text-red-400 text-slate-400 rounded-lg text-sm transition-colors border border-slate-700 hover:border-red-900/50"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-            </svg>
-            Sair do Sistema
-          </button>
+          {/* Navigation Items */}
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+            {navItems.map((item) => (
+              <NavItem
+                key={item.id}
+                item={item}
+                activeTab={activeTab}
+                onTabChange={onTabChange}
+                setIsMobileMenuOpen={setIsMobileMenuOpen}
+                isLocked={!!tabLocks[item.id]}
+                onToggleLock={toggleLock}
+              />
+            ))}
+          </nav>
 
-          <div className="mt-4 pt-4 border-t border-slate-800">
+          {/* User Footer */}
+          <div className="p-4 border-t border-slate-800 bg-slate-900/50">
+            <div className="flex items-center gap-3 mb-4 px-2">
+              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white uppercase flex-shrink-0">
+                {currentUser.substring(0, 2)}
+              </div>
+              <div className="overflow-hidden">
+                <p className="text-sm text-white font-medium truncate" title={currentUser}>{currentUser}</p>
+                <p className="text-xs text-slate-500">Administrador</p>
+              </div>
+            </div>
+
             <button
-              onClick={async () => {
-                if (window.confirm("Deseja migrar todos os dados locais para o Supabase agora? Isso enviará empresas, funcionários e configurações.")) {
-                  const { MigrationService } = await import('../services/migrationService');
-                  const res = await MigrationService.migrateAll();
-                  alert(res.message);
-                  window.location.reload();
-                }
-              }}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-orange-600/10 hover:bg-orange-600/20 text-orange-500 rounded-lg text-xs transition-colors border border-orange-600/20"
+              onClick={onLogout}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-red-900/30 hover:text-red-400 text-slate-400 rounded-lg text-sm transition-colors border border-slate-700 hover:border-red-900/50"
             >
-              Sincronizar Cloud (Migrar)
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+              </svg>
+              Sair do Sistema
             </button>
+
+            <div className="mt-4 pt-4 border-t border-slate-800">
+              <button
+                onClick={async () => {
+                  if (window.confirm("Deseja migrar todos os dados locais para o Supabase agora? Isso enviará empresas, funcionários e configurações.")) {
+                    const { MigrationService } = await import('../services/migrationService');
+                    const res = await MigrationService.migrateAll();
+                    alert(res.message);
+                    window.location.reload();
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-orange-600/10 hover:bg-orange-600/20 text-orange-500 rounded-lg text-xs transition-colors border border-orange-600/20"
+              >
+                Sincronizar Cloud (Migrar)
+              </button>
+            </div>
           </div>
-        </div>
-      </aside>
+        </aside>
+      )}
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-auto h-[calc(100vh-60px)] md:h-screen w-full relative print:h-auto print:overflow-visible">
@@ -398,7 +404,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         />
       )}
 
-      <OperationsAssistant />
+      {!isPublic && <OperationsAssistant />}
     </div>
   );
 };
