@@ -46,6 +46,11 @@ const COLORS = {
     text: '#3a3a3a'
 };
 
+// --- Formatters ---
+const formatCurrency = (val: number) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const formatNumber = (val: number, unit = '') => val.toLocaleString('pt-BR') + unit;
+const formatGrams = (val: number) => val.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' g';
+
 // --- Helper for AI Numeric Parsing ---
 const safeParseNumber = (val: any): number => {
     if (val === null || val === undefined) return 0;
@@ -112,11 +117,6 @@ export const DeliveryOrder: React.FC = () => {
     const [modalLoading, setModalLoading] = useState(false);
     const [modalError, setModalError] = useState(false);
     const [generatedEmail, setGeneratedEmail] = useState('');
-
-    // --- Formatters ---
-    const formatCurrency = (val: number) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const formatNumber = (val: number, unit = '') => val.toLocaleString('pt-BR') + unit;
-    const formatGrams = (val: number) => val.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' g';
 
     // --- AI SMART UPLOAD ---
     const { processFile, processText, isProcessing } = useGeminiParser({
@@ -437,6 +437,83 @@ export const DeliveryOrder: React.FC = () => {
         }
     };
 
+    // --- HISTORY VIEW ---
+    const [historyFilters, setHistoryFilters] = useState({
+        startDate: '',
+        endDate: '',
+        cliente: ''
+    });
+
+    // Helper to process history
+    const historyData = useMemo(() => {
+        // 1. Filter Data
+        let filtered = data;
+
+        if (historyFilters.startDate) {
+            const start = new Date(historyFilters.startDate);
+            filtered = filtered.filter(d => {
+                const [day, month, year] = d.data.split('/');
+                return new Date(Number(year), Number(month) - 1, Number(day)) >= start;
+            });
+        }
+
+        if (historyFilters.endDate) {
+            const end = new Date(historyFilters.endDate);
+            filtered = filtered.filter(d => {
+                const [day, month, year] = d.data.split('/');
+                return new Date(Number(year), Number(month) - 1, Number(day)) <= end;
+            });
+        }
+
+        if (historyFilters.cliente) {
+            filtered = filtered.filter(d => d.cliente === historyFilters.cliente);
+        }
+
+        // 2. Grouping Logic
+        const months: Record<string, { biomass: number, value: number }> = {};
+        const quarters: Record<string, { biomass: number, value: number }> = {};
+        const semesters: Record<string, { biomass: number, value: number }> = {};
+        const years: Record<string, { biomass: number, value: number }> = {};
+
+        filtered.forEach(item => {
+            const [day, mStr, yStr] = item.data.split('/');
+            const m = Number(mStr);
+            const y = Number(yStr);
+            const valor = item.producao * item.preco;
+
+            // Month
+            const monthKey = `${mStr}/${yStr}`;
+            if (!months[monthKey]) months[monthKey] = { biomass: 0, value: 0 };
+            months[monthKey].biomass += item.producao;
+            months[monthKey].value += valor;
+
+            // Quarter
+            const q = Math.ceil(m / 3);
+            const qKey = `${q}º Trim/${y}`;
+            if (!quarters[qKey]) quarters[qKey] = { biomass: 0, value: 0 };
+            quarters[qKey].biomass += item.producao;
+            quarters[qKey].value += valor;
+
+            // Semester
+            const s = Math.ceil(m / 6);
+            const sKey = `${s}º Sem/${y}`;
+            if (!semesters[sKey]) semesters[sKey] = { biomass: 0, value: 0 };
+            semesters[sKey].biomass += item.producao;
+            semesters[sKey].value += valor;
+
+            // Year
+            const yKey = `${y}`;
+            if (!years[yKey]) years[yKey] = { biomass: 0, value: 0 };
+            years[yKey].biomass += item.producao;
+            years[yKey].value += valor;
+        });
+
+        return { months, quarters, semesters, years, filteredCount: filtered.length };
+    }, [data, historyFilters]);
+
+    // Unique clients for filter
+    const uniqueClients = useMemo(() => Array.from(new Set(data.map(d => d.cliente))), [data]);
+
     // --- Views ---
 
     if (view === 'INPUT') {
@@ -528,120 +605,186 @@ export const DeliveryOrder: React.FC = () => {
                         </div>
                     )}
                     <div>
-                        <h2 className="text-3xl font-extrabold tracking-tight">Resumo de Faturamento</h2>
-                        <p className="text-orange-100 font-medium">Carapitanga 0019 (Ocean) — Dezembro/2025</p>
+                        <h2 className="text-3xl font-extrabold tracking-tight">
+                            {view === 'HISTORY' ? 'Histórico Financeiro' : 'Resumo de Faturamento'}
+                        </h2>
+                        <p className="text-orange-100 font-medium">Carapitanga 0019 (Ocean) — Gestão Inteligente</p>
                     </div>
                 </div>
-                <button
-                    onClick={() => setView('INPUT')}
-                    className="px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-lg text-white font-bold transition-all border border-white/30"
-                >
-                    Nova Importação
-                </button>
+                <div className="flex gap-4">
+                    <button
+                        onClick={() => setView('HISTORY')}
+                        className={`px-6 py-2 rounded-lg font-bold transition-all border ${view === 'HISTORY' ? 'bg-white text-[#f26522]' : 'bg-white/20 hover:bg-white/30 text-white border-white/30'}`}
+                    >
+                        Histórico
+                    </button>
+                    <button
+                        onClick={() => setView('DASHBOARD')}
+                        className={`px-6 py-2 rounded-lg font-bold transition-all border ${view === 'DASHBOARD' ? 'bg-white text-[#f26522]' : 'bg-white/20 hover:bg-white/30 text-white border-white/30'}`}
+                    >
+                        Tabela
+                    </button>
+                    <button
+                        onClick={() => setView('INPUT')}
+                        className="px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-lg text-white font-bold transition-all border border-white/30"
+                    >
+                        Nova Importação
+                    </button>
+                </div>
             </header>
 
-            <section className="bg-white rounded-2xl shadow-xl shadow-orange-100/50 overflow-hidden border border-orange-50">
-                <div className="overflow-x-auto" ref={reportRef}>
-                    <table className="w-full border-collapse">
-                        <thead>
-                            <tr className="bg-[#f26522] text-white">
-                                <th className="p-5 text-center w-16" data-html2canvas-ignore></th>
-                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Data</th>
-                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Viveiro</th>
-                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Cliente</th>
-                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Produção</th>
-                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">P. Médio</th>
-                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Preço</th>
-                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Total</th>
-                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Sobrev.</th>
-                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">FCA</th>
-                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Ciclo</th>
-                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider">Laborat.</th>
-                                <th className="p-5 text-left font-bold uppercase text-xs tracking-wider last:rounded-tr-2xl">Obs</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-orange-50">
-                            {data.map((row) => (
-                                <tr key={row.id} className={`transition-colors h-16 ${row.visible ? 'bg-white hover:bg-orange-50/30' : 'bg-gray-50/50 opacity-50'}`}>
-                                    <td className="p-4 text-center" data-html2canvas-ignore>
-                                        <input
-                                            type="checkbox"
-                                            checked={row.visible}
-                                            onChange={() => toggleRow(row.id)}
-                                            className="h-5 w-5 rounded-md text-[#f26522] focus:ring-[#f26522] border-orange-200 cursor-pointer"
-                                        />
-                                    </td>
-                                    <td className="p-5 text-sm font-semibold text-gray-500">{row.data}</td>
-                                    <td className="p-5 text-sm font-bold text-gray-700">{row.viveiro}</td>
-                                    <td className="p-5 text-sm font-extrabold text-[#f26522]">{row.cliente}</td>
-                                    <td className="p-5 text-sm font-black text-gray-900">{formatNumber(row.producao, ' kg')}</td>
-                                    <td className="p-5 text-sm text-gray-600 font-medium">{formatGrams(row.pesoMedio)}</td>
-                                    <td className="p-5 text-sm text-gray-600 font-medium">{formatCurrency(row.preco)}</td>
-                                    <td className="p-5 text-sm font-black text-green-600 bg-green-50/30">{formatCurrency(row.producao * row.preco)}</td>
-                                    <td className="p-5 text-sm text-gray-600">{row.sobrevivencia}</td>
-                                    <td className="p-5 text-sm text-gray-600">{row.fca}</td>
-                                    <td className="p-5 text-sm text-gray-600">{row.diasCultivo} d</td>
-                                    <td className="p-5 text-sm text-gray-600 font-semibold">{row.laboratorio}</td>
-                                    <td className="p-5 text-xs text-red-500 font-bold max-w-[120px] truncate">{row.notas}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                        <tfoot className="bg-orange-50/50 font-black text-[#3a3a3a] border-t-2 border-[#f26522]">
-                            <tr>
-                                <td colSpan={4} className="p-6 text-right text-sm uppercase tracking-widest text-gray-500">Total Selecionado</td>
-                                <td className="p-6 text-2xl text-[#f26522]">{formatNumber(grandTotals.biomass, ' kg')}</td>
-                                <td colSpan={2}></td>
-                                <td className="p-6 text-2xl text-green-600">{formatCurrency(grandTotals.value)}</td>
-                                <td colSpan={5}></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </section>
+            {view === 'HISTORY' ? (
+                <div className="space-y-8">
+                    {/* FILTERS */}
+                    <section className="bg-white p-6 rounded-2xl shadow-lg border border-orange-50 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Data Início</label>
+                            <input
+                                type="date"
+                                value={historyFilters.startDate}
+                                onChange={e => setHistoryFilters({ ...historyFilters, startDate: e.target.value })}
+                                className="w-full p-2 border rounded-lg focus:ring-[#f26522] focus:border-[#f26522]"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Data Fim</label>
+                            <input
+                                type="date"
+                                value={historyFilters.endDate}
+                                onChange={e => setHistoryFilters({ ...historyFilters, endDate: e.target.value })}
+                                className="w-full p-2 border rounded-lg focus:ring-[#f26522] focus:border-[#f26522]"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-bold text-gray-700 mb-2">Cliente</label>
+                            <select
+                                value={historyFilters.cliente}
+                                onChange={e => setHistoryFilters({ ...historyFilters, cliente: e.target.value })}
+                                className="w-full p-2 border rounded-lg focus:ring-[#f26522] focus:border-[#f26522]"
+                            >
+                                <option value="">Todos</option>
+                                {uniqueClients.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                        </div>
+                        <div className="flex items-center pb-2 text-gray-500 font-medium">
+                            {historyData.filteredCount} registros encontrados
+                        </div>
+                    </section>
 
-            <section>
-                <div className="flex items-center gap-4 mb-8">
-                    <div className="h-8 w-2 bg-[#f26522] rounded-full"></div>
-                    <h3 className="text-2xl font-black text-gray-800 tracking-tight">Resumo Consolidado</h3>
+                    {/* HISTORY GRIDS */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <HistoryCard title="Balancete Mensal" data={historyData.months} color="blue" />
+                        <HistoryCard title="Balancete Trimestral" data={historyData.quarters} color="purple" />
+                        <HistoryCard title="Balancete Semestral" data={historyData.semesters} color="emerald" />
+                        <HistoryCard title="Balancete Anual" data={historyData.years} color="amber" />
+                    </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {Object.entries(summaryByClient).map(([cliente, summaryData]: [string, any]) => {
-                        const info = CLIENT_INFO[cliente] || { codigo: '---', prazo: '---' };
-                        const mediaGramatura = summaryData.gramaturas.reduce((a: number, b: number) => a + b, 0) / summaryData.count;
-                        const mediaPreco = summaryData.value / summaryData.biomass;
+            ) : (
+                <>
+                    <section className="bg-white rounded-2xl shadow-xl shadow-orange-100/50 overflow-hidden border border-orange-50">
+                        <div className="overflow-x-auto" ref={reportRef}>
+                            <table className="w-full border-collapse">
+                                <thead>
+                                    <tr className="bg-[#f26522] text-white">
+                                        <th className="p-2 text-center w-12" data-html2canvas-ignore></th>
+                                        <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Data</th>
+                                        <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Viveiro</th>
+                                        <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Cliente</th>
+                                        <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Produção</th>
+                                        <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">P. Médio</th>
+                                        <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Preço</th>
+                                        <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Total</th>
+                                        <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Sobrev.</th>
+                                        <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">FCA</th>
+                                        <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Ciclo</th>
+                                        <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Laborat.</th>
+                                        <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider last:rounded-tr-2xl">Obs</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-orange-50">
+                                    {data.map((row) => (
+                                        <tr key={row.id} className={`transition-colors h-10 ${row.visible ? 'bg-white hover:bg-orange-50/30' : 'bg-gray-50/50 opacity-50'}`}>
+                                            <td className="p-2 text-center" data-html2canvas-ignore>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={row.visible}
+                                                    onChange={() => toggleRow(row.id)}
+                                                    className="h-4 w-4 rounded-md text-[#f26522] focus:ring-[#f26522] border-orange-200 cursor-pointer"
+                                                />
+                                            </td>
+                                            <td className="p-2 text-xs font-semibold text-gray-500">{row.data}</td>
+                                            <td className="p-2 text-xs font-bold text-gray-700">{row.viveiro}</td>
+                                            <td className="p-2 text-xs font-extrabold text-[#f26522]">{row.cliente}</td>
+                                            <td className="p-2 text-xs font-black text-gray-900">{formatNumber(row.producao, ' kg')}</td>
+                                            <td className="p-2 text-xs text-gray-600 font-medium">{formatGrams(row.pesoMedio)}</td>
+                                            <td className="p-2 text-xs text-gray-600 font-medium">{formatCurrency(row.preco)}</td>
+                                            <td className="p-2 text-xs font-black text-green-600 bg-green-50/30">{formatCurrency(row.producao * row.preco)}</td>
+                                            <td className="p-2 text-xs text-gray-600">{row.sobrevivencia}</td>
+                                            <td className="p-2 text-xs text-gray-600">{row.fca}</td>
+                                            <td className="p-2 text-xs text-gray-600">{row.diasCultivo} d</td>
+                                            <td className="p-2 text-xs text-gray-600 font-semibold">{row.laboratorio}</td>
+                                            <td className="p-2 text-[0.70rem] text-red-500 font-bold max-w-[100px] truncate">{row.notas}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                                <tfoot className="bg-orange-50/50 font-black text-[#3a3a3a] border-t-2 border-[#f26522]">
+                                    <tr>
+                                        <td colSpan={4} className="p-3 text-right text-xs uppercase tracking-widest text-gray-500 bg-orange-100/50">Total Selecionado</td>
+                                        <td className="p-3 text-lg text-[#f26522] bg-orange-100/50">{formatNumber(grandTotals.biomass, ' kg')}</td>
+                                        <td colSpan={2} className="bg-orange-100/50"></td>
+                                        <td className="p-3 text-lg text-green-600 bg-orange-100/50">{formatCurrency(grandTotals.value)}</td>
+                                        <td colSpan={5} className="bg-orange-100/50"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </section>
 
-                        return (
-                            <div key={cliente} className="group bg-white rounded-3xl p-8 shadow-xl shadow-orange-100/30 border border-orange-50 flex flex-col h-full transform transition-all hover:-translate-y-2 hover:shadow-orange-200/50">
-                                <div className="flex justify-between items-start mb-6">
-                                    <h4 className="text-2xl font-black text-[#3a3a3a] leading-tight">{cliente}</h4>
-                                    <div className="bg-orange-100 text-[#f26522] p-2 rounded-xl">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                                        </svg>
+                    <section>
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="h-8 w-2 bg-[#f26522] rounded-full"></div>
+                            <h3 className="text-2xl font-black text-gray-800 tracking-tight">Resumo Consolidado</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {Object.entries(summaryByClient).map(([cliente, summaryData]: [string, any]) => {
+                                const info = CLIENT_INFO[cliente] || { codigo: '---', prazo: '---' };
+                                const mediaGramatura = summaryData.gramaturas.reduce((a: number, b: number) => a + b, 0) / summaryData.count;
+                                const mediaPreco = summaryData.value / summaryData.biomass;
+
+                                return (
+                                    <div key={cliente} className="group bg-white rounded-3xl p-8 shadow-xl shadow-orange-100/30 border border-orange-50 flex flex-col h-full transform transition-all hover:-translate-y-2 hover:shadow-orange-200/50">
+                                        <div className="flex justify-between items-start mb-6">
+                                            <h4 className="text-2xl font-black text-[#3a3a3a] leading-tight">{cliente}</h4>
+                                            <div className="bg-orange-100 text-[#f26522] p-2 rounded-xl">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-4 flex-1">
+                                            <SummaryItem label="ID Faturamento" value={info.codigo} />
+                                            <SummaryItem label="Pagamento" value={info.prazo} />
+                                            <SummaryItem label="Biomassa" value={formatNumber(summaryData.biomass, ' kg')} />
+                                            <SummaryItem label="Média G" value={formatGrams(mediaGramatura)} />
+                                            <SummaryItem label="Preço Médio" value={formatCurrency(mediaPreco)} />
+                                            <div className="pt-6 mt-4 border-t-2 border-orange-50 flex flex-col gap-2">
+                                                <span className="text-xs font-black uppercase tracking-widest text-gray-400">Total a Faturar</span>
+                                                <span className="text-3xl font-black text-[#f26522] drop-shadow-sm">{formatCurrency(summaryData.value)}</span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => generateEmail(cliente)}
+                                            className="mt-8 w-full py-4 bg-gray-900 hover:bg-[#f26522] text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-3 shadow-lg shadow-gray-200 group-hover:shadow-orange-200"
+                                        >
+                                            <span className="text-lg">✨ Gerar Rascunho</span>
+                                        </button>
                                     </div>
-                                </div>
-                                <div className="space-y-4 flex-1">
-                                    <SummaryItem label="ID Faturamento" value={info.codigo} />
-                                    <SummaryItem label="Pagamento" value={info.prazo} />
-                                    <SummaryItem label="Biomassa" value={formatNumber(summaryData.biomass, ' kg')} />
-                                    <SummaryItem label="Média G" value={formatGrams(mediaGramatura)} />
-                                    <SummaryItem label="Preço Médio" value={formatCurrency(mediaPreco)} />
-                                    <div className="pt-6 mt-4 border-t-2 border-orange-50 flex flex-col gap-2">
-                                        <span className="text-xs font-black uppercase tracking-widest text-gray-400">Total a Faturar</span>
-                                        <span className="text-3xl font-black text-[#f26522] drop-shadow-sm">{formatCurrency(summaryData.value)}</span>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => generateEmail(cliente)}
-                                    className="mt-8 w-full py-4 bg-gray-900 hover:bg-[#f26522] text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-3 shadow-lg shadow-gray-200 group-hover:shadow-orange-200"
-                                >
-                                    <span className="text-lg">✨ Gerar Rascunho</span>
-                                </button>
-                            </div>
-                        );
-                    })}
-                </div>
-            </section>
+                                );
+                            })}
+                        </div>
+                    </section>
+                </>
+            )}
 
             {/* GEMINI MODAL */}
             {modalOpen && (
@@ -745,3 +888,50 @@ const SummaryItem = ({ label, value }: { label: string, value: string }) => (
         <span className="text-base text-gray-900 font-bold">{value}</span>
     </div>
 );
+
+const HistoryCard = ({ title, data, color }: { title: string, data: Record<string, { biomass: number, value: number }>, color: string }) => {
+    // Basic color mapping
+    const colorClasses: Record<string, { border: string, header: string, text: string }> = {
+        blue: { border: 'border-blue-500', header: 'bg-blue-600', text: 'text-blue-900' },
+        purple: { border: 'border-purple-500', header: 'bg-purple-600', text: 'text-purple-900' },
+        emerald: { border: 'border-emerald-500', header: 'bg-emerald-600', text: 'text-emerald-900' },
+        amber: { border: 'border-amber-500', header: 'bg-amber-600', text: 'text-amber-900' }
+    };
+
+    const c = colorClasses[color] || colorClasses.blue;
+    const entries = Object.entries(data).sort((a, b) => {
+        // Custom sort for periods if needed, currently alphabetical/lexicographical
+        return a[0].localeCompare(b[0]);
+    });
+
+    return (
+        <div className={`bg-white rounded-lg shadow-sm border-l-4 ${c.border} overflow-hidden`}>
+            <div className={`p-4 ${c.header} text-white font-bold text-lg`}>
+                {title}
+            </div>
+            <table className="w-full">
+                <thead>
+                    <tr className="bg-gray-50 border-b">
+                        <th className="p-3 text-left text-xs font-bold text-gray-500 uppercase">Período</th>
+                        <th className="p-3 text-right text-xs font-bold text-gray-500 uppercase">Biomassa</th>
+                        <th className="p-3 text-right text-xs font-bold text-gray-500 uppercase">Faturamento</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                    {entries.map(([key, val]) => (
+                        <tr key={key} className="hover:bg-gray-50">
+                            <td className={`p-3 font-medium ${c.text}`}>{key}</td>
+                            <td className="p-3 text-right text-gray-600">{formatNumber(val.biomass, ' kg')}</td>
+                            <td className="p-3 text-right font-bold text-gray-800">
+                                {formatCurrency(val.value)}
+                            </td>
+                        </tr>
+                    ))}
+                    {entries.length === 0 && (
+                        <tr><td colSpan={3} className="p-4 text-center text-gray-400 italic">Sem dados</td></tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+    );
+};
