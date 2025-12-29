@@ -346,13 +346,19 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false }
         }
     };
 
-    // --- Calculation for Totals (Footer) ---
+    // --- Calculation for Totals (Footer & KPIs) ---
     const grandTotals = activeData.reduce((acc, curr) => {
+        const sobrevValue = parseFloat(curr.sobrevivencia.replace('%', '').replace(',', '.')) || 0;
+        const fcaValue = parseFloat(curr.fca.replace(',', '.')) || 0;
+
         return {
             biomass: acc.biomass + curr.producao,
-            value: acc.value + (curr.producao * curr.preco)
+            value: acc.value + (curr.producao * curr.preco),
+            sobrevSum: acc.sobrevSum + sobrevValue,
+            fcaSum: acc.fcaSum + fcaValue,
+            count: acc.count + 1
         };
-    }, { biomass: 0, value: 0 });
+    }, { biomass: 0, value: 0, sobrevSum: 0, fcaSum: 0, count: 0 });
 
     // --- Calculation for Summary Cards (Grouping) ---
     const summaryByClient = useMemo(() => {
@@ -718,19 +724,19 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false }
     // DASHBOARD VIEW
     return (
         <div className="space-y-8 font-inter animate-fadeIn pb-20">
-            <header className="bg-gradient-to-r from-[#f26522] to-[#ff9d6c] p-8 rounded-2xl shadow-xl text-white flex flex-col md:flex-row justify-between items-center gap-6">
-                <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+            <header className="bg-gradient-to-r from-[#f26522] to-[#ff9d6c] p-10 rounded-3xl shadow-2xl text-white flex flex-col items-center gap-8 text-center">
+                <div className="flex flex-col items-center gap-6">
                     {logo && (
-                        <div className="w-32 h-32 bg-white p-3 rounded-2xl shadow-inner flex items-center justify-center overflow-hidden border-2 border-orange-100">
+                        <div className="w-64 h-32 bg-white p-4 rounded-2xl shadow-inner flex items-center justify-center overflow-hidden border-2 border-orange-100">
                             <img src={logo} alt="Empresa Logo" className="max-w-full max-h-full object-contain" />
                         </div>
                     )}
-                    <div className="flex flex-col justify-center">
-                        <h2 className="text-4xl font-black tracking-tight mb-1">
+                    <div className="flex flex-col items-center">
+                        <h2 className="text-5xl font-black tracking-tight mb-2">
                             {view === 'SHOWCASE' ? 'Faturamento' : view === 'HISTORY' ? 'Histórico Financeiro' : 'Resumo de Faturamento'}
                         </h2>
-                        <p className="text-orange-50/90 font-bold text-lg">Carapitanga 0019 (Ocean)</p>
-                        <p className="text-orange-100/70 text-sm font-medium">Gestão Inteligente</p>
+                        <p className="text-orange-50/90 font-bold text-xl">Carapitanga 0019 (Ocean)</p>
+                        <p className="text-orange-100/70 text-base font-medium">Gestão Inteligente</p>
                     </div>
                 </div>
                 <div className="flex gap-4" data-html2canvas-ignore>
@@ -860,39 +866,60 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false }
             ) : (
                 <>
                     {view === 'SHOWCASE' && (
-                        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fadeIn">
-                            <div className="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-[#f26522] flex items-center gap-4">
-                                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <section className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8 animate-fadeIn">
+                            {/* Biomassa Total */}
+                            <div className="bg-white p-5 rounded-2xl shadow-lg border-t-4 border-[#f26522] flex flex-col items-center text-center gap-2">
+                                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 mb-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                                     </svg>
                                 </div>
-                                <div>
-                                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Biomassa Total</p>
-                                    <h4 className="text-2xl font-black text-gray-900">{formatNumber(grandTotals.biomass, ' kg')}</h4>
-                                </div>
+                                <p className="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest">Biomassa Total</p>
+                                <h4 className="text-xl font-black text-gray-900">{formatNumber(grandTotals.biomass, ' kg')}</h4>
                             </div>
-                            <div className="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-green-500 flex items-center gap-4">
-                                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+                            {/* Valor Gerado */}
+                            <div className="bg-white p-5 rounded-2xl shadow-lg border-t-4 border-green-500 flex flex-col items-center text-center gap-2">
+                                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v1m0 5V5m0 16c-1.11 0-2.08-.402-2.599-1M12 21V11m0 10c-1.11 0-2.08-.402-2.599-1M12 21V11" />
                                     </svg>
                                 </div>
-                                <div>
-                                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Valor Gerado</p>
-                                    <h4 className="text-2xl font-black text-green-600">{formatCurrency(grandTotals.value)}</h4>
-                                </div>
+                                <p className="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest">Valor Gerado</p>
+                                <h4 className="text-xl font-black text-green-600">{formatCurrency(grandTotals.value)}</h4>
                             </div>
-                            <div className="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-blue-500 flex items-center gap-4">
-                                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+                            {/* Preço Médio Global */}
+                            <div className="bg-white p-5 rounded-2xl shadow-lg border-t-4 border-blue-500 flex flex-col items-center text-center gap-2">
+                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                     </svg>
                                 </div>
-                                <div>
-                                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Preço Médio Global</p>
-                                    <h4 className="text-2xl font-black text-blue-600">{formatCurrency(grandTotals.value / (grandTotals.biomass || 1))}/kg</h4>
+                                <p className="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest">Preço Médio Global</p>
+                                <h4 className="text-xl font-black text-blue-600">{formatCurrency(grandTotals.value / (grandTotals.biomass || 1))}/kg</h4>
+                            </div>
+
+                            {/* Sobrevivência Média */}
+                            <div className="bg-white p-5 rounded-2xl shadow-lg border-t-4 border-indigo-500 flex flex-col items-center text-center gap-2">
+                                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mb-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    </svg>
                                 </div>
+                                <p className="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest">Sobrevivência Média</p>
+                                <h4 className="text-xl font-black text-indigo-600">{(grandTotals.sobrevSum / (grandTotals.count || 1)).toFixed(1)}%</h4>
+                            </div>
+
+                            {/* FCA Médio */}
+                            <div className="bg-white p-5 rounded-2xl shadow-lg border-t-4 border-amber-500 flex flex-col items-center text-center gap-2">
+                                <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 mb-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                    </svg>
+                                </div>
+                                <p className="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest">FCA Médio</p>
+                                <h4 className="text-xl font-black text-amber-600">{(grandTotals.fcaSum / (grandTotals.count || 1)).toFixed(2)}</h4>
                             </div>
                         </section>
                     )}
