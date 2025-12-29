@@ -86,10 +86,18 @@ const safeParseNumber = (val: any): number => {
 };
 
 export const DeliveryOrder: React.FC = () => {
-    const [view, setView] = useState<'INPUT' | 'DASHBOARD'>('INPUT');
+    const [view, setView] = useState<'INPUT' | 'DASHBOARD' | 'HISTORY' | 'SHOWCASE'>('INPUT');
     const [inputText, setInputText] = useState('');
     const [data, setData] = useState<HarvestData[]>(INITIAL_HARVEST_DATA);
     const [logo, setLogo] = useState<string | null>(null);
+
+    // --- Detect Showcase Mode from URL ---
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('showcase') === 'true') {
+            setView('SHOWCASE');
+        }
+    }, []);
 
     // --- PERSISTÊNCIA AUTOMÁTICA (SUPABASE) ---
     useEffect(() => {
@@ -501,6 +509,14 @@ export const DeliveryOrder: React.FC = () => {
         });
     };
 
+    const handleShareShowcase = () => {
+        const url = new URL(window.location.href);
+        url.searchParams.set('showcase', 'true');
+        navigator.clipboard.writeText(url.toString()).then(() => {
+            alert("Link do Mostruário copiado! Você pode enviar este link para outras pessoas visualizarem.");
+        });
+    };
+
     // --- MANUAL SAVE ---
     const [isSaving, setIsSaving] = useState(false);
 
@@ -695,32 +711,85 @@ export const DeliveryOrder: React.FC = () => {
                     )}
                     <div>
                         <h2 className="text-3xl font-extrabold tracking-tight">
-                            {view === 'HISTORY' ? 'Histórico Financeiro' : 'Resumo de Faturamento'}
+                            {view === 'HISTORY' ? 'Histórico Financeiro' : view === 'SHOWCASE' ? 'Mostruário de Faturamento' : 'Resumo de Faturamento'}
                         </h2>
                         <p className="text-orange-100 font-medium">Carapitanga 0019 (Ocean) — Gestão Inteligente</p>
                     </div>
                 </div>
-                <div className="flex gap-4">
-                    <button
-                        onClick={() => setView('HISTORY')}
-                        className={`px-6 py-2 rounded-lg font-bold transition-all border ${view === 'HISTORY' ? 'bg-white text-[#f26522]' : 'bg-white/20 hover:bg-white/30 text-white border-white/30'}`}
-                    >
-                        Histórico
-                    </button>
-                    <button
-                        onClick={() => setView('DASHBOARD')}
-                        className={`px-6 py-2 rounded-lg font-bold transition-all border ${view === 'DASHBOARD' ? 'bg-white text-[#f26522]' : 'bg-white/20 hover:bg-white/30 text-white border-white/30'}`}
-                    >
-                        Tabela
-                    </button>
-                    <button
-                        onClick={() => setView('INPUT')}
-                        className="px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-lg text-white font-bold transition-all border border-white/30"
-                    >
-                        Nova Importação
-                    </button>
+                <div className="flex gap-4" data-html2canvas-ignore>
+                    {view !== 'SHOWCASE' && (
+                        <>
+                            <button
+                                onClick={() => setView('HISTORY')}
+                                className={`px-6 py-2 rounded-lg font-bold transition-all border ${view === 'HISTORY' ? 'bg-white text-[#f26522]' : 'bg-white/20 hover:bg-white/30 text-white border-white/30'}`}
+                            >
+                                Histórico
+                            </button>
+                            <button
+                                onClick={() => setView('DASHBOARD')}
+                                className={`px-6 py-2 rounded-lg font-bold transition-all border ${view === 'DASHBOARD' ? 'bg-white text-[#f26522]' : 'bg-white/20 hover:bg-white/30 text-white border-white/30'}`}
+                            >
+                                Tabela
+                            </button>
+                            <button
+                                onClick={() => setView('INPUT')}
+                                className="px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-lg text-white font-bold transition-all border border-white/30"
+                            >
+                                Nova Importação
+                            </button>
+                        </>
+                    )}
+
+                    {view === 'DASHBOARD' && (
+                        <button
+                            onClick={() => setView('SHOWCASE')}
+                            className="px-6 py-2 bg-white text-[#f26522] hover:bg-orange-50 rounded-lg font-bold shadow-lg transition-all flex items-center gap-2"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-orange-500">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Mostruário
+                        </button>
+                    )}
+
+                    {view === 'SHOWCASE' && (
+                        <button
+                            onClick={() => {
+                                const url = new URL(window.location.href);
+                                url.searchParams.delete('showcase');
+                                window.history.replaceState({}, '', url.toString());
+                                setView('DASHBOARD');
+                            }}
+                            className="px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-lg text-white font-bold transition-all border border-white/30"
+                        >
+                            Voltar ao Painel
+                        </button>
+                    )}
                 </div>
             </header>
+
+            {view === 'SHOWCASE' && (
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-8 flex justify-between items-center animate-slideDown" data-html2canvas-ignore>
+                    <div className="flex items-center gap-3">
+                        <svg className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-blue-700 text-sm font-medium">
+                            Você está no <strong>Modo Mostruário</strong>. Esta é uma visão executiva ideal para compartilhar com terceiros.
+                        </p>
+                    </div>
+                    <button
+                        onClick={handleShareShowcase}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md transition-all text-sm"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                        </svg>
+                        Compartilhar Link
+                    </button>
+                </div>
+            )}
 
             {view === 'HISTORY' ? (
                 <div className="space-y-8">
@@ -770,12 +839,50 @@ export const DeliveryOrder: React.FC = () => {
                 </div>
             ) : (
                 <>
+                    {view === 'SHOWCASE' && (
+                        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fadeIn">
+                            <div className="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-[#f26522] flex items-center gap-4">
+                                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Biomassa Total</p>
+                                    <h4 className="text-2xl font-black text-gray-900">{formatNumber(grandTotals.biomass, ' kg')}</h4>
+                                </div>
+                            </div>
+                            <div className="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-green-500 flex items-center gap-4">
+                                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v1m0 5V5m0 16c-1.11 0-2.08-.402-2.599-1M12 21V11m0 10c-1.11 0-2.08-.402-2.599-1M12 21V11" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Valor Gerado</p>
+                                    <h4 className="text-2xl font-black text-green-600">{formatCurrency(grandTotals.value)}</h4>
+                                </div>
+                            </div>
+                            <div className="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-blue-500 flex items-center gap-4">
+                                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Preço Médio Global</p>
+                                    <h4 className="text-2xl font-black text-blue-600">{formatCurrency(grandTotals.value / (grandTotals.biomass || 1))}/kg</h4>
+                                </div>
+                            </div>
+                        </section>
+                    )}
+
                     <section className="bg-white rounded-2xl shadow-xl shadow-orange-100/50 overflow-hidden border border-orange-50">
                         <div className="overflow-x-auto" ref={reportRef}>
                             <table className="w-full border-collapse">
                                 <thead>
                                     <tr className="bg-[#f26522] text-white">
-                                        <th className="p-2 text-center w-12" data-html2canvas-ignore></th>
+                                        {view !== 'SHOWCASE' && <th className="p-2 text-center w-12" data-html2canvas-ignore></th>}
                                         <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Data</th>
                                         <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Viveiro</th>
                                         <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Cliente</th>
@@ -788,20 +895,22 @@ export const DeliveryOrder: React.FC = () => {
                                         <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Ciclo</th>
                                         <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Laborat.</th>
                                         <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Obs</th>
-                                        <th className="p-2 text-center font-bold uppercase text-[0.70rem] tracking-wider last:rounded-tr-2xl" data-html2canvas-ignore>Ações</th>
+                                        {view !== 'SHOWCASE' && <th className="p-2 text-center font-bold uppercase text-[0.70rem] tracking-wider last:rounded-tr-2xl" data-html2canvas-ignore>Ações</th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-orange-50">
-                                    {data.map((row) => (
+                                    {data.filter(row => view === 'SHOWCASE' ? row.visible : true).map((row) => (
                                         <tr key={row.id} className={`transition-colors h-10 ${row.visible ? 'bg-white hover:bg-orange-50/30' : 'bg-gray-50/50 opacity-50'}`}>
-                                            <td className="p-2 text-center" data-html2canvas-ignore>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={row.visible}
-                                                    onChange={() => toggleRow(row.id)}
-                                                    className="h-4 w-4 rounded-md text-[#f26522] focus:ring-[#f26522] border-orange-200 cursor-pointer"
-                                                />
-                                            </td>
+                                            {view !== 'SHOWCASE' && (
+                                                <td className="p-2 text-center" data-html2canvas-ignore>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={row.visible}
+                                                        onChange={() => toggleRow(row.id)}
+                                                        className="h-4 w-4 rounded-md text-[#f26522] focus:ring-[#f26522] border-orange-200 cursor-pointer"
+                                                    />
+                                                </td>
+                                            )}
                                             <td className="p-2 text-xs font-semibold text-gray-500">{row.data}</td>
                                             <td className="p-2 text-xs font-bold text-gray-700">{row.viveiro}</td>
                                             <td className="p-2 text-xs font-extrabold text-[#f26522]">{row.cliente}</td>
@@ -814,20 +923,22 @@ export const DeliveryOrder: React.FC = () => {
                                             <td className="p-2 text-xs text-gray-600">{row.diasCultivo} d</td>
                                             <td className="p-2 text-xs text-gray-600 font-semibold">{row.laboratorio}</td>
                                             <td className="p-2 text-[0.70rem] text-red-500 font-bold max-w-[100px] truncate">{row.notas}</td>
-                                            <td className="p-2 text-center" data-html2canvas-ignore>
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <button onClick={() => handleEditClick(row)} className="text-blue-500 hover:text-blue-700 p-1 hover:bg-blue-50 rounded">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                                        </svg>
-                                                    </button>
-                                                    <button onClick={() => handleDelete(row.id)} className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </td>
+                                            {view !== 'SHOWCASE' && (
+                                                <td className="p-2 text-center" data-html2canvas-ignore>
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button onClick={() => handleEditClick(row)} className="text-blue-500 hover:text-blue-700 p-1 hover:bg-blue-50 rounded">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                            </svg>
+                                                        </button>
+                                                        <button onClick={() => handleDelete(row.id)} className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            )}
                                         </tr>
                                     ))}
                                 </tbody>
