@@ -481,166 +481,169 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         }, 0);
     };
 
-    const ActionBar = () => (
-        <div className="flex flex-wrap gap-2 mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100 print:hidden">
-            <button onClick={() => performExport('pdf')} className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase flex items-center gap-2 hover:bg-red-700 transition-all shadow-lg active:scale-95">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
-                PDF
-            </button>
-            <button onClick={() => performExport('png')} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition-all shadow-lg active:scale-95">PNG</button>
-            <button onClick={() => performExport('html')} className="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-800 transition-all shadow-lg active:scale-95">HTML</button>
-            {!isPublic && (
-                <>
-                    <div className="w-px h-8 bg-slate-200 mx-2" />
-                    <input type="file" ref={fileInputRef} onChange={handleAIPreencher} accept="image/*" className="hidden" />
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isAIProcessing}
-                        className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg text-xs font-black uppercase hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg active:scale-95 flex items-center gap-2 disabled:opacity-50"
-                    >
-                        {isAIProcessing ? (
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                            <span>🪄</span>
-                        )}
-                        {isAIProcessing ? 'Processando...' : 'IA Preencher Tudo'}
-                    </button>
-                </>
-            )}
-            <div className="w-px h-8 bg-slate-200 mx-2" />
-            <button onClick={handleShare} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-700 transition-all shadow-lg active:scale-95">Compartilhar</button>
-
-            {!isPublic && (
-                <>
-                    <div className="w-px h-8 bg-slate-200 mx-2" />
-                    <button onClick={handleBackup} className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-800 transition-all shadow-lg active:scale-95">Backup</button>
-                    <input type="file" id="load-backup-input" accept=".json" onChange={handleLoadBackup} className="hidden" />
-                    <button onClick={() => document.getElementById('load-backup-input')?.click()} className="bg-orange-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-orange-600 transition-all shadow-lg active:scale-95">Carregar</button>
-                    <button onClick={handleSave} className="bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-600 transition-all shadow-lg active:scale-95">Salvar</button>
-                    <button onClick={handleClearData} className="bg-slate-400 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-500 transition-all shadow-lg active:scale-95">Limpar Tudo</button>
-                </>
-            )}
-
-            <div className="w-px h-8 bg-slate-200 mx-2" />
-
-            <div className="flex bg-slate-100 p-1 rounded-lg">
-                {[0, 1, 2, 3, 4, 5].map(w => (
-                    <button
-                        key={w}
-                        onClick={() => setSelectedWeek(w)}
-                        className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${selectedWeek === w
-                            ? 'bg-white text-blue-600 shadow-sm'
-                            : 'text-slate-500 hover:text-slate-700'
-                            }`}
-                    >
-                        {w === 0 ? 'MÊS' : `S${w}`}
-                    </button>
-                ))}
-            </div>
-
-            <div className="w-px h-8 bg-slate-200 mx-2" />
-            <div className="relative">
+    const ActionBar = () => {
+        if (isPublic) return null;
+        return (
+            <div className="flex flex-wrap gap-2 mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100 print:hidden">
+                <button onClick={() => performExport('pdf')} className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase flex items-center gap-2 hover:bg-red-700 transition-all shadow-lg active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                    PDF
+                </button>
+                <button onClick={() => performExport('png')} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition-all shadow-lg active:scale-95">PNG</button>
+                <button onClick={() => performExport('html')} className="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-800 transition-all shadow-lg active:scale-95">HTML</button>
                 {!isPublic && (
-                    <button
-                        onClick={() => setShowLayoutSettings(!showLayoutSettings)}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-lg active:scale-95 flex items-center gap-2 ${showLayoutSettings ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-                    >
-                        <span>⚙️</span> Ajustar Layout
-                    </button>
+                    <>
+                        <div className="w-px h-8 bg-slate-200 mx-2" />
+                        <input type="file" ref={fileInputRef} onChange={handleAIPreencher} accept="image/*" className="hidden" />
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isAIProcessing}
+                            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg text-xs font-black uppercase hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                        >
+                            {isAIProcessing ? (
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <span>🪄</span>
+                            )}
+                            {isAIProcessing ? 'Processando...' : 'IA Preencher Tudo'}
+                        </button>
+                    </>
+                )}
+                <div className="w-px h-8 bg-slate-200 mx-2" />
+                <button onClick={handleShare} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-700 transition-all shadow-lg active:scale-95">Compartilhar</button>
+
+                {!isPublic && (
+                    <>
+                        <div className="w-px h-8 bg-slate-200 mx-2" />
+                        <button onClick={handleBackup} className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-800 transition-all shadow-lg active:scale-95">Backup</button>
+                        <input type="file" id="load-backup-input" accept=".json" onChange={handleLoadBackup} className="hidden" />
+                        <button onClick={() => document.getElementById('load-backup-input')?.click()} className="bg-orange-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-orange-600 transition-all shadow-lg active:scale-95">Carregar</button>
+                        <button onClick={handleSave} className="bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-600 transition-all shadow-lg active:scale-95">Salvar</button>
+                        <button onClick={handleClearData} className="bg-slate-400 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-500 transition-all shadow-lg active:scale-95">Limpar Tudo</button>
+                    </>
                 )}
 
-                {showLayoutSettings && (
-                    <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 p-4 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
-                        <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
-                            <h3 className="font-black text-[10px] text-slate-900 uppercase">Ajustes de Tabela</h3>
-                            <button onClick={() => setShowLayoutSettings(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+                <div className="w-px h-8 bg-slate-200 mx-2" />
+
+                <div className="flex bg-slate-100 p-1 rounded-lg">
+                    {[0, 1, 2, 3, 4, 5].map(w => (
+                        <button
+                            key={w}
+                            onClick={() => setSelectedWeek(w)}
+                            className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${selectedWeek === w
+                                ? 'bg-white text-blue-600 shadow-sm'
+                                : 'text-slate-500 hover:text-slate-700'
+                                }`}
+                        >
+                            {w === 0 ? 'MÊS' : `S${w}`}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="w-px h-8 bg-slate-200 mx-2" />
+                <div className="relative">
+                    {!isPublic && (
+                        <button
+                            onClick={() => setShowLayoutSettings(!showLayoutSettings)}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-lg active:scale-95 flex items-center gap-2 ${showLayoutSettings ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                        >
+                            <span>⚙️</span> Ajustar Layout
+                        </button>
+                    )}
+
+                    {showLayoutSettings && (
+                        <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 p-4 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                            <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+                                <h3 className="font-black text-[10px] text-slate-900 uppercase">Ajustes de Tabela</h3>
+                                <button onClick={() => setShowLayoutSettings(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
+                                        <span>Largura Col. Dias</span>
+                                        <span className="text-indigo-600">{tableConfig.dayColWidth}px</span>
+                                    </label>
+                                    <input
+                                        type="range" min="20" max="100"
+                                        value={tableConfig.dayColWidth}
+                                        onChange={e => setTableConfig({ ...tableConfig, dayColWidth: parseInt(e.target.value) })}
+                                        className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                    />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
+                                        <span>Largura Col. Fixas</span>
+                                        <span className="text-indigo-600">{tableConfig.headerColWidth}px</span>
+                                    </label>
+                                    <input
+                                        type="range" min="40" max="120"
+                                        value={tableConfig.headerColWidth}
+                                        onChange={e => setTableConfig({ ...tableConfig, headerColWidth: parseInt(e.target.value) })}
+                                        className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                    />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
+                                        <span>Tamanho da Fonte</span>
+                                        <span className="text-indigo-600">{tableConfig.fontSize}px</span>
+                                    </label>
+                                    <input
+                                        type="range" min="8" max="14"
+                                        value={tableConfig.fontSize}
+                                        onChange={e => setTableConfig({ ...tableConfig, fontSize: parseInt(e.target.value) })}
+                                        className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                    />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
+                                        <span>Altura da Linha</span>
+                                        <span className="text-indigo-600">{tableConfig.lineHeight}px</span>
+                                    </label>
+                                    <input
+                                        type="range" min="1" max="80"
+                                        value={tableConfig.lineHeight}
+                                        onChange={e => setTableConfig({ ...tableConfig, lineHeight: parseInt(e.target.value) })}
+                                        className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                    />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
+                                        <span>Respiro (Padding)</span>
+                                        <span className="text-indigo-600">{tableConfig.rowHeight}px</span>
+                                    </label>
+                                    <input
+                                        type="range" min="-25" max="15"
+                                        value={tableConfig.rowHeight}
+                                        onChange={e => setTableConfig({ ...tableConfig, rowHeight: parseInt(e.target.value) })}
+                                        className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                    />
+                                </div>
+
+                                <button
+                                    onClick={() => setTableConfig({ dayColWidth: 55, headerColWidth: 65, fontSize: 10, rowHeight: 6, lineHeight: 30, veWidth: 56 })}
+                                    className="w-full py-2 bg-slate-50 text-slate-500 text-[9px] font-bold rounded-lg hover:bg-slate-100 transition-colors uppercase"
+                                >
+                                    Resetar para Padrão
+                                </button>
+                            </div>
                         </div>
-
-                        <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
-                                    <span>Largura Col. Dias</span>
-                                    <span className="text-indigo-600">{tableConfig.dayColWidth}px</span>
-                                </label>
-                                <input
-                                    type="range" min="20" max="100"
-                                    value={tableConfig.dayColWidth}
-                                    onChange={e => setTableConfig({ ...tableConfig, dayColWidth: parseInt(e.target.value) })}
-                                    className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                                />
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
-                                    <span>Largura Col. Fixas</span>
-                                    <span className="text-indigo-600">{tableConfig.headerColWidth}px</span>
-                                </label>
-                                <input
-                                    type="range" min="40" max="120"
-                                    value={tableConfig.headerColWidth}
-                                    onChange={e => setTableConfig({ ...tableConfig, headerColWidth: parseInt(e.target.value) })}
-                                    className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                                />
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
-                                    <span>Tamanho da Fonte</span>
-                                    <span className="text-indigo-600">{tableConfig.fontSize}px</span>
-                                </label>
-                                <input
-                                    type="range" min="8" max="14"
-                                    value={tableConfig.fontSize}
-                                    onChange={e => setTableConfig({ ...tableConfig, fontSize: parseInt(e.target.value) })}
-                                    className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                                />
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
-                                    <span>Altura da Linha</span>
-                                    <span className="text-indigo-600">{tableConfig.lineHeight}px</span>
-                                </label>
-                                <input
-                                    type="range" min="1" max="80"
-                                    value={tableConfig.lineHeight}
-                                    onChange={e => setTableConfig({ ...tableConfig, lineHeight: parseInt(e.target.value) })}
-                                    className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                                />
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="flex justify-between text-[9px] font-black text-slate-500 uppercase">
-                                    <span>Respiro (Padding)</span>
-                                    <span className="text-indigo-600">{tableConfig.rowHeight}px</span>
-                                </label>
-                                <input
-                                    type="range" min="-25" max="15"
-                                    value={tableConfig.rowHeight}
-                                    onChange={e => setTableConfig({ ...tableConfig, rowHeight: parseInt(e.target.value) })}
-                                    className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                                />
-                            </div>
-
-                            <button
-                                onClick={() => setTableConfig({ dayColWidth: 55, headerColWidth: 65, fontSize: 10, rowHeight: 6, lineHeight: 30, veWidth: 56 })}
-                                className="w-full py-2 bg-slate-50 text-slate-500 text-[9px] font-bold rounded-lg hover:bg-slate-100 transition-colors uppercase"
-                            >
-                                Resetar para Padrão
-                            </button>
-                        </div>
-                    </div>
+                    )}
+                </div>
+                {!isPublic && (
+                    <>
+                        <div className="w-px h-8 bg-slate-200 mx-2" />
+                        <input type="file" id="logo-upload-input" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                        <button onClick={() => document.getElementById('logo-upload-input')?.click()} className="bg-purple-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-purple-700 transition-all shadow-lg active:scale-95">📷 Logo</button>
+                    </>
                 )}
             </div>
-            {!isPublic && (
-                <>
-                    <div className="w-px h-8 bg-slate-200 mx-2" />
-                    <input type="file" id="logo-upload-input" accept="image/*" onChange={handleLogoUpload} className="hidden" />
-                    <button onClick={() => document.getElementById('logo-upload-input')?.click()} className="bg-purple-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-purple-700 transition-all shadow-lg active:scale-95">📷 Logo</button>
-                </>
-            )}
-        </div>
-    );
+        );
+    };
 
     if (isLoading && !data) {
         return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div></div>;
@@ -711,28 +714,30 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                 </div>
 
                 {/* Tab Navigation */}
-                <div className="flex gap-2 mb-4 px-4 print:hidden" data-html2canvas-ignore>
-                    <button
-                        onClick={() => setActiveView('table')}
-                        className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeView === 'table'
-                            ? 'bg-orange-600 text-white shadow-lg'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                    >
-                        📊 Tabela
-                    </button>
-                    {!isPublic && (
+                {!isPublic && (
+                    <div className="flex gap-2 mb-4 px-4 print:hidden" data-html2canvas-ignore>
                         <button
-                            onClick={() => setActiveView('dashboard')}
-                            className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeView === 'dashboard'
-                                ? 'bg-purple-600 text-white shadow-lg'
+                            onClick={() => setActiveView('table')}
+                            className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeView === 'table'
+                                ? 'bg-orange-600 text-white shadow-lg'
                                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                 }`}
                         >
-                            📈 Dashboard
+                            📊 Tabela
                         </button>
-                    )}
-                </div>
+                        {!isPublic && (
+                            <button
+                                onClick={() => setActiveView('dashboard')}
+                                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeView === 'dashboard'
+                                    ? 'bg-purple-600 text-white shadow-lg'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    }`}
+                            >
+                                📈 Dashboard
+                            </button>
+                        )}
+                    </div>
+                )}
 
                 {/* Conditional Rendering */}
                 {activeView === 'dashboard' ? (
@@ -901,28 +906,30 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 </React.Fragment>
                                             ))}
 
-                                            <tr className="bg-slate-50 border-t-2 border-slate-200" data-html2canvas-ignore>
-                                                <td colSpan={7} className="p-3">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex bg-white rounded-lg shadow-sm border border-slate-200 p-0.5">
-                                                            <input
-                                                                type="number"
-                                                                value={tankQuantity}
-                                                                onChange={(e) => setTankQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                                                className="w-10 text-center bg-transparent border-none focus:ring-0 font-bold text-slate-600 text-xs"
-                                                            />
+                                            {!isPublic && (
+                                                <tr className="bg-slate-50 border-t-2 border-slate-200" data-html2canvas-ignore>
+                                                    <td colSpan={7} className="p-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="flex bg-white rounded-lg shadow-sm border border-slate-200 p-0.5">
+                                                                <input
+                                                                    type="number"
+                                                                    value={tankQuantity}
+                                                                    onChange={(e) => setTankQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                                                    className="w-10 text-center bg-transparent border-none focus:ring-0 font-bold text-slate-600 text-xs"
+                                                                />
+                                                            </div>
+                                                            <button
+                                                                onClick={addTank}
+                                                                className="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase hover:bg-slate-800 transition-all flex items-center gap-2"
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3.5 h-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                                                                Adicionar Viveiros
+                                                            </button>
                                                         </div>
-                                                        <button
-                                                            onClick={addTank}
-                                                            className="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase hover:bg-slate-800 transition-all flex items-center gap-2"
-                                                        >
-                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3.5 h-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                                                            Adicionar Viveiros
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                                <td colSpan={daysArray.length + 1}></td>
-                                            </tr>
+                                                    </td>
+                                                    <td colSpan={daysArray.length + 1}></td>
+                                                </tr>
+                                            )}
                                         </tbody>
                                         <tfoot>
                                             <tr className="bg-slate-900 shadow-[0_-10px_20px_rgba(0,0,0,0.1)] relative z-30">

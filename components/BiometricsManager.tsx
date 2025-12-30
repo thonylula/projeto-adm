@@ -918,51 +918,55 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
                     )}
 
                     {/* --- ACTION BUTTONS FOOTER --- */}
-                    <div className="mt-8 border-t border-gray-100 pt-6 flex flex-wrap justify-center gap-3 no-print" data-html2canvas-ignore="true">
-                        <button
-                            onClick={saveBackup}
-                            className="px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors flex items-center gap-2 shadow-sm"
-                            title="Baixar backup dos dados (JSON)"
-                        >
-                            <span>💾</span> Salvar Backup
-                        </button>
-
-                        <div className="relative">
+                    {!isPublic && (
+                        <div className="mt-8 border-t border-gray-100 pt-6 flex flex-wrap justify-center gap-3 no-print" data-html2canvas-ignore="true">
                             <button
-                                onClick={() => fileInputRef.current?.click()}
-                                className="px-4 py-2 bg-green-50 border border-green-200 text-green-700 rounded-lg text-xs font-bold hover:bg-green-100 transition-colors flex items-center gap-2 shadow-sm"
-                                title="Carregar backup dos dados (JSON)"
+                                onClick={saveBackup}
+                                className="px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors flex items-center gap-2 shadow-sm"
+                                title="Baixar backup dos dados (JSON)"
                             >
-                                <span>📂</span> Carregar Backup
+                                <span>💾</span> Salvar Backup
                             </button>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                className="hidden"
-                                accept="application/json"
-                                onChange={loadBackup}
-                            />
+
+                            <div className="relative">
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="px-4 py-2 bg-green-50 border border-green-200 text-green-700 rounded-lg text-xs font-bold hover:bg-green-100 transition-colors flex items-center gap-2 shadow-sm"
+                                    title="Carregar backup dos dados (JSON)"
+                                >
+                                    <span>📂</span> Carregar Backup
+                                </button>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    className="hidden"
+                                    accept="application/json"
+                                    onChange={loadBackup}
+                                />
+                            </div>
+
+                            <div className="w-px h-8 bg-gray-200 mx-2 hidden md:block"></div>
+
+                            <button onClick={exportPDF} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
+                                📄 PDF
+                            </button>
+                            <button onClick={exportPNG} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
+                                🖼️ PNG
+                            </button>
+                            <button onClick={copyHTML} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
+                                🌐 HTML
+                            </button>
                         </div>
-
-                        <div className="w-px h-8 bg-gray-200 mx-2 hidden md:block"></div>
-
-                        <button onClick={exportPDF} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
-                            📄 PDF
-                        </button>
-                        <button onClick={exportPNG} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
-                            🖼️ PNG
-                        </button>
-                        <button onClick={copyHTML} className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
-                            🌐 HTML
-                        </button>
-                    </div>
+                    )}
 
                 </main>
-                <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
-                    <p className="text-[10px] text-gray-400 font-mono opacity-60">
-                        Sistema Integrado de Gestão • v2.0 (Backup & Input) • Conectado ao GitHub
-                    </p>
-                </div>
+                {!isPublic && (
+                    <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
+                        <p className="text-[10px] text-gray-400 font-mono opacity-60">
+                            Sistema Integrado de Gestão • v2.0 (Backup & Input) • Conectado ao GitHub
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );
