@@ -136,40 +136,42 @@ const NavItem: React.FC<{
                 </button>
 
                 {isYearExpanded && (
-                  <div className="grid grid-cols-3 gap-1 px-1">
-                    {months.map(month => {
-                      // Determine if this is the current or previous month in the current year
-                      const isCurrentMonth = year === currentYear && month.id === currentMonth;
-                      const isPreviousMonth = year === currentYear && month.id === previousMonth;
+                  <div className="grid grid-cols-2 gap-1 px-1">
+                    {months
+                      .filter(month => month.id === 11 || month.id === 12) // Mostrar apenas NOV e DEZ
+                      .map(month => {
+                        // Determine if this is the current or previous month in the current year
+                        const isCurrentMonth = year === currentYear && month.id === currentMonth;
+                        const isPreviousMonth = year === currentYear && month.id === previousMonth;
 
-                      let buttonClasses = "px-1 py-2 rounded text-[10px] font-medium transition-colors text-center";
+                        let buttonClasses = "px-1 py-2 rounded text-[10px] font-medium transition-colors text-center";
 
-                      if (isCurrentMonth) {
-                        // Current month: bright orange with background
-                        buttonClasses += " bg-orange-600 text-white font-bold shadow-lg";
-                      } else if (isPreviousMonth) {
-                        // Previous month: lighter orange tone
-                        buttonClasses += " bg-orange-500/30 text-orange-300 font-bold border border-orange-500/50";
-                      } else {
-                        // Other months: default style
-                        buttonClasses += " text-slate-500 hover:bg-orange-600/20 hover:text-orange-400";
-                      }
+                        if (isCurrentMonth) {
+                          // Current month: bright orange with background
+                          buttonClasses += " bg-orange-600 text-white font-bold shadow-lg";
+                        } else if (isPreviousMonth) {
+                          // Previous month: lighter orange tone
+                          buttonClasses += " bg-orange-500/30 text-orange-300 font-bold border border-orange-500/50";
+                        } else {
+                          // Other months: default style
+                          buttonClasses += " text-slate-500 hover:bg-orange-600/20 hover:text-orange-400";
+                        }
 
-                      return (
-                        <button
-                          key={month.id}
-                          onClick={() => {
-                            window.dispatchEvent(new CustomEvent('app-navigation', {
-                              detail: { tab: 'payroll', year, month: month.id }
-                            }));
-                            setIsMobileMenuOpen(false);
-                          }}
-                          className={buttonClasses}
-                        >
-                          {month.label}
-                        </button>
-                      );
-                    })}
+                        return (
+                          <button
+                            key={month.id}
+                            onClick={() => {
+                              window.dispatchEvent(new CustomEvent('app-navigation', {
+                                detail: { tab: 'payroll', year, month: month.id }
+                              }));
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className={buttonClasses}
+                          >
+                            {month.label}
+                          </button>
+                        );
+                      })}
                   </div>
                 )}
               </div>
