@@ -23,6 +23,7 @@ const NavItem: React.FC<{
 }> = ({ item, activeTab, onTabChange, setIsMobileMenuOpen, isLocked, onToggleLock }) => {
   const isPayroll = item.id === 'payroll';
   const isPantry = item.id === 'pantry';
+  const isShowcase = item.id === 'showcase';
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedYear, setExpandedYear] = useState<number | null>(new Date().getFullYear());
 
@@ -40,10 +41,10 @@ const NavItem: React.FC<{
     <div className="space-y-1">
       <button
         onClick={() => {
-          if (isPayroll || isPantry) {
+          if (isPayroll || isPantry || isShowcase) {
             setIsExpanded(!isExpanded);
           }
-          if (!isPayroll && !isPantry) {
+          if (!isPayroll && !isPantry && !isShowcase) {
             onTabChange(item.id);
             setIsMobileMenuOpen(false);
           } else {
@@ -81,7 +82,7 @@ const NavItem: React.FC<{
           )}
         </button>
 
-        {(isPayroll || isPantry) && (
+        {(isPayroll || isPantry || isShowcase) && (
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -93,7 +94,7 @@ const NavItem: React.FC<{
             <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
           </svg>
         )}
-        {isActive && !isPayroll && !isPantry && (
+        {isActive && !isPayroll && !isPantry && !isShowcase && (
           <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white flex-shrink-0"></span>
         )}
       </button>
@@ -144,7 +145,6 @@ const NavItem: React.FC<{
         </div>
       )}
 
-      {/* Submenu Cestas Básicas */}
       {isPantry && isExpanded && (
         <div className="ml-9 space-y-1 border-l border-slate-800 pl-2 py-1">
           <button
@@ -164,6 +164,21 @@ const NavItem: React.FC<{
             className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeTab === 'budget' ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
           >
             💰 Orçamento
+          </button>
+        </div>
+      )}
+
+      {/* Submenu Mostruário */}
+      {isShowcase && isExpanded && (
+        <div className="ml-9 space-y-1 border-l border-slate-800 pl-2 py-1">
+          <button
+            onClick={() => {
+              onTabChange('showcase');
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeTab === 'showcase' ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+          >
+            📊 Faturamento
           </button>
         </div>
       )}
