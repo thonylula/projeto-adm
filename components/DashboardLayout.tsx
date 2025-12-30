@@ -105,46 +105,76 @@ const NavItem: React.FC<{
       {/* Submenu Folha Salarial - Anos */}
       {isPayroll && isExpanded && (
         <div className="ml-9 space-y-1 border-l border-slate-800 pl-2 py-1">
-          {years.map(year => (
-            <div key={year} className="space-y-1">
-              <button
-                onClick={() => setExpandedYear(expandedYear === year ? null : year)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold transition-colors ${expandedYear === year ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                  }`}
-              >
-                <span>{year}</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className={`w-3 h-3 transition-transform ${expandedYear === year ? 'rotate-180' : ''}`}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                </svg>
-              </button>
+          {years.map(year => {
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+            const currentMonth = currentDate.getMonth() + 1; // 1-12
+            const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1;
 
-              {expandedYear === year && (
-                <div className="grid grid-cols-3 gap-1 px-1">
-                  {months.map(month => (
-                    <button
-                      key={month.id}
-                      onClick={() => {
-                        window.dispatchEvent(new CustomEvent('app-navigation', {
-                          detail: { tab: 'payroll', year, month: month.id }
-                        }));
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="px-1 py-2 rounded text-[10px] font-medium text-slate-500 hover:bg-orange-600/20 hover:text-orange-400 transition-colors text-center"
-                    >
-                      {month.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+            // Auto-expand current year
+            const shouldAutoExpand = year === currentYear;
+            const isYearExpanded = expandedYear === year || shouldAutoExpand;
+
+            return (
+              <div key={year} className="space-y-1">
+                <button
+                  onClick={() => setExpandedYear(expandedYear === year ? null : year)}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold transition-colors ${isYearExpanded ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                >
+                  <span>{year}</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className={`w-3 h-3 transition-transform ${isYearExpanded ? 'rotate-180' : ''}`}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </button>
+
+                {isYearExpanded && (
+                  <div className="grid grid-cols-3 gap-1 px-1">
+                    {months.map(month => {
+                      // Determine if this is the current or previous month in the current year
+                      const isCurrentMonth = year === currentYear && month.id === currentMonth;
+                      const isPreviousMonth = year === currentYear && month.id === previousMonth;
+
+                      let buttonClasses = "px-1 py-2 rounded text-[10px] font-medium transition-colors text-center";
+
+                      if (isCurrentMonth) {
+                        // Current month: bright orange with background
+                        buttonClasses += " bg-orange-600 text-white font-bold shadow-lg";
+                      } else if (isPreviousMonth) {
+                        // Previous month: lighter orange tone
+                        buttonClasses += " bg-orange-500/30 text-orange-300 font-bold border border-orange-500/50";
+                      } else {
+                        // Other months: default style
+                        buttonClasses += " text-slate-500 hover:bg-orange-600/20 hover:text-orange-400";
+                      }
+
+                      return (
+                        <button
+                          key={month.id}
+                          onClick={() => {
+                            window.dispatchEvent(new CustomEvent('app-navigation', {
+                              detail: { tab: 'payroll', year, month: month.id }
+                            }));
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={buttonClasses}
+                        >
+                          {month.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
