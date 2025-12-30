@@ -53,6 +53,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
     const [showHistory, setShowHistory] = useState(false);
     const [needsSave, setNeedsSave] = useState(false);
     const [biometryDate, setBiometryDate] = useState(new Date().toISOString().split('T')[0]);
+    const [loadedRecordId, setLoadedRecordId] = useState<string | null>(null);
 
     const { processFile, isProcessing } = useGeminiParser();
     const [filterText, setFilterText] = useState('');
@@ -264,6 +265,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
         setStep('UPLOAD');
         setFiles([]);
         setTextInput('');
+        setLoadedRecordId(null);
     };
 
     const handleNewBiometry = () => {
@@ -272,6 +274,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
             return;
         }
 
+        setLoadedRecordId(null);
         // Copiar dados atuais e mover PM para P.Ant, limpar PM
         const newData = currentData.map(item => ({
             ...item,
@@ -296,6 +299,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
     const handleLoadHistory = (record: any) => {
         if (record.data) {
             setCurrentData(record.data);
+            setLoadedRecordId(record.id);
             // Tentar extrair a data do registro se disponível
             if (record.timestamp) {
                 setBiometryDate(new Date(record.timestamp).toISOString().split('T')[0]);
@@ -311,8 +315,39 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
             const success = await SupabaseService.deleteBiometry(id);
             if (success) {
                 setBiometricsHistory(prev => prev.filter(item => item.id !== id));
+                if (loadedRecordId === id) setLoadedRecordId(null);
                 showToast('Registro excluído com sucesso.');
             }
+        }
+    };
+
+    const handleDeleteCurrent = async () => {
+        if (!loadedRecordId) return;
+        if (window.confirm('Deseja excluir este registro PERMANENTEMENTE do banco de dados?')) {
+            const success = await SupabaseService.deleteBiometry(loadedRecordId);
+            if (success) {
+                setBiometricsHistory(prev => prev.filter(item => item.id !== loadedRecordId));
+                setLoadedRecordId(null);
+                setCurrentData(defaultRawData);
+                setStep('UPLOAD');
+                showToast('✅ Registro removido permanentemente.');
+            }
+        }
+    };
+
+    const handleDeleteAllHistory = async () => {
+        if (biometricsHistory.length === 0) return;
+        if (window.confirm('CUIDADO! Isso irá excluir TODO o histórico de biometrias para sempre. Deseja prosseguir?')) {
+            // No SupabaseService, deleteBiometry apaga por ID. Precisamos de um delete all ou loop.
+            // Para segurança e performance, usaremos um loop aqui mas seria ideal um RPC no Postgres.
+            let count = 0;
+            for (const item of biometricsHistory) {
+                const ok = await SupabaseService.deleteBiometry(item.id);
+                if (ok) count++;
+            }
+            setBiometricsHistory([]);
+            setLoadedRecordId(null);
+            showToast(`✅ ${count} registros removidos do histórico.`);
         }
     };
 
@@ -780,6 +815,18 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
                             </svg>
                             Nova Biometria
                         </button>
+                        {loadedRecordId && (
+                            <button
+                                onClick={handleDeleteCurrent}
+                                className="flex items-center gap-2 text-sm font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg border border-red-200 shadow-sm transition-all"
+                                title="Excluir este registro permanentemente do banco"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Excluir
+                            </button>
+                        )}
                         <button
                             onClick={handleSaveBiometry}
                             className="flex items-center gap-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg shadow-sm transition-all"
@@ -1179,7 +1226,18 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
                             )}
                         </div>
 
-                        <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end">
+                        <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+                            {biometricsHistory.length > 0 ? (
+                                <button
+                                    onClick={handleDeleteAllHistory}
+                                    className="text-[10px] font-bold text-red-400 hover:text-red-600 uppercase tracking-widest transition-colors flex items-center gap-1"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Limpar Histórico
+                                </button>
+                            ) : <div></div>}
                             <button
                                 onClick={() => setShowHistory(false)}
                                 className="px-6 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors"
