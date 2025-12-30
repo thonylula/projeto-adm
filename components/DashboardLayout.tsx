@@ -44,11 +44,11 @@ const NavItem: React.FC<{
           if (isPayroll || isPantry || isShowcase) {
             setIsExpanded(!isExpanded);
           }
-          if (!isPayroll && !isPantry && !isShowcase) {
+
+          // For Showcase, the parent is also a view (the manager/hub)
+          if (!isPayroll && !isPantry) {
             onTabChange(item.id);
             setIsMobileMenuOpen(false);
-          } else {
-            // Se clicar no item pai, a gente só expande
           }
         }}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
@@ -173,10 +173,11 @@ const NavItem: React.FC<{
         <div className="ml-9 space-y-1 border-l border-slate-800 pl-2 py-1">
           <button
             onClick={() => {
-              onTabChange('showcase');
+              window.dispatchEvent(new CustomEvent('app-navigation', { detail: { tab: 'showcase' } }));
+              onTabChange('showcase-faturamento');
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeTab === 'showcase' ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeTab === 'showcase-faturamento' ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
           >
             📊 Faturamento
           </button>
@@ -316,7 +317,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   ];
 
 
-  const navItems = menuItems; // Fixed order, no auto-sort to preserve "below Biometria" request
+  const navItems = isPublic
+    ? menuItems.filter(item => {
+      const params = new URLSearchParams(window.location.search);
+      const sharedTabs = params.get('tabs')?.split(',') || [];
+      return sharedTabs.includes(item.id);
+    })
+    : menuItems;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row print:bg-white print:block" data-active-tab={activeTab}>

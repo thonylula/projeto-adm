@@ -14,6 +14,7 @@ import { BudgetPage } from './components/BudgetPage';
 import { MortalidadeConsumo } from './components/MortalidadeConsumo';
 import { CampoViveiros } from './components/CampoViveiros';
 import { Comparator } from './components/Comparator';
+import { ShowcaseManager } from './components/ShowcaseManager';
 import { Company, PayrollHistoryItem } from './types';
 import { SupabaseService } from './services/supabaseService';
 import { isSupabaseConfigured } from './supabaseClient';
@@ -38,7 +39,11 @@ export default function App() {
 
   // Navigation State
   // Navigation State
-  const [activeTab, setActiveTab] = useState(localStorage.getItem('activeTab') || 'payroll');
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sharedTabs = params.get('tabs')?.split(',') || [];
+    return params.get('tab') || (sharedTabs.length > 0 ? sharedTabs[0] : (localStorage.getItem('activeTab') || 'payroll'));
+  });
 
   // Year/Month with persistence
   const [activeYear, setActiveYear] = useState<number | null>(() => {
@@ -249,15 +254,36 @@ export default function App() {
 
   // --- Public Showcase View (No login required) ---
   if (isPublicShowcase) {
+    const params = new URLSearchParams(window.location.search);
+    const sharedTabs = params.get('tabs')?.split(',') || [];
+
+    // Ensure activeTab is one of the shared tabs, or default to first
+    const effectiveTab = (sharedTabs.includes(activeTab)) ? activeTab : (sharedTabs[0] || 'showcase');
+
     return (
       <DashboardLayout
-        activeTab="delivery-order"
-        onTabChange={() => { }} // Disable switching in public mode
+        activeTab={effectiveTab}
+        onTabChange={(tab) => {
+          // Allow switching only between shared tabs
+          if (sharedTabs.includes(tab)) {
+            setActiveTab(tab);
+          }
+        }}
         onLogout={() => { window.location.href = window.location.origin + window.location.pathname; }}
         currentUser="Visitante"
         isPublic={true}
       >
-        <DeliveryOrder isPublic={true} />
+        {effectiveTab === 'showcase' && <DeliveryOrder initialView="SHOWCASE" isPublic={true} />}
+        {effectiveTab === 'biometrics' && <BiometricsManager />}
+        {effectiveTab === 'mortalidade' && activeCompany && <MortalidadeConsumo activeCompany={activeCompany} activeYear={activeYear || 2025} activeMonth={activeMonth || 12} />}
+        {effectiveTab === 'campo' && activeCompany && <CampoViveiros activeCompany={activeCompany} />}
+
+        {/* Fallback if no company is selected but needed (Public view usually expects a default or selected company from context) */}
+        {((effectiveTab === 'mortalidade' || effectiveTab === 'campo') && !activeCompany) && (
+          <div className="text-center p-20">
+            <h3 className="text-xl font-bold text-slate-400">Dados não disponíveis no momento.</h3>
+          </div>
+        )}
       </DashboardLayout>
     );
   }
@@ -349,6 +375,11 @@ export default function App() {
         )}
 
         {activeTab === 'showcase' && (
+          <ShowcaseManager />
+        )}
+
+        {/* Legacy/Direct support for Faturamento view inside Manager if needed */}
+        {activeTab === 'showcase-faturamento' && (
           <DeliveryOrder initialView="SHOWCASE" />
         )}
 
