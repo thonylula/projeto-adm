@@ -348,6 +348,10 @@ export default function App() {
           <CestasBasicas />
         )}
 
+        {activeTab === 'showcase' && (
+          <DeliveryOrder initialView="SHOWCASE" />
+        )}
+
         {activeTab === 'budget' && (
           <>
             {activeCompany ? (

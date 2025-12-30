@@ -29,6 +29,7 @@ interface ClientInfo {
 
 interface DeliveryOrderProps {
     isPublic?: boolean;
+    initialView?: 'INPUT' | 'DASHBOARD' | 'HISTORY' | 'SHOWCASE';
 }
 
 // --- Hardcoded Data (Ported from User Source) ---
@@ -89,8 +90,8 @@ const safeParseNumber = (val: any): number => {
     return 0;
 };
 
-export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false }) => {
-    const [view, setView] = useState<'INPUT' | 'DASHBOARD' | 'HISTORY' | 'SHOWCASE'>('INPUT');
+export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, initialView }) => {
+    const [view, setView] = useState<'INPUT' | 'DASHBOARD' | 'HISTORY' | 'SHOWCASE'>(initialView || 'INPUT');
     const [inputText, setInputText] = useState('');
     const [data, setData] = useState<HarvestData[]>(INITIAL_HARVEST_DATA);
     const [logo, setLogo] = useState<string | null>(null);
@@ -766,12 +767,20 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false }
                                 Tabela
                             </button>
                             <button
-                                onClick={() => setView('INPUT')}
-                                className="px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-lg text-white font-bold transition-all border border-white/30"
+                                onClick={() => setView('HISTORY')}
+                                className={`px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all duration-300 ${view === 'HISTORY' ? 'bg-white text-orange-600 shadow-lg' : 'bg-white/10 text-white hover:bg-white/20'}`}
                             >
-                                Nova Importação
+                                <span>Histórico</span>
                             </button>
                         </>
+                    )}
+                    {!isPublic && (
+                        <button
+                            onClick={() => setView('INPUT')}
+                            className="px-5 py-2.5 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-400 transition-all shadow-lg flex items-center gap-2"
+                        >
+                            <span>Nova Importação</span>
+                        </button>
                     )}
 
                     {view === 'DASHBOARD' && (
