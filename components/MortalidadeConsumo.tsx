@@ -721,15 +721,17 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     >
                         📊 Tabela
                     </button>
-                    <button
-                        onClick={() => setActiveView('dashboard')}
-                        className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeView === 'dashboard'
-                            ? 'bg-purple-600 text-white shadow-lg'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                            }`}
-                    >
-                        📈 Dashboard
-                    </button>
+                    {!isPublic && (
+                        <button
+                            onClick={() => setActiveView('dashboard')}
+                            className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeView === 'dashboard'
+                                ? 'bg-purple-600 text-white shadow-lg'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                        >
+                            📈 Dashboard
+                        </button>
+                    )}
                 </div>
 
                 {/* Conditional Rendering */}
