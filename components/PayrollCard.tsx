@@ -1168,508 +1168,509 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     <div className="w-full max-w-6xl mx-auto print:max-w-none print:w-full">
 
       {/* INPUT CARD */}
-      <div className={`w-full max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border transition-all duration-300 mb-12 print:hidden ${editingId ? 'border-amber-300 ring-4 ring-amber-50 shadow-amber-100' : 'border-gray-200/60 hover:shadow-2xl'}`}>
+      {!isPublic && (
+        <div className={`w-full max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border transition-all duration-300 mb-12 print:hidden ${editingId ? 'border-amber-300 ring-4 ring-amber-50 shadow-amber-100' : 'border-gray-200/60 hover:shadow-2xl'}`}>
 
-        <header className={`px-6 py-6 text-center relative overflow-hidden ${editingId ? 'bg-amber-500' : isThirteenthMode ? 'bg-slate-900' : 'bg-slate-900'}`}>
-          <div className="relative z-10">
-            <div className="flex justify-between items-center mb-2">
-              <button onClick={onBack} className="text-xs text-white/70 hover:text-white flex items-center gap-1 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                </svg>
-                Trocar Empresa
-              </button>
-              {editingId && <span className="text-xs font-bold text-white bg-black/20 px-2 py-1 rounded-full uppercase tracking-wide">Editando</span>}
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight uppercase">
-              {activeCompany.name} {isThirteenthMode ? '13º Proporcional' : ''}
-            </h1>
-            <p className="text-white/80 text-sm mt-2 font-medium">Folha de Pagamento Inteligente (Multi-Escala)</p>
-          </div>
-          {isThirteenthMode
-            ? <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-200 via-orange-600 to-red-900" />
-            : !editingId && <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-500 via-purple-500 to-pink-500" />
-          }
-        </header>
-
-        {/* --- SELETOR DE MODO DE CÁLCULO --- */}
-        <div className="bg-slate-50 border-b border-gray-200 p-2 flex justify-center gap-2">
-          <button
-            type="button"
-            onClick={() => setFormState(prev => ({ ...prev, calculationMode: 'MONTHLY' }))}
-            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${!isThirteenthMode ? 'bg-white text-indigo-700 shadow-sm border border-indigo-200' : 'text-gray-400 hover:text-gray-600'}`}
-          >
-            Folha Mensal
-          </button>
-          <button
-            type="button"
-            onClick={() => setFormState(prev => ({ ...prev, calculationMode: '13TH' }))}
-            className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${isThirteenthMode ? 'bg-white text-red-600 shadow-sm border border-red-200' : 'text-gray-400 hover:text-gray-600'}`}
-          >
-            13º Salário
-          </button>
-        </div>
-
-        {/* --- SMART UPLOAD BAR --- */}
-        <div className="bg-white border-b border-gray-100 p-3 flex justify-center items-center gap-4">
-          <div className="relative group w-full max-w-md">
-            <input
-              type="file"
-              id="smart-upload-payroll"
-              className="hidden"
-              onChange={handleSmartUpload}
-              accept="image/*,application/pdf"
-              disabled={isProcessing}
-            />
-            <label
-              htmlFor="smart-upload-payroll"
-              className={`flex items-center justify-center gap-2 w-full px-4 py-2 rounded-xl text-sm font-bold uppercase tracking-wider cursor-pointer border-2 border-dashed transition-all ${isProcessing ? 'bg-gray-50 border-gray-200 text-gray-400' : 'border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:border-indigo-300'}`}
-            >
-              {isProcessing ? (
-                <>
-                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                  Analisando Holerite...
-                </>
-              ) : (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          <header className={`px-6 py-6 text-center relative overflow-hidden ${editingId ? 'bg-amber-500' : isThirteenthMode ? 'bg-slate-900' : 'bg-slate-900'}`}>
+            <div className="relative z-10">
+              <div className="flex justify-between items-center mb-2">
+                <button onClick={onBack} className="text-xs text-white/70 hover:text-white flex items-center gap-1 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                   </svg>
-                  Importar Dados via Holerite (IA)
-                </>
-              )}
-            </label>
+                  Trocar Empresa
+                </button>
+                {editingId && <span className="text-xs font-bold text-white bg-black/20 px-2 py-1 rounded-full uppercase tracking-wide">Editando</span>}
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight uppercase">
+                {activeCompany.name} {isThirteenthMode ? '13º Proporcional' : ''}
+              </h1>
+              <p className="text-white/80 text-sm mt-2 font-medium">Folha de Pagamento Inteligente (Multi-Escala)</p>
+            </div>
+            {isThirteenthMode
+              ? <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-200 via-orange-600 to-red-900" />
+              : !editingId && <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-500 via-purple-500 to-pink-500" />
+            }
+          </header>
+
+          {/* --- SELETOR DE MODO DE CÁLCULO --- */}
+          <div className="bg-slate-50 border-b border-gray-200 p-2 flex justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setFormState(prev => ({ ...prev, calculationMode: 'MONTHLY' }))}
+              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${!isThirteenthMode ? 'bg-white text-indigo-700 shadow-sm border border-indigo-200' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              Folha Mensal
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormState(prev => ({ ...prev, calculationMode: '13TH' }))}
+              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${isThirteenthMode ? 'bg-white text-red-600 shadow-sm border border-red-200' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              13º Salário
+            </button>
           </div>
-        </div>
 
-        <div className="p-6 sm:p-8">
-
-          {/* BANNER 13º */}
-          {isThirteenthMode && (
-            <div className="mb-8 animate-in fade-in">
-              <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-center mb-4">
-                <h3 className="text-lg font-bold text-red-600 uppercase mb-1">CÁLCULO DETALHADO 13º PROPORCIONAL</h3>
-                <p className="text-xs text-red-400">Insira as médias e os dias trabalhados no quadro abaixo.</p>
-              </div>
-
-              {/* SELETOR DE TIPO DE CÁLCULO 13º */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <label className="text-xs font-bold text-gray-500 uppercase">Regra de Pagamento:</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setFormState(prev => ({ ...prev, thirteenthCalculationType: 'CLT' }))}
-                    className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${formState.thirteenthCalculationType === 'CLT' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300'}`}
-                  >
-                    Padrão CLT (15 Dias)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormState(prev => ({ ...prev, thirteenthCalculationType: 'DAILY_EXACT' }))}
-                    className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${formState.thirteenthCalculationType === 'DAILY_EXACT' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300'}`}
-                  >
-                    Cálculo Avulso (Por Dias)
-                  </button>
-                </div>
-              </div>
+          {/* --- SMART UPLOAD BAR --- */}
+          <div className="bg-white border-b border-gray-100 p-3 flex justify-center items-center gap-4">
+            <div className="relative group w-full max-w-md">
+              <input
+                type="file"
+                id="smart-upload-payroll"
+                className="hidden"
+                onChange={handleSmartUpload}
+                accept="image/*,application/pdf"
+                disabled={isProcessing}
+              />
+              <label
+                htmlFor="smart-upload-payroll"
+                className={`flex items-center justify-center gap-2 w-full px-4 py-2 rounded-xl text-sm font-bold uppercase tracking-wider cursor-pointer border-2 border-dashed transition-all ${isProcessing ? 'bg-gray-50 border-gray-200 text-gray-400' : 'border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:border-indigo-300'}`}
+              >
+                {isProcessing ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Analisando Holerite...
+                  </>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Importar Dados via Holerite (IA)
+                  </>
+                )}
+              </label>
             </div>
-          )}
+          </div>
 
-          <form className="space-y-8" onSubmit={handleCalculate}>
+          <div className="p-6 sm:p-8">
 
-            {/* Seção: Escala de Trabalho */}
-            <div className="flex flex-col sm:flex-row gap-6 pb-6 border-b border-slate-100">
-              <div className="flex-1 space-y-4">
-                <div>
-                  <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Selecione a Escala</span>
-                  <div className="flex gap-4">
-                    <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${formState.workScale === 'STANDARD' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold' : 'bg-white border-gray-200 text-slate-500 hover:bg-gray-50'}`}>
-                      <input type="radio" name="workScale" value="STANDARD" checked={formState.workScale === 'STANDARD'} onChange={handleInputChange} className="hidden" />
-                      <span className="text-sm">Padrão (8h/44h)</span>
-                    </label>
-                    <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${formState.workScale === '12x36' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold' : 'bg-white border-gray-200 text-slate-500 hover:bg-gray-50'}`}>
-                      <input type="radio" name="workScale" value="12x36" checked={formState.workScale === '12x36'} onChange={handleInputChange} className="hidden" />
-                      <span className="text-sm">Escala 12x36</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Seção de Grade Mensal do 13º */}
+            {/* BANNER 13º */}
             {isThirteenthMode && (
-              <div className="bg-red-50/50 rounded-xl p-6 border-2 border-red-100 animate-in slide-in-from-top-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-sm font-bold text-red-700 uppercase tracking-wider flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    Detalhamento de Dias por Mês
-                  </h3>
+              <div className="mb-8 animate-in fade-in">
+                <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-center mb-4">
+                  <h3 className="text-lg font-bold text-red-600 uppercase mb-1">CÁLCULO DETALHADO 13º PROPORCIONAL</h3>
+                  <p className="text-xs text-red-400">Insira as médias e os dias trabalhados no quadro abaixo.</p>
+                </div>
+
+                {/* SELETOR DE TIPO DE CÁLCULO 13º */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <label className="text-xs font-bold text-gray-500 uppercase">Regra de Pagamento:</label>
                   <div className="flex gap-2">
-                    <button type="button" onClick={() => handleFillAllMonths(30)} className="text-[10px] bg-white border border-red-200 text-red-600 px-2 py-1 rounded hover:bg-red-50 font-bold">Preencher Ano (30)</button>
-                    <button type="button" onClick={() => handleFillAllMonths(0)} className="text-[10px] bg-white border border-gray-200 text-gray-500 px-2 py-1 rounded hover:bg-gray-50">Limpar</button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                  {monthAbbr.map((m, index) => {
-                    const monthKey = index + 1;
-                    const days = formState.thirteenthDetailedDays?.[monthKey] || 0;
-                    const isValidAvo = days >= 15;
-                    const isClt = formState.thirteenthCalculationType === 'CLT';
-
-                    // Visualização muda dependendo do modo
-                    let cellStyle = 'bg-red-50/50 border-red-100 opacity-80';
-                    if (isClt) {
-                      if (isValidAvo) cellStyle = 'bg-white border-green-300 shadow-sm';
-                    } else {
-                      if (days > 0) cellStyle = 'bg-white border-blue-300 shadow-sm';
-                    }
-
-                    return (
-                      <div key={monthKey} className={`relative border rounded-lg p-2 transition-all ${cellStyle}`}>
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase text-center mb-1">{m}</label>
-                        <input
-                          type="number"
-                          min="0"
-                          max="31"
-                          value={days || ''}
-                          onChange={(e) => handleThirteenthDayChange(monthKey, parseInt(e.target.value) || 0)}
-                          className={`w-full text-center font-bold text-sm outline-none bg-transparent ${isClt ? (isValidAvo ? 'text-green-700' : 'text-red-400') : 'text-blue-700'}`}
-                          placeholder="0"
-                        />
-                        {isClt && (
-                          <div className={`absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full border border-white ${isValidAvo ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-red-100 flex justify-between items-center">
-                  <span className="text-xs text-red-400 font-medium">
-                    {formState.thirteenthCalculationType === 'CLT'
-                      ? "Regra CLT: Mês com 15+ dias conta 1 avo."
-                      : "Cálculo Avulso: Proporcional aos dias trabalhados."}
-                  </span>
-                  <div className="text-right">
-                    <span className="text-xs text-gray-500 uppercase font-bold mr-2">
-                      {formState.thirteenthCalculationType === 'CLT'
-                        ? "Avos Conquistados:"
-                        : "Total Dias:"}
-                    </span>
-                    <span className="text-xl font-black text-red-600">
-                      {formState.thirteenthCalculationType === 'CLT'
-                        ? `${currentCalculatedAvos}/12`
-                        : currentTotalDays
-                      }
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setFormState(prev => ({ ...prev, thirteenthCalculationType: 'CLT' }))}
+                      className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${formState.thirteenthCalculationType === 'CLT' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300'}`}
+                    >
+                      Padrão CLT (15 Dias)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormState(prev => ({ ...prev, thirteenthCalculationType: 'DAILY_EXACT' }))}
+                      className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${formState.thirteenthCalculationType === 'DAILY_EXACT' ? 'bg-red-600 text-white shadow-md' : 'bg-white text-gray-600 border border-gray-300'}`}
+                    >
+                      Cálculo Avulso (Por Dias)
+                    </button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Competência (Ocultar/Simplificar se for 13º?) - Mantemos para referência do ano */}
-            <div className="bg-blue-50/50 rounded-xl p-5 border border-blue-100">
-              <h3 className="text-xs font-semibold text-blue-700 uppercase tracking-wider mb-3 flex items-center gap-2">
-                Competência & Calendário
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                <div className="col-span-1">
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Mês Ref.</label>
-                  <select name="referenceMonth" value={formState.referenceMonth} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900">
-                    {months.map((m, idx) => <option key={idx} value={idx + 1}>{m}</option>)}
-                  </select>
-                </div>
-                <div className="col-span-1">
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Ano</label>
-                  <input type="number" name="referenceYear" value={formState.referenceYear} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900" min="2000" max="2100" />
-                </div>
-                {/* Oculta detalhes de dias úteis se for 13º, pois base é integral */}
-                {!isThirteenthMode && (
-                  <>
-                    <div className="col-span-1">
-                      <label className="block text-xs font-medium text-slate-500 mb-1">Estado (UF)</label>
-                      <select name="selectedState" value={formState.selectedState} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900">
-                        {BRAZIL_STATES.map(state => <option key={state} value={state}>{state}</option>)}
-                      </select>
-                    </div>
-                    <div className="col-span-1">
-                      <label className="block text-xs font-medium text-slate-500 mb-1">Dias Úteis</label>
-                      <input type="number" name="businessDays" value={formState.businessDays} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900 font-bold text-center" />
-                    </div>
-                    <div className="col-span-1">
-                      <label className="block text-xs font-medium text-slate-500 mb-1">Dom/Feriados</label>
-                      <input type="number" name="nonBusinessDays" value={formState.nonBusinessDays} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900 font-bold text-center" />
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
+            <form className="space-y-8" onSubmit={handleCalculate}>
 
-            {/* Dados do Funcionário */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Nome do Funcionário</label>
-              <div className="flex gap-2">
-                <input type="text" name="employeeName" value={formState.employeeName} onChange={handleInputChange} className="block w-full px-3 py-2 sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-900 flex-1" required placeholder="Ex: João da Silva" />
-                {registeredEmployees.length > 0 && (
-                  <div className="relative">
-                    <select onChange={handleImportEmployee} className="block w-40 px-3 py-2 text-xs border border-indigo-200 bg-indigo-50 text-indigo-700 font-bold rounded-lg cursor-pointer hover:bg-indigo-100" defaultValue="">
-                      <option value="" disabled>Importar</option>
-                      {registeredEmployees.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
+              {/* Seção: Escala de Trabalho */}
+              <div className="flex flex-col sm:flex-row gap-6 pb-6 border-b border-slate-100">
+                <div className="flex-1 space-y-4">
+                  <div>
+                    <span className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Selecione a Escala</span>
+                    <div className="flex gap-4">
+                      <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${formState.workScale === 'STANDARD' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold' : 'bg-white border-gray-200 text-slate-500 hover:bg-gray-50'}`}>
+                        <input type="radio" name="workScale" value="STANDARD" checked={formState.workScale === 'STANDARD'} onChange={handleInputChange} className="hidden" />
+                        <span className="text-sm">Padrão (8h/44h)</span>
+                      </label>
+                      <label className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${formState.workScale === '12x36' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold' : 'bg-white border-gray-200 text-slate-500 hover:bg-gray-50'}`}>
+                        <input type="radio" name="workScale" value="12x36" checked={formState.workScale === '12x36'} onChange={handleInputChange} className="hidden" />
+                        <span className="text-sm">Escala 12x36</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Seção de Grade Mensal do 13º */}
+              {isThirteenthMode && (
+                <div className="bg-red-50/50 rounded-xl p-6 border-2 border-red-100 animate-in slide-in-from-top-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-sm font-bold text-red-700 uppercase tracking-wider flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                      Detalhamento de Dias por Mês
+                    </h3>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => handleFillAllMonths(30)} className="text-[10px] bg-white border border-red-200 text-red-600 px-2 py-1 rounded hover:bg-red-50 font-bold">Preencher Ano (30)</button>
+                      <button type="button" onClick={() => handleFillAllMonths(0)} className="text-[10px] bg-white border border-gray-200 text-gray-500 px-2 py-1 rounded hover:bg-gray-50">Limpar</button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                    {monthAbbr.map((m, index) => {
+                      const monthKey = index + 1;
+                      const days = formState.thirteenthDetailedDays?.[monthKey] || 0;
+                      const isValidAvo = days >= 15;
+                      const isClt = formState.thirteenthCalculationType === 'CLT';
+
+                      // Visualização muda dependendo do modo
+                      let cellStyle = 'bg-red-50/50 border-red-100 opacity-80';
+                      if (isClt) {
+                        if (isValidAvo) cellStyle = 'bg-white border-green-300 shadow-sm';
+                      } else {
+                        if (days > 0) cellStyle = 'bg-white border-blue-300 shadow-sm';
+                      }
+
+                      return (
+                        <div key={monthKey} className={`relative border rounded-lg p-2 transition-all ${cellStyle}`}>
+                          <label className="block text-[10px] font-bold text-gray-500 uppercase text-center mb-1">{m}</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="31"
+                            value={days || ''}
+                            onChange={(e) => handleThirteenthDayChange(monthKey, parseInt(e.target.value) || 0)}
+                            className={`w-full text-center font-bold text-sm outline-none bg-transparent ${isClt ? (isValidAvo ? 'text-green-700' : 'text-red-400') : 'text-blue-700'}`}
+                            placeholder="0"
+                          />
+                          {isClt && (
+                            <div className={`absolute -top-1.5 -right-1.5 w-3 h-3 rounded-full border border-white ${isValidAvo ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-red-100 flex justify-between items-center">
+                    <span className="text-xs text-red-400 font-medium">
+                      {formState.thirteenthCalculationType === 'CLT'
+                        ? "Regra CLT: Mês com 15+ dias conta 1 avo."
+                        : "Cálculo Avulso: Proporcional aos dias trabalhados."}
+                    </span>
+                    <div className="text-right">
+                      <span className="text-xs text-gray-500 uppercase font-bold mr-2">
+                        {formState.thirteenthCalculationType === 'CLT'
+                          ? "Avos Conquistados:"
+                          : "Total Dias:"}
+                      </span>
+                      <span className="text-xl font-black text-red-600">
+                        {formState.thirteenthCalculationType === 'CLT'
+                          ? `${currentCalculatedAvos}/12`
+                          : currentTotalDays
+                        }
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Competência (Ocultar/Simplificar se for 13º?) - Mantemos para referência do ano */}
+              <div className="bg-blue-50/50 rounded-xl p-5 border border-blue-100">
+                <h3 className="text-xs font-semibold text-blue-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  Competência & Calendário
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                  <div className="col-span-1">
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Mês Ref.</label>
+                    <select name="referenceMonth" value={formState.referenceMonth} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900">
+                      {months.map((m, idx) => <option key={idx} value={idx + 1}>{m}</option>)}
                     </select>
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Remuneração Fixa */}
-            <div className="space-y-4">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">Remuneração Base {isThirteenthMode ? '(Integral)' : ''}</h3>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Salário Contratual</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-sm">R$</span></div>
-                    <input type="number" name="baseSalary" value={formState.baseSalary || ''} onChange={handleInputChange} className="block w-full pl-10 px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0,00" step="0.01" required />
-                  </div>
-                </div>
-                {!isThirteenthMode && (
                   <div className="col-span-1">
-                    <label className={`block text-sm font-medium mb-1 ${formState.workScale === '12x36' ? 'text-indigo-600 font-bold' : 'text-slate-700'}`}>
-                      {formState.workScale === '12x36' ? 'Plantões' : 'Dias Trab.'}
-                    </label>
-                    <input type="number" name="daysWorked" value={formState.daysWorked} onChange={handleInputChange} className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg text-center bg-white text-gray-900" min="0" max="31" required />
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Ano</label>
+                    <input type="number" name="referenceYear" value={formState.referenceYear} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900" min="2000" max="2100" />
+                  </div>
+                  {/* Oculta detalhes de dias úteis se for 13º, pois base é integral */}
+                  {!isThirteenthMode && (
+                    <>
+                      <div className="col-span-1">
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Estado (UF)</label>
+                        <select name="selectedState" value={formState.selectedState} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900">
+                          {BRAZIL_STATES.map(state => <option key={state} value={state}>{state}</option>)}
+                        </select>
+                      </div>
+                      <div className="col-span-1">
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Dias Úteis</label>
+                        <input type="number" name="businessDays" value={formState.businessDays} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900 font-bold text-center" />
+                      </div>
+                      <div className="col-span-1">
+                        <label className="block text-xs font-medium text-slate-500 mb-1">Dom/Feriados</label>
+                        <input type="number" name="nonBusinessDays" value={formState.nonBusinessDays} onChange={handleInputChange} className="block w-full px-2 py-2 text-sm border border-blue-200 rounded-lg bg-white text-gray-900 font-bold text-center" />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Dados do Funcionário */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Nome do Funcionário</label>
+                <div className="flex gap-2">
+                  <input type="text" name="employeeName" value={formState.employeeName} onChange={handleInputChange} className="block w-full px-3 py-2 sm:text-sm border border-gray-300 rounded-lg bg-white text-gray-900 flex-1" required placeholder="Ex: João da Silva" />
+                  {registeredEmployees.length > 0 && (
+                    <div className="relative">
+                      <select onChange={handleImportEmployee} className="block w-40 px-3 py-2 text-xs border border-indigo-200 bg-indigo-50 text-indigo-700 font-bold rounded-lg cursor-pointer hover:bg-indigo-100" defaultValue="">
+                        <option value="" disabled>Importar</option>
+                        {registeredEmployees.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Remuneração Fixa */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">Remuneração Base {isThirteenthMode ? '(Integral)' : ''}</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Salário Contratual</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-sm">R$</span></div>
+                      <input type="number" name="baseSalary" value={formState.baseSalary || ''} onChange={handleInputChange} className="block w-full pl-10 px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0,00" step="0.01" required />
+                    </div>
+                  </div>
+                  {!isThirteenthMode && (
+                    <div className="col-span-1">
+                      <label className={`block text-sm font-medium mb-1 ${formState.workScale === '12x36' ? 'text-indigo-600 font-bold' : 'text-slate-700'}`}>
+                        {formState.workScale === '12x36' ? 'Plantões' : 'Dias Trab.'}
+                      </label>
+                      <input type="number" name="daysWorked" value={formState.daysWorked} onChange={handleInputChange} className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg text-center bg-white text-gray-900" min="0" max="31" required />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center pt-1 cursor-pointer">
+                <input
+                  id="hasHazardPay"
+                  name="hasHazardPay"
+                  type="checkbox"
+                  checked={formState.hasHazardPay}
+                  onChange={handleInputChange}
+                  className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer accent-indigo-600"
+                />
+                <label htmlFor="hasHazardPay" className="ml-3 text-sm text-slate-700 font-medium cursor-pointer select-none">Periculosidade (30%)</label>
+              </div>
+
+
+
+              {/* Nova Seção: Benefícios e Produção */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">
+                  Benefícios & Produção
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Salário Família</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-xs">R$</span></div>
+                      <input type="number" name="familyAllowance" value={formState.familyAllowance || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0,00" step="0.01" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Ajuda de Custo</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-xs">R$</span></div>
+                      <input type="number" name="costAllowance" value={formState.costAllowance || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0,00" step="0.01" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Produção</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-xs">R$</span></div>
+                      <input type="number" name="productionBonus" value={formState.productionBonus || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0,00" step="0.01" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Visitas */}
+                <div className="grid grid-cols-2 gap-4 bg-orange-50/50 p-3 rounded-lg border border-orange-100">
+                  <div>
+                    <label className="block text-xs font-medium text-orange-900 mb-1">Qtd. Visitas</label>
+                    <input type="number" name="visitsAmount" value={formState.visitsAmount || ''} onChange={handleInputChange} className="block w-full px-3 py-2 border border-orange-200 rounded-md bg-white text-gray-900" placeholder="0" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-orange-900 mb-1">Valor por Visita</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-xs">R$</span></div>
+                      <input type="number" name="visitUnitValue" value={formState.visitUnitValue || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-orange-200 rounded-md bg-white text-gray-900" placeholder="0,00" step="0.01" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Empréstimo */}
+                <div className="grid grid-cols-2 gap-4 bg-red-50/50 p-3 rounded-lg border border-red-100">
+                  <div className="col-span-2">
+                    <label className="block text-xs font-medium text-red-900 mb-1 font-bold">VALOR TOTAL DO EMPRÉSTIMO</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-xs">R$</span></div>
+                      <input type="number" name="loanTotalValue" value={formState.loanTotalValue || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-red-200 rounded-md bg-white text-gray-900 font-bold" placeholder="0,00" step="0.01" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-red-800 mb-1">QTD PARCELAS</label>
+                    <input type="number" name="loanTotalInstallments" value={formState.loanTotalInstallments || ''} onChange={handleInputChange} className="block w-full px-3 py-2 border border-red-200 rounded-md bg-white text-gray-900 text-center" placeholder="Ex: 5" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-red-800 mb-1">PARCELA ATUAL</label>
+                    <input type="number" name="loanCurrentInstallment" value={formState.loanCurrentInstallment || ''} onChange={handleInputChange} className="block w-full px-3 py-2 border border-red-200 rounded-md bg-white text-gray-900 text-center" placeholder="Ex: 3" />
+                  </div>
+                  {formState.loanTotalValue > 0 && formState.loanTotalInstallments > 0 && (
+                    <div className="col-span-2 pt-2 border-t border-red-100 flex justify-between items-center">
+                      <span className="text-[10px] text-red-600 font-bold uppercase">Desconto Automático:</span>
+                      <span className="text-sm font-black text-red-700">{formatCurrency(formState.loanTotalValue / formState.loanTotalInstallments)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Dados Bancários para o Resumo */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">
+                  Dados para Pagamento (Resumo)
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Banco / Ag. / CC</label>
+                    <input
+                      type="text"
+                      name="bankName"
+                      value={formState.bankName}
+                      onChange={handleInputChange}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900"
+                      placeholder="Ex: Nubank Ag 0001 CC 12345-6"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Chave PIX</label>
+                    <input
+                      type="text"
+                      name="pixKey"
+                      value={formState.pixKey}
+                      onChange={handleInputChange}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900"
+                      placeholder="CPF, E-mail, Celular ou Aleatória"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Médias e Variáveis */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">
+                  {isThirteenthMode ? 'Médias de Variáveis (Integral)' : 'Jornada & Variáveis'}
+                </h3>
+
+                {!isThirteenthMode && (
+                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl mb-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-xs font-bold text-slate-500 uppercase">Calculadora de Jornada (Opcional)</span>
+                      {formState.workScale === '12x36' && (
+                        <button
+                          type="button"
+                          onClick={() => setFormState(prev => ({ ...prev, shiftStartTime: '19:00', shiftEndTime: '07:00', shiftBreakStart: '00:00', shiftBreakEnd: '01:00' }))}
+                          className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-200 font-bold"
+                        >
+                          Preencher 12x36 Noturno (19h-07h)
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <div>
+                        <label className="block text-[10px] uppercase text-slate-400 font-bold mb-1">Entrada</label>
+                        <input type="time" name="shiftStartTime" value={formState.shiftStartTime} onChange={handleInputChange} className="block w-full px-2 py-1 text-sm border border-slate-300 rounded bg-white text-center" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase text-slate-400 font-bold mb-1">Saída</label>
+                        <input type="time" name="shiftEndTime" value={formState.shiftEndTime} onChange={handleInputChange} className="block w-full px-2 py-1 text-sm border border-slate-300 rounded bg-white text-center" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase text-slate-400 font-bold mb-1">Início Int.</label>
+                        <input type="time" name="shiftBreakStart" value={formState.shiftBreakStart} onChange={handleInputChange} className="block w-full px-2 py-1 text-sm border border-slate-300 rounded bg-white text-center" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase text-slate-400 font-bold mb-1">Fim Int.</label>
+                        <input type="time" name="shiftBreakEnd" value={formState.shiftBreakEnd} onChange={handleInputChange} className="block w-full px-2 py-1 text-sm border border-slate-300 rounded bg-white text-center" />
+                      </div>
+                    </div>
                   </div>
                 )}
-              </div>
-            </div>
-            <div className="flex items-center pt-1 cursor-pointer">
-              <input
-                id="hasHazardPay"
-                name="hasHazardPay"
-                type="checkbox"
-                checked={formState.hasHazardPay}
-                onChange={handleInputChange}
-                className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded cursor-pointer accent-indigo-600"
-              />
-              <label htmlFor="hasHazardPay" className="ml-3 text-sm text-slate-700 font-medium cursor-pointer select-none">Periculosidade (30%)</label>
-            </div>
 
-
-
-            {/* Nova Seção: Benefícios e Produção */}
-            <div className="space-y-4">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">
-                Benefícios & Produção
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Salário Família</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-xs">R$</span></div>
-                    <input type="number" name="familyAllowance" value={formState.familyAllowance || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0,00" step="0.01" />
+                {/* Noturno */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-indigo-50/50 rounded-lg border border-indigo-100">
+                  <div>
+                    <label className="block text-xs font-medium text-indigo-900 mb-1">Noturno: Qtd. Horas {isThirteenthMode ? '(Média)' : 'Totais'}</label>
+                    <input type="number" name="nightHours" value={formState.nightHours || ''} onChange={handleInputChange} className="block w-full px-3 py-2 text-sm border border-indigo-200 rounded-md bg-white text-gray-900" placeholder="0.0" step="0.1" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-indigo-900 mb-1">% Adicional</label>
+                    <input type="number" name="nightShiftPercentage" value={formState.nightShiftPercentage || ''} onChange={handleInputChange} className="block w-full px-3 py-2 text-sm border border-indigo-200 rounded-md bg-white text-gray-900" placeholder="20" />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Ajuda de Custo</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-xs">R$</span></div>
-                    <input type="number" name="costAllowance" value={formState.costAllowance || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0,00" step="0.01" />
+
+                {/* Extras */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Qtd. H. Extra (Tipo 1) {isThirteenthMode ? '(Média)' : ''}</label>
+                    <input type="number" name="overtimeHours" value={formState.overtimeHours || ''} onChange={handleInputChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0.0" step="0.1" />
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Produção</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-xs">R$</span></div>
-                    <input type="number" name="productionBonus" value={formState.productionBonus || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0,00" step="0.01" />
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">% H. Extra</label>
+                    <select name="overtimePercentage" value={formState.overtimePercentage} onChange={handleInputChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900">
+                      <option value="50">50%</option>
+                      <option value="100">100%</option>
+                    </select>
+                  </div>
+                  {/* Hora Extra Tipo 2 */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Qtd. H. Extra (Tipo 2)</label>
+                    <input type="number" name="overtimeHours2" value={formState.overtimeHours2 || ''} onChange={handleInputChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0.0" step="0.1" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">% H. Extra (Tipo 2)</label>
+                    <select name="overtimePercentage2" value={formState.overtimePercentage2} onChange={handleInputChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900">
+                      <option value="50">50%</option>
+                      <option value="100">100%</option>
+                    </select>
                   </div>
                 </div>
               </div>
 
-              {/* Visitas */}
-              <div className="grid grid-cols-2 gap-4 bg-orange-50/50 p-3 rounded-lg border border-orange-100">
-                <div>
-                  <label className="block text-xs font-medium text-orange-900 mb-1">Qtd. Visitas</label>
-                  <input type="number" name="visitsAmount" value={formState.visitsAmount || ''} onChange={handleInputChange} className="block w-full px-3 py-2 border border-orange-200 rounded-md bg-white text-gray-900" placeholder="0" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-orange-900 mb-1">Valor por Visita</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-xs">R$</span></div>
-                    <input type="number" name="visitUnitValue" value={formState.visitUnitValue || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-orange-200 rounded-md bg-white text-gray-900" placeholder="0,00" step="0.01" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Empréstimo */}
-              <div className="grid grid-cols-2 gap-4 bg-red-50/50 p-3 rounded-lg border border-red-100">
-                <div className="col-span-2">
-                  <label className="block text-xs font-medium text-red-900 mb-1 font-bold">VALOR TOTAL DO EMPRÉSTIMO</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-slate-500 sm:text-xs">R$</span></div>
-                    <input type="number" name="loanTotalValue" value={formState.loanTotalValue || ''} onChange={handleInputChange} className="block w-full pl-8 px-3 py-2 border border-red-200 rounded-md bg-white text-gray-900 font-bold" placeholder="0,00" step="0.01" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-red-800 mb-1">QTD PARCELAS</label>
-                  <input type="number" name="loanTotalInstallments" value={formState.loanTotalInstallments || ''} onChange={handleInputChange} className="block w-full px-3 py-2 border border-red-200 rounded-md bg-white text-gray-900 text-center" placeholder="Ex: 5" />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-red-800 mb-1">PARCELA ATUAL</label>
-                  <input type="number" name="loanCurrentInstallment" value={formState.loanCurrentInstallment || ''} onChange={handleInputChange} className="block w-full px-3 py-2 border border-red-200 rounded-md bg-white text-gray-900 text-center" placeholder="Ex: 3" />
-                </div>
-                {formState.loanTotalValue > 0 && formState.loanTotalInstallments > 0 && (
-                  <div className="col-span-2 pt-2 border-t border-red-100 flex justify-between items-center">
-                    <span className="text-[10px] text-red-600 font-bold uppercase">Desconto Automático:</span>
-                    <span className="text-sm font-black text-red-700">{formatCurrency(formState.loanTotalValue / formState.loanTotalInstallments)}</span>
-                  </div>
+              <div className="pt-6 flex gap-3">
+                {editingId && (
+                  <button type="button" onClick={handleCancelEdit} className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">Cancelar</button>
                 )}
+                <button type="submit" className={`flex-[2] py-4 px-6 text-lg font-bold rounded-xl shadow-lg text-white flex items-center justify-center gap-2 ${editingId ? 'bg-amber-500 hover:bg-amber-600' : isThirteenthMode ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}>
+                  {editingId ? 'Salvar Alterações' : 'Calcular e Adicionar'}
+                </button>
               </div>
-            </div>
+            </form>
 
-            {/* Dados Bancários para o Resumo */}
-            <div className="space-y-4">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">
-                Dados para Pagamento (Resumo)
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Banco / Ag. / CC</label>
-                  <input
-                    type="text"
-                    name="bankName"
-                    value={formState.bankName}
-                    onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900"
-                    placeholder="Ex: Nubank Ag 0001 CC 12345-6"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Chave PIX</label>
-                  <input
-                    type="text"
-                    name="pixKey"
-                    value={formState.pixKey}
-                    onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900"
-                    placeholder="CPF, E-mail, Celular ou Aleatória"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Médias e Variáveis */}
-            <div className="space-y-4">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">
-                {isThirteenthMode ? 'Médias de Variáveis (Integral)' : 'Jornada & Variáveis'}
-              </h3>
-
-              {!isThirteenthMode && (
-                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl mb-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-xs font-bold text-slate-500 uppercase">Calculadora de Jornada (Opcional)</span>
-                    {formState.workScale === '12x36' && (
-                      <button
-                        type="button"
-                        onClick={() => setFormState(prev => ({ ...prev, shiftStartTime: '19:00', shiftEndTime: '07:00', shiftBreakStart: '00:00', shiftBreakEnd: '01:00' }))}
-                        className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-200 font-bold"
-                      >
-                        Preencher 12x36 Noturno (19h-07h)
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    <div>
-                      <label className="block text-[10px] uppercase text-slate-400 font-bold mb-1">Entrada</label>
-                      <input type="time" name="shiftStartTime" value={formState.shiftStartTime} onChange={handleInputChange} className="block w-full px-2 py-1 text-sm border border-slate-300 rounded bg-white text-center" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] uppercase text-slate-400 font-bold mb-1">Saída</label>
-                      <input type="time" name="shiftEndTime" value={formState.shiftEndTime} onChange={handleInputChange} className="block w-full px-2 py-1 text-sm border border-slate-300 rounded bg-white text-center" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] uppercase text-slate-400 font-bold mb-1">Início Int.</label>
-                      <input type="time" name="shiftBreakStart" value={formState.shiftBreakStart} onChange={handleInputChange} className="block w-full px-2 py-1 text-sm border border-slate-300 rounded bg-white text-center" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] uppercase text-slate-400 font-bold mb-1">Fim Int.</label>
-                      <input type="time" name="shiftBreakEnd" value={formState.shiftBreakEnd} onChange={handleInputChange} className="block w-full px-2 py-1 text-sm border border-slate-300 rounded bg-white text-center" />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Noturno */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-indigo-50/50 rounded-lg border border-indigo-100">
-                <div>
-                  <label className="block text-xs font-medium text-indigo-900 mb-1">Noturno: Qtd. Horas {isThirteenthMode ? '(Média)' : 'Totais'}</label>
-                  <input type="number" name="nightHours" value={formState.nightHours || ''} onChange={handleInputChange} className="block w-full px-3 py-2 text-sm border border-indigo-200 rounded-md bg-white text-gray-900" placeholder="0.0" step="0.1" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-indigo-900 mb-1">% Adicional</label>
-                  <input type="number" name="nightShiftPercentage" value={formState.nightShiftPercentage || ''} onChange={handleInputChange} className="block w-full px-3 py-2 text-sm border border-indigo-200 rounded-md bg-white text-gray-900" placeholder="20" />
-                </div>
-              </div>
-
-              {/* Extras */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Qtd. H. Extra (Tipo 1) {isThirteenthMode ? '(Média)' : ''}</label>
-                  <input type="number" name="overtimeHours" value={formState.overtimeHours || ''} onChange={handleInputChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0.0" step="0.1" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">% H. Extra</label>
-                  <select name="overtimePercentage" value={formState.overtimePercentage} onChange={handleInputChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900">
-                    <option value="50">50%</option>
-                    <option value="100">100%</option>
-                  </select>
-                </div>
-                {/* Hora Extra Tipo 2 */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Qtd. H. Extra (Tipo 2)</label>
-                  <input type="number" name="overtimeHours2" value={formState.overtimeHours2 || ''} onChange={handleInputChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900" placeholder="0.0" step="0.1" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">% H. Extra (Tipo 2)</label>
-                  <select name="overtimePercentage2" value={formState.overtimePercentage2} onChange={handleInputChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900">
-                    <option value="50">50%</option>
-                    <option value="100">100%</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-6 flex gap-3">
-              {editingId && (
-                <button type="button" onClick={handleCancelEdit} className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">Cancelar</button>
-              )}
-              <button type="submit" className={`flex-[2] py-4 px-6 text-lg font-bold rounded-xl shadow-lg text-white flex items-center justify-center gap-2 ${editingId ? 'bg-amber-500 hover:bg-amber-600' : isThirteenthMode ? 'bg-red-600 hover:bg-red-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}>
-                {editingId ? 'Salvar Alterações' : 'Calcular e Adicionar'}
-              </button>
-            </div>
-          </form>
-
-          {/* Instant Feedback */}
-          {result && !editingId && (
-            <div className="mt-8 bg-emerald-50 rounded-lg p-4 border border-emerald-100 flex justify-between items-center print:hidden">
-              <div className="text-left">
-                <span className="block text-emerald-800 font-medium">
-                  {isThirteenthMode ? '13º Salário Bruto' : 'Total Bruto'}
-                </span>
-                {isThirteenthMode && (
-                  <span className="text-xs text-emerald-600 block">
-                    {formState.thirteenthCalculationType === 'CLT'
-                      ? `Proporção: ${result.thirteenthTotalAvos}/12 avos`
-                      : `Base: ${result.thirteenthTotalDays} dias trabalhados`
-                    }
+            {/* Instant Feedback */}
+            {result && !editingId && (
+              <div className="mt-8 bg-emerald-50 rounded-lg p-4 border border-emerald-100 flex justify-between items-center print:hidden">
+                <div className="text-left">
+                  <span className="block text-emerald-800 font-medium">
+                    {isThirteenthMode ? '13º Salário Bruto' : 'Total Bruto'}
                   </span>
-                )}
+                  {isThirteenthMode && (
+                    <span className="text-xs text-emerald-600 block">
+                      {formState.thirteenthCalculationType === 'CLT'
+                        ? `Proporção: ${result.thirteenthTotalAvos}/12 avos`
+                        : `Base: ${result.thirteenthTotalDays} dias trabalhados`
+                      }
+                    </span>
+                  )}
+                </div>
+                <span className="text-2xl font-bold text-emerald-700">{formatCurrency(result.grossSalary)}</span>
               </div>
-              <span className="text-2xl font-bold text-emerald-700">{formatCurrency(result.grossSalary)}</span>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
       )}
 
       {/* REPORT TABLE */}
