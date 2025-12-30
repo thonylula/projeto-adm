@@ -83,7 +83,7 @@ export const ShowcaseManager: React.FC = () => {
         <div className="max-w-4xl mx-auto space-y-8 animate-fadeIn">
             <div className="text-center space-y-4">
                 <h2 className="text-4xl font-black text-slate-900 tracking-tight">
-                    Gestão do <span className="text-orange-600">Mostruário</span>
+                    Gestão do <span className="text-orange-600">Faturamento</span>
                 </h2>
                 <p className="text-slate-500 text-lg max-w-2xl mx-auto">
                     Selecione os módulos que deseja compartilhar. O gestor poderá visualizar e acompanhar todos em uma única tela harmoniosa.
