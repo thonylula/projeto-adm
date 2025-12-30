@@ -274,9 +274,9 @@ export default function App() {
         isPublic={true}
       >
         {effectiveTab === 'showcase' && <DeliveryOrder initialView="SHOWCASE" isPublic={true} />}
-        {effectiveTab === 'biometrics' && <BiometricsManager />}
-        {effectiveTab === 'mortalidade' && activeCompany && <MortalidadeConsumo activeCompany={activeCompany} activeYear={activeYear || 2025} activeMonth={activeMonth || 12} />}
-        {effectiveTab === 'campo' && activeCompany && <CampoViveiros activeCompany={activeCompany} />}
+        {effectiveTab === 'biometrics' && <BiometricsManager isPublic={true} />}
+        {effectiveTab === 'mortalidade' && activeCompany && <MortalidadeConsumo activeCompany={activeCompany} activeYear={activeYear || 2025} activeMonth={activeMonth || 12} isPublic={true} />}
+        {effectiveTab === 'campo' && activeCompany && <CampoViveiros activeCompany={activeCompany} isPublic={true} />}
 
         {/* Fallback if no company is selected but needed (Public view usually expects a default or selected company from context) */}
         {((effectiveTab === 'mortalidade' || effectiveTab === 'campo') && !activeCompany) && (

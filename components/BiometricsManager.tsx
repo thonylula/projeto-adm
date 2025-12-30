@@ -42,7 +42,7 @@ const NEWS_HEADLINES_SOURCE = [
 
 type ViewStep = 'UPLOAD' | 'PROCESSING' | 'DASHBOARD';
 
-export const BiometricsManager: React.FC = () => {
+export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic = false }) => {
     const [step, setStep] = useState<ViewStep>('UPLOAD');
     const [logo, setLogo] = useState<string | null>(DEFAULT_LOGO);
     const [toast, setToast] = useState<{ msg: string; visible: boolean }>({ msg: '', visible: false });
@@ -648,11 +648,13 @@ export const BiometricsManager: React.FC = () => {
 .print-visible { display: none; }
 `}</style>
 
-            <div className="mb-6 flex justify-between items-center no-print">
-                <button onClick={handleReset} className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-900 bg-white px-4 py-2 rounded-lg border shadow-sm">
-                    Inserir Novos Dados
-                </button>
-            </div>
+            {!isPublic && (
+                <div className="mb-6 flex justify-between items-center no-print">
+                    <button onClick={handleReset} className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-900 bg-white px-4 py-2 rounded-lg border shadow-sm">
+                        Inserir Novos Dados
+                    </button>
+                </div>
+            )}
 
             <div id="dashboard-content" ref={dashboardRef} className="w-full max-w-5xl mx-auto bg-white rounded-3xl shadow-xl border border-orange-100 overflow-hidden relative">
 
@@ -745,30 +747,36 @@ export const BiometricsManager: React.FC = () => {
                                             <div className="print-visible font-bold text-slate-900 text-[9.5px]">
                                                 {item.dataPovoamento ? item.dataPovoamento.split('-').reverse().join('/') : '-'}
                                             </div>
-                                            <input
-                                                type="text"
-                                                placeholder="DD/MM/AAAA"
-                                                maxLength={10}
-                                                className="print-hidden w-[75px] text-center bg-white text-[10px] font-bold text-gray-900 border border-gray-300 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none h-7 px-1 shadow-sm placeholder-gray-300"
-                                                value={item.dataPovoamento ? item.dataPovoamento.split('-').reverse().join('/') : ''}
-                                                onChange={(e) => {
-                                                    let val = e.target.value.replace(/\D/g, '');
-                                                    if (val.length > 2) val = val.slice(0, 2) + '/' + val.slice(2);
-                                                    if (val.length > 5) val = val.slice(0, 5) + '/' + val.slice(5);
+                                            {isPublic ? (
+                                                <div className="font-bold text-slate-900 text-[9.5px]">
+                                                    {item.dataPovoamento ? item.dataPovoamento.split('-').reverse().join('/') : '-'}
+                                                </div>
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    placeholder="DD/MM/AAAA"
+                                                    maxLength={10}
+                                                    className="print-hidden w-[75px] text-center bg-white text-[10px] font-bold text-gray-900 border border-gray-300 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none h-7 px-1 shadow-sm placeholder-gray-300"
+                                                    value={item.dataPovoamento ? item.dataPovoamento.split('-').reverse().join('/') : ''}
+                                                    onChange={(e) => {
+                                                        let val = e.target.value.replace(/\D/g, '');
+                                                        if (val.length > 2) val = val.slice(0, 2) + '/' + val.slice(2);
+                                                        if (val.length > 5) val = val.slice(0, 5) + '/' + val.slice(5);
 
-                                                    if (val.length === 10) {
-                                                        const [d, m, y] = val.split('/');
-                                                        const iso = `${y}-${m}-${d}`;
-                                                        if (!isNaN(new Date(iso).getTime())) {
-                                                            handleUpdateRow(item.viveiro, 'dataPovoamento', iso);
+                                                        if (val.length === 10) {
+                                                            const [d, m, y] = val.split('/');
+                                                            const iso = `${y}-${m}-${d}`;
+                                                            if (!isNaN(new Date(iso).getTime())) {
+                                                                handleUpdateRow(item.viveiro, 'dataPovoamento', iso);
+                                                            } else {
+                                                                handleUpdateRow(item.viveiro, 'dataPovoamento', val);
+                                                            }
                                                         } else {
                                                             handleUpdateRow(item.viveiro, 'dataPovoamento', val);
                                                         }
-                                                    } else {
-                                                        handleUpdateRow(item.viveiro, 'dataPovoamento', val);
-                                                    }
-                                                }}
-                                            />
+                                                    }}
+                                                />
+                                            )}
                                         </td>
 
                                         <td className="px-1.5 py-1.5 text-center font-mono font-bold text-gray-600 bg-gray-50">{item.diasCultivo}</td>
@@ -778,12 +786,18 @@ export const BiometricsManager: React.FC = () => {
                                             <div className="print-visible font-mono font-bold text-black text-[10px]">
                                                 {item.pMedInputValue}
                                             </div>
-                                            <input
-                                                type="text"
-                                                value={item.pMedInputValue}
-                                                onChange={(e) => handleUpdateRow(item.viveiro, 'pMedStr', e.target.value)}
-                                                className="print-hidden w-full text-right bg-transparent font-bold text-black text-[10px] outline-none border-b border-transparent focus:border-orange-500"
-                                            />
+                                            {isPublic ? (
+                                                <div className="font-mono font-bold text-black text-[10px]">
+                                                    {item.pMedInputValue || '-'}
+                                                </div>
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    value={item.pMedInputValue}
+                                                    onChange={(e) => handleUpdateRow(item.viveiro, 'pMedStr', e.target.value)}
+                                                    className="print-hidden w-full text-right bg-transparent font-bold text-black text-[10px] outline-none border-b border-transparent focus:border-orange-500"
+                                                />
+                                            )}
                                         </td>
 
                                         {/* QUANTIDADE (Input Editável) */}
@@ -791,12 +805,18 @@ export const BiometricsManager: React.FC = () => {
                                             <div className="print-visible font-mono font-bold text-gray-700 text-[10px]">
                                                 {item.quatInputValue}
                                             </div>
-                                            <input
-                                                type="text"
-                                                value={item.quatInputValue}
-                                                onChange={(e) => handleUpdateRow(item.viveiro, 'quat', e.target.value)}
-                                                className="print-hidden w-full text-right bg-transparent font-bold text-gray-700 text-[10px] outline-none border-b border-transparent focus:border-orange-500"
-                                            />
+                                            {isPublic ? (
+                                                <div className="font-mono font-bold text-gray-700 text-[10px]">
+                                                    {item.quatInputValue || '-'}
+                                                </div>
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    value={item.quatInputValue}
+                                                    onChange={(e) => handleUpdateRow(item.viveiro, 'quat', e.target.value)}
+                                                    className="print-hidden w-full text-right bg-transparent font-bold text-gray-700 text-[10px] outline-none border-b border-transparent focus:border-orange-500"
+                                                />
+                                            )}
                                         </td>
 
                                         {/* PESO TOTAL (Editável) */}
