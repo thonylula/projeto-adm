@@ -275,6 +275,20 @@ export default function App() {
       >
         {effectiveTab === 'showcase' && <DeliveryOrder initialView="SHOWCASE" isPublic={true} />}
         {effectiveTab === 'biometrics' && <BiometricsManager isPublic={true} />}
+        {effectiveTab === 'payroll' && activeCompany && (
+          <PayrollCard
+            activeCompany={activeCompany}
+            activeYear={activeYear}
+            activeMonth={activeMonth}
+            isPublic={true}
+            onBack={() => { }}
+            onAddEmployee={() => { }}
+            onUpdateEmployee={() => { }}
+            onDeleteEmployee={() => { }}
+            onBulkUpdateEmployees={() => { }}
+            onSaveBulk={() => { }}
+          />
+        )}
         {effectiveTab === 'mortalidade' && activeCompany && <MortalidadeConsumo activeCompany={activeCompany} activeYear={activeYear || 2025} activeMonth={activeMonth || 12} isPublic={true} />}
         {effectiveTab === 'campo' && activeCompany && <CampoViveiros activeCompany={activeCompany} isPublic={true} />}
 
