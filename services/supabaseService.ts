@@ -273,16 +273,71 @@ export const SupabaseService = {
         return !error;
     },
 
-    // --- BIOMETRICS ---
+    // --- BIOMETRICS HISTORY ---
+    async getBiometricsHistory(): Promise<any[]> {
+        const { data, error } = await supabase
+            .from('biometrics')
+            .select('*')
+            .order('timestamp', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching biometrics history:', error);
+            return [];
+        }
+        return data || [];
+    },
+
+    async getLatestBiometry(): Promise<{ id: string; data: any[]; label: string; timestamp: string } | null> {
+        const { data, error } = await supabase
+            .from('biometrics')
+            .select('*')
+            .order('timestamp', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (error || !data) return null;
+        return data;
+    },
+
+    async saveBiometry(biometryData: any[], label?: string): Promise<boolean> {
+        const { error } = await supabase
+            .from('biometrics')
+            .insert([{
+                data: biometryData,
+                label: label || `Biometria ${new Date().toLocaleDateString('pt-BR')}`,
+                timestamp: new Date().toISOString()
+            }]);
+
+        if (error) {
+            console.error('Error saving biometry:', error);
+            return false;
+        }
+        return true;
+    },
+
+    async deleteBiometry(id: string): Promise<boolean> {
+        const { error } = await supabase
+            .from('biometrics')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error deleting biometry:', error);
+            return false;
+        }
+        return true;
+    },
+
+    // Legacy methods for backward compatibility (deprecated)
     async getBiometrics(): Promise<any[]> {
-        const { data, error } = await supabase.from('biometrics').select('*');
-        if (error) return [];
-        return data.map(d => d.data);
+        const latest = await this.getLatestBiometry();
+        if (!latest) return [];
+        return [latest.data];
     },
 
     async saveBiometrics(data: any[]): Promise<boolean> {
-        const { error } = await supabase.from('biometrics').upsert([{ id: 'global_biometrics', data }]);
-        return !error;
+        // This is now a no-op - use saveBiometry instead
+        return true;
     },
 
     // --- DELIVERY ORDERS ---

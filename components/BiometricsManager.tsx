@@ -49,6 +49,9 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
     const [files, setFiles] = useState<File[]>([]);
     const [textInput, setTextInput] = useState('');
     const [currentData, setCurrentData] = useState<any[]>(defaultRawData);
+    const [biometricsHistory, setBiometricsHistory] = useState<any[]>([]);
+    const [showHistory, setShowHistory] = useState(false);
+    const [needsSave, setNeedsSave] = useState(false);
 
     const { processFile, isProcessing } = useGeminiParser();
     const [filterText, setFilterText] = useState('');
@@ -64,27 +67,30 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
     // --- PERSISTÊNCIA AUTOMÁTICA (SUPABASE) ---
     useEffect(() => {
         const load = async () => {
-            const data = await SupabaseService.getBiometrics();
-            if (data && data.length > 0) {
-                // In our implementation, we stored it as an array inside a record with id 'global_biometrics' 
-                // but SupabaseService.getBiometrics returns an array of data property. 
-                // Since we used upsert([{id: 'global_biometrics', data}]), data should be exactly our array.
-                // The getBiometrics implementation returns: return data.map(d => d.data);
-                // So if we have one record, it will return [dataArray].
-                if (data[0]) {
-                    setCurrentData(data[0]);
-                    setStep('DASHBOARD');
-                }
+            // Carregar histórico completo
+            const history = await SupabaseService.getBiometricsHistory();
+            setBiometricsHistory(history);
+
+            // Carregar última biometria para exibir
+            const latest = await SupabaseService.getLatestBiometry();
+            if (latest && latest.data) {
+                setCurrentData(latest.data);
+                setStep('DASHBOARD');
             }
         };
         load();
     }, []);
 
+    // Auto-save quando needsSave é true
     useEffect(() => {
-        if (currentData.length > 0) {
-            SupabaseService.saveBiometrics(currentData);
+        if (needsSave && currentData.length > 0) {
+            SupabaseService.saveBiometry(currentData);
+            setNeedsSave(false);
+            showToast('Biometria salva com sucesso!');
+            // Recarregar histórico
+            SupabaseService.getBiometricsHistory().then(setBiometricsHistory);
         }
-    }, [currentData]);
+    }, [needsSave, currentData]);
 
     // --- BACKUP MANUAL (ARQUIVO JSON) ---
     const saveBackup = () => {
@@ -220,6 +226,33 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
         setStep('UPLOAD');
         setFiles([]);
         setTextInput('');
+    };
+
+    const handleNewBiometry = () => {
+        if (currentData.length === 0) {
+            showToast('Nenhuma biometria anterior para carregar.');
+            return;
+        }
+
+        // Copiar dados atuais e mover PM para P.Ant, limpar PM
+        const newData = currentData.map(item => ({
+            ...item,
+            pAntStr: item.pMedStr || item.pAntStr, // PM anterior = PM atual (ou mantém anterior se PM estiver vazio)
+            pMedStr: '', // Limpar PM para novo lançamento
+            diasCultivo: item.diasCultivo, // Será recalculado automaticamente pela data
+            dataPovoamento: item.dataPovoamento // Manter data de povoamento
+        }));
+
+        setCurrentData(newData);
+        showToast('✅ Biometria anterior carregada! Preencha os novos pesos médios.');
+    };
+
+    const handleSaveBiometry = () => {
+        if (currentData.length === 0) {
+            showToast('⚠️ Nenhum dado para salvar.');
+            return;
+        }
+        setNeedsSave(true);
     };
 
     // --- LÓGICA DE EDIÇÃO ---
@@ -649,10 +682,32 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
 `}</style>
 
             {!isPublic && (
-                <div className="mb-6 flex justify-between items-center no-print">
+                <div className="mb-6 flex justify-between items-center gap-3 no-print">
                     <button onClick={handleReset} className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-900 bg-white px-4 py-2 rounded-lg border shadow-sm">
                         Inserir Novos Dados
                     </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleNewBiometry}
+                            className="flex items-center gap-2 text-sm font-bold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-lg border border-orange-200 shadow-sm transition-all"
+                            title="Criar nova biometria usando dados da anterior"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            Nova Biometria
+                        </button>
+                        <button
+                            onClick={handleSaveBiometry}
+                            className="flex items-center gap-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg shadow-sm transition-all"
+                            title="Salvar biometria atual no histórico"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Salvar Biometria
+                        </button>
+                    </div>
                 </div>
             )}
 
