@@ -309,7 +309,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     },
     {
       id: 'showcase',
-      label: 'Mostruário',
+      label: 'Faturamento',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.644C3.399 8.049 7.21 5 12 5c4.793 0 8.601 3.049 9.964 6.678.045.122.045.253 0 .376C20.601 15.951 16.79 19 12 19c-4.793 0-8.601-3.049-9.964-6.678z" />
