@@ -43,7 +43,7 @@ const NEWS_HEADLINES_SOURCE = [
 type ViewStep = 'UPLOAD' | 'PROCESSING' | 'DASHBOARD';
 
 export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic = false }) => {
-    const [step, setStep] = useState<ViewStep>('UPLOAD');
+    const [step, setStep] = useState<ViewStep>(isPublic ? 'DASHBOARD' : 'UPLOAD');
     const [logo, setLogo] = useState<string | null>(DEFAULT_LOGO);
     const [toast, setToast] = useState<{ msg: string; visible: boolean }>({ msg: '', visible: false });
     const [files, setFiles] = useState<File[]>([]);
@@ -52,6 +52,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
     const [biometricsHistory, setBiometricsHistory] = useState<any[]>([]);
     const [showHistory, setShowHistory] = useState(false);
     const [needsSave, setNeedsSave] = useState(false);
+    const [biometryDate, setBiometryDate] = useState(new Date().toISOString().split('T')[0]);
 
     const { processFile, isProcessing } = useGeminiParser();
     const [filterText, setFilterText] = useState('');
@@ -84,13 +85,36 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
     // Auto-save quando needsSave é true
     useEffect(() => {
         if (needsSave && currentData.length > 0) {
-            SupabaseService.saveBiometry(currentData);
+            const label = `Biometria ${new Date(biometryDate + 'T12:00:00').toLocaleDateString('pt-BR')}`;
+            // Modificar SupabaseService para aceitar a data customizada no futuro se necessário, 
+            // por enquanto usamos o timestamp como a data da biometria
+            SupabaseService.saveBiometry(currentData, label, new Date(biometryDate + 'T12:00:00').toISOString());
             setNeedsSave(false);
             showToast('Biometria salva com sucesso!');
             // Recarregar histórico
             SupabaseService.getBiometricsHistory().then(setBiometricsHistory);
         }
-    }, [needsSave, currentData]);
+    }, [needsSave, currentData, biometryDate]);
+
+    // --- RE-CALCULAR DIAS QUANDO MUDA DATA DA BIOMETRIA ---
+    useEffect(() => {
+        if (currentData.length > 0) {
+            setCurrentData(prev => prev.map(item => {
+                if (item.dataPovoamento) {
+                    try {
+                        const pDate = new Date(item.dataPovoamento);
+                        const bDate = new Date(biometryDate);
+                        if (!isNaN(pDate.getTime()) && !isNaN(bDate.getTime())) {
+                            const diffTime = Math.abs(bDate.getTime() - pDate.getTime());
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            return { ...item, diasCultivo: diffDays };
+                        }
+                    } catch (e) { }
+                }
+                return item;
+            }));
+        }
+    }, [biometryDate]);
 
     // --- BACKUP MANUAL (ARQUIVO JSON) ---
     const saveBackup = () => {
@@ -255,6 +279,29 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
         setNeedsSave(true);
     };
 
+    const handleLoadHistory = (record: any) => {
+        if (record.data) {
+            setCurrentData(record.data);
+            // Tentar extrair a data do registro se disponível
+            if (record.timestamp) {
+                setBiometryDate(new Date(record.timestamp).toISOString().split('T')[0]);
+            }
+            setShowHistory(false);
+            showToast('✅ Biometria carregada do histórico!');
+        }
+    };
+
+    const handleDeleteHistory = async (id: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (window.confirm('Deseja realmente excluir este registro do histórico?')) {
+            const success = await SupabaseService.deleteBiometry(id);
+            if (success) {
+                setBiometricsHistory(prev => prev.filter(item => item.id !== id));
+                showToast('Registro excluído com sucesso.');
+            }
+        }
+    };
+
     // --- LÓGICA DE EDIÇÃO ---
     // --- LÓGICA DE EDIÇÃO E CÁLCULOS ---
 
@@ -294,8 +341,8 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
                             const pDate = new Date(value as string);
                             // Validar se data é válida antes de calcular
                             if (!isNaN(pDate.getTime())) {
-                                const today = new Date();
-                                const diffTime = Math.abs(today.getTime() - pDate.getTime());
+                                const bioDate = new Date(biometryDate);
+                                const diffTime = Math.abs(bioDate.getTime() - pDate.getTime());
                                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                                 newItem.diasCultivo = diffDays;
                             }
@@ -682,11 +729,33 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
 `}</style>
 
             {!isPublic && (
-                <div className="mb-6 flex justify-between items-center gap-3 no-print">
-                    <button onClick={handleReset} className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-900 bg-white px-4 py-2 rounded-lg border shadow-sm">
-                        Inserir Novos Dados
-                    </button>
+                <div className="mb-6 flex flex-wrap justify-between items-center gap-4 no-print">
+                    <div className="flex items-center gap-3">
+                        <button onClick={handleReset} className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-900 bg-white px-4 py-2 rounded-lg border shadow-sm">
+                            Inserir Novos Dados
+                        </button>
+                        <div className="h-8 w-[1px] bg-gray-200 mx-1"></div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase">Data da Biometria:</span>
+                            <input
+                                type="date"
+                                value={biometryDate}
+                                onChange={(e) => setBiometryDate(e.target.value)}
+                                className="text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-orange-200 transition-all cursor-pointer"
+                            />
+                        </div>
+                    </div>
                     <div className="flex gap-2">
+                        <button
+                            onClick={() => setShowHistory(true)}
+                            className="flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-lg border border-blue-200 shadow-sm transition-all"
+                            title="Ver histórico de todas as biometrias"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Histórico
+                        </button>
                         <button
                             onClick={handleNewBiometry}
                             className="flex items-center gap-2 text-sm font-bold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-lg border border-orange-200 shadow-sm transition-all"
@@ -1031,6 +1100,82 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
             {step === 'UPLOAD' && renderUploadScreen()}
             {step === 'PROCESSING' && renderProcessing()}
             {step === 'DASHBOARD' && renderDashboard()}
+
+            {/* --- MODAL DE HISTÓRICO --- */}
+            {showHistory && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300 no-print">
+                    <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-gray-100 animate-in zoom-in-95 duration-300">
+                        <div className="bg-blue-600 px-6 py-4 flex justify-between items-center">
+                            <h3 className="text-white font-bold flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Histórico de Biometrias
+                            </h3>
+                            <button onClick={() => setShowHistory(false)} className="text-white/80 hover:text-white transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="max-h-[60vh] overflow-y-auto p-6">
+                            {biometricsHistory.length === 0 ? (
+                                <div className="text-center py-10 text-gray-400">
+                                    <p>Nenhuma biometria salva no histórico.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {biometricsHistory.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            onClick={() => handleLoadHistory(item)}
+                                            className="group flex items-center justify-between p-4 rounded-2xl border border-gray-100 bg-gray-50 hover:bg-blue-50 hover:border-blue-100 transition-all cursor-pointer"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs uppercase">
+                                                    {new Date(item.timestamp).toLocaleDateString('pt-BR', { month: 'short' })}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-gray-800 group-hover:text-blue-700 transition-colors uppercase text-sm">
+                                                        {item.label}
+                                                    </p>
+                                                    <p className="text-[10px] text-gray-400 font-medium">
+                                                        {new Date(item.timestamp).toLocaleTimeString('pt-BR')} • {item.data?.length || 0} viveiros
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={(e) => handleDeleteHistory(item.id, e)}
+                                                    className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-all"
+                                                    title="Excluir do histórico"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                                <div className="bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full group-hover:scale-105 transition-transform">
+                                                    CARREGAR
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end">
+                            <button
+                                onClick={() => setShowHistory(false)}
+                                className="px-6 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors"
+                            >
+                                Fechar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Toast Notification */}
             {toast.visible && (

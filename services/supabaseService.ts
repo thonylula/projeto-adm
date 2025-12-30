@@ -299,13 +299,13 @@ export const SupabaseService = {
         return data;
     },
 
-    async saveBiometry(biometryData: any[], label?: string): Promise<boolean> {
+    async saveBiometry(biometryData: any[], label?: string, customTimestamp?: string): Promise<boolean> {
         const { error } = await supabase
             .from('biometrics')
             .insert([{
                 data: biometryData,
                 label: label || `Biometria ${new Date().toLocaleDateString('pt-BR')}`,
-                timestamp: new Date().toISOString()
+                timestamp: customTimestamp || new Date().toISOString()
             }]);
 
         if (error) {
