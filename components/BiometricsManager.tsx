@@ -84,16 +84,30 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
 
     // Auto-save quando needsSave é true
     useEffect(() => {
-        if (needsSave && currentData.length > 0) {
-            const label = `Biometria ${new Date(biometryDate + 'T12:00:00').toLocaleDateString('pt-BR')}`;
-            // Modificar SupabaseService para aceitar a data customizada no futuro se necessário, 
-            // por enquanto usamos o timestamp como a data da biometria
-            SupabaseService.saveBiometry(currentData, label, new Date(biometryDate + 'T12:00:00').toISOString());
-            setNeedsSave(false);
-            showToast('Biometria salva com sucesso!');
-            // Recarregar histórico
-            SupabaseService.getBiometricsHistory().then(setBiometricsHistory);
-        }
+        const performSave = async () => {
+            if (needsSave && currentData.length > 0) {
+                const label = `Biometria ${new Date(biometryDate + 'T12:00:00').toLocaleDateString('pt-BR')}`;
+
+                showToast('Salvando biometria...');
+                const success = await SupabaseService.saveBiometry(
+                    currentData,
+                    label,
+                    new Date(biometryDate + 'T12:00:00').toISOString()
+                );
+
+                setNeedsSave(false);
+
+                if (success) {
+                    showToast('✅ Biometria salva com sucesso!');
+                    // Recarregar histórico
+                    const updatedHistory = await SupabaseService.getBiometricsHistory();
+                    setBiometricsHistory(updatedHistory);
+                } else {
+                    showToast('❌ Erro ao salvar biometria. Verifique se a tabela biometrics existe no Supabase.');
+                }
+            }
+        };
+        performSave();
     }, [needsSave, currentData, biometryDate]);
 
     // --- RE-CALCULAR DIAS QUANDO MUDA DATA DA BIOMETRIA ---
