@@ -751,89 +751,65 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                         <p className="text-orange-100/70 text-base font-medium">Gestão Inteligente</p>
                     </div>
                 </div>
-                <div className="flex gap-4" data-html2canvas-ignore>
-                    {view !== 'SHOWCASE' && (
-                        <>
-                            <button
-                                onClick={() => setView('HISTORY')}
-                                className={`px-6 py-2 rounded-lg font-bold transition-all border ${view === 'HISTORY' ? 'bg-white text-[#f26522]' : 'bg-white/20 hover:bg-white/30 text-white border-white/30'}`}
-                            >
-                                Histórico
-                            </button>
+                <div className="flex flex-wrap gap-4 items-center justify-center md:justify-end" data-html2canvas-ignore>
+                    {/* Navigation Pills (Glassmorphism) - Hidden for visitors unless they have history */}
+                    {!isPublic && (
+                        <div className="flex bg-white/10 p-1.5 rounded-2xl backdrop-blur-md border border-white/20 gap-1 shadow-inner">
                             <button
                                 onClick={() => setView('DASHBOARD')}
-                                className={`px-6 py-2 rounded-lg font-bold transition-all border ${view === 'DASHBOARD' ? 'bg-white text-[#f26522]' : 'bg-white/20 hover:bg-white/30 text-white border-white/30'}`}
+                                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all ${view === 'DASHBOARD' ? 'bg-white text-orange-600 shadow-md' : 'text-white hover:bg-white/10'}`}
                             >
                                 Tabela
                             </button>
                             <button
                                 onClick={() => setView('HISTORY')}
-                                className={`px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all duration-300 ${view === 'HISTORY' ? 'bg-white text-orange-600 shadow-lg' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all ${view === 'HISTORY' ? 'bg-white text-orange-600 shadow-md' : 'text-white hover:bg-white/10'}`}
                             >
-                                <span>Histórico</span>
+                                Histórico
                             </button>
-                        </>
-                    )}
-                    {!isPublic && (
-                        <button
-                            onClick={() => setView('INPUT')}
-                            className="px-5 py-2.5 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-400 transition-all shadow-lg flex items-center gap-2"
-                        >
-                            <span>Nova Importação</span>
-                        </button>
+                        </div>
                     )}
 
-                    {view === 'DASHBOARD' && (
-                        <button
-                            onClick={() => setView('SHOWCASE')}
-                            className="px-6 py-2 bg-white text-[#f26522] hover:bg-orange-50 rounded-lg font-bold shadow-lg transition-all flex items-center gap-2"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-orange-500">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            Mostruário
-                        </button>
-                    )}
+                    {/* Action Group */}
+                    <div className="flex items-center gap-3">
+                        {!isPublic && (
+                            <button
+                                onClick={() => setView('INPUT')}
+                                className="px-6 py-2.5 rounded-2xl bg-white text-orange-600 font-bold hover:bg-orange-50 transition-all shadow-xl flex items-center gap-2 text-sm border-2 border-transparent hover:border-orange-100"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                </svg>
+                                Nova Importação
+                            </button>
+                        )}
 
-                    {view === 'SHOWCASE' && !isPublic && (
-                        <button
-                            onClick={() => {
-                                const url = new URL(window.location.href);
-                                url.searchParams.delete('showcase');
-                                window.history.replaceState({}, '', url.toString());
-                                setView('DASHBOARD');
-                            }}
-                            className="px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-lg text-white font-bold transition-all border border-white/30"
-                        >
-                            Voltar ao Painel
-                        </button>
-                    )}
-                    {/* Showcase Info Banner (Hidden for public visitors) */}
-                    {view === 'SHOWCASE' && !isPublic && (
-                        <section className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm animate-fadeIn">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-blue-800 font-bold">Você está no Modo Mostruário</p>
-                                    <p className="text-xs text-blue-600 font-medium">Esta é uma visão executiva ideal para compartilhar com terceiros.</p>
-                                </div>
-                            </div>
+                        {view === 'SHOWCASE' && !isPublic && (
                             <button
                                 onClick={handleShareShowcase}
-                                className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md font-bold transition-all text-sm group"
+                                className="px-6 py-2.5 rounded-2xl bg-[#f26522] text-white font-bold hover:bg-[#d95213] transition-all shadow-xl flex items-center gap-2 text-sm border border-white/20"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 group-hover:rotate-12 transition-transform">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
                                 </svg>
-                                Compartilhar Link
+                                Compartilhar
                             </button>
-                        </section>
-                    )}
+                        )}
+
+                        {view === 'SHOWCASE' && !isPublic && (
+                            <button
+                                onClick={() => {
+                                    const url = new URL(window.location.href);
+                                    url.searchParams.delete('showcase');
+                                    window.history.replaceState({}, '', url.toString());
+                                    setView('DASHBOARD');
+                                }}
+                                className="px-6 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-bold transition-all border border-white/20 text-sm shadow-md"
+                            >
+                                Voltar ao Painel
+                            </button>
+                        )}
+                    </div>
                 </div>
             </header>
 
