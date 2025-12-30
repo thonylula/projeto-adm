@@ -4,9 +4,10 @@ import { SupabaseService } from '../services/supabaseService';
 
 interface CampoViveirosProps {
     activeCompany: Company | null;
+    isPublic?: boolean;
 }
 
-export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany }) => {
+export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isPublic = false }) => {
     const [viveiros, setViveiros] = useState<Viveiro[]>([]);
     const [selectedViveiro, setSelectedViveiro] = useState<Viveiro | null>(null);
     const [editingName, setEditingName] = useState('');
@@ -27,7 +28,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany }) =
     };
 
     const handleImageClick = async (e: React.MouseEvent<HTMLImageElement>) => {
-        if (!activeCompany) return;
+        if (!activeCompany || isPublic) return;
 
         const img = e.currentTarget;
         const rect = img.getBoundingClientRect();
@@ -139,102 +140,106 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany }) =
                     </div>
                 </div>
 
-                {/* Instructions Overlay */}
-                <div className="absolute top-4 left-4 bg-white p-4 rounded-lg shadow-lg max-w-sm">
-                    <h3 className="font-bold text-slate-900 mb-2">🗺️ Como usar:</h3>
-                    <ul className="text-sm text-slate-600 space-y-1">
-                        <li>1. Clique no mapa onde está o viveiro</li>
-                        <li>2. Digite o nome do viveiro</li>
-                        <li>3. Digite a área em hectares</li>
-                        <li>4. Clique no marcador para editar</li>
-                    </ul>
-                </div>
-            </div>
-
-            {/* Sidebar */}
-            <div className="w-96 bg-white shadow-lg p-6 overflow-y-auto">
-                <h2 className="text-2xl font-black text-slate-900 mb-4">🐟 Viveiros</h2>
-
-                {/* Viveiros List */}
-                <div className="space-y-2 mb-6">
-                    {viveiros.map(v => (
-                        <div
-                            key={v.id}
-                            onClick={() => {
-                                setSelectedViveiro(v);
-                                setEditingName(v.name);
-                                setEditingNotes(v.notes || '');
-                                setEditingArea(v.area_m2.toString());
-                            }}
-                            className={`p-3 rounded-lg cursor-pointer transition-all ${selectedViveiro?.id === v.id
-                                ? 'bg-indigo-100 border-2 border-indigo-500'
-                                : 'bg-slate-50 hover:bg-slate-100'
-                                }`}
-                        >
-                            <div className="font-bold text-slate-900">{v.name}</div>
-                            <div className="text-sm text-slate-600">Área: {v.area_m2.toLocaleString('pt-BR')} ha</div>
-                        </div>
-                    ))}
-                    {viveiros.length === 0 && (
-                        <p className="text-slate-400 text-sm text-center py-8">
-                            Nenhum viveiro cadastrado.<br />
-                            Clique no mapa para adicionar.
-                        </p>
-                    )}
-                </div>
-
-                {/* Editor */}
-                {selectedViveiro && (
-                    <div className="border-t pt-4">
-                        <h3 className="font-bold text-slate-900 mb-3">Editar Viveiro</h3>
-
-                        <label className="block mb-2">
-                            <span className="text-sm text-slate-600">Nome:</span>
-                            <input
-                                type="text"
-                                value={editingName}
-                                onChange={e => setEditingName(e.target.value)}
-                                className="w-full mt-1 px-3 py-2 border rounded-lg"
-                            />
-                        </label>
-
-                        <label className="block mb-2">
-                            <span className="text-sm text-slate-600">Área (hectares):</span>
-                            <input
-                                type="number"
-                                value={editingArea}
-                                onChange={e => setEditingArea(e.target.value)}
-                                className="w-full mt-1 px-3 py-2 border rounded-lg"
-                            />
-                        </label>
-
-                        <label className="block mb-4">
-                            <span className="text-sm text-slate-600">Notas:</span>
-                            <textarea
-                                value={editingNotes}
-                                onChange={e => setEditingNotes(e.target.value)}
-                                className="w-full mt-1 px-3 py-2 border rounded-lg"
-                                rows={3}
-                            />
-                        </label>
-
-                        <div className="flex gap-2">
-                            <button
-                                onClick={handleSaveViveiro}
-                                className="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700"
-                            >
-                                ✅ Salvar
-                            </button>
-                            <button
-                                onClick={handleDeleteViveiro}
-                                className="px-4 bg-red-500 text-white py-2 rounded-lg font-bold hover:bg-red-600"
-                            >
-                                🗑️
-                            </button>
-                        </div>
+                {/* Instructions Overlay - Hidden for visitors */}
+                {!isPublic && (
+                    <div className="absolute top-4 left-4 bg-white p-4 rounded-lg shadow-lg max-w-sm">
+                        <h3 className="font-bold text-slate-900 mb-2">🗺️ Como usar:</h3>
+                        <ul className="text-sm text-slate-600 space-y-1">
+                            <li>1. Clique no mapa onde está o viveiro</li>
+                            <li>2. Digite o nome do viveiro</li>
+                            <li>3. Digite a área em hectares</li>
+                            <li>4. Clique no marcador para editar</li>
+                        </ul>
                     </div>
                 )}
             </div>
+
+            {/* Sidebar - Hidden for visitors */}
+            {!isPublic && (
+                <div className="w-96 bg-white shadow-lg p-6 overflow-y-auto">
+                    <h2 className="text-2xl font-black text-slate-900 mb-4">🐟 Viveiros</h2>
+
+                    {/* Viveiros List */}
+                    <div className="space-y-2 mb-6">
+                        {viveiros.map(v => (
+                            <div
+                                key={v.id}
+                                onClick={() => {
+                                    setSelectedViveiro(v);
+                                    setEditingName(v.name);
+                                    setEditingNotes(v.notes || '');
+                                    setEditingArea(v.area_m2.toString());
+                                }}
+                                className={`p-3 rounded-lg cursor-pointer transition-all ${selectedViveiro?.id === v.id
+                                    ? 'bg-indigo-100 border-2 border-indigo-500'
+                                    : 'bg-slate-50 hover:bg-slate-100'
+                                    }`}
+                            >
+                                <div className="font-bold text-slate-900">{v.name}</div>
+                                <div className="text-sm text-slate-600">Área: {v.area_m2.toLocaleString('pt-BR')} ha</div>
+                            </div>
+                        ))}
+                        {viveiros.length === 0 && (
+                            <p className="text-slate-400 text-sm text-center py-8">
+                                Nenhum viveiro cadastrado.<br />
+                                Clique no mapa para adicionar.
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Editor */}
+                    {selectedViveiro && (
+                        <div className="border-t pt-4">
+                            <h3 className="font-bold text-slate-900 mb-3">Editar Viveiro</h3>
+
+                            <label className="block mb-2">
+                                <span className="text-sm text-slate-600">Nome:</span>
+                                <input
+                                    type="text"
+                                    value={editingName}
+                                    onChange={e => setEditingName(e.target.value)}
+                                    className="w-full mt-1 px-3 py-2 border rounded-lg"
+                                />
+                            </label>
+
+                            <label className="block mb-2">
+                                <span className="text-sm text-slate-600">Área (hectares):</span>
+                                <input
+                                    type="number"
+                                    value={editingArea}
+                                    onChange={e => setEditingArea(e.target.value)}
+                                    className="w-full mt-1 px-3 py-2 border rounded-lg"
+                                />
+                            </label>
+
+                            <label className="block mb-4">
+                                <span className="text-sm text-slate-600">Notas:</span>
+                                <textarea
+                                    value={editingNotes}
+                                    onChange={e => setEditingNotes(e.target.value)}
+                                    className="w-full mt-1 px-3 py-2 border rounded-lg"
+                                    rows={3}
+                                />
+                            </label>
+
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleSaveViveiro}
+                                    className="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700"
+                                >
+                                    ✅ Salvar
+                                </button>
+                                <button
+                                    onClick={handleDeleteViveiro}
+                                    className="px-4 bg-red-500 text-white py-2 rounded-lg font-bold hover:bg-red-600"
+                                >
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };

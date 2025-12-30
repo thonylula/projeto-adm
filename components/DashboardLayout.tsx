@@ -20,7 +20,8 @@ const NavItem: React.FC<{
   setIsMobileMenuOpen: (open: boolean) => void;
   isLocked: boolean;
   onToggleLock: (id: string) => void;
-}> = ({ item, activeTab, onTabChange, setIsMobileMenuOpen, isLocked, onToggleLock }) => {
+  isPublic?: boolean;
+}> = ({ item, activeTab, onTabChange, setIsMobileMenuOpen, isLocked, onToggleLock, isPublic }) => {
   const isPayroll = item.id === 'payroll';
   const isPantry = item.id === 'pantry';
   const isShowcase = item.id === 'showcase';
@@ -61,26 +62,28 @@ const NavItem: React.FC<{
         </span>
         <span className="font-medium text-sm uppercase text-left leading-tight">{item.label}</span>
 
-        {/* Lock Toggle */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleLock(item.id);
-          }}
-          className={`ml-auto p-1.5 rounded-lg transition-all ${isLocked ? 'bg-red-500/20 text-red-400' : 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
-            }`}
-          title={isLocked ? "Área Bloqueada para a IA" : "Área Liberada para a IA"}
-        >
-          {isLocked ? (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-              <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-              <path d="M18 1.5c2.9 0 5.25 2.35 5.25 5.25v3.75a.75.75 0 01-1.5 0V6.75a3.75 3.75 0 10-7.5 0v3a3 3 0 013 3v6.75a3 3 0 01-3 3H3.75a3 3 0 01-3-3v-6.75a3 3 0 013-3h9v-3c0-2.9 2.35-5.25 5.25-5.25z" />
-            </svg>
-          )}
-        </button>
+        {/* Lock Toggle - Hidden for visitors */}
+        {!isPublic && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleLock(item.id);
+            }}
+            className={`ml-auto p-1.5 rounded-lg transition-all ${isLocked ? 'bg-red-500/20 text-red-400' : 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
+              }`}
+            title={isLocked ? "Área Bloqueada para a IA" : "Área Liberada para a IA"}
+          >
+            {isLocked ? (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                <path d="M18 1.5c2.9 0 5.25 2.35 5.25 5.25v3.75a.75.75 0 01-1.5 0V6.75a3.75 3.75 0 10-7.5 0v3a3 3 0 013 3v6.75a3 3 0 01-3 3H3.75a3 3 0 01-3-3v-6.75a3 3 0 013-3h9v-3c0-2.9 2.35-5.25 5.25-5.25z" />
+              </svg>
+            )}
+          </button>
+        )}
 
         {(isPayroll || isPantry || isShowcase) && (
           <svg
@@ -329,54 +332,55 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row print:bg-white print:block" data-active-tab={activeTab}>
       {/* Mobile Header */}
       <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center print:hidden">
-        <span className="font-bold text-lg truncate max-w-[200px]">Adm: {currentUser}</span>
-        {!isPublic && (
-          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
-          </button>
-        )}
+        <span className="font-bold text-lg truncate max-w-[200px]">
+          {isPublic ? 'Modo Visualização' : `Adm: ${currentUser}`}
+        </span>
+        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
       </div>
 
       {/* Sidebar Navigation */}
-      {!isPublic && (
-        <aside className={`
-          fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 transform transition-transform duration-300 ease-in-out print:hidden
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-          md:relative md:translate-x-0 flex flex-col
-        `}>
-          {/* Sidebar Header */}
-          <div className="p-6 border-b border-slate-800">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded bg-orange-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-                A
-              </div>
-              <div className="overflow-hidden">
-                <h1 className="text-white font-bold text-sm leading-tight truncate" title={`Adm: ${currentUser}`}>
-                  Adm: {currentUser}
-                </h1>
-                <p className="text-xs text-slate-500">Gestão Inteligente</p>
-              </div>
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 transform transition-transform duration-300 ease-in-out print:hidden
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:relative md:translate-x-0 flex flex-col
+      `}>
+        {/* Sidebar Header */}
+        <div className="p-6 border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded bg-orange-500 flex items-center justify-center text-white font-bold flex-shrink-0">
+              A
+            </div>
+            <div className="overflow-hidden">
+              <h1 className="text-white font-bold text-sm leading-tight truncate" title={`Adm: ${currentUser}`}>
+                Adm: {currentUser}
+              </h1>
+              <p className="text-xs text-slate-500">Gestão Inteligente</p>
             </div>
           </div>
+        </div>
 
-          {/* Navigation Items */}
-          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-            {navItems.map((item) => (
-              <NavItem
-                key={item.id}
-                item={item}
-                activeTab={activeTab}
-                onTabChange={onTabChange}
-                setIsMobileMenuOpen={setIsMobileMenuOpen}
-                isLocked={!!tabLocks[item.id]}
-                onToggleLock={toggleLock}
-              />
-            ))}
-          </nav>
+        {/* Navigation Items */}
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          {navItems.map((item) => (
+            <NavItem
+              key={item.id}
+              item={item}
+              activeTab={activeTab}
+              onTabChange={onTabChange}
+              setIsMobileMenuOpen={setIsMobileMenuOpen}
+              isLocked={!!tabLocks[item.id]}
+              onToggleLock={toggleLock}
+              isPublic={isPublic}
+            />
+          ))}
+        </nav>
 
-          {/* User Footer */}
+        {/* User Footer - Hidden for visitors */}
+        {!isPublic && (
           <div className="p-4 border-t border-slate-800 bg-slate-900/50">
             <div className="flex items-center gap-3 mb-4 px-2">
               <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white uppercase flex-shrink-0">
@@ -414,8 +418,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               </button>
             </div>
           </div>
-        </aside>
-      )}
+        )}
+      </aside>
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-auto h-[calc(100vh-60px)] md:h-screen w-full relative print:h-auto print:overflow-visible">

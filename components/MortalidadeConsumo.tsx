@@ -10,9 +10,10 @@ interface MortalidadeConsumoProps {
     activeCompany?: Company | null;
     activeYear: number;
     activeMonth: number;
+    isPublic?: boolean;
 }
 
-export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCompany, activeYear, activeMonth }) => {
+export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCompany, activeYear, activeMonth, isPublic = false }) => {
     const [data, setData] = useState<MonthlyMortalityData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [month, setMonth] = useState(activeMonth);
@@ -488,28 +489,37 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             </button>
             <button onClick={() => performExport('png')} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition-all shadow-lg active:scale-95">PNG</button>
             <button onClick={() => performExport('html')} className="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-800 transition-all shadow-lg active:scale-95">HTML</button>
-            <div className="w-px h-8 bg-slate-200 mx-2" />
-            <input type="file" ref={fileInputRef} onChange={handleAIPreencher} accept="image/*" className="hidden" />
-            <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isAIProcessing}
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg text-xs font-black uppercase hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg active:scale-95 flex items-center gap-2 disabled:opacity-50"
-            >
-                {isAIProcessing ? (
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                    <span>🪄</span>
-                )}
-                {isAIProcessing ? 'Processando...' : 'IA Preencher Tudo'}
-            </button>
+            {!isPublic && (
+                <>
+                    <div className="w-px h-8 bg-slate-200 mx-2" />
+                    <input type="file" ref={fileInputRef} onChange={handleAIPreencher} accept="image/*" className="hidden" />
+                    <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isAIProcessing}
+                        className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg text-xs font-black uppercase hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                    >
+                        {isAIProcessing ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <span>🪄</span>
+                        )}
+                        {isAIProcessing ? 'Processando...' : 'IA Preencher Tudo'}
+                    </button>
+                </>
+            )}
             <div className="w-px h-8 bg-slate-200 mx-2" />
             <button onClick={handleShare} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-700 transition-all shadow-lg active:scale-95">Compartilhar</button>
-            <div className="w-px h-8 bg-slate-200 mx-2" />
-            <button onClick={handleBackup} className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-800 transition-all shadow-lg active:scale-95">Backup</button>
-            <input type="file" id="load-backup-input" accept=".json" onChange={handleLoadBackup} className="hidden" />
-            <button onClick={() => document.getElementById('load-backup-input')?.click()} className="bg-orange-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-orange-600 transition-all shadow-lg active:scale-95">Carregar</button>
-            <button onClick={handleSave} className="bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-600 transition-all shadow-lg active:scale-95">Salvar</button>
-            <button onClick={handleClearData} className="bg-slate-400 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-500 transition-all shadow-lg active:scale-95">Limpar Tudo</button>
+
+            {!isPublic && (
+                <>
+                    <div className="w-px h-8 bg-slate-200 mx-2" />
+                    <button onClick={handleBackup} className="bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-800 transition-all shadow-lg active:scale-95">Backup</button>
+                    <input type="file" id="load-backup-input" accept=".json" onChange={handleLoadBackup} className="hidden" />
+                    <button onClick={() => document.getElementById('load-backup-input')?.click()} className="bg-orange-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-orange-600 transition-all shadow-lg active:scale-95">Carregar</button>
+                    <button onClick={handleSave} className="bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-600 transition-all shadow-lg active:scale-95">Salvar</button>
+                    <button onClick={handleClearData} className="bg-slate-400 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-500 transition-all shadow-lg active:scale-95">Limpar Tudo</button>
+                </>
+            )}
 
             <div className="w-px h-8 bg-slate-200 mx-2" />
 
@@ -530,12 +540,14 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
             <div className="w-px h-8 bg-slate-200 mx-2" />
             <div className="relative">
-                <button
-                    onClick={() => setShowLayoutSettings(!showLayoutSettings)}
-                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-lg active:scale-95 flex items-center gap-2 ${showLayoutSettings ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-                >
-                    <span>⚙️</span> Ajustar Layout
-                </button>
+                {!isPublic && (
+                    <button
+                        onClick={() => setShowLayoutSettings(!showLayoutSettings)}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-lg active:scale-95 flex items-center gap-2 ${showLayoutSettings ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                    >
+                        <span>⚙️</span> Ajustar Layout
+                    </button>
+                )}
 
                 {showLayoutSettings && (
                     <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 p-4 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
@@ -620,9 +632,13 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     </div>
                 )}
             </div>
-            <div className="w-px h-8 bg-slate-200 mx-2" />
-            <input type="file" id="logo-upload-input" accept="image/*" onChange={handleLogoUpload} className="hidden" />
-            <button onClick={() => document.getElementById('logo-upload-input')?.click()} className="bg-purple-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-purple-700 transition-all shadow-lg active:scale-95">📷 Logo</button>
+            {!isPublic && (
+                <>
+                    <div className="w-px h-8 bg-slate-200 mx-2" />
+                    <input type="file" id="logo-upload-input" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                    <button onClick={() => document.getElementById('logo-upload-input')?.click()} className="bg-purple-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-purple-700 transition-all shadow-lg active:scale-95">📷 Logo</button>
+                </>
+            )}
         </div>
     );
 
