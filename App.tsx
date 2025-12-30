@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { MainLayout } from './components/MainLayout';
 import { DashboardLayout } from './components/DashboardLayout';
 import { CompanySelection } from './components/CompanySelection';
@@ -122,7 +123,48 @@ export default function App() {
     };
   }, []);
 
-  const activeCompany = companies.find(c => c.id === activeCompanyId);
+  // Mesclar empresas CARAPITANGA para mostrar efetivados e diaristas juntos
+  const activeCompany = useMemo(() => {
+    const selected = companies.find(c => c.id === activeCompanyId);
+    if (!selected) return undefined;
+
+    // Se for uma empresa CARAPITANGA, mesclar com a outra CARAPITANGA
+    if (selected.name.toUpperCase().includes('CARAPITANGA')) {
+      const carapitangaCompanies = companies.filter(c =>
+        c.name.toUpperCase().includes('CARAPITANGA')
+      );
+
+      if (carapitangaCompanies.length > 1) {
+        // Ordenar por número de funcionários (menor primeiro = efetivados, maior = diaristas)
+        const sorted = [...carapitangaCompanies].sort(
+          (a, b) => (a.employees?.length || 0) - (b.employees?.length || 0)
+        );
+
+        const efetivadosCompany = sorted[0]; // Empresa com menos funcionários (4)
+        const diaristasCompany = sorted[1]; // Empresa com mais funcionários (11)
+
+        // Mesclar funcionários com identificação de tipo
+        const mergedEmployees = [
+          ...(efetivadosCompany.employees || []).map(emp => ({
+            ...emp,
+            input: { ...emp.input, employeeName: `${emp.input.employeeName} [Efetivado]` }
+          })),
+          ...(diaristasCompany.employees || []).map(emp => ({
+            ...emp,
+            input: { ...emp.input, employeeName: `${emp.input.employeeName} [Diarista]` }
+          }))
+        ];
+
+        // Retornar empresa mesclada
+        return {
+          ...diaristasCompany, // Usar dados da empresa de diaristas como base
+          employees: mergedEmployees
+        };
+      }
+    }
+
+    return selected;
+  }, [companies, activeCompanyId]);
 
   // --- Handlers ---
 
