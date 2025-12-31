@@ -1,26 +1,25 @@
 -- SQL Schema for Viveiros (Fish Ponds) Table
 -- Execute this in your Supabase SQL Editor
 
-CREATE TABLE viveiros (
+-- 1. Create the table ONLY if it doesn't exist
+CREATE TABLE IF NOT EXISTS viveiros (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   coordinates JSONB NOT NULL, -- Array of {lat: number, lng: number}
   area_m2 DECIMAL(10,2) NOT NULL,
-  status TEXT DEFAULT 'VAZIO',
+  -- status TEXT DEFAULT 'VAZIO', -- We add this safely below
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Add index for faster company queries
-CREATE INDEX idx_viveiros_company_id ON viveiros(company_id);
+-- 2. Add 'status' column safely if it doesn't exist (Migration)
+ALTER TABLE viveiros 
+ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'VAZIO';
 
--- Row Level Security (RLS) - Adjust based on your auth setup
+-- 3. Add index safely
+CREATE INDEX IF NOT EXISTS idx_viveiros_company_id ON viveiros(company_id);
+
+-- 4. RLS - Already configured? Safe to run these commands even if enabled
 -- ALTER TABLE viveiros ENABLE ROW LEVEL SECURITY;
-
--- Example RLS policy (if using Supabase Auth)
--- CREATE POLICY "Users can view viveiros" ON viveiros FOR SELECT USING (true);
--- CREATE POLICY "Users can insert viveiros" ON viveiros FOR INSERT WITH CHECK (true);
--- CREATE POLICY "Users can update viveiros" ON viveiros FOR UPDATE USING (true);
--- CREATE POLICY "Users can delete viveiros" ON viveiros FOR DELETE USING (true);
