@@ -816,10 +816,11 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
 @media print {
     @page { margin: 3mm; size: auto; }
     body { zoom: 0.9!important; -webkit-print-color-adjust: exact; }
-    .printing .print-visible { display: block!important; visibility: visible!important; opacity: 1!important; }
-    .printing .print-hidden { display: none!important; }
     * { -webkit-print-color-adjust: exact!important; color-adjust: exact!important; }
 }
+/* Ensure elements are visible during export (PNG and PDF) */
+.printing .print-visible { display: block!important; visibility: visible!important; opacity: 1!important; }
+.printing .print-hidden { display: none!important; }
 .print-visible { display: none; }
 `}</style>
 
@@ -976,7 +977,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
                                         {/* DATA POVOAMENTO (Novo Input) */}
                                         <td className="px-1 py-1 text-center bg-orange-50/20 print:bg-transparent">
                                             <div className="print-visible font-bold text-slate-900 text-[9.5px]">
-                                                {item.dataPovoamento ? item.dataPovoamento.split('-').reverse().join('/') : '-'}
+                                                {item.dataPovoamento ? (item.dataPovoamento.includes('-') ? item.dataPovoamento.split('-').reverse().join('/') : item.dataPovoamento) : '-'}
                                             </div>
                                             {isPublic ? (
                                                 <div className="font-bold text-slate-900 text-[9.5px]">
