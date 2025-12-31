@@ -140,18 +140,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                     </div>
                 </div>
 
-                {/* Instructions Overlay - Hidden for visitors */}
-                {!isPublic && (
-                    <div className="absolute top-4 left-4 bg-white p-4 rounded-lg shadow-lg max-w-sm">
-                        <h3 className="font-bold text-slate-900 mb-2">🗺️ Como usar:</h3>
-                        <ul className="text-sm text-slate-600 space-y-1">
-                            <li>1. Clique no mapa onde está o viveiro</li>
-                            <li>2. Digite o nome do viveiro</li>
-                            <li>3. Digite a área em hectares</li>
-                            <li>4. Clique no marcador para editar</li>
-                        </ul>
-                    </div>
-                )}
+
             </div>
 
             {/* Sidebar - Hidden for visitors */}
