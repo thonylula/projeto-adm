@@ -16,6 +16,7 @@ import { MortalidadeConsumo } from './components/MortalidadeConsumo';
 import { CampoViveiros } from './components/CampoViveiros';
 import { Comparator } from './components/Comparator';
 import { ShowcaseManager } from './components/ShowcaseManager';
+import { PlansPrices } from './components/PlansPrices';
 import { Company, PayrollHistoryItem } from './types';
 import { SupabaseService } from './services/supabaseService';
 import { isSupabaseConfigured } from './supabaseClient';
@@ -502,6 +503,10 @@ export default function App() {
               />
             )}
           </>
+        )}
+
+        {activeTab === 'plans' && (
+          <PlansPrices />
         )}
       </DashboardLayout>
     );
