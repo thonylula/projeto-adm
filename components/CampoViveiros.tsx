@@ -16,10 +16,17 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
     const [editingStatus, setEditingStatus] = useState<ViveiroStatus>('VAZIO');
 
     const statusColors: Record<ViveiroStatus, string> = {
-        'VAZIO': 'bg-slate-400',
-        'PREPARADO': 'bg-green-600',
-        'POVOADO': 'bg-cyan-400',
-        'DESPESCA': 'bg-blue-600'
+        'VAZIO': 'bg-[#c0c0c0]', // Cinza
+        'PREPARADO': 'bg-[#008000]', // Verde Escuro
+        'POVOADO': 'bg-[#00ffff]', // Ciano Vibrante
+        'DESPESCA': 'bg-[#0000ff]' // Azul Royal
+    };
+
+    const statusTextColors: Record<ViveiroStatus, string> = {
+        'VAZIO': 'text-slate-700',
+        'PREPARADO': 'text-white',
+        'POVOADO': 'text-slate-900',
+        'DESPESCA': 'text-white'
     };
 
     // Load viveiros when company changes
@@ -139,11 +146,12 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                         top: `${pos.lat}%`
                                     }}
                                 >
-                                    <div className={`px-2 py-1 rounded-sm flex items-center justify-center font-bold text-[10px] shadow-sm whitespace-nowrap border border-black/20 text-white min-w-[40px] ${selectedViveiro?.id === v.id
-                                        ? 'ring-2 ring-white ring-offset-2 ring-offset-indigo-600 z-30'
+                                    <div className={`px-2 py-1.5 rounded-sm flex items-center justify-between font-bold text-[11px] shadow-md whitespace-nowrap border border-black/30 min-w-[65px] transition-all hover:scale-110 active:scale-95 ${selectedViveiro?.id === v.id
+                                        ? 'ring-2 ring-yellow-400 z-30'
                                         : ''
-                                        } ${statusColors[v.status || 'VAZIO']}`}>
-                                        {v.name.toUpperCase()}
+                                        } ${statusColors[v.status || 'VAZIO']} ${statusTextColors[v.status || 'VAZIO']}`}>
+                                        <span>{v.name.toUpperCase()}</span>
+                                        <span className="ml-1 opacity-60 text-[8px]">▼</span>
                                     </div>
                                 </div>
                             );
@@ -155,22 +163,18 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                 {/* Legenda Overlay */}
                 <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md p-3 rounded-lg shadow-xl border border-slate-200 z-10">
                     <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Situação dos Viveiros</h4>
-                    <div className="flex gap-3">
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 bg-slate-400 rounded-sm border border-black/10"></div>
-                            <span className="text-[11px] font-medium text-slate-700">Vazio</span>
+                    <div className="flex gap-4">
+                        <div className="flex items-center gap-2">
+                            <div className="w-10 h-6 bg-[#c0c0c0] rounded-sm border border-black/20 flex items-center justify-center text-[10px] font-bold text-slate-700">Vazio</div>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 bg-green-600 rounded-sm border border-black/10"></div>
-                            <span className="text-[11px] font-medium text-slate-700">Preparado</span>
+                        <div className="flex items-center gap-2">
+                            <div className="w-10 h-6 bg-[#008000] rounded-sm border border-black/20 flex items-center justify-center text-[10px] font-bold text-white">Pronto</div>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 bg-cyan-400 rounded-sm border border-black/10"></div>
-                            <span className="text-[11px] font-medium text-slate-700">Povoado</span>
+                        <div className="flex items-center gap-2">
+                            <div className="w-10 h-6 bg-[#00ffff] rounded-sm border border-black/20 flex items-center justify-center text-[10px] font-bold text-slate-900">Povoado</div>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 bg-blue-600 rounded-sm border border-black/10"></div>
-                            <span className="text-[11px] font-medium text-slate-700">Em Despesca</span>
+                        <div className="flex items-center gap-2">
+                            <div className="w-10 h-6 bg-[#0000ff] rounded-sm border border-black/20 flex items-center justify-center text-[10px] font-bold text-white">Despesca</div>
                         </div>
                     </div>
                 </div>
