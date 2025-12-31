@@ -129,12 +129,15 @@ export interface Company {
   employees: PayrollHistoryItem[];
 }
 
+export type ViveiroStatus = 'VAZIO' | 'PREPARADO' | 'POVOADO' | 'DESPESCA';
+
 export interface Viveiro {
   id: string;
   company_id: string;
   name: string;
   coordinates: { lat: number; lng: number }[];
   area_m2: number;
+  status?: ViveiroStatus;
   notes?: string;
   created_at: string;
 }

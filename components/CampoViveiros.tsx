@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Company, Viveiro } from '../types';
+import { Company, Viveiro, ViveiroStatus } from '../types';
 import { SupabaseService } from '../services/supabaseService';
 
 interface CampoViveirosProps {
@@ -13,6 +13,14 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
     const [editingName, setEditingName] = useState('');
     const [editingNotes, setEditingNotes] = useState('');
     const [editingArea, setEditingArea] = useState('');
+    const [editingStatus, setEditingStatus] = useState<ViveiroStatus>('VAZIO');
+
+    const statusColors: Record<ViveiroStatus, string> = {
+        'VAZIO': 'bg-slate-400',
+        'PREPARADO': 'bg-green-600',
+        'POVOADO': 'bg-cyan-400',
+        'DESPESCA': 'bg-blue-600'
+    };
 
     // Load viveiros when company changes
     useEffect(() => {
@@ -47,7 +55,8 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
             company_id: activeCompany.id,
             name,
             coordinates: [{ lat: y, lng: x }], // Salvamos como % para posicionamento relativo
-            area_m2: area // Usando o mesmo campo mas agora representa hectares
+            area_m2: area, // Usando o mesmo campo mas agora representa hectares
+            status: 'VAZIO'
         };
 
         const added = await SupabaseService.addViveiro(newViveiro);
@@ -62,7 +71,8 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
         const success = await SupabaseService.updateViveiro(selectedViveiro.id, {
             name: editingName,
             notes: editingNotes,
-            area_m2: parseFloat(editingArea)
+            area_m2: parseFloat(editingArea),
+            status: editingStatus
         });
 
         if (success) {
@@ -118,6 +128,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                         setEditingName(v.name);
                                         setEditingNotes(v.notes || '');
                                         setEditingArea(v.area_m2.toString());
+                                        setEditingStatus(v.status || 'VAZIO');
                                     }}
                                     className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all ${selectedViveiro?.id === v.id
                                         ? 'scale-125 z-20'
@@ -128,11 +139,11 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                         top: `${pos.lat}%`
                                     }}
                                 >
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-lg ${selectedViveiro?.id === v.id
-                                        ? 'bg-red-500 text-white ring-4 ring-red-300'
-                                        : 'bg-green-500 text-white'
-                                        }`}>
-                                        {v.name.substring(0, 2).toUpperCase()}
+                                    <div className={`px-2 py-1 rounded-sm flex items-center justify-center font-bold text-[10px] shadow-sm whitespace-nowrap border border-black/20 text-white min-w-[40px] ${selectedViveiro?.id === v.id
+                                        ? 'ring-2 ring-white ring-offset-2 ring-offset-indigo-600 z-30'
+                                        : ''
+                                        } ${statusColors[v.status || 'VAZIO']}`}>
+                                        {v.name.toUpperCase()}
                                     </div>
                                 </div>
                             );
@@ -141,6 +152,28 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                 </div>
 
 
+                {/* Legenda Overlay */}
+                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md p-3 rounded-lg shadow-xl border border-slate-200 z-10">
+                    <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Situação dos Viveiros</h4>
+                    <div className="flex gap-3">
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-3 h-3 bg-slate-400 rounded-sm border border-black/10"></div>
+                            <span className="text-[11px] font-medium text-slate-700">Vazio</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-3 h-3 bg-green-600 rounded-sm border border-black/10"></div>
+                            <span className="text-[11px] font-medium text-slate-700">Preparado</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-3 h-3 bg-cyan-400 rounded-sm border border-black/10"></div>
+                            <span className="text-[11px] font-medium text-slate-700">Povoado</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="w-3 h-3 bg-blue-600 rounded-sm border border-black/10"></div>
+                            <span className="text-[11px] font-medium text-slate-700">Em Despesca</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Sidebar - Hidden for visitors */}
@@ -158,6 +191,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                     setEditingName(v.name);
                                     setEditingNotes(v.notes || '');
                                     setEditingArea(v.area_m2.toString());
+                                    setEditingStatus(v.status || 'VAZIO');
                                 }}
                                 className={`p-3 rounded-lg cursor-pointer transition-all ${selectedViveiro?.id === v.id
                                     ? 'bg-indigo-100 border-2 border-indigo-500'
@@ -209,6 +243,20 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                     className="w-full mt-1 px-3 py-2 border rounded-lg"
                                     rows={3}
                                 />
+                            </label>
+
+                            <label className="block mb-4">
+                                <span className="text-sm text-slate-600">Status:</span>
+                                <select
+                                    value={editingStatus}
+                                    onChange={e => setEditingStatus(e.target.value as ViveiroStatus)}
+                                    className="w-full mt-1 px-3 py-2 border rounded-lg bg-white"
+                                >
+                                    <option value="VAZIO">⚪ Vazio</option>
+                                    <option value="PREPARADO">🟢 Preparado</option>
+                                    <option value="POVOADO">💎 Povoado</option>
+                                    <option value="DESPESCA">🔵 Em Despesca</option>
+                                </select>
                             </label>
 
                             <div className="flex gap-2">
