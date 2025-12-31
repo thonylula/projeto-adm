@@ -115,14 +115,22 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
     useEffect(() => {
         if (currentData.length > 0) {
             setCurrentData(prev => prev.map(item => {
-                if (item.dataPovoamento) {
+                let itemDataPovoamento = item.dataPovoamento;
+
+                // Se o formato for DD/MM/AAAA, converter para ISO para salvar/processar
+                if (itemDataPovoamento && itemDataPovoamento.includes('/')) {
+                    const [d, m, y] = itemDataPovoamento.split('/');
+                    if (y && m && d) itemDataPovoamento = `${y}-${m}-${d}`;
+                }
+
+                if (itemDataPovoamento) {
                     try {
-                        const pDate = new Date(item.dataPovoamento);
+                        const pDate = new Date(itemDataPovoamento);
                         const bDate = new Date(biometryDate);
                         if (!isNaN(pDate.getTime()) && !isNaN(bDate.getTime())) {
                             const diffTime = Math.abs(bDate.getTime() - pDate.getTime());
                             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                            return { ...item, diasCultivo: diffDays };
+                            return { ...item, dataPovoamento: itemDataPovoamento, diasCultivo: diffDays };
                         }
                     } catch (e) { }
                 }
@@ -213,15 +221,14 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
                     ANALISE A IMAGEM E EXTRAIA ** TODOS ** OS DADOS DA TABELA PARA JSON.
                     
                     Retorne UM ARRAY DE OBJETOS no seguinte formato:
-[
     {
         "viveiro": "string",
+        "dataPovoamento": "string (DD/MM/AAAA)",
         "diasCultivo": number,
         "pMedStr": "string (ex: 5,25)",
         "quat": number,
         "pAntStr": "string (ex: 4,25)"
     }
-]
                     
                     Instruções CRÍTICAS:
 1. Extraia linha por linha, sem pular nenhuma.
@@ -231,7 +238,14 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
                 const result = await processFile(files[0], prompt);
 
                 if (Array.isArray(result)) {
-                    setCurrentData(sortData(result));
+                    // Normalização de Nomes e Datas
+                    const normalized = result.map(item => ({
+                        ...item,
+                        viveiro: item.viveiro?.toUpperCase().trim().replace('OS-005', 'OC-005').replace('OS 005', 'OC-005') || item.viveiro,
+                        dataPovoamento: item.dataPovoamento || null
+                    }));
+
+                    setCurrentData(sortData(normalized));
                     setTimeout(() => {
                         setStep('DASHBOARD');
                         showToast(`Sucesso: ${result.length} linhas extraídas.`);
@@ -505,7 +519,10 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
             return partA.num - partB.num;
         };
 
-        const sortedData = [...filtered].sort(sortViveiros);
+        const sortedData = [...filtered].map(item => ({
+            ...item,
+            viveiro: (item.viveiro || '').toUpperCase().trim().replace('OS-005', 'OC-005').replace('OS 005', 'OC-005')
+        })).sort(sortViveiros);
 
         const processed = sortedData.map(item => {
             let pMed = null;
@@ -543,13 +560,40 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
                 gpdDisplay = gpd.toFixed(3);
             }
 
+            // --- LÓGICA DE DATAS E DIAS ---
+            let doc = item.diasCultivo;
+            let dataPov = item.dataPovoamento;
+
+            // Converter data Pov se estiver em formato brasileiro
+            if (dataPov && dataPov.includes('/')) {
+                const [d, m, y] = dataPov.split('/');
+                if (y && m && d) dataPov = `${y}-${m}-${d}`;
+            }
+
+            // Se não tem data mas tem dias, inferir a data
+            if (!dataPov && doc && biometryDate) {
+                try {
+                    const bDate = new Date(biometryDate);
+                    const pTime = bDate.getTime() - (doc * 24 * 60 * 60 * 1000);
+                    dataPov = new Date(pTime).toISOString().split('T')[0];
+                } catch (e) { }
+            }
+
+            // Se não tem dias mas tem data, calcular os dias
+            if (!doc && dataPov && biometryDate) {
+                try {
+                    const pDate = new Date(dataPov);
+                    const bDate = new Date(biometryDate);
+                    doc = Math.ceil(Math.abs(bDate.getTime() - pDate.getTime()) / (1000 * 60 * 60 * 24));
+                } catch (e) { }
+            }
+
             // Análise Combinada com Nova Tabela
             let analysisStatus = "Aguardando";
             let rowBgColor = "";
             let statusTextColor = "text-gray-400";
 
-            if (pMed !== null && item.diasCultivo) {
-                const doc = item.diasCultivo;
+            if (pMed !== null && doc) {
                 const targets = calculateTargets(doc);
 
                 // CLASSIFICAÇÃO ATUALIZADA (6 NÍVEIS) - TEMA LARANJA TOM SOBRE TOM
@@ -599,7 +643,9 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
                 pesoTotalInputValue: item.pesoTotalStr || pesoTotal,
                 pMedDisplay: item.pMedStr || '-',
                 pAntDisplay: item.pAntStr || '-',
-                diasCultivoDisplay: item.diasCultivo ?? '-',
+                dataPovoamento: dataPov,
+                diasCultivo: doc,
+                diasCultivoDisplay: doc ?? '-',
                 pesoTotal,
                 incSemanalStr,
                 gpdDisplay,
