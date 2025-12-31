@@ -146,11 +146,11 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                         top: `${pos.lat}%`
                                     }}
                                 >
-                                    <div className={`px-2 py-1.5 rounded-sm flex items-center justify-between font-bold text-[11px] shadow-md whitespace-nowrap border border-black/30 min-w-[65px] transition-all hover:scale-110 active:scale-95 ${selectedViveiro?.id === v.id
+                                    <div className={`px-2 py-1.5 rounded-sm flex items-center justify-between font-bold text-[11px] shadow-md whitespace-nowrap border border-black/30 min-w-[50px] transition-all hover:scale-110 active:scale-95 ${selectedViveiro?.id === v.id
                                         ? 'ring-2 ring-yellow-400 z-30'
                                         : ''
                                         } ${statusColors[v.status || 'VAZIO']} ${statusTextColors[v.status || 'VAZIO']}`}>
-                                        <span>{v.name.toUpperCase()}</span>
+                                        <span>{v.name.toUpperCase().replace('BERCÁRIOS', 'BE').replace('BERCÁRIO', 'BE').replace('BERCARIO', 'BE')}</span>
                                         <span className="ml-1 opacity-60 text-[8px]">▼</span>
                                     </div>
                                 </div>
@@ -160,24 +160,6 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                 </div>
 
 
-                {/* Legenda Overlay */}
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md p-3 rounded-lg shadow-xl border border-slate-200 z-10">
-                    <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Situação dos Viveiros</h4>
-                    <div className="flex gap-4">
-                        <div className="flex items-center gap-2">
-                            <div className="w-10 h-6 bg-[#c0c0c0] rounded-sm border border-black/20 flex items-center justify-center text-[10px] font-bold text-slate-700">Vazio</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-10 h-6 bg-[#008000] rounded-sm border border-black/20 flex items-center justify-center text-[10px] font-bold text-white">Pronto</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-10 h-6 bg-[#00ffff] rounded-sm border border-black/20 flex items-center justify-center text-[10px] font-bold text-slate-900">Povoado</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-10 h-6 bg-[#0000ff] rounded-sm border border-black/20 flex items-center justify-center text-[10px] font-bold text-white">Despesca</div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             {/* Sidebar - Hidden for visitors */}
