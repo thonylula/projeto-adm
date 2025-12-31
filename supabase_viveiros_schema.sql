@@ -7,6 +7,7 @@ CREATE TABLE viveiros (
   name TEXT NOT NULL,
   coordinates JSONB NOT NULL, -- Array of {lat: number, lng: number}
   area_m2 DECIMAL(10,2) NOT NULL,
+  status TEXT DEFAULT 'VAZIO',
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
