@@ -465,7 +465,7 @@ export const SupabaseService = {
         return data || [];
     },
 
-    async addViveiro(viveiro: { company_id: string; name: string; coordinates: any[]; area_m2: number; notes?: string }): Promise<any | null> {
+    async addViveiro(viveiro: { company_id: string; name: string; coordinates: any[]; area_m2: number; status?: string; notes?: string }): Promise<any | null> {
         const { data, error } = await supabase
             .from('viveiros')
             .insert([viveiro])
@@ -479,7 +479,7 @@ export const SupabaseService = {
         return data;
     },
 
-    async updateViveiro(id: string, updates: { name?: string; coordinates?: any[]; area_m2?: number; notes?: string }): Promise<boolean> {
+    async updateViveiro(id: string, updates: { name?: string; coordinates?: any[]; area_m2?: number; status?: string; notes?: string }): Promise<boolean> {
         const { error } = await supabase
             .from('viveiros')
             .update(updates)
