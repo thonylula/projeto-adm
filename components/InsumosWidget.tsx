@@ -23,11 +23,9 @@ export const InsumosWidget: React.FC<InsumosWidgetProps> = ({ activeCompanyId, p
 
                 if (data && data.records) {
                     // Normalize pond name (e.g., "OC-011" -> "11")
-                    // This logic tries to extract the number from the VE name
-                    const pondNumber = pondName.replace(/[^0-9]/g, ''); // "011" or "11"
+                    const pondNumber = pondName.replace(/[^0-9]/g, '');
 
                     // Find record matching the pond number
-                    // We check if the record's VE matches the number (e.g. "11") or the full name logic if necessary
                     const record = data.records.find((r: any) => {
                         const recVe = r.ve?.toString().replace(/[^0-9]/g, '');
                         return recVe && parseInt(recVe) === parseInt(pondNumber);
@@ -53,6 +51,14 @@ export const InsumosWidget: React.FC<InsumosWidgetProps> = ({ activeCompanyId, p
         loadData();
     }, [activeCompanyId, pondName, currentMonth, currentYear]);
 
+    const months = [
+        "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+
+    const currentYearNum = new Date().getFullYear();
+    const years = [currentYearNum, currentYearNum - 1];
+
     return (
         <div className="flex flex-col items-center justify-center p-6 h-full font-sans bg-white">
             <div className="relative overflow-hidden rounded-2xl shadow-lg border p-6 bg-gradient-to-br from-indigo-50 to-white w-full max-w-md">
@@ -64,8 +70,28 @@ export const InsumosWidget: React.FC<InsumosWidgetProps> = ({ activeCompanyId, p
                             Consumo de Ração
                         </p>
                     </div>
-                    <div className="bg-white/80 backdrop-blur px-3 py-1 rounded-full text-xs font-bold shadow-sm border border-gray-100 uppercase text-indigo-600">
-                        {new Date(currentYear, currentMonth - 1).toLocaleString('pt-BR', { month: 'long' })}
+
+                    {/* Month/Year Selectors */}
+                    <div className="flex gap-2">
+                        <select
+                            value={currentMonth}
+                            onChange={(e) => setCurrentMonth(parseInt(e.target.value))}
+                            className="bg-white/80 backdrop-blur px-2 py-1 rounded-full text-[10px] font-bold shadow-sm border border-gray-100 uppercase text-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-300 transition-all appearance-none cursor-pointer hover:bg-white"
+                        >
+                            {months.map((m, i) => (
+                                <option key={m} value={i + 1}>{m}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            value={currentYear}
+                            onChange={(e) => setCurrentYear(parseInt(e.target.value))}
+                            className="bg-white/80 backdrop-blur px-2 py-1 rounded-full text-[10px] font-bold shadow-sm border border-gray-100 uppercase text-indigo-600 focus:outline-none focus:ring-1 focus:ring-indigo-300 transition-all appearance-none cursor-pointer hover:bg-white"
+                        >
+                            {years.map(y => (
+                                <option key={y} value={y}>{y}</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 
@@ -74,10 +100,12 @@ export const InsumosWidget: React.FC<InsumosWidgetProps> = ({ activeCompanyId, p
                     {loading ? (
                         <div className="animate-pulse h-12 w-32 bg-gray-200 rounded"></div>
                     ) : (
-                        <span className="text-5xl font-extrabold text-indigo-600 tracking-tighter">
-                            {consumption > 0 ? consumption.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '0'}
-                            <span className="text-2xl text-indigo-400 font-bold ml-1">kg</span>
-                        </span>
+                        <div className="flex flex-col items-center">
+                            <span className="text-5xl font-extrabold text-indigo-600 tracking-tighter">
+                                {consumption > 0 ? consumption.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : '0'}
+                                <span className="text-2xl text-indigo-400 font-bold ml-1">kg</span>
+                            </span>
+                        </div>
                     )}
                 </div>
 
