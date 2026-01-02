@@ -796,9 +796,17 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                             {item.gpdDisplay}
                                         </span>
                                     </div>
-                                    <div className="flex flex-col col-span-2 border-t border-gray-200/50 pt-2 mt-1">
-                                        <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Biomassa Estimada</span>
-                                        <span className="text-lg font-bold text-slate-700">
+
+                                    {/* Updated Metrics as per User Request */}
+                                    <div className="flex flex-col border-t border-gray-200/50 pt-2 mt-1">
+                                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Quantidade</span>
+                                        <span className="text-base font-bold text-slate-700">
+                                            {item.quatInputValue} mil
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col border-t border-gray-200/50 pt-2 mt-1">
+                                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Peso Total</span>
+                                        <span className="text-base font-bold text-slate-700">
                                             {item.pesoTotalInputValue} kg
                                         </span>
                                     </div>
