@@ -25,6 +25,9 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
     // We'll use this to store the "Parent" BE marker if needed, or just generally know we are editing nurseries
     const [bePonds, setBePonds] = useState<Viveiro[]>([]);
 
+    // --- Context Menu State ---
+    const [activeContextMenu, setActiveContextMenu] = useState<{ id: string, x: number, y: number } | null>(null);
+
     // --- Layout Lock State ---
     const [isLayoutLocked, setIsLayoutLocked] = useState(true);
 
@@ -189,11 +192,38 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
             return;
         }
 
-        setSelectedViveiro(v);
-        setEditingName(v.name);
-        setEditingNotes(v.notes || '');
-        setEditingArea(v.area_m2.toString());
-        setEditingStatus(v.status || 'VAZIO');
+        // Open Context Menu instead of immediate selection
+        // Normalize coordinates relative to window for fixed positioning
+        setActiveContextMenu({
+            id: v.id,
+            x: e.clientX,
+            y: e.clientY
+        });
+    };
+
+    const handleMenuAction = (action: string) => {
+        if (!activeContextMenu) return;
+
+        const v = viveiros.find(p => p.id === activeContextMenu.id);
+        if (!v) return;
+
+        switch (action) {
+            case 'ficha_viveiro':
+                // Open Sidebar/Edit Mode
+                setSelectedViveiro(v);
+                setEditingName(v.name);
+                setEditingNotes(v.notes || '');
+                setEditingArea(v.area_m2.toString());
+                setEditingStatus(v.status || 'VAZIO');
+                break;
+            default:
+                console.log(`Action ${action} triggered for ${v.name}`);
+                // Optional: alert(`Funcionalidade: ${action} \n(Em desenvolvimento)`);
+                break;
+        }
+
+        // Close Menu
+        setActiveContextMenu(null);
     };
 
     const handleSaveViveiro = async () => {
@@ -297,8 +327,8 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                             <button
                                 onClick={() => setIsLayoutLocked(!isLayoutLocked)}
                                 className={`absolute top-4 right-4 z-[60] p-3 rounded-full shadow-lg transition-all border-2 ${isLayoutLocked
-                                        ? 'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200'
-                                        : 'bg-yellow-100 text-yellow-600 border-yellow-400 hover:bg-yellow-200 animate-pulse'
+                                    ? 'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200'
+                                    : 'bg-yellow-100 text-yellow-600 border-yellow-400 hover:bg-yellow-200 animate-pulse'
                                     }`}
                                 title={isLayoutLocked ? "Layout Bloqueado (Clique para editar)" : "Edição de Layout Habilitada"}
                             >
@@ -361,6 +391,56 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                     </div>
                 </div>
             </div>
+
+            {/* --- CONTEXT MENU POPUP --- */}
+            {activeContextMenu && (
+                <>
+                    {/* Transparent Backdrop to close menu */}
+                    <div
+                        className="fixed inset-0 z-[100]"
+                        onClick={() => setActiveContextMenu(null)}
+                    // Transparent but captures clicks
+                    />
+
+                    {/* Menu Popup */}
+                    <div
+                        className="fixed z-[101] bg-white rounded-lg shadow-xl border border-slate-200 w-56 py-2 animate-in fade-in zoom-in-95 duration-100"
+                        style={{
+                            left: Math.min(activeContextMenu.x, window.innerWidth - 240), // Prevent overflowing right
+                            top: Math.min(activeContextMenu.y, window.innerHeight - 350) // Prevent overflowing bottom
+                        }}
+                    >
+                        <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 font-bold text-xs text-slate-500 mb-1">
+                            {viveiros.find(v => v.id === activeContextMenu.id)?.name || 'Opções'}
+                        </div>
+
+                        {[
+                            { label: 'Preparação', action: 'preparacao' },
+                            { label: 'Povoamento', action: 'povoamento' },
+                            { label: 'Transferência', action: 'transferencia', separator: true },
+                            { label: 'Insumos', action: 'insumos' },
+                            { label: 'Parâmetros', action: 'parametros' },
+                            { label: 'Custos', action: 'custos' },
+                            { label: 'Biometria', action: 'biometria' },
+                            { label: 'Despesca', action: 'despesca', separator: true },
+                            { label: 'Ficha de Viveiro', action: 'ficha_viveiro' },
+                            { label: 'Ficha Técnica', action: 'ficha_tecnica' },
+                            { label: 'Situação Atual', action: 'situacao_atual' },
+                            { label: 'Histórico de Cultivos', action: 'historico' },
+                        ].map((item, idx) => (
+                            <React.Fragment key={idx}>
+                                {item.separator && idx > 0 && <hr className="my-1 border-slate-100" />}
+                                <button
+                                    onClick={() => handleMenuAction(item.action)}
+                                    className="w-full text-left px-4 py-2 hover:bg-sky-50 text-sky-700 text-sm font-medium transition-colors"
+                                >
+                                    {item.label}
+                                </button>
+                            </React.Fragment>
+                        ))}
+                    </div>
+                </>
+            )}
 
             {/* Sidebar - Hidden for visitors */}
             {!isPublic && (
