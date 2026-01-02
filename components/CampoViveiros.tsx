@@ -25,6 +25,8 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
     // We'll use this to store the "Parent" BE marker if needed, or just generally know we are editing nurseries
     const [bePonds, setBePonds] = useState<Viveiro[]>([]);
 
+    // --- Layout Lock State ---
+    const [isLayoutLocked, setIsLayoutLocked] = useState(true);
 
     const statusColors: Record<ViveiroStatus, string> = {
         'VAZIO': 'bg-[#c0c0c0]', // Cinza
@@ -56,7 +58,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
     // --- Drag & Drop Logic ---
 
     const handleMouseDown = (e: React.MouseEvent, v: Viveiro) => {
-        if (isPublic) return; // Visitors can't move things
+        if (isPublic || isLayoutLocked) return; // Visitors or Locked mode can't move things
         e.stopPropagation();
         e.preventDefault();
 
@@ -142,7 +144,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
 
 
     const handleImageClick = async (e: React.MouseEvent<HTMLImageElement>) => {
-        if (!activeCompany || isPublic || draggingId) return; // Don't create if dragging
+        if (!activeCompany || isPublic || draggingId || isLayoutLocked) return; // Don't create if dragging or locked
 
         const img = e.currentTarget;
         const rect = img.getBoundingClientRect();
@@ -266,7 +268,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
     return (
         <div className="flex h-screen bg-slate-100">
             {/* Map Container */}
-            <div className={`flex-1 relative ${isPublic ? '' : 'cursor-crosshair'}`}>
+            <div className={`flex-1 relative ${isPublic || isLayoutLocked ? '' : 'cursor-crosshair'}`}>
                 <div
                     className="w-full h-full flex items-center justify-center bg-slate-200 overflow-hidden relative"
                     onMouseMove={isPublic ? undefined : handleMouseMove}
@@ -283,11 +285,33 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                         />
 
                         {/* Wrapper for click-to-create that sits on top */}
-                        {!isPublic && (
+                        {!isPublic && !isLayoutLocked && (
                             <div
                                 className="absolute inset-0 z-0"
                                 onClick={handleImageClick}
                             />
+                        )}
+
+                        {/* Lock Toggle Button */}
+                        {!isPublic && (
+                            <button
+                                onClick={() => setIsLayoutLocked(!isLayoutLocked)}
+                                className={`absolute top-4 right-4 z-[60] p-3 rounded-full shadow-lg transition-all border-2 ${isLayoutLocked
+                                        ? 'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200'
+                                        : 'bg-yellow-100 text-yellow-600 border-yellow-400 hover:bg-yellow-200 animate-pulse'
+                                    }`}
+                                title={isLayoutLocked ? "Layout Bloqueado (Clique para editar)" : "Edição de Layout Habilitada"}
+                            >
+                                {isLayoutLocked ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                    </svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                    </svg>
+                                )}
+                            </button>
                         )}
 
                         {/* Alignment Lines */}
