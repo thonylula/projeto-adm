@@ -632,19 +632,19 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
 
             {/* --- BIOMETRICS MODAL (INTEGRATED) --- */}
             {showBiometricsModal && biometricsTarget && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] overflow-hidden flex flex-col relative">
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col relative border border-white/20 ring-1 ring-black/5">
                         {/* Header Overlay */}
-                        <div className="absolute top-4 right-4 z-50">
+                        <div className="absolute top-3 right-3 z-50">
                             <button
                                 onClick={() => setShowBiometricsModal(false)}
-                                className="bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg font-bold transition-transform hover:scale-110"
+                                className="bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-red-500 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
                             >
                                 ✕
                             </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto bg-slate-50 p-4">
+                        <div className="flex-1 overflow-y-auto bg-slate-50/50 p-2">
                             <BiometricsManager
                                 isPublic={isPublic}
                                 initialFilter={biometricsTarget}
