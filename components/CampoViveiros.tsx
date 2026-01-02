@@ -15,6 +15,17 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
     const [editingArea, setEditingArea] = useState('');
     const [editingStatus, setEditingStatus] = useState<ViveiroStatus>('VAZIO');
 
+    // --- Drag & Drop State ---
+    const [draggingId, setDraggingId] = useState<string | null>(null);
+    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+    const [alignmentLines, setAlignmentLines] = useState<{ type: 'vertical' | 'horizontal', pos: number }[]>([]);
+
+    // --- BE (Nursery) Modal State ---
+    const [showNurseryModal, setShowNurseryModal] = useState(false);
+    // We'll use this to store the "Parent" BE marker if needed, or just generally know we are editing nurseries
+    const [bePonds, setBePonds] = useState<Viveiro[]>([]);
+
+
     const statusColors: Record<ViveiroStatus, string> = {
         'VAZIO': 'bg-[#c0c0c0]', // Cinza
         'PREPARADO': 'bg-[#008000]', // Verde Escuro
@@ -42,13 +53,101 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
         setViveiros(data);
     };
 
+    // --- Drag & Drop Logic ---
+
+    const handleMouseDown = (e: React.MouseEvent, v: Viveiro) => {
+        if (isPublic) return; // Visitors can't move things
+        e.stopPropagation();
+        e.preventDefault();
+
+        // Calculate offset (cursor pos relative to element pos)
+        const element = e.currentTarget as HTMLElement;
+        const rect = element.getBoundingClientRect();
+        const parentRect = element.parentElement?.getBoundingClientRect();
+
+        if (!parentRect) return;
+
+        // Start Dragging
+        setDraggingId(v.id);
+        setDragOffset({
+            x: e.clientX - rect.left - (rect.width / 2),
+            y: e.clientY - rect.top - (rect.height / 2)
+        });
+    };
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!draggingId || !activeCompany) return;
+
+        const container = e.currentTarget as HTMLElement;
+        const rect = container.getBoundingClientRect();
+
+        // Calculate raw % position
+        let xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+        let yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+
+        // --- Alignment Snapping (Canva-like) ---
+        const SNAP_THRESHOLD_PERCENT = 0.8; // Sensitivity
+        const newAlignmentLines: { type: 'vertical' | 'horizontal', pos: number }[] = [];
+
+        // Find matches
+        let snappedX = xPercent;
+        let snappedY = yPercent;
+
+        viveiros.forEach(other => {
+            if (other.id === draggingId) return;
+            const otherPos = other.coordinates[0];
+            if (!otherPos) return;
+
+            // Check Horizontal Alignment (Vertical Line)
+            if (Math.abs(otherPos.lng - xPercent) < SNAP_THRESHOLD_PERCENT) {
+                snappedX = otherPos.lng;
+                newAlignmentLines.push({ type: 'vertical', pos: otherPos.lng });
+            }
+
+            // Check Vertical Alignment (Horizontal Line)
+            if (Math.abs(otherPos.lat - yPercent) < SNAP_THRESHOLD_PERCENT) {
+                snappedY = otherPos.lat;
+                newAlignmentLines.push({ type: 'horizontal', pos: otherPos.lat });
+            }
+        });
+
+        setAlignmentLines(newAlignmentLines);
+
+        // Update local state (optimistic UI)
+        setViveiros(prev => prev.map(v => {
+            if (v.id === draggingId) {
+                return {
+                    ...v,
+                    coordinates: [{ lat: snappedY, lng: snappedX }]
+                };
+            }
+            return v;
+        }));
+    };
+
+    const handleMouseUp = async () => {
+        if (draggingId) {
+            const v = viveiros.find(v => v.id === draggingId);
+            if (v) {
+                // Save final position to Supabase
+                // NOTE: We only update lat/lng here
+                await SupabaseService.updateViveiro(v.id, {
+                    coordinates: v.coordinates // coordinates were updated in state during drag
+                });
+            }
+            setDraggingId(null);
+            setAlignmentLines([]);
+        }
+    };
+
+
     const handleImageClick = async (e: React.MouseEvent<HTMLImageElement>) => {
-        if (!activeCompany || isPublic) return;
+        if (!activeCompany || isPublic || draggingId) return; // Don't create if dragging
 
         const img = e.currentTarget;
         const rect = img.getBoundingClientRect();
-        const x = ((e.clientX - rect.left) / rect.width) * 100; // Porcentagem
-        const y = ((e.clientY - rect.top) / rect.height) * 100; // Porcentagem
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
 
         const name = prompt('Nome do viveiro:');
         if (!name) return;
@@ -61,15 +160,38 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
         const newViveiro = {
             company_id: activeCompany.id,
             name,
-            coordinates: [{ lat: y, lng: x }], // Salvamos como % para posicionamento relativo
-            area_m2: area, // Usando o mesmo campo mas agora representa hectares
-            status: 'VAZIO'
+            coordinates: [{ lat: y, lng: x }],
+            area_m2: area,
+            status: 'VAZIO' as ViveiroStatus
         };
 
         const added = await SupabaseService.addViveiro(newViveiro);
         if (added) {
             await loadViveiros();
         }
+    };
+
+    const handleViveiroClick = async (e: React.MouseEvent, v: Viveiro) => {
+        if (draggingId) return; // Ignore click if finishing a drag
+        e.stopPropagation();
+
+        // Check for 'BE' special interaction
+        const normalizedName = v.name.toUpperCase().trim();
+        const isBE = ['BE', 'BERCÁRIOS', 'BERCARIO', 'BERCÁRIO'].some(n => normalizedName === n);
+
+        if (isBE) {
+            // Open Nursery Manager Modal
+            const nurseryPonds = viveiros.filter(p => p.name.toUpperCase().startsWith('BE-'));
+            setBePonds(nurseryPonds);
+            setShowNurseryModal(true);
+            return;
+        }
+
+        setSelectedViveiro(v);
+        setEditingName(v.name);
+        setEditingNotes(v.notes || '');
+        setEditingArea(v.area_m2.toString());
+        setEditingStatus(v.status || 'VAZIO');
     };
 
     const handleSaveViveiro = async () => {
@@ -100,45 +222,38 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
         }
     };
 
-    const handleViveiroClick = async (e: React.MouseEvent, v: Viveiro) => {
-        e.stopPropagation();
+    // --- Helper to Create Missing Nurseries ---
+    const handleCreateMissingNurseries = async () => {
+        if (!activeCompany) return;
 
-        // Check for 'BE' special interaction
-        const normalizedName = v.name.toUpperCase().trim();
-        if (['BE', 'BERCÁRIOS', 'BERCARIO', 'BERCÁRIO'].some(n => normalizedName === n)) {
-            const confirmCreate = confirm("Deseja criar automaticamente 8 berçários neste local?");
-            if (confirmCreate) {
-                const baseLat = v.coordinates[0].lat;
-                const baseLng = v.coordinates[0].lng;
+        const existingIndices = bePonds
+            .map(p => parseInt(p.name.replace('BE-', '')))
+            .filter(n => !isNaN(n));
 
-                // Create 8 nurseries in a 2x4 grid or similar pattern nearby
-                const newNurseries = Array.from({ length: 8 }).map((_, i) => ({
+        const promises = [];
+        for (let i = 1; i <= 8; i++) {
+            if (!existingIndices.includes(i)) {
+                promises.push(SupabaseService.addViveiro({
                     company_id: activeCompany.id,
-                    name: `BE-${String(i + 1).padStart(2, '0')}`,
-                    coordinates: [{
-                        lat: baseLat + (Math.floor(i / 4) * 3), // 2 rows
-                        lng: baseLng + ((i % 4) * 4) // 4 columns
-                    }],
-                    area_m2: 0.5, // Default small area for nursery
-                    status: 'VAZIO' as ViveiroStatus
+                    name: `BE-${String(i).padStart(2, '0')}`,
+                    coordinates: [{ lat: 0, lng: 0 }], // Hidden or default, we filter them out of map
+                    area_m2: 0.5,
+                    status: 'VAZIO'
                 }));
-
-                // Add sequentially
-                for (const nursery of newNurseries) {
-                    await SupabaseService.addViveiro(nursery);
-                }
-
-                await loadViveiros();
-                return;
             }
         }
 
-        setSelectedViveiro(v);
-        setEditingName(v.name);
-        setEditingNotes(v.notes || '');
-        setEditingArea(v.area_m2.toString());
-        setEditingStatus(v.status || 'VAZIO');
+        await Promise.all(promises);
+        await loadViveiros();
+
+        // Refresh local list
+        const updated = await SupabaseService.getViveiros(activeCompany.id);
+        const newBePonds = updated.filter(p => p.name.toUpperCase().startsWith('BE-'));
+        setBePonds(newBePonds);
     };
+
+    // Filter main map ponds (Hide BE-xx sub-items to avoid clutter)
+    const visibleViveiros = viveiros.filter(v => !v.name.toUpperCase().startsWith('BE-'));
 
     if (!activeCompany) {
         return (
@@ -151,38 +266,67 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
     return (
         <div className="flex h-screen bg-slate-100">
             {/* Map Container */}
-            <div className="flex-1 relative">
-                <div className="w-full h-full flex items-center justify-center bg-slate-200 overflow-auto">
-                    <div className="relative inline-block">
+            <div className={`flex-1 relative ${isPublic ? '' : 'cursor-crosshair'}`}>
+                <div
+                    className="w-full h-full flex items-center justify-center bg-slate-200 overflow-hidden relative"
+                    onMouseMove={isPublic ? undefined : handleMouseMove}
+                    onMouseUp={isPublic ? undefined : handleMouseUp}
+                    onMouseLeave={handleMouseUp} // Cancel drag if leaving
+                >
+                    <div className="relative inline-block w-full h-full"> {/* Changed to fill for better coordinate mapping */}
                         <img
                             src="/viveiros_map.png"
                             alt="Mapa dos Viveiros"
-                            className="max-w-full max-h-screen cursor-crosshair"
-                            onClick={handleImageClick}
+                            className="w-full h-full object-contain pointer-events-none select-none" // prevent img drag
+                        // Click handler moved to container or handled via bubbles, 
+                        // but for new creation we use the wrapper click if not dragging.
                         />
 
-                        {/* Markers for viveiros */}
-                        {viveiros.map(v => {
+                        {/* Wrapper for click-to-create that sits on top */}
+                        {!isPublic && (
+                            <div
+                                className="absolute inset-0 z-0"
+                                onClick={handleImageClick}
+                            />
+                        )}
+
+                        {/* Alignment Lines */}
+                        {alignmentLines.map((line, idx) => (
+                            <div
+                                key={idx}
+                                className={`absolute bg-cyan-400 z-50 pointer-events-none ${line.type === 'vertical'
+                                    ? 'w-[1px] h-full top-0'
+                                    : 'h-[1px] w-full left-0'
+                                    }`}
+                                style={
+                                    line.type === 'vertical'
+                                        ? { left: `${line.pos}%` }
+                                        : { top: `${line.pos}%` }
+                                }
+                            />
+                        ))}
+
+                        {/* Markers */}
+                        {visibleViveiros.map(v => {
                             const pos = v.coordinates[0];
                             if (!pos) return null;
+
+                            const isSmallFont = /^OC-P0[1-9]$/i.test(v.name) || /^OC-P02-03$/i.test(v.name);
 
                             return (
                                 <div
                                     key={v.id}
+                                    onMouseDown={(e) => handleMouseDown(e, v)}
                                     onClick={(e) => handleViveiroClick(e, v)}
-                                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all ${selectedViveiro?.id === v.id
-                                        ? 'scale-125 z-20'
-                                        : 'z-10'
-                                        }`}
+                                    className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-shadow ${draggingId === v.id ? 'z-50 scale-110 opacity-80' : 'z-10'
+                                        } ${selectedViveiro?.id === v.id ? 'z-40' : ''}`}
                                     style={{
                                         left: `${pos.lng}%`,
                                         top: `${pos.lat}%`
                                     }}
                                 >
-                                    <div className={`px-2 py-1.5 rounded-sm flex items-center justify-center relative font-bold shadow-md whitespace-nowrap border border-black/30 min-w-[50px] transition-all hover:scale-110 active:scale-95 ${selectedViveiro?.id === v.id
-                                        ? 'ring-2 ring-yellow-400 z-30'
-                                        : ''
-                                        } ${statusColors[v.status || 'VAZIO']} ${statusTextColors[v.status || 'VAZIO']} ${/^OC-P0[1-9]$/i.test(v.name) ? 'text-[9px]' : 'text-[11px]'
+                                    <div className={`px-2 py-1.5 rounded-sm flex items-center justify-center relative font-bold shadow-md whitespace-nowrap border border-black/30 min-w-[50px] select-none ${selectedViveiro?.id === v.id ? 'ring-2 ring-yellow-400' : ''
+                                        } ${statusColors[v.status || 'VAZIO']} ${statusTextColors[v.status || 'VAZIO']} ${isSmallFont ? 'text-[9px]' : 'text-[11px]'
                                         }`}>
                                         <span>{v.name.toUpperCase().replace('BERCÁRIOS', 'BE').replace('BERCÁRIO', 'BE').replace('BERCARIO', 'BE')}</span>
                                         <span className="absolute right-0.5 opacity-60 text-[6px]">▼</span>
@@ -192,27 +336,19 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                         })}
                     </div>
                 </div>
-
-
             </div>
 
             {/* Sidebar - Hidden for visitors */}
             {!isPublic && (
-                <div className="w-96 bg-white shadow-lg p-6 overflow-y-auto">
+                <div className="w-96 bg-white shadow-lg p-6 overflow-y-auto z-10">
                     <h2 className="text-2xl font-black text-slate-900 mb-4">🐟 Viveiros</h2>
 
                     {/* Viveiros List */}
                     <div className="space-y-2 mb-6">
-                        {viveiros.map(v => (
+                        {visibleViveiros.map(v => (
                             <div
                                 key={v.id}
-                                onClick={() => {
-                                    setSelectedViveiro(v);
-                                    setEditingName(v.name);
-                                    setEditingNotes(v.notes || '');
-                                    setEditingArea(v.area_m2.toString());
-                                    setEditingStatus(v.status || 'VAZIO');
-                                }}
+                                onClick={() => handleViveiroClick({ stopPropagation: () => { } } as any, v)}
                                 className={`p-3 rounded-lg cursor-pointer transition-all ${selectedViveiro?.id === v.id
                                     ? 'bg-indigo-100 border-2 border-indigo-500'
                                     : 'bg-slate-50 hover:bg-slate-100'
@@ -222,12 +358,6 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                 <div className="text-sm text-slate-600">Área: {v.area_m2.toLocaleString('pt-BR')} ha</div>
                             </div>
                         ))}
-                        {viveiros.length === 0 && (
-                            <p className="text-slate-400 text-sm text-center py-8">
-                                Nenhum viveiro cadastrado.<br />
-                                Clique no mapa para adicionar.
-                            </p>
-                        )}
                     </div>
 
                     {/* Editor */}
@@ -295,6 +425,103 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                             </div>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* --- NURSERY MANAGEMENT MODAL --- */}
+            {showNurseryModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                        {/* Header */}
+                        <div className="bg-indigo-600 p-6 flex justify-between items-center text-white">
+                            <div>
+                                <h3 className="text-xl font-black flex items-center gap-2">
+                                    🍼 Berçários (BE)
+                                </h3>
+                                <p className="text-indigo-100 text-sm">Gerenciamento Rápido</p>
+                            </div>
+                            <button
+                                onClick={() => setShowNurseryModal(false)}
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-indigo-500 hover:bg-indigo-400 transition-colors"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 overflow-y-auto flex-1 bg-slate-50">
+
+                            {/* Stats Cards */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                {['VAZIO', 'PREPARADO', 'POVOADO', 'DESPESCA'].map(status => {
+                                    const count = bePonds.filter(p => p.status === status).length;
+                                    return (
+                                        <div key={status} className={`p-3 rounded-xl border ${count > 0 ? 'bg-white border-indigo-100 shadow-sm' : 'bg-slate-100 border-transparent opacity-60'}`}>
+                                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{status}</div>
+                                            <div className="text-2xl font-black text-slate-800">{count}</div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+
+                            {/* List */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {Array.from({ length: 8 }).map((_, i) => {
+                                    const pondName = `BE-${String(i + 1).padStart(2, '0')}`;
+                                    const existing = bePonds.find(p => p.name === pondName);
+
+                                    return (
+                                        <div key={pondName} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs ${existing ? statusColors[existing.status || 'VAZIO'] : 'bg-slate-100 text-slate-400'}`}>
+                                                    {existing ? (existing.status === 'PREPARADO' || existing.status === 'DESPESCA' ? '⚪' : (existing.status === 'POVOADO' ? '🦐' : '⭕')) : '+'}
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-slate-800">{pondName}</div>
+                                                    <div className="text-xs text-slate-500">
+                                                        {existing ? `${existing.area_m2} ha • ${existing.status}` : 'Não Criado'}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {existing ? (
+                                                <button
+                                                    onClick={() => {
+                                                        // Quick edit mode could go here, for now switch main selection
+                                                        setSelectedViveiro(existing);
+                                                        setEditingName(existing.name);
+                                                        setEditingNotes(existing.notes || '');
+                                                        setEditingArea(existing.area_m2.toString());
+                                                        setEditingStatus(existing.status || 'VAZIO');
+                                                        setShowNurseryModal(false); // Close modal to edit in sidebar
+                                                    }}
+                                                    className="px-3 py-1 bg-slate-100 hover:bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold transition-colors"
+                                                >
+                                                    Editar
+                                                </button>
+                                            ) : (
+                                                <span className="text-xs text-slate-400 italic">Disponível</span>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Action Footer */}
+                            {bePonds.length < 8 && (
+                                <div className="mt-6 flex justify-center">
+                                    <button
+                                        onClick={handleCreateMissingNurseries}
+                                        className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-200 transition-all font-bold"
+                                    >
+                                        <span>✨</span>
+                                        Criar Berçários Faltantes (BE-01 a BE-08)
+                                    </button>
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
