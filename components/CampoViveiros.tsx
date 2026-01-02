@@ -100,6 +100,46 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
         }
     };
 
+    const handleViveiroClick = async (e: React.MouseEvent, v: Viveiro) => {
+        e.stopPropagation();
+
+        // Check for 'BE' special interaction
+        const normalizedName = v.name.toUpperCase().trim();
+        if (['BE', 'BERCÁRIOS', 'BERCARIO', 'BERCÁRIO'].some(n => normalizedName === n)) {
+            const confirmCreate = confirm("Deseja criar automaticamente 8 berçários neste local?");
+            if (confirmCreate) {
+                const baseLat = v.coordinates[0].lat;
+                const baseLng = v.coordinates[0].lng;
+
+                // Create 8 nurseries in a 2x4 grid or similar pattern nearby
+                const newNurseries = Array.from({ length: 8 }).map((_, i) => ({
+                    company_id: activeCompany.id,
+                    name: `BE-${String(i + 1).padStart(2, '0')}`,
+                    coordinates: [{
+                        lat: baseLat + (Math.floor(i / 4) * 3), // 2 rows
+                        lng: baseLng + ((i % 4) * 4) // 4 columns
+                    }],
+                    area_m2: 0.5, // Default small area for nursery
+                    status: 'VAZIO' as ViveiroStatus
+                }));
+
+                // Add sequentially
+                for (const nursery of newNurseries) {
+                    await SupabaseService.addViveiro(nursery);
+                }
+
+                await loadViveiros();
+                return;
+            }
+        }
+
+        setSelectedViveiro(v);
+        setEditingName(v.name);
+        setEditingNotes(v.notes || '');
+        setEditingArea(v.area_m2.toString());
+        setEditingStatus(v.status || 'VAZIO');
+    };
+
     if (!activeCompany) {
         return (
             <div className="flex items-center justify-center h-screen">
@@ -129,14 +169,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                             return (
                                 <div
                                     key={v.id}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedViveiro(v);
-                                        setEditingName(v.name);
-                                        setEditingNotes(v.notes || '');
-                                        setEditingArea(v.area_m2.toString());
-                                        setEditingStatus(v.status || 'VAZIO');
-                                    }}
+                                    onClick={(e) => handleViveiroClick(e, v)}
                                     className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all ${selectedViveiro?.id === v.id
                                         ? 'scale-125 z-20'
                                         : 'z-10'
@@ -146,12 +179,13 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                         top: `${pos.lat}%`
                                     }}
                                 >
-                                    <div className={`px-2 py-1.5 rounded-sm flex items-center justify-between font-bold text-[11px] shadow-md whitespace-nowrap border border-black/30 min-w-[50px] transition-all hover:scale-110 active:scale-95 ${selectedViveiro?.id === v.id
+                                    <div className={`px-2 py-1.5 rounded-sm flex items-center justify-center relative font-bold shadow-md whitespace-nowrap border border-black/30 min-w-[50px] transition-all hover:scale-110 active:scale-95 ${selectedViveiro?.id === v.id
                                         ? 'ring-2 ring-yellow-400 z-30'
                                         : ''
-                                        } ${statusColors[v.status || 'VAZIO']} ${statusTextColors[v.status || 'VAZIO']}`}>
+                                        } ${statusColors[v.status || 'VAZIO']} ${statusTextColors[v.status || 'VAZIO']} ${/^OC-P0[1-9]$/i.test(v.name) ? 'text-[9px]' : 'text-[11px]'
+                                        }`}>
                                         <span>{v.name.toUpperCase().replace('BERCÁRIOS', 'BE').replace('BERCÁRIO', 'BE').replace('BERCARIO', 'BE')}</span>
-                                        <span className="ml-1 opacity-60 text-[8px]">▼</span>
+                                        <span className="absolute right-0.5 opacity-60 text-[6px]">▼</span>
                                     </div>
                                 </div>
                             );
