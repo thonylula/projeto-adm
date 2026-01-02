@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Company, Viveiro, ViveiroStatus } from '../types';
 import { SupabaseService } from '../services/supabaseService';
+import { BiometricsManager } from './BiometricsManager'; // Import Biometrics Component
 
 interface CampoViveirosProps {
-    activeCompany: Company | null;
+    activeCompany?: any;
     isPublic?: boolean;
 }
 
@@ -27,6 +28,10 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
 
     // --- Context Menu State ---
     const [activeContextMenu, setActiveContextMenu] = useState<{ id: string, x: number, y: number } | null>(null);
+
+    // --- Biometrics Modal State ---
+    const [showBiometricsModal, setShowBiometricsModal] = useState(false);
+    const [biometricsTarget, setBiometricsTarget] = useState<string | null>(null);
 
     // --- Layout Lock State ---
     const [isLayoutLocked, setIsLayoutLocked] = useState(true);
@@ -215,6 +220,10 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                 setEditingNotes(v.notes || '');
                 setEditingArea(v.area_m2.toString());
                 setEditingStatus(v.status || 'VAZIO');
+                break;
+            case 'biometria':
+                setBiometricsTarget(v.name);
+                setShowBiometricsModal(true);
                 break;
             default:
                 console.log(`Action ${action} triggered for ${v.name}`);
@@ -616,6 +625,31 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                 </div>
                             )}
 
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- BIOMETRICS MODAL (INTEGRATED) --- */}
+            {showBiometricsModal && biometricsTarget && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] overflow-hidden flex flex-col relative">
+                        {/* Header Overlay */}
+                        <div className="absolute top-4 right-4 z-50">
+                            <button
+                                onClick={() => setShowBiometricsModal(false)}
+                                className="bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg font-bold transition-transform hover:scale-110"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto bg-slate-50 p-4">
+                            <BiometricsManager
+                                isPublic={isPublic}
+                                initialFilter={biometricsTarget}
+                                isModal={true}
+                            />
                         </div>
                     </div>
                 </div>

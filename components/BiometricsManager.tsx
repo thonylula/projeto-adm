@@ -42,8 +42,8 @@ const NEWS_HEADLINES_SOURCE = [
 
 type ViewStep = 'UPLOAD' | 'PROCESSING' | 'DASHBOARD';
 
-export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic = false }) => {
-    const [step, setStep] = useState<ViewStep>(isPublic ? 'DASHBOARD' : 'UPLOAD');
+export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: string; isModal?: boolean }> = ({ isPublic = false, initialFilter = '', isModal = false }) => {
+    const [step, setStep] = useState<ViewStep>(isPublic ? 'DASHBOARD' : (isModal ? 'DASHBOARD' : 'UPLOAD')); // Modal assumes we want to see data if available
     const [logo, setLogo] = useState<string | null>(DEFAULT_LOGO);
     const [toast, setToast] = useState<{ msg: string; visible: boolean }>({ msg: '', visible: false });
     const [files, setFiles] = useState<File[]>([]);
@@ -56,7 +56,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
     const [loadedRecordId, setLoadedRecordId] = useState<string | null>(null);
 
     const { processFile, isProcessing } = useGeminiParser();
-    const [filterText, setFilterText] = useState('');
+    const [filterText, setFilterText] = useState(initialFilter);
     const [showReferenceTable, setShowReferenceTable] = useState(false);
 
     // --- NEWS ROTATION STATE ---
@@ -746,10 +746,12 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean }> = ({ isPublic =
                 {/* Manual Key Config Removed for Security */}
             </div>
 
-            <div className="text-center space-y-2">
-                <h1 className="text-3xl font-bold text-gray-900">Análise de Performance Biológica</h1>
-                <p className="text-gray-500">Avaliação avançada: <span className="text-indigo-600 font-bold">Histórico de Peso</span> vs <span className="text-indigo-600 font-bold">Velocidade (GPD)</span>.</p>
-            </div>
+            {!isModal && (
+                <div className="text-center space-y-2">
+                    <h1 className="text-3xl font-bold text-gray-900">Análise de Performance Biológica</h1>
+                    <p className="text-gray-500">Avaliação avançada: <span className="text-indigo-600 font-bold">Histórico de Peso</span> vs <span className="text-indigo-600 font-bold">Velocidade (GPD)</span>.</p>
+                </div>
+            )}
 
             <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
                 <div className="p-10 border-b border-gray-100 flex flex-col items-center justify-center text-center hover:bg-orange-50/30 cursor-pointer" onDragOver={(e) => e.preventDefault()} onDrop={handleFileDrop}>
