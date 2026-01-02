@@ -404,14 +404,17 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
 
                     {/* Menu Popup */}
                     <div
-                        className="fixed z-[101] bg-white rounded-lg shadow-xl border border-slate-200 w-56 py-2 animate-in fade-in zoom-in-95 duration-100"
+                        className="fixed z-[101] bg-white rounded shadow-[2px_2px_5px_rgba(0,0,0,0.3)] border border-gray-300 min-w-[140px] py-1 animate-in fade-in zoom-in-95 duration-100"
                         style={{
-                            left: Math.min(activeContextMenu.x, window.innerWidth - 240), // Prevent overflowing right
-                            top: Math.min(activeContextMenu.y, window.innerHeight - 350) // Prevent overflowing bottom
+                            left: Math.min(activeContextMenu.x, window.innerWidth - 150), // Prevent overflowing right
+                            top: Math.min(activeContextMenu.y, window.innerHeight - 250) // Prevent overflowing bottom
                         }}
                     >
-                        <div className="px-4 py-2 bg-slate-50 border-b border-slate-100 font-bold text-xs text-slate-500 mb-1">
-                            {viveiros.find(v => v.id === activeContextMenu.id)?.name || 'Opções'}
+                        {/* Header/Title removed or made very subtle if needed, user example doesn't show a big header. 
+                            Keeping a small one or removing based on 'molde'. Example has 'OC-001' at top.
+                        */}
+                        <div className="px-2 py-1 bg-cyan-400 text-black font-bold text-[11px] mb-1">
+                            {viveiros.find(v => v.id === activeContextMenu.id)?.name || 'Opções'} ▼
                         </div>
 
                         {[
@@ -429,15 +432,19 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                             { label: 'Histórico de Cultivos', action: 'historico' },
                         ].map((item, idx) => (
                             <React.Fragment key={idx}>
-                                {item.separator && idx > 0 && <hr className="my-1 border-slate-100" />}
+                                {item.separator && idx > 0 && <hr className="my-1 border-gray-300" />}
                                 <button
                                     onClick={() => handleMenuAction(item.action)}
-                                    className="w-full text-left px-4 py-2 hover:bg-sky-50 text-sky-700 text-sm font-medium transition-colors"
+                                    className="w-full text-left px-2 py-[2px] hover:bg-slate-100 text-[#0066cc] text-[11px] font-medium transition-colors underline decoration-transparent hover:decoration-[#0066cc]"
                                 >
                                     {item.label}
                                 </button>
                             </React.Fragment>
                         ))}
+                        <hr className="my-1 border-gray-300" />
+                        <div className="px-2 py-[2px] text-black text-[11px] font-medium cursor-pointer hover:bg-slate-100 flex justify-between items-center">
+                            Outras Funções <span>▼</span>
+                        </div>
                     </div>
                 </>
             )}
