@@ -739,6 +739,81 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
 
 
+    // --- RENDERIZADORES ---
+
+    // 1. MODO SIMPLIFICADO (Modal do Mapa)
+    if (isModal) {
+        const data = processedData; // Já filtrado e processado
+
+        return (
+            <div className="flex flex-col items-center justify-center p-6 h-full font-sans">
+                {data.length === 0 ? (
+                    <div className="text-center text-gray-400">
+                        <div className="text-4xl mb-2">📊</div>
+                        <p>Nenhuma biometria recente encontrada para <span className="font-bold">{initialFilter || 'este viveiro'}</span>.</p>
+                    </div>
+                ) : (
+                    <div className="w-full max-w-md space-y-4">
+                        {data.map((item, idx) => (
+                            <div key={idx} className={`relative overflow-hidden rounded-2xl shadow-lg border p-6 ${item.rowBgColor || 'bg-white'}`}>
+                                {/* Header */}
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 className="text-2xl font-black text-gray-800 tracking-tight">{item.viveiro}</h3>
+                                        <p className="text-sm text-gray-500 font-medium">
+                                            {item.dataPovoamento ? `Povoado em ${new Date(item.dataPovoamento).toLocaleDateString('pt-BR')}` : 'Data Povoamento N/A'}
+                                        </p>
+                                    </div>
+                                    <div className="bg-white/80 backdrop-blur px-3 py-1 rounded-full text-xs font-bold shadow-sm border border-gray-100">
+                                        {item.diasCultivoDisplay} dias
+                                    </div>
+                                </div>
+
+                                {/* Main Metric: PESO */}
+                                <div className="flex items-baseline gap-2 mb-2">
+                                    <span className="text-5xl font-extrabold text-blue-600 tracking-tighter">
+                                        {typeof item.pMedDisplay === 'number' ? item.pMedDisplay.toFixed(2) : item.pMedDisplay}
+                                        <span className="text-2xl text-blue-400 font-bold ml-1">g</span>
+                                    </span>
+                                </div>
+
+                                {/* Status Badge */}
+                                <div className={`inline-block px-3 py-1 rounded-lg text-sm mb-6 ${item.statusTextColor} bg-white/60 border border-white/50 backdrop-blur-sm`}>
+                                    {item.analysisStatus}
+                                </div>
+
+                                {/* Secondary Metrics Grid */}
+                                <div className="grid grid-cols-2 gap-3 bg-white/50 rounded-xl p-3 backdrop-blur-sm">
+                                    <div className="flex flex-col">
+                                        <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Inc. Semanal</span>
+                                        <span className={`text-lg font-bold ${parseFloat(item.incSemanalStr) > 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                                            {item.incSemanalStr} g
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">GPD (g/dia)</span>
+                                        <span className="text-lg font-bold text-indigo-600">
+                                            {item.gpdDisplay}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col col-span-2 border-t border-gray-200/50 pt-2 mt-1">
+                                        <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Biomassa Estimada</span>
+                                        <span className="text-lg font-bold text-slate-700">
+                                            {item.pesoTotalInputValue} kg
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Decoration */}
+                                <div className="absolute -top-6 -right-6 w-24 h-24 bg-gradient-to-br from-blue-100 to-transparent rounded-full opacity-50 blur-xl pointer-events-none"></div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     const renderUploadScreen = () => (
         <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
 
