@@ -3,6 +3,7 @@ import { Company, Viveiro, ViveiroStatus } from '../types';
 import { SupabaseService } from '../services/supabaseService';
 import { BiometricsManager } from './BiometricsManager';
 import { InsumosWidget } from './InsumosWidget';
+import { TransferManager } from './TransferManager';
 import { useAuth } from '../hooks/useAuth';
 
 interface CampoViveirosProps {
@@ -34,8 +35,10 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
     // --- Biometrics Modal State ---
     const [showBiometricsModal, setShowBiometricsModal] = useState(false);
     const [showInsumosModal, setShowInsumosModal] = useState(false);
+    const [showTransferModal, setShowTransferModal] = useState(false);
     const [biometricsTarget, setBiometricsTarget] = useState<string | null>(null);
     const [insumosTarget, setInsumosTarget] = useState<string | null>(null);
+    const [transferTarget, setTransferTarget] = useState<string | null>(null);
 
     // --- Layout Lock State ---
     const [isLayoutLocked, setIsLayoutLocked] = useState(true);
@@ -226,6 +229,10 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                 setInsumosTarget(v.name);
                 setShowInsumosModal(true);
                 break;
+            case 'transferencia':
+                setTransferTarget(v.name);
+                setShowTransferModal(true);
+                break;
             case 'ficha_viveiro':
                 // Open Sidebar/Edit Mode
                 setSelectedViveiro(v);
@@ -345,8 +352,8 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                             <button
                                 onClick={() => setIsLayoutLocked(!isLayoutLocked)}
                                 className={`absolute top-4 right-4 z-[60] p-3 rounded-full shadow-lg transition-all border-2 ${isLayoutLocked
-                                        ? 'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200'
-                                        : 'bg-yellow-100 text-yellow-600 border-yellow-400 hover:bg-yellow-200 animate-pulse'
+                                    ? 'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200'
+                                    : 'bg-yellow-100 text-yellow-600 border-yellow-400 hover:bg-yellow-200 animate-pulse'
                                     }`}
                                 title={isLayoutLocked ? "Layout Bloqueado (Clique para editar)" : "Edição de Layout Habilitada"}
                             >
@@ -367,8 +374,8 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                             <div
                                 key={idx}
                                 className={`absolute bg-cyan-400 z-50 pointer-events-none ${line.type === 'vertical'
-                                        ? 'w-[1px] h-full top-0'
-                                        : 'h-[1px] w-full left-0'
+                                    ? 'w-[1px] h-full top-0'
+                                    : 'h-[1px] w-full left-0'
                                     }`}
                                 style={
                                     line.type === 'vertical'
@@ -680,6 +687,21 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                             <InsumosWidget
                                 activeCompanyId={activeCompany.id}
                                 pondName={insumosTarget}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* --- TRANSFER MODAL --- */}
+            {showTransferModal && transferTarget && activeCompany && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px] animate-in fade-in duration-200">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col relative border border-white/20 ring-1 ring-black/5">
+                        <div className="flex-1 overflow-y-auto bg-slate-50/50">
+                            <TransferManager
+                                activeCompanyId={activeCompany.id}
+                                originPondName={transferTarget}
+                                onClose={() => setShowTransferModal(false)}
+                                onSuccess={() => loadViveiros()}
                             />
                         </div>
                     </div>

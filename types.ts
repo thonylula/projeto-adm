@@ -261,3 +261,18 @@ export interface MonthlyMortalityData {
   year: number;
   records: MortalityTankRecord[];
 }
+
+export interface Transferencia {
+  id: string; // Unique ID formatted as TR-YYYY-XXXX or UUID
+  company_id: string;
+  origem_id: string;
+  destino_id: string;
+  data_transferencia: string;
+  turno: string;
+  povoamento_origem_id?: string;
+  quantidade: number;
+  peso_medio: number;
+  observacao?: string;
+  created_at?: string;
+  updated_at?: string;
+}
