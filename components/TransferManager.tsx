@@ -46,15 +46,15 @@ export const TransferManager: React.FC<TransferManagerProps> = ({
             const month = now.getMonth() + 1;
 
             const mortalityData = await SupabaseService.getMortalityData(activeCompanyId, month, year);
-            if (mortalityData && mortalityData.records) {
+            if (mortalityData) {
                 // Find records for the origin pond (VE)
                 // Normalize pond name: OC-001 -> 1
-                const tankNum = originPondName.replace(/\D/g, '');
-                const pondRecords = mortalityData.records.filter((r: any) =>
+                const tankNum = (originPondName || '').replace(/\D/g, '');
+                const pondRecords = (mortalityData.records || []).filter((r: any) =>
                     r.ve === tankNum || r.ve === originPondName
                 );
 
-                const options = pondRecords.map((r: any) => ({
+                const options = (pondRecords || []).map((r: any) => ({
                     id: r.id,
                     label: `${r.stockingDate ? `Povoado em ${r.stockingDate}` : 'Povoamento Atual'} (${r.ve})`
                 }));
