@@ -457,7 +457,7 @@ export const CestasBasicas: React.FC = () => {
 
     return (
         <div className={`w-full max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500 ${appMode === 'CHRISTMAS' ? 'christmas-theme' : ''}`}>
-            <header className={`bg-white p-6 border-b-4 ${appMode === 'CHRISTMAS' ? 'border-red-600' : 'border-orange-500'} shadow-sm flex flex-col md:flex-row justify-between items-center gap-4`}>
+            <header className={`bg-white p-6 border-b-4 ${appMode === 'CHRISTMAS' ? 'border-red-600' : 'border-orange-500'} shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 print:hidden`}>
                 <div className="flex items-center gap-4">
                     <button onClick={() => setAppMode(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6 text-slate-400">
@@ -592,7 +592,7 @@ export const CestasBasicas: React.FC = () => {
             )}
 
             <main className="space-y-6">
-                <div className={`bg-white p-8 border-2 ${appMode === 'CHRISTMAS' ? 'border-red-200' : 'border-slate-100'} rounded-sm shadow-sm`}>
+                <div className={`bg-white p-8 border-2 ${appMode === 'CHRISTMAS' ? 'border-red-200' : 'border-slate-100'} rounded-sm shadow-sm print:hidden`}>
                     <div className="grid lg:grid-cols-2 gap-8 items-start">
                         <ImageUploader onFilesReady={handleFilesReady} disabled={isLoading} />
                         <div className="space-y-6">
@@ -642,7 +642,7 @@ export const CestasBasicas: React.FC = () => {
 
                     {/* --- Targeted Distribution UI --- */}
                     {invoiceData && (
-                        <div className="mt-8 pt-8 border-t border-slate-200 animate-in slide-in-from-top-4 duration-500">
+                        <div className="mt-8 pt-8 border-t border-slate-200 animate-in slide-in-from-top-4 duration-500 print:hidden">
                             <div className="mb-8">
                                 <div className="mb-4">
                                     <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">1. Identificar Funcionários que NÃO BEBEM</h3>
