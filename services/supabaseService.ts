@@ -86,7 +86,7 @@ export const SupabaseService = {
     async getEmployees(): Promise<RegistryEmployee[]> {
         try {
             const { data, error } = await supabase.from('employees').select('*');
-            if (error || !data) return [];
+            if (error || !data || !Array.isArray(data)) return [];
             return data.map(item => ({ ...item, photoUrl: item.photo_url, admissionDate: item.admission_date, isNonDrinker: item.is_non_drinker }));
         } catch (e) {
             console.error("[Supabase] Error fetching employees:", e);

@@ -59,7 +59,7 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ data, companyNam
                     <h2 className="text-[11px] font-black text-slate-800 uppercase tracking-tight">
                         Itens da Nota
                     </h2>
-                    <span className="text-[8px] font-bold text-slate-400">Qtd: {data.items.length}</span>
+                    <span className="text-[8px] font-bold text-slate-400">Qtd: {data.items?.length || 0}</span>
                 </div>
                 <div className="h-1 w-full bg-orange-500 mb-1 rounded-none" style={{ backgroundColor: '#f97316' }} />
 

@@ -2,7 +2,7 @@ import React from 'react';
 import type { InvoiceData, ItemAllocationConfig } from '../types';
 
 interface PantryListProps {
-    data: InvoiceData;
+    items: any[];
     employeeNames: string[];
     motivationalMessages?: string[];
     sloganImage?: string | null;
@@ -15,7 +15,7 @@ interface PantryListProps {
 }
 
 export const PantryList: React.FC<PantryListProps> = ({
-    data,
+    items,
     employeeNames,
     motivationalMessages = [],
     companyName,
@@ -28,8 +28,8 @@ export const PantryList: React.FC<PantryListProps> = ({
 }) => {
     const formatQty = (qty: number) => qty.toLocaleString('pt-BR', { minimumFractionDigits: 3 });
 
-    const totalEmployees = employeeNames.length;
-    const nonDrinkerCount = selectedNonDrinkers.length;
+    const totalEmployees = (employeeNames || []).length;
+    const nonDrinkerCount = (selectedNonDrinkers || []).length;
     const drinkerCount = totalEmployees - nonDrinkerCount;
 
     return (
@@ -38,7 +38,7 @@ export const PantryList: React.FC<PantryListProps> = ({
                 const isNonDrinker = (selectedNonDrinkers || []).includes(index);
 
                 // Filter items based on allocation
-                const visibleItems = (data?.items || []).filter(item => {
+                const visibleItems = (items || []).filter(item => {
                     const config = (itemAllocation || {})[item.id] || { mode: 'ALL' };
                     if (config.mode === 'ALL' || config.mode === 'CUSTOM') return true;
                     if (isNonDrinker && config.mode === 'NON_DRINKER') return true;

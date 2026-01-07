@@ -293,7 +293,7 @@ export const CestasBasicas: React.FC = () => {
     }, []);
 
     const processInvoices = async () => {
-        if (files.length === 0) {
+        if ((files || []).length === 0) {
             setError('Por favor, carregue pelo menos um arquivo de nota fiscal.');
             return;
         }
@@ -303,14 +303,14 @@ export const CestasBasicas: React.FC = () => {
             const results: InvoiceData[] = [];
 
             // Process sequential to avoid RPM limits
-            for (let i = 0; i < files.length; i++) {
+            for (let i = 0; i < (files || []).length; i++) {
                 const file = files[i];
                 const fc = await fileToBase64(file);
                 const data = await extractInvoiceData(fc.base64, fc.mimeType);
                 results.push(data);
 
                 // Small delay between requests to be gentle with Rate Limits
-                if (i < files.length - 1) {
+                if (i < (files || []).length - 1) {
                     await new Promise(r => setTimeout(r, 600));
                 }
             }
@@ -487,14 +487,14 @@ export const CestasBasicas: React.FC = () => {
                                     className="px-4 py-2 bg-red-600 text-white text-xs font-black uppercase rounded-sm hover:bg-red-700 transition-colors flex items-center gap-2"
                                 >
                                     🚫 Gerenciar Exclusões
-                                    {excludedEmployees.length > 0 && (
+                                    {(excludedEmployees || []).length > 0 && (
                                         <span className="ml-1 bg-white text-red-600 px-2 py-0.5 rounded-full text-[10px]">
                                             {excludedEmployees.length}
                                         </span>
                                     )}
                                 </button>
                             </div>
-                            {excludedEmployees.length > 0 && (
+                            {(excludedEmployees || []).length > 0 && (
                                 <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded">
                                     <p className="text-[10px] font-bold text-red-700">Excluídos neste mês: {excludedEmployees.join(', ')}</p>
                                 </div>
@@ -598,11 +598,11 @@ export const CestasBasicas: React.FC = () => {
                         <div className="space-y-6">
                             <button
                                 onClick={processInvoices}
-                                disabled={files.length === 0 || isLoading || retryCountdown !== null}
+                                disabled={(files || []).length === 0 || isLoading || retryCountdown !== null}
                                 className={`w-full font-black uppercase text-sm py-5 px-8 rounded-none transition-all duration-300 transform hover:scale-[1.01] shadow-xl disabled:bg-slate-200 disabled:shadow-none disabled:cursor-not-allowed ${appMode === 'CHRISTMAS' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'
                                     }`}
                             >
-                                {isLoading ? 'Analisando via I.A...' : retryCountdown !== null ? `Aguarde ${formatCountdown(retryCountdown)}...` : `Processar ${files.length > 0 ? files.length : ''} Notas`}
+                                {isLoading ? 'Analisando via I.A...' : retryCountdown !== null ? `Aguarde ${formatCountdown(retryCountdown)}...` : `Processar ${(files || []).length > 0 ? files.length : ''} Notas`}
                             </button>
 
                             {retryCountdown !== null && (
@@ -798,7 +798,7 @@ export const CestasBasicas: React.FC = () => {
                         )}
                         {activeTab === 'signature' && (
                             <SignatureSheet
-                                employees={activeEmployees}
+                                employeeNames={activeEmployees || []}
                                 companyName={companyName}
                                 companyLogo={companyLogoBase64}
                                 isChristmas={appMode === 'CHRISTMAS'}
@@ -806,8 +806,8 @@ export const CestasBasicas: React.FC = () => {
                         )}
                         {activeTab === 'pantry' && (
                             <PantryList
-                                items={invoiceData.items}
-                                employees={activeEmployees}
+                                items={invoiceData?.items || []}
+                                employeeNames={activeEmployees || []}
                                 selectedNonDrinkers={selectedNonDrinkers}
                                 itemAllocation={itemAllocation}
                                 companyName={companyName}
