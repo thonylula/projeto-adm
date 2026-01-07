@@ -17,7 +17,13 @@ export const getCurrentMonthYear = (): { month: number; year: number } => {
 export const getExcludedEmployees = (month: number, year: number): string[] => {
     const key = getExclusionKey(month, year);
     const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : [];
+    if (!stored) return [];
+    try {
+        const parsed = JSON.parse(stored);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+        return [];
+    }
 };
 
 export const isEmployeeExcluded = (
