@@ -62,6 +62,14 @@ export const exportToPng = async (elementId: string, fileName: string) => {
                     el.style.left = '0';
                     el.style.display = 'block';
 
+                    // Explicitly hide elements marked for exclusion
+                    const hiddenElements = clonedDoc.querySelectorAll('.print\\:hidden, .hidden-in-export');
+                    hiddenElements.forEach((hiddenEl: any) => {
+                        hiddenEl.style.display = 'none';
+                        hiddenEl.style.visibility = 'hidden';
+                        hiddenEl.style.opacity = '0';
+                    });
+
                     // Remove scroll and ensure full width
                     const scrollable = el.querySelector('.overflow-x-auto');
                     if (scrollable) (scrollable as HTMLElement).style.overflow = 'visible';
