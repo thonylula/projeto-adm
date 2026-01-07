@@ -457,6 +457,26 @@ export const CestasBasicas: React.FC = () => {
 
     return (
         <div className={`w-full max-w-6xl mx-auto space-y-6 animate-in fade-in duration-500 ${appMode === 'CHRISTMAS' ? 'christmas-theme' : ''}`}>
+            {/* Aggressive Print Styles */}
+            <style>{`
+                @media print {
+                    .print\\:hidden, .hidden-in-export {
+                        display: none !important;
+                        opacity: 0 !important;
+                        visibility: hidden !important;
+                        height: 0 !important;
+                        width: 0 !important;
+                        position: absolute !important;
+                    }
+                    /* Ensure body/html allow printing */
+                    body, html {
+                        visibility: visible !important;
+                        height: auto !important;
+                        overflow: visible !important;
+                    }
+                }
+            `}</style>
+
             <header className={`bg-white p-6 border-b-4 ${appMode === 'CHRISTMAS' ? 'border-red-600' : 'border-orange-500'} shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 print:hidden hidden-in-export`}>
                 <div className="flex items-center gap-4">
                     <button onClick={() => setAppMode(null)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
