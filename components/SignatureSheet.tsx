@@ -46,7 +46,7 @@ export const SignatureSheet: React.FC<SignatureSheetProps> = ({ employeeNames, c
 
                 {/* Rows */}
                 <div className="divide-y-2" style={{ borderColor: '#f97316' }}>
-                    {employeeNames.map((name, index) => (
+                    {(employeeNames || []).map((name, index) => (
                         <div key={index} className="grid grid-cols-[1.5fr_2fr] min-h-[48px]">
                             <div className="p-2 px-3 border-r-2 flex items-center" style={{ borderColor: '#f97316' }}>
                                 <span className="text-[11px] font-black text-slate-800 uppercase leading-snug">{name}</span>

@@ -11,7 +11,7 @@ interface MortalidadeDashboardProps {
 
 export const MortalidadeDashboard: React.FC<MortalidadeDashboardProps> = ({ data }) => {
     const analytics = useMemo(() => {
-        if (!data || data.records.length === 0) return null;
+        if (!data || !(data.records || []).length) return null;
 
         let totalInitialPop = 0;
         let totalCurrentPop = 0;
@@ -19,9 +19,9 @@ export const MortalidadeDashboard: React.FC<MortalidadeDashboardProps> = ({ data
         let totalFeed = 0;
         let totalBiomass = 0;
 
-        const tankMetrics = data.records.map(record => {
-            const mortality = record.dailyRecords.reduce((s, day) => s + (day.mort || 0), 0);
-            const feed = record.dailyRecords.reduce((s, day) => s + (day.feed || 0), 0);
+        const tankMetrics = (data.records || []).map(record => {
+            const mortality = (record.dailyRecords || []).reduce((s, day) => s + (day.mort || 0), 0);
+            const feed = (record.dailyRecords || []).reduce((s, day) => s + (day.feed || 0), 0);
             // ADJUST: Population inputs are in thousands (e.g., 372 = 372,000)
             const realInitialPop = record.initialPopulation * 1000;
             const currentPop = realInitialPop - mortality;

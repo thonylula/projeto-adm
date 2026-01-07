@@ -84,9 +84,14 @@ export const SupabaseService = {
 
     // --- REGISTRATIONS (GLOBAL) ---
     async getEmployees(): Promise<RegistryEmployee[]> {
-        const { data, error } = await supabase.from('employees').select('*');
-        if (error) return [];
-        return data.map(item => ({ ...item, photoUrl: item.photo_url, admissionDate: item.admission_date, isNonDrinker: item.is_non_drinker }));
+        try {
+            const { data, error } = await supabase.from('employees').select('*');
+            if (error || !data) return [];
+            return data.map(item => ({ ...item, photoUrl: item.photo_url, admissionDate: item.admission_date, isNonDrinker: item.is_non_drinker }));
+        } catch (e) {
+            console.error("[Supabase] Error fetching employees:", e);
+            return [];
+        }
     },
 
     async saveEmployee(employee: RegistryEmployee): Promise<boolean> {
@@ -192,20 +197,25 @@ export const SupabaseService = {
 
     // --- PAYROLL HISTORY ---
     async getPayrollHistory(companyId: string): Promise<PayrollHistoryItem[]> {
-        const { data, error } = await supabase
-            .from('payroll_history')
-            .select('*')
-            .eq('company_id', companyId)
-            .order('raw_date', { ascending: false });
+        try {
+            const { data, error } = await supabase
+                .from('payroll_history')
+                .select('*')
+                .eq('company_id', companyId)
+                .order('raw_date', { ascending: false });
 
-        if (error) return [];
-        return data.map(item => ({
-            id: item.id,
-            timestamp: item.timestamp,
-            rawDate: item.raw_date,
-            input: item.input,
-            result: item.result
-        }));
+            if (error || !data) return [];
+            return data.map(item => ({
+                id: item.id,
+                timestamp: item.timestamp,
+                rawDate: item.raw_date,
+                input: item.input,
+                result: item.result
+            }));
+        } catch (e) {
+            console.error("[Supabase] Error in getPayrollHistory:", e);
+            return [];
+        }
     },
 
     async addPayrollItem(companyId: string, item: PayrollHistoryItem): Promise<boolean> {
@@ -260,9 +270,14 @@ export const SupabaseService = {
 
     // --- BASKET CONFIGS ---
     async getBasketConfigs(): Promise<ItemConfiguration[]> {
-        const { data, error } = await supabase.from('basket_item_configs').select('*');
-        if (error) return [];
-        return data.map(item => ({ id: item.id, description: item.description, config: item.config }));
+        try {
+            const { data, error } = await supabase.from('basket_item_configs').select('*');
+            if (error || !data) return [];
+            return data.map(item => ({ id: item.id, description: item.description, config: item.config }));
+        } catch (e) {
+            console.error("[Supabase] Error in getBasketConfigs:", e);
+            return [];
+        }
     },
 
     async saveBasketConfigs(configs: ItemConfiguration[]): Promise<boolean> {

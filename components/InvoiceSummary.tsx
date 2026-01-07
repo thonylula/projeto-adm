@@ -75,25 +75,25 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ data, companyNam
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-orange-200">
-                            {data.items.map((item, index) => (
+                            {(data?.items || []).map((item, index) => (
                                 <tr key={item.id || index} className="hover:bg-orange-50/50 transition-all duration-200 group">
                                     <td className="px-2 py-1.5 text-[10px] font-bold text-slate-400 font-mono tracking-tighter group-hover:text-orange-500">{item.code || '---'}</td>
                                     <td className="px-2 py-1.5 text-[10px] font-extrabold text-slate-800 uppercase leading-snug tracking-tight max-w-md">{item.description}</td>
                                     <td className="px-2 py-1.5 text-[10px] text-right text-slate-700 font-bold bg-slate-50/50">
-                                        {item.quantity.toLocaleString('pt-BR', { minimumFractionDigits: 3 })} {item.unit}
+                                        {(item.quantity || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3 })} {item.unit || ''}
                                     </td>
                                     <td className="px-2 py-1.5 text-[10px] text-right text-slate-600 font-medium">
-                                        {formatCurrency(item.price)}
+                                        {formatCurrency(item.price || 0)}
                                     </td>
                                     <td className="px-2 py-1.5 text-[10px] text-right font-black text-slate-900 bg-orange-50/20">
-                                        {formatCurrency(item.total)}
+                                        {formatCurrency(item.total || 0)}
                                     </td>
                                 </tr>
                             ))}
                             <tr className="border-t-2 bg-orange-50" style={{ borderTop: '2px solid #f97316' }}>
                                 <td colSpan={4} className="px-2 py-1 text-right text-[10px] font-black text-slate-800 uppercase tracking-wide">Total Geral:</td>
                                 <td className="px-2 py-1 text-right text-sm font-black text-green-600">
-                                    {formatCurrency(data.items.reduce((sum, item) => sum + item.total, 0))}
+                                    {formatCurrency((data?.items || []).reduce((sum, item) => sum + (item.total || 0), 0))}
                                 </td>
                             </tr>
                         </tbody>

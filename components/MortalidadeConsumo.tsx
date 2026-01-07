@@ -818,7 +818,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {data?.records.map((record, index) => (
+                                            {(data?.records || []).map((record, index) => (
                                                 <React.Fragment key={record.id}>
                                                     <tr className="group hover:bg-slate-50 transition-all font-bold text-slate-700" style={{ height: `${tableConfig.lineHeight}px` }}>
                                                         <td className="p-0 border border-slate-100 sticky left-0 z-10 bg-white" style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>
@@ -855,7 +855,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         </td>
                                                         <td className="border border-slate-100 bg-slate-50/50 font-black text-slate-400 text-center tracking-tighter italic border-r-2 border-r-slate-200 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px`, minWidth: '45px' }}>Ração</td>
                                                         {daysArray.map(d => {
-                                                            const val = record.dailyRecords.find(dr => dr.day === d)?.feed;
+                                                            const val = (record.dailyRecords || []).find(dr => dr.day === d)?.feed;
                                                             return (
                                                                 <td key={d} className="p-0 border border-slate-100 hover:bg-orange-50/30" style={{ minWidth: `${tableConfig.dayColWidth}px` }}>
                                                                     <input
@@ -884,7 +884,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                     <tr className="bg-pink-50/10" style={{ height: `${tableConfig.lineHeight}px` }}>
                                                         <td className="border border-slate-100 text-pink-400 text-center tracking-tighter italic border-r-2 border-r-pink-100 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px` }}>Mort.</td>
                                                         {daysArray.map(d => {
-                                                            const val = record.dailyRecords.find(dr => dr.day === d)?.mortality;
+                                                            const val = (record.dailyRecords || []).find(dr => dr.day === d)?.mortality;
                                                             return (
                                                                 <td key={d} className="p-0 border border-slate-100 hover:bg-pink-50/50">
                                                                     <input
@@ -947,7 +947,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 <td className="p-3 bg-orange-600 text-center sticky right-0 z-20">
                                                     <div className="flex flex-col items-center gap-0">
                                                         <span className="text-white font-black text-sm leading-none">
-                                                            {data ? data.records.reduce((sum, tank) => sum + calculateRowTotal(tank, 'feed'), 0).toLocaleString('pt-BR') : 0}
+                                                            {data ? (data.records || []).reduce((sum, tank) => sum + calculateRowTotal(tank, 'feed'), 0).toLocaleString('pt-BR') : 0}
                                                         </span>
                                                         <span className="text-orange-200 text-[8px] font-bold uppercase tracking-tighter">TOTAL KG</span>
                                                     </div>

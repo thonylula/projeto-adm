@@ -34,12 +34,12 @@ export const PantryList: React.FC<PantryListProps> = ({
 
     return (
         <div className="space-y-8 print:space-y-4 print:grid print:grid-cols-1">
-            {employeeNames.map((name, index) => {
-                const isNonDrinker = selectedNonDrinkers.includes(index);
+            {(employeeNames || []).map((name, index) => {
+                const isNonDrinker = (selectedNonDrinkers || []).includes(index);
 
                 // Filter items based on allocation
-                const visibleItems = data.items.filter(item => {
-                    const config = itemAllocation[item.id] || { mode: 'ALL' };
+                const visibleItems = (data?.items || []).filter(item => {
+                    const config = (itemAllocation || {})[item.id] || { mode: 'ALL' };
                     if (config.mode === 'ALL' || config.mode === 'CUSTOM') return true;
                     if (isNonDrinker && config.mode === 'NON_DRINKER') return true;
                     if (!isNonDrinker && config.mode === 'DRINKER') return true;
@@ -101,8 +101,8 @@ export const PantryList: React.FC<PantryListProps> = ({
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-orange-100">
-                                    {visibleItems.map((item, idx) => {
-                                        const config = itemAllocation[item.id] || { mode: 'ALL' };
+                                    {(visibleItems || []).map((item, idx) => {
+                                        const config = (itemAllocation || {})[item.id] || { mode: 'ALL' };
                                         let qtyPerEmployee = 0;
 
                                         if (config.mode === 'CUSTOM') {
@@ -110,11 +110,11 @@ export const PantryList: React.FC<PantryListProps> = ({
                                                 ? (config.customQtyNonDrinker || 0)
                                                 : (config.customQtyDrinker || 0);
                                         } else if (config.mode === 'ALL') {
-                                            qtyPerEmployee = item.quantity / totalEmployees;
+                                            qtyPerEmployee = (item.quantity || 0) / (totalEmployees || 1);
                                         } else if (config.mode === 'NON_DRINKER' && isNonDrinker) {
-                                            qtyPerEmployee = item.quantity / (nonDrinkerCount || 1);
+                                            qtyPerEmployee = (item.quantity || 0) / (nonDrinkerCount || 1);
                                         } else if (config.mode === 'DRINKER' && !isNonDrinker) {
-                                            qtyPerEmployee = item.quantity / (drinkerCount || 1);
+                                            qtyPerEmployee = (item.quantity || 0) / (drinkerCount || 1);
                                         }
 
                                         return (
@@ -126,7 +126,7 @@ export const PantryList: React.FC<PantryListProps> = ({
                                             </tr>
                                         );
                                     })}
-                                    {visibleItems.length === 0 && (
+                                    {(visibleItems || []).length === 0 && (
                                         <tr>
                                             <td colSpan={2} className="py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nenhum item alocado para este grupo</td>
                                         </tr>

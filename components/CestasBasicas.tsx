@@ -178,9 +178,9 @@ export const CestasBasicas: React.FC = () => {
         const reloadAllData = async () => {
             // 1. Load employees from registry
             try {
-                const registered = await SupabaseService.getEmployees();
+                const registered = await SupabaseService.getEmployees() || [];
                 if (registered.length > 0) {
-                    const names = registered.map(r => r.name);
+                    const names = registered.map(r => r.name) || [];
                     setActualEmployees(names);
 
                     // Auto-select non-drinkers based on registry
@@ -203,10 +203,10 @@ export const CestasBasicas: React.FC = () => {
                 }
 
                 const updatedAllocation: Record<string, ItemAllocationConfig> = {};
-                invoiceData.items.forEach(item => {
-                    const desc = item.description.toUpperCase();
-                    const configMatch = globalConfigs.find(c => {
-                        const keyword = c.description.toUpperCase();
+                (invoiceData?.items || []).forEach(item => {
+                    const desc = (item.description || '').toUpperCase();
+                    const configMatch = (globalConfigs || []).find(c => {
+                        const keyword = (c.description || '').toUpperCase();
                         return desc === keyword || desc.includes(keyword) || keyword.includes(desc);
                     });
 
@@ -268,7 +268,7 @@ export const CestasBasicas: React.FC = () => {
     };
 
     // Filter out excluded employees for the current month
-    const activeEmployees = actualEmployees.filter(name => !excludedEmployees.includes(name));
+    const activeEmployees = (actualEmployees || []).filter(name => !(excludedEmployees || []).includes(name));
 
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files?.[0]) {
@@ -401,8 +401,8 @@ export const CestasBasicas: React.FC = () => {
         <button
             onClick={() => setActiveTab(tabName)}
             className={`flex items-center gap-2 px-6 py-3 text-sm font-black uppercase rounded-none transition-all duration-200 border-b-4 ${activeTab === tabName
-                    ? (appMode === 'CHRISTMAS' ? 'border-red-600 bg-red-50 text-red-700' : 'border-orange-500 bg-orange-50 text-orange-700')
-                    : 'border-transparent text-gray-400 hover:text-gray-600'
+                ? (appMode === 'CHRISTMAS' ? 'border-red-600 bg-red-50 text-red-700' : 'border-orange-500 bg-orange-50 text-orange-700')
+                : 'border-transparent text-gray-400 hover:text-gray-600'
                 }`}
         >
             {icon}
@@ -553,15 +553,15 @@ export const CestasBasicas: React.FC = () => {
                                 <p className="text-[10px]">Esta exclusão é temporária e específica para o mês atual. Use para casos de faltas que resultam em perda da cesta.</p>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                {actualEmployees.map((name, idx) => {
-                                    const isExcluded = excludedEmployees.includes(name);
+                                {(actualEmployees || []).map((name, idx) => {
+                                    const isExcluded = (excludedEmployees || []).includes(name);
                                     return (
                                         <button
                                             key={idx}
                                             onClick={() => toggleMonthlyExclusion(name)}
                                             className={`p-3 text-left border-2 rounded-lg transition-all flex items-center justify-between ${isExcluded
-                                                    ? 'bg-red-50 border-red-500 text-red-700'
-                                                    : 'bg-white border-slate-200 hover:border-slate-300'
+                                                ? 'bg-red-50 border-red-500 text-red-700'
+                                                : 'bg-white border-slate-200 hover:border-slate-300'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-2">
@@ -576,8 +576,8 @@ export const CestasBasicas: React.FC = () => {
                         </div>
                         <div className="p-4 bg-slate-50 border-t flex justify-between items-center">
                             <div className="text-xs font-bold text-slate-600">
-                                {excludedEmployees.length > 0
-                                    ? `${excludedEmployees.length} funcionário(s) excluído(s)`
+                                {(excludedEmployees || []).length > 0
+                                    ? `${(excludedEmployees || []).length} funcionário(s) excluído(s)`
                                     : 'Nenhum funcionário excluído'}
                             </div>
                             <button
@@ -649,19 +649,19 @@ export const CestasBasicas: React.FC = () => {
                                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Selecione quem receberá a cesta sem álcool</p>
                                 </div>
                                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
-                                    {actualEmployees.map((name, idx) => {
-                                        const isNonDrinker = selectedNonDrinkers.includes(idx);
+                                    {(actualEmployees || []).map((name, idx) => {
+                                        const isNonDrinker = (selectedNonDrinkers || []).includes(idx);
                                         return (
                                             <button
                                                 key={idx}
                                                 onClick={() => toggleEmployeeDrinking(idx)}
                                                 className={`p-3 text-[9px] font-black uppercase text-center border-2 transition-all rounded-sm flex flex-col items-center justify-between min-h-[70px] ${isNonDrinker
-                                                        ? (appMode === 'CHRISTMAS' ? 'bg-red-50 border-red-600 text-red-700' : 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-inner')
-                                                        : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300'
+                                                    ? (appMode === 'CHRISTMAS' ? 'bg-red-50 border-red-600 text-red-700' : 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-inner')
+                                                    : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300'
                                                     }`}
                                             >
                                                 <div className="text-xl mb-1">{isNonDrinker ? '🥤' : '🍺'}</div>
-                                                <div className="leading-tight shrink-0">{name.split(' ')[0]}</div>
+                                                <div className="leading-tight shrink-0">{(name || '').split(' ')[0]}</div>
                                                 {isNonDrinker && <div className="mt-1 text-[7px] bg-indigo-600 text-white px-1 rounded-full">SEM ÁLCOOL</div>}
                                             </button>
                                         );
@@ -675,11 +675,11 @@ export const CestasBasicas: React.FC = () => {
                                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Defina quais itens vão para cada grupo</p>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    {invoiceData.items.map(item => {
-                                        const config = itemAllocation[item.id] || { mode: 'ALL' };
+                                    {(invoiceData?.items || []).map(item => {
+                                        const config = (itemAllocation || {})[item.id] || { mode: 'ALL' };
                                         const isCustom = config.mode === 'CUSTOM';
                                         const totalEmployees = activeEmployees.length;
-                                        const nonDrinkerCount = selectedNonDrinkers.length;
+                                        const nonDrinkerCount = (selectedNonDrinkers || []).length;
                                         const drinkerCount = totalEmployees - nonDrinkerCount;
 
                                         return (
@@ -704,8 +704,8 @@ export const CestasBasicas: React.FC = () => {
                                                             key={type}
                                                             onClick={() => toggleAllocation(item.id, type as any)}
                                                             className={`flex-1 text-[8px] font-black p-1.5 rounded-sm border transition-all ${config.mode === type && !isCustom
-                                                                    ? (appMode === 'CHRISTMAS' ? 'bg-red-600 border-red-600 text-white' : 'bg-indigo-600 border-indigo-600 text-white')
-                                                                    : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400'
+                                                                ? (appMode === 'CHRISTMAS' ? 'bg-red-600 border-red-600 text-white' : 'bg-indigo-600 border-indigo-600 text-white')
+                                                                : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400'
                                                                 }`}
                                                         >
                                                             {type === 'ALL' ? 'TODOS' : type === 'NON_DRINKER' ? 'NÃO BEBEM' : 'BEBEM'}
