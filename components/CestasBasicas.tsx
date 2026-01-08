@@ -119,6 +119,7 @@ export const CestasBasicas: React.FC = () => {
     const [showExclusionModal, setShowExclusionModal] = useState<boolean>(false);
     const [exclusionMonth, setExclusionMonth] = useState<number>(new Date().getMonth() + 1);
     const [exclusionYear, setExclusionYear] = useState<number>(new Date().getFullYear());
+    const [exportMenuOpen, setExportMenuOpen] = useState<Tab | null>(null);
 
     // Load persistent quota timer on mount
     useEffect(() => {
@@ -269,6 +270,114 @@ export const CestasBasicas: React.FC = () => {
 
     // Filter out excluded employees for the current month
     const activeEmployees = (actualEmployees || []).filter(name => !(excludedEmployees || []).includes(name));
+
+    // Calculate exact quantities for all items automatically
+    const calculateExactQuantities = () => {
+        if (!invoiceData?.items) return;
+
+        const totalEmployees = activeEmployees.length;
+        const nonDrinkerCount = selectedNonDrinkers.length;
+        const drinkerCount = totalEmployees - nonDrinkerCount;
+
+        const updatedAllocation: Record<string, ItemAllocationConfig> = {};
+
+        invoiceData.items.forEach(item => {
+            const currentConfig = itemAllocation[item.id] || { mode: 'ALL' };
+            const unit = item.unit.toUpperCase();
+
+            // Check if unit is discrete (whole numbers only)
+            const isDiscrete = ['CX', 'UN', 'PCT', 'UNIDADE', 'CAIXA', 'PACOTE'].includes(unit);
+
+            let qtyNonDrinker = 0;
+            let qtyDrinker = 0;
+
+            if (currentConfig.mode === 'ALL') {
+                // Distribute to all employees
+                if (isDiscrete) {
+                    const perEmployee = Math.floor(item.quantity / totalEmployees);
+                    qtyNonDrinker = perEmployee;
+                    qtyDrinker = perEmployee;
+                } else {
+                    const perEmployee = Math.floor((item.quantity / totalEmployees) * 1000) / 1000;
+                    qtyNonDrinker = perEmployee;
+                    qtyDrinker = perEmployee;
+                }
+            } else if (currentConfig.mode === 'NON_DRINKER') {
+                // Only for non-drinkers
+                if (nonDrinkerCount > 0) {
+                    if (isDiscrete) {
+                        qtyNonDrinker = Math.floor(item.quantity / nonDrinkerCount);
+                    } else {
+                        qtyNonDrinker = Math.floor((item.quantity / nonDrinkerCount) * 1000) / 1000;
+                    }
+                }
+                qtyDrinker = 0;
+            } else if (currentConfig.mode === 'DRINKER') {
+                // Only for drinkers
+                if (drinkerCount > 0) {
+                    if (isDiscrete) {
+                        qtyDrinker = Math.floor(item.quantity / drinkerCount);
+                    } else {
+                        qtyDrinker = Math.floor((item.quantity / drinkerCount) * 1000) / 1000;
+                    }
+                }
+                qtyNonDrinker = 0;
+            } else if (currentConfig.mode === 'CUSTOM') {
+                // Keep existing custom values
+                qtyNonDrinker = currentConfig.customQtyNonDrinker || 0;
+                qtyDrinker = currentConfig.customQtyDrinker || 0;
+            }
+
+            updatedAllocation[item.id] = {
+                mode: 'CUSTOM',
+                customQtyNonDrinker: qtyNonDrinker,
+                customQtyDrinker: qtyDrinker
+            };
+        });
+
+        setItemAllocation(updatedAllocation);
+    };
+
+    // Calculate distribution summary statistics
+    const getDistributionSummary = () => {
+        if (!invoiceData?.items) return null;
+
+        const totalEmployees = activeEmployees.length;
+        const nonDrinkerCount = selectedNonDrinkers.length;
+        const drinkerCount = totalEmployees - nonDrinkerCount;
+
+        let closedCount = 0;
+        let withRemainder = 0;
+        let needsMore = 0;
+
+        invoiceData.items.forEach(item => {
+            const config = itemAllocation[item.id];
+            if (!config) return;
+
+            const distributed = (config.customQtyNonDrinker || 0) * nonDrinkerCount + (config.customQtyDrinker || 0) * drinkerCount;
+            const diff = Math.abs(item.quantity - distributed);
+
+            if (diff < 0.001) {
+                closedCount++;
+            } else if (distributed < item.quantity) {
+                withRemainder++;
+            } else {
+                needsMore++;
+            }
+        });
+
+        return {
+            totalProducts: invoiceData.items.length,
+            totalEmployees,
+            nonDrinkerCount,
+            drinkerCount,
+            closedCount,
+            withRemainder,
+            needsMore
+        };
+    };
+
+    const summary = getDistributionSummary();
 
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files?.[0]) {
@@ -746,14 +855,30 @@ export const CestasBasicas: React.FC = () => {
                                         const nonDrinkerCount = (selectedNonDrinkers || []).length;
                                         const drinkerCount = totalEmployees - nonDrinkerCount;
 
+                                        // Calculate divergence
+                                        const distributed = (config.customQtyNonDrinker || 0) * nonDrinkerCount + (config.customQtyDrinker || 0) * drinkerCount;
+                                        const diff = item.quantity - distributed;
+                                        const diffAbs = Math.abs(diff);
+                                        const isClosed = diffAbs < 0.001;
+                                        const hasRemainder = diff > 0.001;
+                                        const needsMore = diff < -0.001;
+
                                         return (
-                                            <div key={item.id} className={`p-3 border-2 rounded-lg transition-all flex flex-col gap-2 ${isCustom ? 'border-amber-400 bg-amber-50/50 ring-2 ring-amber-400/30' : 'border-slate-200 bg-slate-50/50'
+                                            <div key={item.id} className={`p-3 border-2 rounded-lg transition-all flex flex-col gap-2 ${isClosed ? 'border-green-500 bg-green-50/50 ring-1 ring-green-500/30' :
+                                                needsMore ? 'border-red-500 bg-red-50/50 ring-1 ring-red-500/30' :
+                                                    hasRemainder ? 'border-orange-400 bg-orange-50/50 ring-1 ring-orange-400/30' :
+                                                        isCustom ? 'border-amber-400 bg-amber-50/50 ring-2 ring-amber-400/30' : 'border-slate-200 bg-slate-50/50'
                                                 }`}>
                                                 <div className="flex justify-between items-center">
                                                     <div className="text-[10px] font-bold text-slate-800 truncate uppercase">{item.description}</div>
-                                                    {isCustom && (
-                                                        <span className="text-[7px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded-full">PERSONALIZADO</span>
-                                                    )}
+                                                    <div className="flex gap-1 items-center">
+                                                        {isClosed && <span className="text-[7px] font-black bg-green-500 text-white px-1.5 py-0.5 rounded-full">✅ EXATO</span>}
+                                                        {hasRemainder && <span className="text-[7px] font-black bg-orange-500 text-white px-1.5 py-0.5 rounded-full">⚠️ SOBRA</span>}
+                                                        {needsMore && <span className="text-[7px] font-black bg-red-500 text-white px-1.5 py-0.5 rounded-full">❌ FALTA</span>}
+                                                        {isCustom && (
+                                                            <span className="text-[7px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded-full">PERSONALIZADO</span>
+                                                        )}
+                                                    </div>
                                                 </div>
 
                                                 {/* Total available */}
@@ -894,3 +1019,4 @@ export const CestasBasicas: React.FC = () => {
         </div>
     );
 };
+
