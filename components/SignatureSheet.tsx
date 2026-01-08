@@ -51,8 +51,8 @@ export const SignatureSheet: React.FC<SignatureSheetProps> = ({ employeeNames, c
                             <div className="p-2 px-3 border-r-2 flex items-center" style={{ borderColor: '#f97316' }}>
                                 <span className="text-[11px] font-black text-slate-800 uppercase leading-snug">{name}</span>
                             </div>
-                            <div className="p-2 bg-white">
-                                {/* Space for signature */}
+                            <div className="p-2 bg-white flex items-end justify-center">
+                                <div className="w-full h-full border-b border-slate-300 mb-2"></div>
                             </div>
                         </div>
                     ))}
