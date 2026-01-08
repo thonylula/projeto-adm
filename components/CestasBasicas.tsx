@@ -1129,19 +1129,19 @@ export const CestasBasicas: React.FC = () => {
                                         </button>
                                         <div className="w-px h-6 bg-slate-100 mx-1"></div>
                                         <button
-                                            onClick={() => exportToPdf('active-view', `distribuicao_cesta_${new Date().getTime()}`)}
+                                            onClick={() => exportToPdf('report-content', `relatorio_cesta_${activeTab}_${new Date().getTime()}`)}
                                             className="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-sm text-[9px] font-black uppercase hover:bg-red-100 transition-colors flex items-center gap-1"
                                         >
                                             📄 PDF
                                         </button>
                                         <button
-                                            onClick={() => exportToPng('active-view', `distribuicao_cesta_${activeTab}`)}
+                                            onClick={() => exportToPng('report-content', `cesta_${activeTab}`)}
                                             className="px-3 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-sm text-[9px] font-black uppercase hover:bg-orange-100 transition-colors flex items-center gap-1"
                                         >
                                             🖼️ PNG
                                         </button>
                                         <button
-                                            onClick={() => exportToHtml('active-view', `distribuicao_cesta_${activeTab}`)}
+                                            onClick={() => exportToHtml('report-content', `cesta_${activeTab}`)}
                                             className="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-sm text-[9px] font-black uppercase hover:bg-indigo-100 transition-colors flex items-center gap-1"
                                         >
                                             🌐 HTML
@@ -1180,7 +1180,7 @@ export const CestasBasicas: React.FC = () => {
                             </div>
 
                             {/* TAB CONTENT */}
-                            <div className="mt-8 transition-all duration-700 pb-20">
+                            <div id="report-content" className="mt-8 transition-all duration-700 pb-20 bg-white">
                                 {activeTab === 'summary' && invoiceData && (
                                     <InvoiceSummary
                                         data={invoiceData}
@@ -1216,9 +1216,11 @@ export const CestasBasicas: React.FC = () => {
                             </div>
 
                             {/* HIDDEN BUNDLE FOR FULL PDF EXPORT */}
-                            <div id="full-report-bundle" className="hidden-in-export overflow-hidden h-0 w-0 opacity-0 pointer-events-none">
+                            <div id="full-report-bundle" className="hidden-in-export overflow-hidden h-0 w-0 opacity-0 pointer-events-none bg-white">
                                 <style>{`
+                                    #full-report-bundle { visibility: hidden; }
                                     @media print {
+                                        #full-report-bundle { visibility: visible; height: auto; width: auto; opacity: 1; position: relative; }
                                         .break-after-page { page-break-after: always; break-after: page; }
                                         .pantry-full-list { width: 100%; }
                                     }
