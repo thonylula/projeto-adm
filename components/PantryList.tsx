@@ -33,7 +33,7 @@ export const PantryList: React.FC<PantryListProps> = ({
     const drinkerCount = totalEmployees - nonDrinkerCount;
 
     return (
-        <div className="space-y-8 print:space-y-4 print:grid print:grid-cols-1">
+        <div className="space-y-8 print:space-y-4 print:grid print:grid-cols-2 print:gap-4">
             {(employeeNames || []).map((name, index) => {
                 const isNonDrinker = (selectedNonDrinkers || []).includes(index);
 

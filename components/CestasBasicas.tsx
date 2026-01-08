@@ -1122,6 +1122,13 @@ export const CestasBasicas: React.FC = () => {
                                     <div className="h-6 w-px bg-slate-100"></div>
                                     <div className="flex gap-2">
                                         <button
+                                            onClick={() => exportToPdf('full-report-bundle', `relatorio_completo_cesta_${new Date().getTime()}`)}
+                                            className="px-4 py-1.5 bg-slate-800 text-white rounded-sm text-[9px] font-black uppercase hover:bg-slate-900 transition-colors flex items-center gap-2 shadow-sm"
+                                        >
+                                            <span className="text-sm">📚</span> Relatório Completo (PDF)
+                                        </button>
+                                        <div className="w-px h-6 bg-slate-100 mx-1"></div>
+                                        <button
                                             onClick={() => exportToPdf('active-view', `distribuicao_cesta_${new Date().getTime()}`)}
                                             className="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-sm text-[9px] font-black uppercase hover:bg-red-100 transition-colors flex items-center gap-1"
                                         >
@@ -1172,38 +1179,85 @@ export const CestasBasicas: React.FC = () => {
                                 </div>
                             </div>
 
-                            {activeTab === 'summary' && (
-                                <InvoiceSummary
-                                    data={invoiceData}
-                                    slogans={motivationalMessages}
-                                    companyName={companyName}
-                                    companyLogo={companyLogoBase64}
-                                    sloganImage={sloganImageBase64}
-                                    isChristmas={appMode === 'CHRISTMAS'}
-                                    selectedNonDrinkers={selectedNonDrinkers}
-                                    activeEmployees={activeEmployees}
-                                    itemAllocation={itemAllocation}
-                                />
-                            )}
-                            {activeTab === 'signature' && (
-                                <SignatureSheet
-                                    employeeNames={activeEmployees || []}
-                                    companyName={companyName}
-                                    companyLogo={companyLogoBase64}
-                                    isChristmas={appMode === 'CHRISTMAS'}
-                                />
-                            )}
-                            {activeTab === 'pantry' && (
-                                <PantryList
-                                    items={invoiceData?.items || []}
-                                    employeeNames={activeEmployees || []}
-                                    selectedNonDrinkers={selectedNonDrinkers}
-                                    itemAllocation={itemAllocation}
-                                    companyName={companyName}
-                                    companyLogo={companyLogoBase64}
-                                    isChristmas={appMode === 'CHRISTMAS'}
-                                />
-                            )}
+                            {/* TAB CONTENT */}
+                            <div className="mt-8 transition-all duration-700 pb-20">
+                                {activeTab === 'summary' && invoiceData && (
+                                    <InvoiceSummary
+                                        data={invoiceData}
+                                        companyName={companyName}
+                                        companyLogo={companyLogoBase64}
+                                        sloganImage={sloganImageBase64}
+                                        recipientCnpj={invoiceData.recipientCnpj}
+                                    />
+                                )}
+                                {activeTab === 'signature' && (
+                                    <SignatureSheet
+                                        employeeNames={activeEmployees.map(e => e.name)}
+                                        companyName={companyName}
+                                        companyLogo={companyLogoBase64}
+                                        recipientCnpj={invoiceData?.recipientCnpj}
+                                        sloganImage={sloganImageBase64}
+                                    />
+                                )}
+                                {activeTab === 'pantry' && (
+                                    <PantryList
+                                        items={invoiceData?.items || []}
+                                        employeeNames={activeEmployees.map(e => e.name)}
+                                        companyName={companyName}
+                                        recipientCnpj={invoiceData?.recipientCnpj}
+                                        companyLogo={companyLogoBase64}
+                                        sloganImage={sloganImageBase64}
+                                        selectedNonDrinkers={selectedNonDrinkers}
+                                        itemAllocation={itemAllocation}
+                                        appMode={appMode}
+                                        motivationalMessages={motivationalMessages}
+                                    />
+                                )}
+                            </div>
+
+                            {/* HIDDEN BUNDLE FOR FULL PDF EXPORT */}
+                            <div id="full-report-bundle" className="hidden-in-export overflow-hidden h-0 w-0 opacity-0 pointer-events-none">
+                                <style>{`
+                                    @media print {
+                                        .break-after-page { page-break-after: always; break-after: page; }
+                                        .pantry-full-list { width: 100%; }
+                                    }
+                                `}</style>
+                                <div className="p-8 space-y-12 bg-white">
+                                    <div className="break-after-page">
+                                        <InvoiceSummary
+                                            data={invoiceData as any}
+                                            companyName={companyName}
+                                            companyLogo={companyLogoBase64}
+                                            sloganImage={sloganImageBase64}
+                                            recipientCnpj={invoiceData?.recipientCnpj}
+                                        />
+                                    </div>
+                                    <div className="break-after-page">
+                                        <SignatureSheet
+                                            employeeNames={activeEmployees.map(e => e.name)}
+                                            companyName={companyName}
+                                            companyLogo={companyLogoBase64}
+                                            recipientCnpj={invoiceData?.recipientCnpj}
+                                            sloganImage={sloganImageBase64}
+                                        />
+                                    </div>
+                                    <div className="pantry-full-list">
+                                        <PantryList
+                                            items={invoiceData?.items || []}
+                                            employeeNames={activeEmployees.map(e => e.name)}
+                                            companyName={companyName}
+                                            recipientCnpj={invoiceData?.recipientCnpj}
+                                            companyLogo={companyLogoBase64}
+                                            sloganImage={sloganImageBase64}
+                                            selectedNonDrinkers={selectedNonDrinkers}
+                                            itemAllocation={itemAllocation}
+                                            appMode={appMode}
+                                            motivationalMessages={motivationalMessages}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )
                 }
@@ -1213,4 +1267,3 @@ export const CestasBasicas: React.FC = () => {
         </div >
     );
 };
-
