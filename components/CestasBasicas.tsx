@@ -704,33 +704,7 @@ export const CestasBasicas: React.FC = () => {
                         <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Processamento Digital de Notas Fiscais</p>
                     </div>
 
-                    {/* Exclusion Manager Button */}
-                    {invoiceData && (
-                        <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-sm">
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <h4 className="text-sm font-black text-slate-800 uppercase">Exclusões Mensais</h4>
-                                    <p className="text-[10px] text-slate-500 font-bold">Gerenciar funcionários que NÃO receberão cesta este mês</p>
-                                </div>
-                                <button
-                                    onClick={() => setShowExclusionModal(true)}
-                                    className="px-4 py-2 bg-red-600 text-white text-xs font-black uppercase rounded-sm hover:bg-red-700 transition-colors flex items-center gap-2"
-                                >
-                                    🚫 Gerenciar Exclusões
-                                    {(excludedEmployees || []).length > 0 && (
-                                        <span className="ml-1 bg-white text-red-600 px-2 py-0.5 rounded-full text-[10px]">
-                                            {excludedEmployees.length}
-                                        </span>
-                                    )}
-                                </button>
-                            </div>
-                            {(excludedEmployees || []).length > 0 && (
-                                <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded">
-                                    <p className="text-[10px] font-bold text-red-700">Excluídos neste mês: {excludedEmployees.join(', ')}</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                    {/* Exclusion Manager removed from here, moving to Step 2 */}
                 </div>
 
                 <div className="flex flex-wrap gap-2 print:hidden justify-center md:justify-end">
@@ -812,45 +786,71 @@ export const CestasBasicas: React.FC = () => {
                 {currentStep === 1 && (
                     <div className={`bg-white p-8 border-2 ${appMode === 'CHRISTMAS' ? 'border-red-200' : 'border-slate-100'} rounded-sm shadow-sm print:hidden hidden-in-export animate-in fade-in`}>
                         <div className="grid lg:grid-cols-2 gap-8 items-start">
-                            <ImageUploader onFilesReady={handleFilesReady} disabled={isLoading} />
-                            <div className="space-y-6">
-                                <button
-                                    onClick={processInvoices}
-                                    disabled={(files || []).length === 0 || isLoading || retryCountdown !== null}
-                                    className={`w-full font-black uppercase text-sm py-5 px-8 rounded-none transition-all duration-300 transform hover:scale-[1.01] shadow-xl disabled:bg-slate-200 disabled:shadow-none disabled:cursor-not-allowed ${appMode === 'CHRISTMAS' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'
-                                        }`}
-                                >
-                                    {isLoading ? 'Analisando via I.A...' : retryCountdown !== null ? `Aguarde ${formatCountdown(retryCountdown)}...` : `Processar ${(files || []).length > 0 ? files.length : ''} Notas`}
-                                </button>
-
-                                {retryCountdown !== null && (
-                                    <div className="p-4 bg-amber-50 border-l-4 border-amber-500 animate-pulse">
-                                        <div className="flex items-center gap-3">
-                                            <div className="text-2xl">⏳</div>
-                                            <div>
-                                                <div className="text-[10px] font-black text-amber-800 uppercase tracking-tighter">Modo de Espera Ativo</div>
-                                                <div className="text-[14px] font-black text-amber-600 uppercase">Aguarde {formatCountdown(retryCountdown)} para tentar novamente</div>
-                                            </div>
-                                        </div>
+                            {!invoiceData ? (
+                                <ImageUploader onFilesReady={handleFilesReady} disabled={isLoading} />
+                            ) : (
+                                <div className="p-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-lg flex flex-col items-center justify-center text-center space-y-4">
+                                    <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl">✅</div>
+                                    <div>
+                                        <h3 className="text-lg font-black text-slate-800 uppercase">Notas Processadas</h3>
+                                        <p className="text-sm text-slate-500 font-medium">{(files || []).length} arquivo(s) analisado(s) com sucesso.</p>
                                     </div>
-                                )}
+                                    <button
+                                        onClick={() => {
+                                            setFiles([]);
+                                            setInvoiceData(null);
+                                        }}
+                                        className="text-xs font-black text-indigo-600 hover:text-indigo-800 uppercase tracking-widest underline underline-offset-4"
+                                    >
+                                        Substituir Notas
+                                    </button>
+                                </div>
+                            )}
 
-                                {error && !retryCountdown && <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-xs font-bold uppercase">{error}</div>}
+                            <div className="space-y-6">
+                                {!invoiceData ? (
+                                    <>
+                                        <button
+                                            onClick={processInvoices}
+                                            disabled={(files || []).length === 0 || isLoading || retryCountdown !== null}
+                                            className={`w-full font-black uppercase text-sm py-5 px-8 rounded-none transition-all duration-300 transform hover:scale-[1.01] shadow-xl disabled:bg-slate-200 disabled:shadow-none disabled:cursor-not-allowed ${appMode === 'CHRISTMAS' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'
+                                                }`}
+                                        >
+                                            {isLoading ? 'Analisando via I.A...' : retryCountdown !== null ? `Aguarde ${formatCountdown(retryCountdown)}...` : `Processar ${(files || []).length > 0 ? files.length : ''} Notas`}
+                                        </button>
 
-                                {invoiceData && (
-                                    <div className="space-y-4 pt-6 border-t border-slate-50">
+                                        {retryCountdown !== null && (
+                                            <div className="p-4 bg-amber-50 border-l-4 border-amber-500 animate-pulse">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="text-2xl">⏳</div>
+                                                    <div>
+                                                        <div className="text-[10px] font-black text-amber-800 uppercase tracking-tighter">Modo de Espera Ativo</div>
+                                                        <div className="text-[14px] font-black text-amber-600 uppercase">Aguarde {formatCountdown(retryCountdown)} para tentar novamente</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {error && !retryCountdown && <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-xs font-bold uppercase">{error}</div>}
+                                    </>
+                                ) : (
+                                    <div className="space-y-4 animate-in slide-in-from-right-4 duration-500">
+                                        <div className="pb-4 border-b border-slate-100">
+                                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">Identidade Visual da Cesta</h3>
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Personalize o cabeçalho dos relatórios</p>
+                                        </div>
                                         <div>
                                             <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Empresa Destinatária</label>
                                             <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-none focus:border-indigo-500 focus:outline-none font-bold text-slate-700 uppercase text-xs" />
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
-                                            <label className="cursor-pointer bg-slate-50 border border-slate-200 p-2 text-[9px] font-bold text-slate-500 uppercase flex flex-col items-center gap-1 hover:bg-indigo-50 hover:text-indigo-600 transition-all">
+                                            <label className="cursor-pointer bg-slate-50 border border-slate-200 p-2 text-[9px] font-bold text-slate-500 uppercase flex flex-col items-center gap-1 hover:bg-indigo-50 hover:text-indigo-600 transition-all overflow-hidden h-20 justify-center">
                                                 <input type="file" className="hidden" onChange={handleLogoChange} accept="image/*" />
-                                                {companyLogoBase64 ? <img src={companyLogoBase64} alt="Logo" className="h-8 w-auto object-contain" /> : 'Logo Empresa'}
+                                                {companyLogoBase64 ? <img src={companyLogoBase64} alt="Logo" className="h-full w-auto object-contain" /> : 'Logo Empresa'}
                                             </label>
-                                            <label className="cursor-pointer bg-slate-50 border border-slate-200 p-2 text-[9px] font-bold text-slate-500 uppercase flex flex-col items-center gap-1 hover:bg-indigo-50 hover:text-indigo-600 transition-all">
+                                            <label className="cursor-pointer bg-slate-50 border border-slate-200 p-2 text-[9px] font-bold text-slate-500 uppercase flex flex-col items-center gap-1 hover:bg-indigo-50 hover:text-indigo-600 transition-all overflow-hidden h-20 justify-center">
                                                 <input type="file" className="hidden" onChange={handleSloganImageChange} accept="image/*" />
-                                                {sloganImageBase64 ? <img src={sloganImageBase64} alt="Slogan" className="h-8 w-auto object-contain" /> : 'Slogan Tema'}
+                                                {sloganImageBase64 ? <img src={sloganImageBase64} alt="Slogan" className="h-full w-auto object-contain" /> : 'Slogan Tema'}
                                             </label>
                                         </div>
                                     </div>
@@ -879,14 +879,49 @@ export const CestasBasicas: React.FC = () => {
                     <>
                         {currentStep === 2 && (
                             <div className="mt-8 pt-8 border-t border-slate-200 animate-in slide-in-from-right-8 duration-500 print:hidden hidden-in-export">
+                                {/* Monthly Exclusions integrated here */}
+                                <div className="mb-10 p-6 bg-red-50 border-2 border-red-100 rounded-lg">
+                                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                        <div>
+                                            <h3 className="text-sm font-black text-red-800 uppercase tracking-tighter flex items-center gap-2">
+                                                🚫 Excluir do Mês
+                                            </h3>
+                                            <p className="text-[10px] text-red-600 font-bold uppercase tracking-widest">Selecione quem NÃO receberá a cesta este mês (faltas, etc)</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setShowExclusionModal(true)}
+                                            className="px-6 py-2 bg-red-600 text-white text-xs font-black uppercase rounded-sm hover:bg-red-700 transition-colors shadow-md flex items-center gap-2"
+                                        >
+                                            Gerenciar Excluídos
+                                            {(excludedEmployees || []).length > 0 && (
+                                                <span className="ml-1 bg-white text-red-600 px-2 py-0.5 rounded-full text-[10px]">
+                                                    {excludedEmployees.length}
+                                                </span>
+                                            )}
+                                        </button>
+                                    </div>
+                                    {(excludedEmployees || []).length > 0 && (
+                                        <div className="mt-4 flex flex-wrap gap-2">
+                                            {excludedEmployees.map(name => (
+                                                <span key={name} className="bg-red-200 text-red-800 px-2 py-1 rounded text-[9px] font-black uppercase">{name}</span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
                                 <div className="mb-8">
                                     <div className="mb-4">
-                                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">1. Identificar Funcionários que NÃO BEBEM</h3>
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Selecione quem receberá a cesta sem álcool</p>
+                                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">
+                                            🥤 Abstêmios
+                                        </h3>
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Selecione quem receberá a cesta SEM Álcool</p>
                                     </div>
                                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
                                         {(actualEmployees || []).map((name, idx) => {
+                                            const isExcluded = (excludedEmployees || []).includes(name);
                                             const isNonDrinker = (selectedNonDrinkers || []).includes(idx);
+                                            if (isExcluded) return null;
+
                                             return (
                                                 <button
                                                     key={idx}
@@ -898,7 +933,7 @@ export const CestasBasicas: React.FC = () => {
                                                 >
                                                     <div className="text-xl mb-1">{isNonDrinker ? '🥤' : '🍺'}</div>
                                                     <div className="leading-tight shrink-0">{(name || '').split(' ')[0]}</div>
-                                                    {isNonDrinker && <div className="mt-1 text-[7px] bg-indigo-600 text-white px-1 rounded-full">SEM ÁLCOOL</div>}
+                                                    {isNonDrinker && <div className="mt-1 text-[7px] bg-indigo-600 text-white px-1 rounded-full uppercase">Alcool Free</div>}
                                                 </button>
                                             );
                                         })}
