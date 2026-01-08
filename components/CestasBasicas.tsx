@@ -177,15 +177,18 @@ export const CestasBasicas: React.FC = () => {
 
     useEffect(() => {
         const reloadAllData = async () => {
+            let names = actualEmployees;
+            let nonDrinkerIndices = selectedNonDrinkers;
+
             // 1. Load employees from registry
             try {
                 const registered = await SupabaseService.getEmployees() || [];
                 if (registered.length > 0) {
-                    const names = registered.map(r => r.name) || [];
+                    names = registered.map(r => r.name) || [];
                     setActualEmployees(names);
 
                     // Auto-select non-drinkers based on registry
-                    const nonDrinkerIndices = registered
+                    nonDrinkerIndices = registered
                         .map((r, idx) => r.isNonDrinker ? idx : -1)
                         .filter(idx => idx !== -1);
                     setSelectedNonDrinkers(nonDrinkerIndices);
