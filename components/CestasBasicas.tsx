@@ -120,6 +120,7 @@ export const CestasBasicas: React.FC = () => {
     const [exclusionMonth, setExclusionMonth] = useState<number>(new Date().getMonth() + 1);
     const [exclusionYear, setExclusionYear] = useState<number>(new Date().getFullYear());
     const [exportMenuOpen, setExportMenuOpen] = useState<Tab | null>(null);
+    const [currentStep, setCurrentStep] = useState<number>(1);
 
     // Load persistent quota timer on mount
     useEffect(() => {
@@ -808,258 +809,342 @@ export const CestasBasicas: React.FC = () => {
             )}
 
             <main className="space-y-6">
-                <div className={`bg-white p-8 border-2 ${appMode === 'CHRISTMAS' ? 'border-red-200' : 'border-slate-100'} rounded-sm shadow-sm print:hidden hidden-in-export`}>
-                    <div className="grid lg:grid-cols-2 gap-8 items-start">
-                        <ImageUploader onFilesReady={handleFilesReady} disabled={isLoading} />
-                        <div className="space-y-6">
-                            <button
-                                onClick={processInvoices}
-                                disabled={(files || []).length === 0 || isLoading || retryCountdown !== null}
-                                className={`w-full font-black uppercase text-sm py-5 px-8 rounded-none transition-all duration-300 transform hover:scale-[1.01] shadow-xl disabled:bg-slate-200 disabled:shadow-none disabled:cursor-not-allowed ${appMode === 'CHRISTMAS' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'
-                                    }`}
-                            >
-                                {isLoading ? 'Analisando via I.A...' : retryCountdown !== null ? `Aguarde ${formatCountdown(retryCountdown)}...` : `Processar ${(files || []).length > 0 ? files.length : ''} Notas`}
-                            </button>
+                {currentStep === 1 && (
+                    <div className={`bg-white p-8 border-2 ${appMode === 'CHRISTMAS' ? 'border-red-200' : 'border-slate-100'} rounded-sm shadow-sm print:hidden hidden-in-export animate-in fade-in`}>
+                        <div className="grid lg:grid-cols-2 gap-8 items-start">
+                            <ImageUploader onFilesReady={handleFilesReady} disabled={isLoading} />
+                            <div className="space-y-6">
+                                <button
+                                    onClick={processInvoices}
+                                    disabled={(files || []).length === 0 || isLoading || retryCountdown !== null}
+                                    className={`w-full font-black uppercase text-sm py-5 px-8 rounded-none transition-all duration-300 transform hover:scale-[1.01] shadow-xl disabled:bg-slate-200 disabled:shadow-none disabled:cursor-not-allowed ${appMode === 'CHRISTMAS' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-orange-500 hover:bg-orange-600 text-white'
+                                        }`}
+                                >
+                                    {isLoading ? 'Analisando via I.A...' : retryCountdown !== null ? `Aguarde ${formatCountdown(retryCountdown)}...` : `Processar ${(files || []).length > 0 ? files.length : ''} Notas`}
+                                </button>
 
-                            {retryCountdown !== null && (
-                                <div className="p-4 bg-amber-50 border-l-4 border-amber-500 animate-pulse">
-                                    <div className="flex items-center gap-3">
-                                        <div className="text-2xl">⏳</div>
-                                        <div>
-                                            <div className="text-[10px] font-black text-amber-800 uppercase tracking-tighter">Modo de Espera Ativo</div>
-                                            <div className="text-[14px] font-black text-amber-600 uppercase">Aguarde {formatCountdown(retryCountdown)} para tentar novamente</div>
+                                {retryCountdown !== null && (
+                                    <div className="p-4 bg-amber-50 border-l-4 border-amber-500 animate-pulse">
+                                        <div className="flex items-center gap-3">
+                                            <div className="text-2xl">⏳</div>
+                                            <div>
+                                                <div className="text-[10px] font-black text-amber-800 uppercase tracking-tighter">Modo de Espera Ativo</div>
+                                                <div className="text-[14px] font-black text-amber-600 uppercase">Aguarde {formatCountdown(retryCountdown)} para tentar novamente</div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            {error && !retryCountdown && <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-xs font-bold uppercase">{error}</div>}
+                                {error && !retryCountdown && <div className="p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-xs font-bold uppercase">{error}</div>}
 
-                            {invoiceData && (
-                                <div className="space-y-4 pt-6 border-t border-slate-50">
-                                    <div>
-                                        <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Empresa Destinatária</label>
-                                        <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-none focus:border-indigo-500 focus:outline-none font-bold text-slate-700 uppercase text-xs" />
+                                {invoiceData && (
+                                    <div className="space-y-4 pt-6 border-t border-slate-50">
+                                        <div>
+                                            <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Empresa Destinatária</label>
+                                            <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-none focus:border-indigo-500 focus:outline-none font-bold text-slate-700 uppercase text-xs" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <label className="cursor-pointer bg-slate-50 border border-slate-200 p-2 text-[9px] font-bold text-slate-500 uppercase flex flex-col items-center gap-1 hover:bg-indigo-50 hover:text-indigo-600 transition-all">
+                                                <input type="file" className="hidden" onChange={handleLogoChange} accept="image/*" />
+                                                {companyLogoBase64 ? <img src={companyLogoBase64} alt="Logo" className="h-8 w-auto object-contain" /> : 'Logo Empresa'}
+                                            </label>
+                                            <label className="cursor-pointer bg-slate-50 border border-slate-200 p-2 text-[9px] font-bold text-slate-500 uppercase flex flex-col items-center gap-1 hover:bg-indigo-50 hover:text-indigo-600 transition-all">
+                                                <input type="file" className="hidden" onChange={handleSloganImageChange} accept="image/*" />
+                                                {sloganImageBase64 ? <img src={sloganImageBase64} alt="Slogan" className="h-8 w-auto object-contain" /> : 'Slogan Tema'}
+                                            </label>
+                                        </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <label className="cursor-pointer bg-slate-50 border border-slate-200 p-2 text-[9px] font-bold text-slate-500 uppercase flex flex-col items-center gap-1 hover:bg-indigo-50 hover:text-indigo-600 transition-all">
-                                            <input type="file" className="hidden" onChange={handleLogoChange} accept="image/*" />
-                                            {companyLogoBase64 ? <img src={companyLogoBase64} alt="Logo" className="h-8 w-auto object-contain" /> : 'Logo Empresa'}
-                                        </label>
-                                        <label className="cursor-pointer bg-slate-50 border border-slate-200 p-2 text-[9px] font-bold text-slate-500 uppercase flex flex-col items-center gap-1 hover:bg-indigo-50 hover:text-indigo-600 transition-all">
-                                            <input type="file" className="hidden" onChange={handleSloganImageChange} accept="image/*" />
-                                            {sloganImageBase64 ? <img src={sloganImageBase64} alt="Slogan" className="h-8 w-auto object-contain" /> : 'Slogan Tema'}
-                                        </label>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* --- Targeted Distribution UI --- */}
-                    {invoiceData && (
-                        <div className="mt-8 pt-8 border-t border-slate-200 animate-in slide-in-from-top-4 duration-500 print:hidden hidden-in-export">
-                            <div className="mb-8">
-                                <div className="mb-4">
-                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">1. Identificar Funcionários que NÃO BEBEM</h3>
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Selecione quem receberá a cesta sem álcool</p>
-                                </div>
-                                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
-                                    {(actualEmployees || []).map((name, idx) => {
-                                        const isNonDrinker = (selectedNonDrinkers || []).includes(idx);
-                                        return (
-                                            <button
-                                                key={idx}
-                                                onClick={() => toggleEmployeeDrinking(idx)}
-                                                className={`p-3 text-[9px] font-black uppercase text-center border-2 transition-all rounded-sm flex flex-col items-center justify-between min-h-[70px] ${isNonDrinker
-                                                    ? (appMode === 'CHRISTMAS' ? 'bg-red-50 border-red-600 text-red-700' : 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-inner')
-                                                    : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300'
-                                                    }`}
-                                            >
-                                                <div className="text-xl mb-1">{isNonDrinker ? '🥤' : '🍺'}</div>
-                                                <div className="leading-tight shrink-0">{(name || '').split(' ')[0]}</div>
-                                                {isNonDrinker && <div className="mt-1 text-[7px] bg-indigo-600 text-white px-1 rounded-full">SEM ÁLCOOL</div>}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            <div className="mb-8">
-                                <div className="mb-4">
-                                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">2. Alocação de Alimentos</h3>
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Defina quais itens vão para cada grupo</p>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    {(invoiceData?.items || []).map(item => {
-                                        const config = (itemAllocation || {})[item.id] || { mode: 'ALL' };
-                                        const isCustom = config.mode === 'CUSTOM';
-                                        const totalEmployees = activeEmployees.length;
-                                        const nonDrinkerCount = (selectedNonDrinkers || []).length;
-                                        const drinkerCount = totalEmployees - nonDrinkerCount;
-
-                                        // Calculate divergence
-                                        const distributed = (config.customQtyNonDrinker || 0) * nonDrinkerCount + (config.customQtyDrinker || 0) * drinkerCount;
-                                        const diff = item.quantity - distributed;
-                                        const diffAbs = Math.abs(diff);
-                                        const isClosed = diffAbs < 0.001;
-                                        const hasRemainder = diff > 0.001;
-                                        const needsMore = diff < -0.001;
-
-                                        return (
-                                            <div key={item.id} className={`p-3 border-2 rounded-lg transition-all flex flex-col gap-2 ${isClosed ? 'border-green-500 bg-green-50/50 ring-1 ring-green-500/30' :
-                                                needsMore ? 'border-red-500 bg-red-50/50 ring-1 ring-red-500/30' :
-                                                    hasRemainder ? 'border-orange-400 bg-orange-50/50 ring-1 ring-orange-400/30' :
-                                                        isCustom ? 'border-amber-400 bg-amber-50/50 ring-2 ring-amber-400/30' : 'border-slate-200 bg-slate-50/50'
-                                                }`}>
-                                                <div className="flex justify-between items-center">
-                                                    <div className="text-[10px] font-bold text-slate-800 truncate uppercase">{item.description}</div>
-                                                    <div className="flex gap-1 items-center">
-                                                        {isClosed && <span className="text-[7px] font-black bg-green-500 text-white px-1.5 py-0.5 rounded-full">✅ EXATO</span>}
-                                                        {hasRemainder && <span className="text-[7px] font-black bg-orange-500 text-white px-1.5 py-0.5 rounded-full">⚠️ SOBRA</span>}
-                                                        {needsMore && <span className="text-[7px] font-black bg-red-500 text-white px-1.5 py-0.5 rounded-full">❌ FALTA</span>}
-                                                        {isCustom && (
-                                                            <span className="text-[7px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded-full">PERSONALIZADO</span>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* Total available */}
-                                                <div className="text-[9px] text-slate-500 font-bold">
-                                                    Total Disponível: {item.quantity.toLocaleString('pt-BR', { minimumFractionDigits: 3 })} {item.unit}
-                                                </div>
-
-                                                {/* Mode Selection Buttons */}
-                                                <div className="flex gap-1">
-                                                    {['ALL', 'NON_DRINKER', 'DRINKER'].map(type => (
-                                                        <button
-                                                            key={type}
-                                                            onClick={() => toggleAllocation(item.id, type as any)}
-                                                            className={`flex-1 text-[8px] font-black p-1.5 rounded-sm border transition-all ${config.mode === type && !isCustom
-                                                                ? (appMode === 'CHRISTMAS' ? 'bg-red-600 border-red-600 text-white' : 'bg-indigo-600 border-indigo-600 text-white')
-                                                                : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400'
-                                                                }`}
-                                                        >
-                                                            {type === 'ALL' ? 'TODOS' : type === 'NON_DRINKER' ? 'NÃO BEBEM' : 'BEBEM'}
-                                                        </button>
-                                                    ))}
-                                                </div>
-
-                                                {/* Custom Quantity Inputs */}
-                                                <div className="mt-2 p-2 bg-white rounded border border-amber-200">
-                                                    <p className="text-[8px] font-black text-amber-700 uppercase mb-2">⚙️ Qtd. Manual por Funcionário</p>
-                                                    <div className="grid grid-cols-2 gap-2">
-                                                        <div>
-                                                            <label className="text-[8px] font-bold text-slate-600 block mb-1">
-                                                                🥤 Abstêmios ({nonDrinkerCount})
-                                                            </label>
-                                                            <input
-                                                                type="number"
-                                                                min="0"
-                                                                step="0.001"
-                                                                value={config.customQtyNonDrinker || ''}
-                                                                onChange={(e) => {
-                                                                    const val = parseFloat(e.target.value) || 0;
-                                                                    setCustomQuantity(
-                                                                        item.id,
-                                                                        val,
-                                                                        config.customQtyDrinker || 0
-                                                                    );
-                                                                }}
-                                                                className="w-full px-2 py-1 border border-indigo-300 rounded text-[10px] font-bold text-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                                                placeholder="0"
-                                                            />
-                                                            <p className="text-[7px] text-slate-500 mt-0.5">
-                                                                Total: {((config.customQtyNonDrinker || 0) * nonDrinkerCount).toFixed(3)}
-                                                            </p>
-                                                        </div>
-                                                        <div>
-                                                            <label className="text-[8px] font-bold text-slate-600 block mb-1">
-                                                                🍺 Padrão ({drinkerCount})
-                                                            </label>
-                                                            <input
-                                                                type="number"
-                                                                min="0"
-                                                                step="0.001"
-                                                                value={config.customQtyDrinker || ''}
-                                                                onChange={(e) => {
-                                                                    const val = parseFloat(e.target.value) || 0;
-                                                                    setCustomQuantity(
-                                                                        item.id,
-                                                                        config.customQtyNonDrinker || 0,
-                                                                        val
-                                                                    );
-                                                                }}
-                                                                className="w-full px-2 py-1 border border-orange-300 rounded text-[10px] font-bold text-orange-700 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                                                                placeholder="0"
-                                                            />
-                                                            <p className="text-[7px] text-slate-500 mt-0.5">
-                                                                Total: {((config.customQtyDrinker || 0) * drinkerCount).toFixed(3)}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="mt-2 pt-2 border-t border-amber-200">
-                                                        <p className="text-[8px] font-bold text-amber-800">
-                                                            ✅ Soma: {(((config.customQtyNonDrinker || 0) * nonDrinkerCount) + ((config.customQtyDrinker || 0) * drinkerCount)).toFixed(3)} / {item.quantity.toFixed(3)}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+                                )}
                             </div>
                         </div>
-                    )}
-                </div>
 
-                {invoiceData && motivationalMessages.length > 0 && (
-                    <div id="active-view" className="animate-in slide-in-from-bottom-4 duration-700">
-                        {activeTab === 'summary' && (
-                            <InvoiceSummary
-                                data={invoiceData}
-                                slogans={motivationalMessages}
-                                companyName={companyName}
-                                companyLogo={companyLogoBase64}
-                                sloganImage={sloganImageBase64}
-                                isChristmas={appMode === 'CHRISTMAS'}
-                                selectedNonDrinkers={selectedNonDrinkers}
-                                activeEmployees={activeEmployees}
-                                itemAllocation={itemAllocation}
-                            />
-                        )}
-                        {activeTab === 'signature' && (
-                            <SignatureSheet
-                                employeeNames={activeEmployees || []}
-                                companyName={companyName}
-                                companyLogo={companyLogoBase64}
-                                isChristmas={appMode === 'CHRISTMAS'}
-                            />
-                        )}
-                        {activeTab === 'pantry' && (
-                            <PantryList
-                                items={invoiceData?.items || []}
-                                employeeNames={activeEmployees || []}
-                                selectedNonDrinkers={selectedNonDrinkers}
-                                itemAllocation={itemAllocation}
-                                companyName={companyName}
-                                companyLogo={companyLogoBase64}
-                                isChristmas={appMode === 'CHRISTMAS'}
-                            />
+                        {invoiceData && (
+                            <div className="mt-8 flex justify-end animate-in fade-in slide-in-from-bottom-2">
+                                <button
+                                    onClick={() => setCurrentStep(2)}
+                                    className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-black uppercase rounded-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                                >
+                                    Seguinte
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                    </svg>
+                                </button>
+                            </div>
                         )}
                     </div>
                 )}
-            </main>
 
-            {/* Sticky Navigation Tabs */}
-            {invoiceData && (
-                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-md border-2 border-slate-200 rounded-sm shadow-2xl flex overflow-hidden z-40 print:hidden hidden-in-export">
-                    <TabButton tabName="summary" icon={<ReceiptIcon className="w-4 h-4" />} label="Resumo" />
-                    <TabButton tabName="signature" icon={<SignatureIcon className="w-4 h-4" />} label="Assinaturas" />
-                    <TabButton tabName="pantry" icon={<BasketIcon className="w-4 h-4" />} label="Dispensa" />
-                </div>
-            )}
-        </div>
+                {/* --- Targeted Distribution UI --- */}
+                {invoiceData && (
+                    <>
+                        {currentStep === 2 && (
+                            <div className="mt-8 pt-8 border-t border-slate-200 animate-in slide-in-from-right-8 duration-500 print:hidden hidden-in-export">
+                                <div className="mb-8">
+                                    <div className="mb-4">
+                                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">1. Identificar Funcionários que NÃO BEBEM</h3>
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Selecione quem receberá a cesta sem álcool</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+                                        {(actualEmployees || []).map((name, idx) => {
+                                            const isNonDrinker = (selectedNonDrinkers || []).includes(idx);
+                                            return (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => toggleEmployeeDrinking(idx)}
+                                                    className={`p-3 text-[9px] font-black uppercase text-center border-2 transition-all rounded-sm flex flex-col items-center justify-between min-h-[70px] ${isNonDrinker
+                                                        ? (appMode === 'CHRISTMAS' ? 'bg-red-50 border-red-600 text-red-700' : 'bg-indigo-50 border-indigo-600 text-indigo-700 shadow-inner')
+                                                        : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300'
+                                                        }`}
+                                                >
+                                                    <div className="text-xl mb-1">{isNonDrinker ? '🥤' : '🍺'}</div>
+                                                    <div className="leading-tight shrink-0">{(name || '').split(' ')[0]}</div>
+                                                    {isNonDrinker && <div className="mt-1 text-[7px] bg-indigo-600 text-white px-1 rounded-full">SEM ÁLCOOL</div>}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Step 2 Buttons */}
+                                <div className="mt-8 flex justify-between items-center animate-in fade-in pt-4 border-t border-slate-100">
+                                    <button
+                                        onClick={() => setCurrentStep(1)}
+                                        className="px-6 py-2 text-slate-400 hover:text-slate-600 text-xs font-black uppercase flex items-center gap-2 transition-colors"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3 h-3 rotate-180">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                        Voltar
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentStep(3)}
+                                        className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black uppercase rounded-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                                    >
+                                        Seguinte
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {currentStep === 3 && (
+                            <div className="mt-8 pt-8 border-t border-slate-200 animate-in slide-in-from-right-8 duration-500 print:hidden hidden-in-export">
+                                <div className="mb-8">
+                                    <div className="mb-4">
+                                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">2. Alocação de Alimentos</h3>
+                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Defina quais itens vão para cada grupo</p>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                        {(invoiceData?.items || []).map(item => {
+                                            const config = (itemAllocation || {})[item.id] || { mode: 'ALL' };
+                                            const isCustom = config.mode === 'CUSTOM';
+                                            const totalEmployees = activeEmployees.length;
+                                            const nonDrinkerCount = (selectedNonDrinkers || []).length;
+                                            const drinkerCount = totalEmployees - nonDrinkerCount;
+
+                                            // Calculate divergence
+                                            const distributed = (config.customQtyNonDrinker || 0) * nonDrinkerCount + (config.customQtyDrinker || 0) * drinkerCount;
+                                            const diff = item.quantity - distributed;
+                                            const diffAbs = Math.abs(diff);
+                                            const isClosed = diffAbs < 0.001;
+                                            const hasRemainder = diff > 0.001;
+                                            const needsMore = diff < -0.001;
+
+                                            return (
+                                                <div key={item.id} className={`p-3 border-2 rounded-lg transition-all flex flex-col gap-2 ${isClosed ? 'border-green-500 bg-green-50/50 ring-1 ring-green-500/30' :
+                                                    needsMore ? 'border-red-500 bg-red-50/50 ring-1 ring-red-500/30' :
+                                                        hasRemainder ? 'border-orange-400 bg-orange-50/50 ring-1 ring-orange-400/30' :
+                                                            isCustom ? 'border-amber-400 bg-amber-50/50 ring-2 ring-amber-400/30' : 'border-slate-200 bg-slate-50/50'
+                                                    }`}>
+                                                    <div className="flex justify-between items-center">
+                                                        <div className="text-[10px] font-bold text-slate-800 truncate uppercase">{item.description}</div>
+                                                        <div className="flex gap-1 items-center">
+                                                            {isClosed && <span className="text-[7px] font-black bg-green-500 text-white px-1.5 py-0.5 rounded-full">✅ EXATO</span>}
+                                                            {hasRemainder && <span className="text-[7px] font-black bg-orange-500 text-white px-1.5 py-0.5 rounded-full">⚠️ SOBRA</span>}
+                                                            {needsMore && <span className="text-[7px] font-black bg-red-500 text-white px-1.5 py-0.5 rounded-full">❌ FALTA</span>}
+                                                            {isCustom && (
+                                                                <span className="text-[7px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded-full">PERSONALIZADO</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Total available */}
+                                                    <div className="text-[9px] text-slate-500 font-bold">
+                                                        Total Disponível: {item.quantity.toLocaleString('pt-BR', { minimumFractionDigits: 3 })} {item.unit}
+                                                    </div>
+
+                                                    {/* Mode Selection Buttons */}
+                                                    <div className="flex gap-1">
+                                                        {['ALL', 'NON_DRINKER', 'DRINKER'].map(type => (
+                                                            <button
+                                                                key={type}
+                                                                onClick={() => toggleAllocation(item.id, type as any)}
+                                                                className={`flex-1 text-[8px] font-black p-1.5 rounded-sm border transition-all ${config.mode === type && !isCustom
+                                                                    ? (appMode === 'CHRISTMAS' ? 'bg-red-600 border-red-600 text-white' : 'bg-indigo-600 border-indigo-600 text-white')
+                                                                    : 'bg-white border-slate-200 text-slate-400 hover:border-slate-400'
+                                                                    }`}
+                                                            >
+                                                                {type === 'ALL' ? 'TODOS' : type === 'NON_DRINKER' ? 'NÃO BEBEM' : 'BEBEM'}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+
+                                                    {/* Custom Quantity Inputs */}
+                                                    <div className="mt-2 p-2 bg-white rounded border border-amber-200">
+                                                        <p className="text-[8px] font-black text-amber-700 uppercase mb-2">⚙️ Qtd. Manual por Funcionário</p>
+                                                        <div className="grid grid-cols-2 gap-2">
+                                                            <div>
+                                                                <label className="text-[8px] font-bold text-slate-600 block mb-1">
+                                                                    🥤 Abstêmios ({nonDrinkerCount})
+                                                                </label>
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    step="0.001"
+                                                                    value={config.customQtyNonDrinker || ''}
+                                                                    onChange={(e) => {
+                                                                        const val = parseFloat(e.target.value) || 0;
+                                                                        setCustomQuantity(
+                                                                            item.id,
+                                                                            val,
+                                                                            config.customQtyDrinker || 0
+                                                                        );
+                                                                    }}
+                                                                    className="w-full px-2 py-1 border border-indigo-300 rounded text-[10px] font-bold text-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                                    placeholder="0"
+                                                                />
+                                                                <p className="text-[7px] text-slate-500 mt-0.5">
+                                                                    Total: {((config.customQtyNonDrinker || 0) * nonDrinkerCount).toFixed(3)}
+                                                                </p>
+                                                            </div>
+                                                            <div>
+                                                                <label className="text-[8px] font-bold text-slate-600 block mb-1">
+                                                                    🍺 Padrão ({drinkerCount})
+                                                                </label>
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    step="0.001"
+                                                                    value={config.customQtyDrinker || ''}
+                                                                    onChange={(e) => {
+                                                                        const val = parseFloat(e.target.value) || 0;
+                                                                        setCustomQuantity(
+                                                                            item.id,
+                                                                            config.customQtyNonDrinker || 0,
+                                                                            val
+                                                                        );
+                                                                    }}
+                                                                    className="w-full px-2 py-1 border border-orange-300 rounded text-[10px] font-bold text-orange-700 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                                                                    placeholder="0"
+                                                                />
+                                                                <p className="text-[7px] text-slate-500 mt-0.5">
+                                                                    Total: {((config.customQtyDrinker || 0) * drinkerCount).toFixed(3)}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="mt-2 pt-2 border-t border-amber-200">
+                                                            <p className="text-[8px] font-bold text-amber-800">
+                                                                ✅ Soma: {(((config.customQtyNonDrinker || 0) * nonDrinkerCount) + ((config.customQtyDrinker || 0) * drinkerCount)).toFixed(3)} / {item.quantity.toFixed(3)}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <div className="mt-8 flex justify-between items-center animate-in fade-in pt-4 border-t border-slate-100">
+                                        <button
+                                            onClick={() => setCurrentStep(2)}
+                                            className="px-6 py-2 text-slate-400 hover:text-slate-600 text-xs font-black uppercase flex items-center gap-2 transition-colors"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3 h-3 rotate-180">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                            </svg>
+                                            Voltar
+                                        </button>
+                                        <button
+                                            onClick={() => setCurrentStep(4)}
+                                            className="px-8 py-3 bg-slate-800 hover:bg-slate-900 text-white text-sm font-black uppercase rounded-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2"
+                                        >
+                                            Finalizar e Ver Listas
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* STEP 4: RESULTS */}
+                {
+                    currentStep === 4 && invoiceData && (
+                        <div id="active-view" className="animate-in slide-in-from-bottom-4 duration-700">
+                            {/* NAVIGATION & TABS */}
+                            <div className="mb-6 flex flex-col md:flex-row justify-between items-center gap-4 print:hidden">
+                                <button
+                                    onClick={() => setCurrentStep(3)}
+                                    className="px-4 py-2 text-slate-400 hover:text-slate-600 text-xs font-black uppercase flex items-center gap-2 transition-colors group"
+                                >
+                                    <div className="p-1 bg-slate-100 group-hover:bg-slate-200 rounded-full">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3 h-3 rotate-180">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                    </div>
+                                    Editar Distribuição
+                                </button>
+
+                                <div className="flex bg-white rounded-sm shadow-sm border border-slate-100 overflow-hidden">
+                                    <TabButton tabName="summary" icon={<ReceiptIcon className="w-4 h-4" />} label="Resumo" />
+                                    <TabButton tabName="signature" icon={<SignatureIcon className="w-4 h-4" />} label="Assinaturas" />
+                                    <TabButton tabName="pantry" icon={<BasketIcon className="w-4 h-4" />} label="Dispensa" />
+                                </div>
+                            </div>
+
+                            {activeTab === 'summary' && (
+                                <InvoiceSummary
+                                    data={invoiceData}
+                                    slogans={motivationalMessages}
+                                    companyName={companyName}
+                                    companyLogo={companyLogoBase64}
+                                    sloganImage={sloganImageBase64}
+                                    isChristmas={appMode === 'CHRISTMAS'}
+                                    selectedNonDrinkers={selectedNonDrinkers}
+                                    activeEmployees={activeEmployees}
+                                    itemAllocation={itemAllocation}
+                                />
+                            )}
+                            {activeTab === 'signature' && (
+                                <SignatureSheet
+                                    employeeNames={activeEmployees || []}
+                                    companyName={companyName}
+                                    companyLogo={companyLogoBase64}
+                                    isChristmas={appMode === 'CHRISTMAS'}
+                                />
+                            )}
+                            {activeTab === 'pantry' && (
+                                <PantryList
+                                    items={invoiceData?.items || []}
+                                    employeeNames={activeEmployees || []}
+                                    selectedNonDrinkers={selectedNonDrinkers}
+                                    itemAllocation={itemAllocation}
+                                    companyName={companyName}
+                                    companyLogo={companyLogoBase64}
+                                    isChristmas={appMode === 'CHRISTMAS'}
+                                />
+                            )}
+                        </div>
+                    )
+                }
+            </main >
+
+
+        </div >
     );
 };
 
