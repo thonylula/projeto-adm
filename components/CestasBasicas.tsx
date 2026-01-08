@@ -217,7 +217,20 @@ export const CestasBasicas: React.FC = () => {
                         updatedAllocation[item.id] = { mode: 'ALL' };
                     }
                 });
-                setItemAllocation(updatedAllocation);
+
+                // 3. Auto-Calculate Quantities (Smart Distribution)
+                // Filter excluded employees to get accurate count
+                const currentExcluded = getExcludedEmployees(exclusionMonth, exclusionYear);
+                const activeNames = (names || []).filter(n => !currentExcluded.includes(n));
+
+                const smartAllocation = computeSmartDistribution(
+                    invoiceData.items,
+                    activeNames.length,
+                    nonDrinkerIndices.length,
+                    updatedAllocation
+                );
+
+                setItemAllocation(smartAllocation);
             }
         };
 
@@ -271,18 +284,18 @@ export const CestasBasicas: React.FC = () => {
     // Filter out excluded employees for the current month
     const activeEmployees = (actualEmployees || []).filter(name => !(excludedEmployees || []).includes(name));
 
-    // Calculate exact quantities for all items automatically
-    const calculateExactQuantities = () => {
-        if (!invoiceData?.items) return;
-
-        const totalEmployees = activeEmployees.length;
-        const nonDrinkerCount = selectedNonDrinkers.length;
+    // Helper to calculate smart distribution
+    const computeSmartDistribution = (
+        items: any[],
+        totalEmployees: number,
+        nonDrinkerCount: number,
+        currentAllocations: Record<string, ItemAllocationConfig>
+    ) => {
         const drinkerCount = totalEmployees - nonDrinkerCount;
+        const result: Record<string, ItemAllocationConfig> = { ...currentAllocations };
 
-        const updatedAllocation: Record<string, ItemAllocationConfig> = {};
-
-        invoiceData.items.forEach(item => {
-            const currentConfig = itemAllocation[item.id] || { mode: 'ALL' };
+        items.forEach(item => {
+            const currentConfig = currentAllocations[item.id] || { mode: 'ALL' };
             const unit = item.unit.toUpperCase();
 
             // Check if unit is discrete (whole numbers only)
@@ -291,8 +304,14 @@ export const CestasBasicas: React.FC = () => {
             let qtyNonDrinker = 0;
             let qtyDrinker = 0;
 
+            // Determine strategy based on current mode
+            // If already CUSTOM with values, we might want to preserve? 
+            // BUT for "Automatic" context, we usually want to recalculate to hit Exact.
+            // However, if we just toggled to CUSTOM manually, we shouldn't overwrite.
+            // For the 'reloadAllData' call, we want to popluate. 
+            // For 'calculateExactQuantities' button, we assume user wants to Force Recalculate.
+
             if (currentConfig.mode === 'ALL') {
-                // Distribute to all employees
                 if (isDiscrete) {
                     const perEmployee = Math.floor(item.quantity / totalEmployees);
                     qtyNonDrinker = perEmployee;
@@ -303,7 +322,6 @@ export const CestasBasicas: React.FC = () => {
                     qtyDrinker = perEmployee;
                 }
             } else if (currentConfig.mode === 'NON_DRINKER') {
-                // Only for non-drinkers
                 if (nonDrinkerCount > 0) {
                     if (isDiscrete) {
                         qtyNonDrinker = Math.floor(item.quantity / nonDrinkerCount);
@@ -313,7 +331,6 @@ export const CestasBasicas: React.FC = () => {
                 }
                 qtyDrinker = 0;
             } else if (currentConfig.mode === 'DRINKER') {
-                // Only for drinkers
                 if (drinkerCount > 0) {
                     if (isDiscrete) {
                         qtyDrinker = Math.floor(item.quantity / drinkerCount);
@@ -323,19 +340,42 @@ export const CestasBasicas: React.FC = () => {
                 }
                 qtyNonDrinker = 0;
             } else if (currentConfig.mode === 'CUSTOM') {
-                // Keep existing custom values
+                // If it's already CUSTOM, we usually preserve it, 
+                // UNLESS this function is called explicitly to recalculate (like the button).
+                // But for initial load, if it came from GlobalConfig as CUSTOM, it might have fixed values 
+                // that don't match current employees. 
+                // Let's assume for now we keep existing Custom values if they exist, 
+                // but the user complaint is about "ALL" needing values.
+
                 qtyNonDrinker = currentConfig.customQtyNonDrinker || 0;
                 qtyDrinker = currentConfig.customQtyDrinker || 0;
             }
 
-            updatedAllocation[item.id] = {
-                mode: 'CUSTOM',
+            result[item.id] = {
+                mode: 'CUSTOM', // Lock into CUSTOM mode so the values persist and show in input fields
                 customQtyNonDrinker: qtyNonDrinker,
                 customQtyDrinker: qtyDrinker
             };
         });
 
-        setItemAllocation(updatedAllocation);
+        return result;
+    };
+
+    // Calculate exact quantities for all items automatically
+    const calculateExactQuantities = () => {
+        if (!invoiceData?.items) return;
+
+        const totalEmployees = activeEmployees.length;
+        const nonDrinkerCount = selectedNonDrinkers.length;
+
+        const smartAllocation = computeSmartDistribution(
+            invoiceData.items,
+            totalEmployees,
+            nonDrinkerCount,
+            itemAllocation
+        );
+
+        setItemAllocation(smartAllocation);
     };
 
     // Calculate distribution summary statistics
