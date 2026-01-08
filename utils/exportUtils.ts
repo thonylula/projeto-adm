@@ -18,7 +18,15 @@ export const exportToPdf = async (elementId: string, fileName: string) => {
             useCORS: true,
             allowTaint: true,
             letterRendering: true,
-            logging: true
+            logging: false,
+            onclone: (clonedDoc) => {
+                const hiddenElements = clonedDoc.querySelectorAll('.print\\:hidden, .hidden-in-export');
+                hiddenElements.forEach((hiddenEl: any) => {
+                    hiddenEl.style.display = 'none';
+                    hiddenEl.style.visibility = 'hidden';
+                    hiddenEl.style.opacity = '0';
+                });
+            }
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' as const },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] as const }
