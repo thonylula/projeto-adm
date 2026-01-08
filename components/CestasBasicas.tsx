@@ -397,18 +397,75 @@ export const CestasBasicas: React.FC = () => {
         reader.readAsText(file);
     };
 
-    const TabButton: React.FC<{ tabName: Tab, icon: React.ReactNode, label: string }> = ({ tabName, icon, label }) => (
-        <button
-            onClick={() => setActiveTab(tabName)}
-            className={`flex items-center gap-2 px-6 py-3 text-sm font-black uppercase rounded-none transition-all duration-200 border-b-4 ${activeTab === tabName
-                ? (appMode === 'CHRISTMAS' ? 'border-red-600 bg-red-50 text-red-700' : 'border-orange-500 bg-orange-50 text-orange-700')
-                : 'border-transparent text-gray-400 hover:text-gray-600'
-                }`}
-        >
-            {icon}
-            {label}
-        </button>
-    );
+    const TabButton: React.FC<{ tabName: Tab, icon: React.ReactNode, label: string }> = ({ tabName, icon, label }) => {
+        const isActive = activeTab === tabName;
+        const isMenuOpen = exportMenuOpen === tabName;
+
+        return (
+            <div className="relative group">
+                {isMenuOpen && (
+                    <div className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-2xl border-2 border-slate-100 p-2 min-w-[160px] animate-in slide-in-from-bottom-4 fade-in duration-200 flex flex-col gap-2 z-50">
+                        <div className="text-[9px] font-black text-slate-400 uppercase px-2 py-1 border-b border-slate-50 tracking-widest text-center">
+                            Exportar {label}
+                        </div>
+                        <button
+                            onClick={() => {
+                                exportToPdf('active-view', `listas_cesta_${new Date().getTime()}`);
+                                setExportMenuOpen(null);
+                            }}
+                            className="flex items-center gap-2 p-2 hover:bg-red-50 text-slate-600 hover:text-red-700 rounded transition-colors text-[10px] font-bold uppercase text-left"
+                        >
+                            <span className="text-lg">📄</span> PDF
+                        </button>
+                        <button
+                            onClick={() => {
+                                exportToPng('active-view', `cesta_${activeTab}`);
+                                setExportMenuOpen(null);
+                            }}
+                            className="flex items-center gap-2 p-2 hover:bg-orange-50 text-slate-600 hover:text-orange-700 rounded transition-colors text-[10px] font-bold uppercase text-left"
+                        >
+                            <span className="text-lg">🖼️</span> PNG
+                        </button>
+                        <button
+                            onClick={() => {
+                                exportToHtml('active-view', `cesta_${activeTab}`);
+                                setExportMenuOpen(null);
+                            }}
+                            className="flex items-center gap-2 p-2 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded transition-colors text-[10px] font-bold uppercase text-left"
+                        >
+                            <span className="text-lg">🌐</span> HTML
+                        </button>
+
+                        {/* Little triangle arrow at the bottom */}
+                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-br-2 border-r-2 border-b-2 border-slate-100 transform rotate-45"></div>
+                    </div>
+                )}
+
+                <button
+                    onClick={() => {
+                        if (isActive) {
+                            setExportMenuOpen(isMenuOpen ? null : tabName);
+                        } else {
+                            setActiveTab(tabName);
+                            setExportMenuOpen(null);
+                        }
+                    }}
+                    className={`flex items-center gap-2 px-6 py-3 text-sm font-black uppercase rounded-none transition-all duration-200 border-b-4 ${isActive
+                        ? (appMode === 'CHRISTMAS' ? 'border-red-600 bg-red-50 text-red-700' : 'border-orange-500 bg-orange-50 text-orange-700')
+                        : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-slate-50'
+                        }`}
+                >
+                    {icon}
+                    {label}
+                    {isActive && (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className={`w-3 h-3 ml-1 transition-transform duration-200 ${isMenuOpen ? 'rotate-180' : ''}`}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    )}
+                </button>
+            </div>
+        );
+    };
 
     // --- Initial Mode Selection ---
     if (!appMode) {
@@ -524,19 +581,6 @@ export const CestasBasicas: React.FC = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2 print:hidden justify-center md:justify-end">
-                    <button
-                        onClick={() => exportToPdf('active-view', `listas_cesta_${new Date().getTime()}`)}
-                        className="p-2 px-3 bg-red-600 hover:bg-red-700 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md flex items-center gap-1"
-                    >
-                        PDF (BAIXAR)
-                    </button>
-                    <button onClick={() => exportToPng(`active-view`, `cesta_${activeTab}`)} className="p-2 px-3 bg-orange-500 hover:bg-orange-600 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md flex items-center gap-1">
-                        PNG
-                    </button>
-                    <button onClick={() => exportToHtml(`active-view`, `cesta_${activeTab}`)} className="p-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md flex items-center gap-1">
-                        HTML
-                    </button>
-                    <div className="h-8 w-px bg-slate-200 mx-1 self-center" />
                     <button onClick={saveBackup} className="p-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md flex items-center gap-1">
                         SALVAR BACKUP
                     </button>
