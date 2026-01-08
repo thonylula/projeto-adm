@@ -121,6 +121,8 @@ export const CestasBasicas: React.FC = () => {
     const [exclusionYear, setExclusionYear] = useState<number>(new Date().getFullYear());
     const [exportMenuOpen, setExportMenuOpen] = useState<Tab | null>(null);
     const [currentStep, setCurrentStep] = useState<number>(1);
+    const [isSaving, setIsSaving] = useState<boolean>(false);
+    const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
 
     // Load persistent quota timer on mount
     useEffect(() => {
@@ -527,6 +529,40 @@ export const CestasBasicas: React.FC = () => {
         link.click();
     };
 
+    const saveBasketToSupabase = async () => {
+        if (!invoiceData) return;
+        setIsSaving(true);
+        setSaveSuccess(false);
+
+        const payload = {
+            invoiceData,
+            itemAllocation,
+            activeEmployees,
+            selectedNonDrinkers,
+            companyName,
+            appMode,
+            excludedEmployees,
+            timestamp: new Date().toISOString()
+        };
+
+        const configId = `basket_dist_${new Date().getFullYear()}_${(new Date().getMonth() + 1).toString().padStart(2, '0')}_${new Date().getDate()}_${new Date().getTime()}`;
+
+        try {
+            const success = await SupabaseService.saveConfig(configId, payload);
+            if (success) {
+                setSaveSuccess(true);
+                setTimeout(() => setSaveSuccess(false), 5000);
+            } else {
+                alert("Falha ao salvar no banco de dados.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Erro ao conectar com o Supabase.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const loadBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -552,71 +588,18 @@ export const CestasBasicas: React.FC = () => {
 
     const TabButton: React.FC<{ tabName: Tab, icon: React.ReactNode, label: string }> = ({ tabName, icon, label }) => {
         const isActive = activeTab === tabName;
-        const isMenuOpen = exportMenuOpen === tabName;
 
         return (
-            <div className="relative group">
-                {isMenuOpen && (
-                    <div className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-2xl border-2 border-slate-100 p-2 min-w-[160px] animate-in slide-in-from-bottom-4 fade-in duration-200 flex flex-col gap-2 z-50">
-                        <div className="text-[9px] font-black text-slate-400 uppercase px-2 py-1 border-b border-slate-50 tracking-widest text-center">
-                            Exportar {label}
-                        </div>
-                        <button
-                            onClick={() => {
-                                exportToPdf('active-view', `listas_cesta_${new Date().getTime()}`);
-                                setExportMenuOpen(null);
-                            }}
-                            className="flex items-center gap-2 p-2 hover:bg-red-50 text-slate-600 hover:text-red-700 rounded transition-colors text-[10px] font-bold uppercase text-left"
-                        >
-                            <span className="text-lg">📄</span> PDF
-                        </button>
-                        <button
-                            onClick={() => {
-                                exportToPng('active-view', `cesta_${activeTab}`);
-                                setExportMenuOpen(null);
-                            }}
-                            className="flex items-center gap-2 p-2 hover:bg-orange-50 text-slate-600 hover:text-orange-700 rounded transition-colors text-[10px] font-bold uppercase text-left"
-                        >
-                            <span className="text-lg">🖼️</span> PNG
-                        </button>
-                        <button
-                            onClick={() => {
-                                exportToHtml('active-view', `cesta_${activeTab}`);
-                                setExportMenuOpen(null);
-                            }}
-                            className="flex items-center gap-2 p-2 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded transition-colors text-[10px] font-bold uppercase text-left"
-                        >
-                            <span className="text-lg">🌐</span> HTML
-                        </button>
-
-                        {/* Little triangle arrow at the bottom */}
-                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-br-2 border-r-2 border-b-2 border-slate-100 transform rotate-45"></div>
-                    </div>
-                )}
-
-                <button
-                    onClick={() => {
-                        if (isActive) {
-                            setExportMenuOpen(isMenuOpen ? null : tabName);
-                        } else {
-                            setActiveTab(tabName);
-                            setExportMenuOpen(null);
-                        }
-                    }}
-                    className={`flex items-center gap-2 px-6 py-3 text-sm font-black uppercase rounded-none transition-all duration-200 border-b-4 ${isActive
-                        ? (appMode === 'CHRISTMAS' ? 'border-red-600 bg-red-50 text-red-700' : 'border-orange-500 bg-orange-50 text-orange-700')
-                        : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-slate-50'
-                        }`}
-                >
-                    {icon}
-                    {label}
-                    {isActive && (
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className={`w-3 h-3 ml-1 transition-transform duration-200 ${isMenuOpen ? 'rotate-180' : ''}`}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                        </svg>
-                    )}
-                </button>
-            </div>
+            <button
+                onClick={() => setActiveTab(tabName)}
+                className={`flex items-center gap-2 px-6 py-3 text-sm font-black uppercase rounded-none transition-all duration-200 border-b-4 ${isActive
+                    ? (appMode === 'CHRISTMAS' ? 'border-red-600 bg-red-50 text-red-700' : 'border-orange-500 bg-orange-50 text-orange-700')
+                    : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-slate-50'
+                    }`}
+            >
+                {icon}
+                {label}
+            </button>
         );
     };
 
@@ -708,13 +691,17 @@ export const CestasBasicas: React.FC = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-2 print:hidden justify-center md:justify-end">
-                    <button onClick={saveBackup} className="p-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md flex items-center gap-1">
-                        SALVAR BACKUP
-                    </button>
-                    <label className="p-2 px-3 bg-slate-600 hover:bg-slate-700 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md cursor-pointer flex items-center gap-1">
-                        <input type="file" className="hidden" onChange={loadBackup} accept=".json" />
-                        CARREGAR BACKUP
-                    </label>
+                    {currentStep === 4 && (
+                        <>
+                            <button onClick={saveBackup} className="p-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md flex items-center gap-1">
+                                SALVAR BACKUP LOCAL
+                            </button>
+                            <label className="p-2 px-3 bg-slate-600 hover:bg-slate-700 text-white rounded-sm text-[10px] font-black uppercase transition-all shadow-md cursor-pointer flex items-center gap-1">
+                                <input type="file" className="hidden" onChange={loadBackup} accept=".json" />
+                                CARREGAR BACKUP
+                            </label>
+                        </>
+                    )}
                 </div>
             </header>
 
@@ -1120,20 +1107,64 @@ export const CestasBasicas: React.FC = () => {
                 {
                     currentStep === 4 && invoiceData && (
                         <div id="active-view" className="animate-in slide-in-from-bottom-4 duration-700">
-                            {/* NAVIGATION & TABS */}
-                            <div className="mb-6 flex flex-col md:flex-row justify-between items-center gap-4 print:hidden">
-                                <button
-                                    onClick={() => setCurrentStep(3)}
-                                    className="px-4 py-2 text-slate-400 hover:text-slate-600 text-xs font-black uppercase flex items-center gap-2 transition-colors group"
-                                >
-                                    <div className="p-1 bg-slate-100 group-hover:bg-slate-200 rounded-full">
+                            {/* GLOBAL ACTIONS BAR (EXPORT & PERSISTENCE) */}
+                            <div className="mb-6 p-4 bg-white border-2 border-slate-100 rounded-sm shadow-sm flex flex-col md:flex-row justify-between items-center gap-4 print:hidden">
+                                <div className="flex items-center gap-6">
+                                    <button
+                                        onClick={() => setCurrentStep(3)}
+                                        className="text-slate-400 hover:text-slate-600 text-[10px] font-black uppercase flex items-center gap-2 transition-colors group"
+                                    >
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3 h-3 rotate-180">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                                         </svg>
+                                        Editar Distribuição
+                                    </button>
+                                    <div className="h-6 w-px bg-slate-100"></div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => exportToPdf('active-view', `distribuicao_cesta_${new Date().getTime()}`)}
+                                            className="px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-sm text-[9px] font-black uppercase hover:bg-red-100 transition-colors flex items-center gap-1"
+                                        >
+                                            📄 PDF
+                                        </button>
+                                        <button
+                                            onClick={() => exportToPng('active-view', `distribuicao_cesta_${activeTab}`)}
+                                            className="px-3 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-sm text-[9px] font-black uppercase hover:bg-orange-100 transition-colors flex items-center gap-1"
+                                        >
+                                            🖼️ PNG
+                                        </button>
+                                        <button
+                                            onClick={() => exportToHtml('active-view', `distribuicao_cesta_${activeTab}`)}
+                                            className="px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-sm text-[9px] font-black uppercase hover:bg-indigo-100 transition-colors flex items-center gap-1"
+                                        >
+                                            🌐 HTML
+                                        </button>
                                     </div>
-                                    Editar Distribuição
-                                </button>
+                                </div>
 
+                                <button
+                                    onClick={saveBasketToSupabase}
+                                    disabled={isSaving}
+                                    className={`px-8 py-3 rounded-sm text-xs font-black uppercase transition-all flex items-center gap-2 shadow-lg hover:scale-[1.02] transform active:scale-95 ${saveSuccess
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-slate-800 text-white hover:bg-slate-900'
+                                        }`}
+                                >
+                                    {isSaving ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            Salvando...
+                                        </>
+                                    ) : saveSuccess ? (
+                                        <>✅ Salvo com sucesso!</>
+                                    ) : (
+                                        <>☁️ Salvar no Banco (Supabase)</>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* NAVIGATION & TABS */}
+                            <div className="mb-6 flex flex-col md:flex-row justify-center items-center gap-4 print:hidden">
                                 <div className="flex bg-white rounded-sm shadow-sm border border-slate-100 overflow-hidden">
                                     <TabButton tabName="summary" icon={<ReceiptIcon className="w-4 h-4" />} label="Resumo" />
                                     <TabButton tabName="signature" icon={<SignatureIcon className="w-4 h-4" />} label="Assinaturas" />
