@@ -69,6 +69,10 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     // --- PERSISTÊNCIA AUTOMÁTICA (SUPABASE) ---
     useEffect(() => {
         const load = async () => {
+            // Carregar logo persistente
+            const savedLogo = await SupabaseService.getConfig('biometry_company_logo');
+            if (savedLogo) setLogo(savedLogo);
+
             // Carregar histórico completo
             const history = await SupabaseService.getBiometricsHistory();
             setBiometricsHistory(history);
@@ -664,7 +668,15 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const reader = new FileReader();
-            reader.onload = (ev) => { if (ev.target?.result) setLogo(ev.target.result as string); };
+            reader.onload = async (ev) => {
+                if (ev.target?.result) {
+                    const newLogo = ev.target.result as string;
+                    setLogo(newLogo);
+                    // Salvar permanentemente no banco
+                    await SupabaseService.saveConfig('biometry_company_logo', newLogo);
+                    showToast("✅ Logo salva permanentemente!");
+                }
+            };
             reader.readAsDataURL(e.target.files[0]);
         }
     };
