@@ -16,6 +16,7 @@ const INITIAL_INPUT: ReceiptInput = {
     payeeDocument: '',
     value: 0,
     date: new Date().toISOString().split('T')[0],
+    serviceDate: new Date().toISOString().split('T')[0],
     description: '',
     paymentMethod: 'PIX',
     pixKey: '',
@@ -206,7 +207,8 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                             payeeName: rec.payeeName || '',
                             payeeDocument: rec.payeeDocument || '',
                             value: rec.value || 0,
-                            date: rec.date || new Date().toISOString().split('T')[0],
+                            date: new Date().toISOString().split('T')[0],
+                            serviceDate: rec.date || new Date().toISOString().split('T')[0],
                             description: rec.description || '',
                             paymentMethod: rec.paymentMethod || 'PIX',
                             pixKey: rec.pixKey || '',
@@ -383,20 +385,31 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Data</label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Data Emissão</label>
                                         <input
                                             type="date"
                                             value={form.date}
                                             onChange={e => setForm({ ...form, date: e.target.value })}
-                                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all"
+                                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all cursor-pointer"
                                         />
                                     </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Data Serviço</label>
+                                        <input
+                                            type="date"
+                                            value={form.serviceDate}
+                                            onChange={e => setForm({ ...form, serviceDate: e.target.value })}
+                                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all cursor-pointer"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Forma de Pgto</label>
                                         <select
                                             value={form.paymentMethod}
                                             onChange={e => setForm({ ...form, paymentMethod: e.target.value })}
-                                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all"
+                                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all cursor-pointer"
                                         >
                                             <option value="PIX">PIX</option>
                                             <option value="DINHEIRO">Dinheiro</option>
@@ -534,7 +547,7 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
             {/* --- RECEIPT PREVIEW MODAL --- */}
             {showReceipt && (
                 <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 overflow-y-auto print:bg-transparent print:p-0">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[880px] overflow-hidden flex flex-col border border-slate-200 print:shadow-none print:border-none print:w-full print:max-w-none">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[650px] overflow-hidden flex flex-col border border-slate-200 print:shadow-none print:border-none print:w-full print:max-w-none">
                         {/* Modal Header */}
                         <div className="flex items-center justify-between px-8 py-4 border-b border-slate-100 bg-slate-50/50 print:hidden">
                             <div className="flex items-center gap-3">
@@ -563,8 +576,8 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                         <div className="p-8 bg-slate-200/50 flex justify-center preview-container print:p-0 print:bg-white">
                             <div
                                 ref={receiptRef}
-                                className="bg-white shadow-2xl flex flex-col justify-between border border-slate-300 print:shadow-none print:border-none"
-                                style={{ width: '210mm', height: '297mm', padding: '15mm', minWidth: '210mm', minHeight: '297mm' }}
+                                className="bg-white shadow-2xl flex flex-col justify-between border border-slate-300 print:shadow-none print:border-none origin-top"
+                                style={{ width: '148mm', height: '210mm', padding: '10mm', minWidth: '148mm', minHeight: '210mm' }}
                             >
                                 {/* 1ª VIA */}
                                 <ReceiptTemplate
@@ -637,7 +650,8 @@ const ReceiptTemplate: React.FC<{
                 <p>
                     Recebi de <strong className="font-black uppercase text-slate-900">{company.name}</strong>, a importância de
                     <strong className="font-bold border-b border-slate-300"> {item.result.valueInWords.toUpperCase()}</strong>,
-                    referente a <strong className="font-bold uppercase">{item.input.description}</strong>.
+                    referente a <strong className="font-bold uppercase">{item.input.description}</strong>,
+                    serviço realizado em <strong className="font-bold underline">{new Date(item.input.serviceDate + 'T12:00:00').toLocaleDateString('pt-BR')}</strong>.
                 </p>
 
                 <p>
@@ -649,8 +663,9 @@ const ReceiptTemplate: React.FC<{
                 </div>
             </div>
 
-            <div className="flex flex-col items-end gap-1 pt-4 font-bold text-slate-500 uppercase text-[11px] italic">
-                <p>CANAVIEIRAS, {new Date(item.input.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}</p>
+            <div className="flex flex-col items-end gap-1 pt-2 font-bold text-slate-500 uppercase text-[10px] italic">
+                <p>EMISSÃO: {new Date(item.input.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}</p>
+                <p>CANAVIEIRAS - BA</p>
             </div>
 
             <div className="pt-8 flex flex-col items-center">
