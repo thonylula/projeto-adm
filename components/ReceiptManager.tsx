@@ -17,6 +17,7 @@ const INITIAL_INPUT: ReceiptInput = {
     value: 0,
     date: new Date().toISOString().split('T')[0],
     serviceDate: new Date().toISOString().split('T')[0],
+    serviceEndDate: '',
     description: '',
     paymentMethod: 'PIX',
     pixKey: '',
@@ -459,11 +460,31 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Data Serviço</label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Data Serviço (Início)</label>
                                         <input
                                             type="date"
                                             value={form.serviceDate}
                                             onChange={e => setForm({ ...form, serviceDate: e.target.value })}
+                                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all cursor-pointer"
+                                        />
+                                    </div>
+                                    <div>
+                                        <div className="flex justify-between items-center mb-1">
+                                            <label className="block text-xs font-bold text-slate-500 uppercase">Fim Período (Opcional)</label>
+                                            {form.serviceEndDate && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setForm({ ...form, serviceEndDate: '' })}
+                                                    className="text-[9px] text-red-500 font-bold hover:underline"
+                                                >
+                                                    LIMPAR
+                                                </button>
+                                            )}
+                                        </div>
+                                        <input
+                                            type="date"
+                                            value={form.serviceEndDate || ''}
+                                            onChange={e => setForm({ ...form, serviceEndDate: e.target.value })}
                                             className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all cursor-pointer"
                                         />
                                     </div>
@@ -745,7 +766,11 @@ const ReceiptTemplate: React.FC<{
                     Recebi de <strong className="font-black uppercase text-slate-900">{company.name}</strong>, a importância de
                     <strong className="font-bold border-b border-slate-300"> {item.result.valueInWords.toUpperCase()}</strong>,
                     referente a <strong className="font-bold uppercase">{item.input.description}</strong>,
-                    serviço realizado em <strong className="font-bold underline">{formatDateSafe(item.input.serviceDate)}</strong>.
+                    serviço realizado {item.input.serviceEndDate ? 'no período de' : 'em'} <strong className="font-bold underline">
+                        {item.input.serviceEndDate
+                            ? `${formatDateSafe(item.input.serviceDate)} À ${formatDateSafe(item.input.serviceEndDate)}`
+                            : formatDateSafe(item.input.serviceDate)}
+                    </strong>.
                 </p>
 
                 <p>
