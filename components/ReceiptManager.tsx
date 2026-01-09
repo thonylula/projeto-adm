@@ -92,7 +92,10 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
             id: editingId || crypto.randomUUID(),
             timestamp: new Date().toLocaleString('pt-BR'),
             rawDate: new Date().toISOString(),
-            input: form,
+            input: {
+                ...form,
+                date: new Date().toISOString().split('T')[0] // Always today for Emission
+            },
             result
         };
 
@@ -136,6 +139,31 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                 pixKey: selected.pixKey || '',
                 bankInfo: selected.bankName ? `${selected.bankName} Ag ${selected.agency} CC ${selected.account}` : ''
             }));
+        }
+    };
+
+    const formatDateSafe = (dateStr: string) => {
+        if (!dateStr) return '---';
+        try {
+            // Handle YYYY-MM-DD or full ISO strings
+            const datePart = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+            const [year, month, day] = datePart.split('-');
+            if (!year || !month || !day) return dateStr;
+            return `${day}/${month}/${year}`;
+        } catch (e) {
+            return dateStr;
+        }
+    };
+
+    const formatDateLongSafe = (dateStr: string) => {
+        if (!dateStr) return '---';
+        try {
+            const datePart = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+            const date = new Date(datePart + 'T12:00:00');
+            if (isNaN(date.getTime())) return dateStr;
+            return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase();
+        } catch (e) {
+            return dateStr;
         }
     };
 
@@ -426,8 +454,8 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                                         <input
                                             type="date"
                                             value={form.date}
-                                            onChange={e => setForm({ ...form, date: e.target.value })}
-                                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all cursor-pointer"
+                                            readOnly
+                                            className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-400 cursor-not-allowed font-medium"
                                         />
                                     </div>
                                     <div>
@@ -637,13 +665,15 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                                     logo={receiptLogo}
                                     via="1ª VIA"
                                     formatCurrency={formatCurrency}
+                                    formatDateSafe={formatDateSafe}
+                                    formatDateLongSafe={formatDateLongSafe}
                                 />
 
                                 {/* Separator line for cutting */}
-                                <div className="border-t-2 border-dashed border-slate-300 relative my-4 print:my-8">
-                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-4 py-1 text-[10px] font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2 print:hidden">
+                                <div className="border-t-2 border-dashed border-slate-200 relative my-2 print:my-4">
+                                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-white px-2 py-0.5 text-[8px] font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1 print:hidden">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758L5 19m11-5.939L14.121 14.121m0 0L19 9" /></svg>
-                                        Tesoura aqui para separar as vias
+                                        CORTE AQUI
                                     </div>
                                 </div>
 
@@ -654,6 +684,8 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                                     logo={receiptLogo}
                                     via="2ª VIA"
                                     formatCurrency={formatCurrency}
+                                    formatDateSafe={formatDateSafe}
+                                    formatDateLongSafe={formatDateLongSafe}
                                 />
                             </div>
                         </div>
@@ -671,59 +703,61 @@ const ReceiptTemplate: React.FC<{
     logo: string | null;
     via: string;
     formatCurrency: (val: number) => string;
-}> = ({ item, company, logo, via, formatCurrency }) => {
+    formatDateSafe: (d: string) => string;
+    formatDateLongSafe: (d: string) => string;
+}> = ({ item, company, logo, via, formatCurrency, formatDateSafe, formatDateLongSafe }) => {
     return (
-        <div className="space-y-3 relative">
-            <div className="absolute top-0 right-0 text-[8px] font-black text-slate-300 tracking-tighter italic">
+        <div className="space-y-2 relative">
+            <div className="absolute top-0 right-0 text-[7px] font-black text-slate-300 tracking-tighter italic">
                 {via}
             </div>
 
             <div className="flex justify-between items-start pt-4">
                 <div className="flex-1 flex justify-center pl-24">
                     {logo ? (
-                        <img src={logo} alt="Logo" className="h-8 w-auto object-contain" />
+                        <img src={logo} alt="Logo" className="h-7 w-auto object-contain" />
                     ) : (
-                        <div className="h-8 w-20 bg-slate-50 border border-dashed border-slate-200 rounded flex items-center justify-center text-[7px] text-slate-400 font-bold uppercase">
+                        <div className="h-7 w-16 bg-slate-50 border border-dashed border-slate-200 rounded flex items-center justify-center text-[6px] text-slate-400 font-bold uppercase">
                             Sem Logo
                         </div>
                     )}
                 </div>
-                <div className="bg-white border-2 border-slate-900 px-3 py-0.5 rounded-lg font-black text-lg text-slate-900 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)]">
+                <div className="bg-white border-2 border-slate-900 px-2 py-0.5 rounded-lg font-black text-base text-slate-900 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)]">
                     {formatCurrency(item.input.value)}
                 </div>
             </div>
 
             <div className="text-center">
-                <h1 className="text-lg font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
+                <h1 className="text-base font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
             </div>
 
-            <div className="space-y-3 text-[11px] leading-[1.6] text-slate-800 text-justify">
+            <div className="space-y-2 text-[10px] leading-[1.4] text-slate-800 text-justify">
                 <p>
                     Recebi de <strong className="font-black uppercase text-slate-900">{company.name}</strong>, a importância de
                     <strong className="font-bold border-b border-slate-300"> {item.result.valueInWords.toUpperCase()}</strong>,
                     referente a <strong className="font-bold uppercase">{item.input.description}</strong>,
-                    serviço realizado em <strong className="font-bold underline">{new Date(item.input.serviceDate + 'T12:00:00').toLocaleDateString('pt-BR')}</strong>.
+                    serviço realizado em <strong className="font-bold underline">{formatDateSafe(item.input.serviceDate)}</strong>.
                 </p>
 
                 <p>
                     Para maior clareza, firmo o presente recibo, que comprova o recebimento integral do valor mencionado, concedendo <strong className="font-black underline uppercase">quitação plena, geral e irrevogável</strong> pela quantia recebida.
                 </p>
 
-                <div className="text-[10px] font-medium text-slate-700">
+                <div className="text-[9px] font-medium text-slate-700">
                     <p>Pagamento recebido por <strong className="font-bold uppercase">{item.input.payeeName}</strong> através da chave Pix: <strong className="font-mono">{item.input.pixKey || 'N/A'}</strong>.</p>
                 </div>
             </div>
 
-            <div className="flex flex-col items-end gap-1 pt-0 font-bold text-slate-400 uppercase text-[8px] italic">
-                <p>EMISSÃO: {new Date(item.input.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}</p>
+            <div className="flex flex-col items-end gap-0.5 pt-0 font-bold text-slate-400 uppercase text-[7px] italic">
+                <p>EMISSÃO: {formatDateLongSafe(item.input.date)}</p>
                 <p>CANAVIEIRAS - BA</p>
             </div>
 
-            <div className="pt-2 flex flex-col items-center">
-                <div className="w-full max-w-[250px] border-b border-slate-300 mb-1"></div>
-                <p className="font-black uppercase text-xs tracking-tight text-slate-900">{item.input.payeeName}</p>
+            <div className="pt-1 flex flex-col items-center">
+                <div className="w-full max-w-[200px] border-b border-slate-300 mb-1"></div>
+                <p className="font-black uppercase text-[10px] tracking-tight text-slate-900">{item.input.payeeName}</p>
                 {item.input.payeeDocument && (
-                    <p className="text-[9px] text-slate-400 font-mono font-bold">{item.input.payeeDocument}</p>
+                    <p className="text-[8px] text-slate-400 font-mono font-bold">{item.input.payeeDocument}</p>
                 )}
             </div>
         </div>
