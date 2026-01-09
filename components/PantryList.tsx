@@ -48,7 +48,7 @@ export const PantryList: React.FC<PantryListProps> = ({
                     <div
                         key={index}
                         className="bg-white rounded-sm shadow-sm overflow-hidden font-sans text-[#444] print:shadow-none print:mb-2 print:break-inside-avoid flex flex-col relative christmas-card overflow-visible"
-                        style={{ border: '4px solid #f97316', minHeight: '150px' }}
+                        style={{ border: '2px solid #f97316', minHeight: '120px' }}
                     >
                         {appMode === 'CHRISTMAS' && (
                             <div className="w-full text-center py-2 border-b border-red-200 hidden print:block">
@@ -65,18 +65,18 @@ export const PantryList: React.FC<PantryListProps> = ({
                         </div>
 
                         {/* Header */}
-                        <div className="p-2 border-b-2 flex justify-between items-center" style={{ borderColor: '#f97316' }}>
-                            <div className="space-y-1 text-left flex items-center gap-4">
+                        <div className="p-1.5 border-b flex justify-between items-center" style={{ borderColor: '#f97316' }}>
+                            <div className="space-y-0.5 text-left flex items-center gap-2">
                                 {companyLogo && (
-                                    <img src={companyLogo} alt="Logo" className="h-16 w-auto object-contain" />
+                                    <img src={companyLogo} alt="Logo" className="h-12 w-auto object-contain" />
                                 )}
                                 <div>
-                                    <h1 className="text-2xl font-black uppercase text-slate-900 leading-none">{companyName}</h1>
-                                    <p className="text-sm text-slate-700 font-extrabold">CNPJ: {recipientCnpj || '---'}</p>
+                                    <h1 className="text-lg font-black uppercase text-slate-900 leading-none">{companyName}</h1>
+                                    <p className="text-[10px] text-slate-700 font-extrabold">CNPJ: {recipientCnpj || '---'}</p>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <p className="text-base font-black text-slate-900">Data: {new Date().toLocaleDateString('pt-BR')}</p>
+                                <p className="text-xs font-black text-slate-900 leading-none">Data: {new Date().toLocaleDateString('pt-BR')}</p>
                             </div>
                         </div>
 
@@ -94,8 +94,8 @@ export const PantryList: React.FC<PantryListProps> = ({
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="border-b border-orange-500">
-                                        <th className="py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">DESCRIÇÃO DO PRODUTO</th>
-                                        <th className="py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">QUANTIDADE NA CESTA</th>
+                                        <th className="py-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest">DESCRIÇÃO DO PRODUTO</th>
+                                        <th className="py-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right">QUANTIDADE</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-orange-100">
@@ -117,8 +117,8 @@ export const PantryList: React.FC<PantryListProps> = ({
 
                                         return (
                                             <tr key={idx}>
-                                                <td className="py-2 text-[11px] font-bold text-slate-800 uppercase leading-snug">{item.description}</td>
-                                                <td className="py-2 text-[11px] text-right text-slate-600 font-bold">
+                                                <td className="py-0.5 text-[10px] font-bold text-slate-800 uppercase leading-snug">{item.description}</td>
+                                                <td className="py-0.5 text-[10px] text-right text-slate-600 font-bold">
                                                     {formatQty(qtyPerEmployee)} {item.unit}
                                                 </td>
                                             </tr>
@@ -137,15 +137,15 @@ export const PantryList: React.FC<PantryListProps> = ({
                         <div className="h-0.5 w-full border-t-2 border-dashed border-orange-500 mt-auto" />
 
                         {/* Dummy Duplicate Header for visual reference like in image */}
-                        <div className="p-3 bg-slate-50/50 flex justify-between items-center opacity-60">
+                        <div className="p-1.5 px-3 bg-slate-50/50 flex justify-between items-center opacity-60">
                             <div className="space-y-0.5 flex-1">
-                                <h1 className="text-[9px] font-bold uppercase text-slate-800">{companyName}</h1>
-                                <p className="text-[8px] text-slate-500 font-medium">
+                                <h1 className="text-[8px] font-bold uppercase text-slate-800">{companyName}</h1>
+                                <p className="text-[7px] text-slate-500 font-medium">
                                     Portador: <span className="font-black underline">{name}</span>
                                 </p>
                             </div>
                             <div className="text-right">
-                                <p className="text-[9px] font-bold text-slate-700 flex items-center justify-end gap-1">
+                                <p className="text-[8px] font-bold text-slate-700 flex items-center justify-end gap-1">
                                     {isNonDrinker ? '🥤 CESTA ESPECIAL' : '🍺 CESTA PADRÃO'}
                                 </p>
                             </div>
