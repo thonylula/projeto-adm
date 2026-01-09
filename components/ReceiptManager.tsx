@@ -4,6 +4,7 @@ import { SupabaseService } from '../services/supabaseService';
 import { numberToWordsBRL } from '../utils';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { useGeminiParser } from '../hooks/useGeminiParser';
 
 interface ReceiptManagerProps {
     activeCompany: Company;
@@ -29,6 +30,9 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
     const [loading, setLoading] = useState(false);
     const [showReceipt, setShowReceipt] = useState<ReceiptHistoryItem | null>(null);
     const [isExporting, setIsExporting] = useState(false);
+
+    const { processFile, isProcessing: isAiProcessing } = useGeminiParser();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [employees, setEmployees] = useState<RegistryEmployee[]>([]);
     const [suppliers, setSuppliers] = useState<RegistrySupplier[]>([]);
@@ -144,6 +148,45 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
         }
     };
 
+    const handleAiScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const prompt = `Analise este comprovante/recibo e extraia os dados para preencher um recibo de pagamento.
+        Retorne APENAS um JSON plano com os seguintes campos:
+        {
+          "payeeName": "nome de quem recebe",
+          "payeeDocument": "CPF ou CNPJ se disponível",
+          "value": 123.45,
+          "date": "YYYY-MM-DD",
+          "description": "breve resumo do que se trata o pagamento",
+          "paymentMethod": "PIX",
+          "pixKey": "chave pix se encontrada"
+        }
+        Converta datas para o formato ISO YYYY-MM-DD. Remova símbolos de moeda. Se não encontrar algo, deixe string vazia ou use valores padrão.`;
+
+        try {
+            const data = await processFile(file, prompt);
+            if (data && typeof data === 'object') {
+                setForm(prev => ({
+                    ...prev,
+                    payeeName: data.payeeName || prev.payeeName,
+                    payeeDocument: data.payeeDocument || prev.payeeDocument,
+                    value: data.value || prev.value,
+                    date: data.date || prev.date,
+                    description: data.description || prev.description,
+                    paymentMethod: data.paymentMethod || prev.paymentMethod,
+                    pixKey: data.pixKey || prev.pixKey
+                }));
+            }
+        } catch (error) {
+            console.error("AI Scan error:", error);
+            alert("Erro ao analisar arquivo com IA.");
+        } finally {
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Header */}
@@ -152,10 +195,39 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                     <h2 className="text-2xl font-bold text-slate-900">Gerador de Recibos</h2>
                     <p className="text-slate-500 text-sm italic">Ferramenta ágil para criação de recibos avulsos</p>
                 </div>
-                <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all self-start">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-                    Voltar
-                </button>
+                <div className="flex items-center gap-3 self-start">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleAiScan}
+                        accept="image/*,application/pdf"
+                        className="hidden"
+                    />
+                    <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isAiProcessing}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all shadow-lg ${isAiProcessing
+                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                            : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200/50'
+                            }`}
+                    >
+                        {isAiProcessing ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-400"></div>
+                                ESCANEANDO...
+                            </>
+                        ) : (
+                            <>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor font-black"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                ESCANEAR COM IA
+                            </>
+                        )}
+                    </button>
+                    <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                        Voltar
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
