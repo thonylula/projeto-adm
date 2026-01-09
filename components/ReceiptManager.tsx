@@ -678,7 +678,7 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                                     />
 
                                     {/* Separator line for cutting */}
-                                    <div className="border-t-2 border-dashed border-slate-200 relative my-6 print:my-10">
+                                    <div className="border-t-2 border-dashed border-slate-200 relative my-4 print:my-6">
                                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-4 py-1 text-[10px] font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2 print:hidden">
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758L5 19m11-5.939L14.121 14.121m0 0L19 9" /></svg>
                                             CORTE AQUI PARA SEPARAR AS VIAS
@@ -716,34 +716,34 @@ const ReceiptTemplate: React.FC<{
     formatDateLongSafe: (d: string) => string;
 }> = ({ item, company, logo, via, formatCurrency, formatDateSafe, formatDateLongSafe }) => {
     return (
-        <div className="space-y-12 relative">
-            <div className="absolute top-0 right-0 text-xs font-black text-slate-300 tracking-tighter italic">
+        <div className="space-y-4 relative">
+            <div className="absolute top-0 right-0 text-[10px] font-black text-slate-300 tracking-tighter italic">
                 {via}
             </div>
 
-            <div className="flex justify-between items-start pt-8">
-                <div className="flex-1 flex justify-center pl-32">
+            <div className="flex justify-between items-start pt-4">
+                <div className="flex-1 flex justify-center pl-24">
                     {logo ? (
-                        <img src={logo} alt="Logo" className="h-16 w-auto object-contain" />
+                        <img src={logo} alt="Logo" className="h-10 w-auto object-contain" />
                     ) : (
-                        <div className="h-16 w-32 bg-slate-50 border border-dashed border-slate-200 rounded flex items-center justify-center text-[10px] text-slate-400 font-bold uppercase">
+                        <div className="h-10 w-24 bg-slate-50 border border-dashed border-slate-200 rounded flex items-center justify-center text-[8px] text-slate-400 font-bold uppercase">
                             Sem Logo
                         </div>
                     )}
                 </div>
-                <div className="bg-white border-2 border-slate-900 px-6 py-2 rounded-xl font-black text-2xl text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+                <div className="bg-white border-2 border-slate-900 px-4 py-1 rounded-lg font-black text-xl text-slate-900 shadow-[3px_3px_0px_0px_rgba(15,23,42,1)]">
                     {formatCurrency(item.input.value)}
                 </div>
             </div>
 
-            <div className="text-center pt-4">
-                <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
+            <div className="text-center">
+                <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
             </div>
 
-            <div className="space-y-8 text-lg leading-[1.8] text-slate-800 text-justify px-4">
+            <div className="space-y-4 text-[13px] leading-[1.6] text-slate-800 text-justify px-2">
                 <p>
                     Recebi de <strong className="font-black uppercase text-slate-900">{company.name}</strong>, a importância de
-                    <strong className="font-bold border-b-2 border-slate-300"> {item.result.valueInWords.toUpperCase()}</strong>,
+                    <strong className="font-bold border-b border-slate-300"> {item.result.valueInWords.toUpperCase()}</strong>,
                     referente a <strong className="font-bold uppercase">{item.input.description}</strong>,
                     serviço realizado em <strong className="font-bold underline">{formatDateSafe(item.input.serviceDate)}</strong>.
                 </p>
@@ -752,21 +752,21 @@ const ReceiptTemplate: React.FC<{
                     Para maior clareza, firmo o presente recibo, que comprova o recebimento integral do valor mencionado, concedendo <strong className="font-black underline uppercase">quitação plena, geral e irrevogável</strong> pela quantia recebida.
                 </p>
 
-                <div className="text-sm font-medium text-slate-700">
+                <div className="text-xs font-medium text-slate-700">
                     <p>Pagamento recebido por <strong className="font-bold uppercase">{item.input.payeeName}</strong> através da chave Pix: <strong className="font-mono">{item.input.pixKey || 'N/A'}</strong>.</p>
                 </div>
             </div>
 
-            <div className="flex flex-col items-end gap-1 pt-4 font-bold text-slate-500 uppercase text-xs italic">
+            <div className="flex flex-col items-end gap-1 pt-0 font-bold text-slate-500 uppercase text-[9px] italic">
                 <p>EMISSÃO: {formatDateLongSafe(item.input.date)}</p>
                 <p>CANAVIEIRAS - BA</p>
             </div>
 
-            <div className="pt-12 flex flex-col items-center">
-                <div className="w-full max-w-[400px] border-b-2 border-slate-300 mb-3"></div>
-                <p className="font-black uppercase text-lg tracking-tight text-slate-900">{item.input.payeeName}</p>
+            <div className="pt-4 flex flex-col items-center">
+                <div className="w-full max-w-[300px] border-b-2 border-slate-200 mb-2"></div>
+                <p className="font-black uppercase text-sm tracking-tight text-slate-900">{item.input.payeeName}</p>
                 {item.input.payeeDocument && (
-                    <p className="text-sm text-slate-500 font-mono font-bold tracking-wider">{item.input.payeeDocument}</p>
+                    <p className="text-[10px] text-slate-500 font-mono font-bold">{item.input.payeeDocument}</p>
                 )}
             </div>
         </div>
