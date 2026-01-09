@@ -560,8 +560,12 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                             </div>
                         </div>
 
-                        <div className="p-8 bg-slate-50 flex justify-center">
-                            <div ref={receiptRef} className="bg-white shadow-xl w-full max-w-[800px] p-10 space-y-12 border border-slate-200">
+                        <div className="p-8 bg-slate-200/50 flex justify-center preview-container">
+                            <div
+                                ref={receiptRef}
+                                className="bg-white shadow-2xl w-full max-w-[794px] aspect-[210/297] p-[50px] flex flex-col justify-between border border-slate-300 print:shadow-none print:border-none"
+                                style={{ height: 'auto', minHeight: '1123px' }}
+                            >
                                 {/* 1ª VIA */}
                                 <ReceiptTemplate
                                     item={showReceipt}
@@ -572,8 +576,9 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                                 />
 
                                 {/* Separator line for cutting */}
-                                <div className="border-t-2 border-dashed border-slate-200 relative">
-                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-4 py-1 text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                                <div className="border-t-2 border-dashed border-slate-300 relative my-8">
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-4 py-1 text-[10px] font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758L5 19m11-5.939L14.121 14.121m0 0L19 9" /></svg>
                                         Tesoura aqui para separar as vias
                                     </div>
                                 </div>
