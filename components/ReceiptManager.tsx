@@ -533,10 +533,10 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
 
             {/* --- RECEIPT PREVIEW MODAL --- */}
             {showReceipt && (
-                <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 overflow-y-auto">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col border border-slate-200">
+                <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 overflow-y-auto print:bg-transparent print:p-0">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[880px] overflow-hidden flex flex-col border border-slate-200 print:shadow-none print:border-none print:w-full print:max-w-none">
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between px-8 py-4 border-b border-slate-100 bg-slate-50/50">
+                        <div className="flex items-center justify-between px-8 py-4 border-b border-slate-100 bg-slate-50/50 print:hidden">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-orange-100 rounded-xl text-orange-600">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
@@ -560,11 +560,11 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                             </div>
                         </div>
 
-                        <div className="p-8 bg-slate-200/50 flex justify-center preview-container">
+                        <div className="p-8 bg-slate-200/50 flex justify-center preview-container print:p-0 print:bg-white">
                             <div
                                 ref={receiptRef}
-                                className="bg-white shadow-2xl w-full max-w-[794px] aspect-[210/297] p-[50px] flex flex-col justify-between border border-slate-300 print:shadow-none print:border-none"
-                                style={{ height: 'auto', minHeight: '1123px' }}
+                                className="bg-white shadow-2xl flex flex-col justify-between border border-slate-300 print:shadow-none print:border-none"
+                                style={{ width: '210mm', height: '297mm', padding: '15mm', minWidth: '210mm', minHeight: '297mm' }}
                             >
                                 {/* 1ª VIA */}
                                 <ReceiptTemplate
@@ -576,8 +576,8 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                                 />
 
                                 {/* Separator line for cutting */}
-                                <div className="border-t-2 border-dashed border-slate-300 relative my-8">
-                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-4 py-1 text-[10px] font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                                <div className="border-t-2 border-dashed border-slate-300 relative my-4 print:my-8">
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-4 py-1 text-[10px] font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2 print:hidden">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758L5 19m11-5.939L14.121 14.121m0 0L19 9" /></svg>
                                         Tesoura aqui para separar as vias
                                     </div>
@@ -609,7 +609,7 @@ const ReceiptTemplate: React.FC<{
     formatCurrency: (val: number) => string;
 }> = ({ item, company, logo, via, formatCurrency }) => {
     return (
-        <div className="space-y-8 relative">
+        <div className="space-y-6 relative">
             <div className="absolute top-0 right-0 text-[10px] font-black text-slate-400 tracking-tighter italic">
                 {via}
             </div>
