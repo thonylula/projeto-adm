@@ -237,13 +237,13 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
             ? `${formatDateSafe(item.input.serviceDate)} À ${formatDateSafe(item.input.serviceEndDate)}`
             : formatDateSafe(item.input.serviceDate);
 
-        const text = `📄 *RECIBO DE PAGAMENTO*
+        const text = `📄 RECIBO DE PAGAMENTO
 ----------------------------
-👤 *Beneficiário:* ${item.input.payeeName}
-💰 *Valor:* ${formatCurrency(item.input.value)}
-📝 *Referente a:* ${item.input.description}
-📅 *Data/Período:* ${period}
-🔑 *CHAVE PIX:* ${item.input.pixKey || 'N/A'}
+👤 Beneficiário: ${item.input.payeeName}
+💰 Valor: ${formatCurrency(item.input.value)}
+📝 Referente a: ${item.input.description}
+📅 Data/Período: ${period}
+🔑 CHAVE PIX: ${item.input.pixKey || 'N/A'}
 ----------------------------`;
 
         navigator.clipboard.writeText(text);
