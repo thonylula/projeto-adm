@@ -182,14 +182,14 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
             });
             const imgData = canvas.toDataURL('image/png');
 
-            // A5 dimensions in mm: 148 x 210
+            // A4 dimensions in mm: 210 x 297
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'mm',
-                format: 'a5'
+                format: 'a4'
             });
 
-            pdf.addImage(imgData, 'PNG', 0, 0, 148, 210);
+            pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
             pdf.save(`recibo_${showReceipt?.input.payeeName.replace(/\s+/g, '_').toLowerCase()}.pdf`);
         } catch (e) {
             console.error("Erro exportando PDF:", e);
@@ -656,7 +656,7 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                             <div
                                 ref={receiptRef}
                                 className="bg-white shadow-2xl flex flex-col justify-between border border-slate-300 print:shadow-none print:border-none origin-top"
-                                style={{ width: '148mm', height: '210mm', padding: '10mm', minWidth: '148mm', minHeight: '210mm' }}
+                                style={{ width: '210mm', height: '297mm', padding: '15mm', minWidth: '210mm', minHeight: '297mm' }}
                             >
                                 {/* 1ª VIA */}
                                 <ReceiptTemplate
@@ -670,10 +670,10 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                                 />
 
                                 {/* Separator line for cutting */}
-                                <div className="border-t-2 border-dashed border-slate-200 relative my-2 print:my-4">
-                                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-white px-2 py-0.5 text-[8px] font-bold text-slate-300 uppercase tracking-widest flex items-center gap-1 print:hidden">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758L5 19m11-5.939L14.121 14.121m0 0L19 9" /></svg>
-                                        CORTE AQUI
+                                <div className="border-t-2 border-dashed border-slate-200 relative my-6 print:my-10">
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-4 py-1 text-[10px] font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2 print:hidden">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758L5 19m11-5.939L14.121 14.121m0 0L19 9" /></svg>
+                                        CORTE AQUI PARA SEPARAR AS VIAS
                                     </div>
                                 </div>
 
@@ -707,31 +707,31 @@ const ReceiptTemplate: React.FC<{
     formatDateLongSafe: (d: string) => string;
 }> = ({ item, company, logo, via, formatCurrency, formatDateSafe, formatDateLongSafe }) => {
     return (
-        <div className="space-y-2 relative">
-            <div className="absolute top-0 right-0 text-[7px] font-black text-slate-300 tracking-tighter italic">
+        <div className="space-y-6 relative">
+            <div className="absolute top-0 right-0 text-[10px] font-black text-slate-300 tracking-tighter italic">
                 {via}
             </div>
 
             <div className="flex justify-between items-start pt-4">
                 <div className="flex-1 flex justify-center pl-24">
                     {logo ? (
-                        <img src={logo} alt="Logo" className="h-7 w-auto object-contain" />
+                        <img src={logo} alt="Logo" className="h-10 w-auto object-contain" />
                     ) : (
-                        <div className="h-7 w-16 bg-slate-50 border border-dashed border-slate-200 rounded flex items-center justify-center text-[6px] text-slate-400 font-bold uppercase">
+                        <div className="h-10 w-24 bg-slate-50 border border-dashed border-slate-200 rounded flex items-center justify-center text-[8px] text-slate-400 font-bold uppercase">
                             Sem Logo
                         </div>
                     )}
                 </div>
-                <div className="bg-white border-2 border-slate-900 px-2 py-0.5 rounded-lg font-black text-base text-slate-900 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)]">
+                <div className="bg-white border-2 border-slate-900 px-4 py-1 rounded-lg font-black text-xl text-slate-900 shadow-[3px_3px_0px_0px_rgba(15,23,42,1)]">
                     {formatCurrency(item.input.value)}
                 </div>
             </div>
 
             <div className="text-center">
-                <h1 className="text-base font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
+                <h1 className="text-xl font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
             </div>
 
-            <div className="space-y-2 text-[10px] leading-[1.4] text-slate-800 text-justify">
+            <div className="space-y-4 text-[13px] leading-[1.6] text-slate-800 text-justify">
                 <p>
                     Recebi de <strong className="font-black uppercase text-slate-900">{company.name}</strong>, a importância de
                     <strong className="font-bold border-b border-slate-300"> {item.result.valueInWords.toUpperCase()}</strong>,
@@ -743,21 +743,21 @@ const ReceiptTemplate: React.FC<{
                     Para maior clareza, firmo o presente recibo, que comprova o recebimento integral do valor mencionado, concedendo <strong className="font-black underline uppercase">quitação plena, geral e irrevogável</strong> pela quantia recebida.
                 </p>
 
-                <div className="text-[9px] font-medium text-slate-700">
+                <div className="text-xs font-medium text-slate-700">
                     <p>Pagamento recebido por <strong className="font-bold uppercase">{item.input.payeeName}</strong> através da chave Pix: <strong className="font-mono">{item.input.pixKey || 'N/A'}</strong>.</p>
                 </div>
             </div>
 
-            <div className="flex flex-col items-end gap-0.5 pt-0 font-bold text-slate-400 uppercase text-[7px] italic">
+            <div className="flex flex-col items-end gap-1 pt-0 font-bold text-slate-500 uppercase text-[9px] italic">
                 <p>EMISSÃO: {formatDateLongSafe(item.input.date)}</p>
                 <p>CANAVIEIRAS - BA</p>
             </div>
 
-            <div className="pt-1 flex flex-col items-center">
-                <div className="w-full max-w-[200px] border-b border-slate-300 mb-1"></div>
-                <p className="font-black uppercase text-[10px] tracking-tight text-slate-900">{item.input.payeeName}</p>
+            <div className="pt-4 flex flex-col items-center">
+                <div className="w-full max-w-[300px] border-b-2 border-slate-200 mb-2"></div>
+                <p className="font-black uppercase text-sm tracking-tight text-slate-900">{item.input.payeeName}</p>
                 {item.input.payeeDocument && (
-                    <p className="text-[8px] text-slate-400 font-mono font-bold">{item.input.payeeDocument}</p>
+                    <p className="text-[10px] text-slate-500 font-mono font-bold">{item.input.payeeDocument}</p>
                 )}
             </div>
         </div>
