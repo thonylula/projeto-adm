@@ -17,6 +17,7 @@ import { CampoViveiros } from './components/CampoViveiros';
 import { Comparator } from './components/Comparator';
 import { ShowcaseManager } from './components/ShowcaseManager';
 import { PlansPrices } from './components/PlansPrices';
+import { ReceiptManager } from './components/ReceiptManager';
 import { Company, PayrollHistoryItem } from './types';
 import { SupabaseService } from './services/supabaseService';
 import { isSupabaseConfigured } from './supabaseClient';
@@ -484,6 +485,28 @@ export default function App() {
 
         {activeTab === 'comparator' && (
           <Comparator />
+        )}
+
+        {activeTab === 'receipts' && (
+          <>
+            {activeCompany ? (
+              <ReceiptManager
+                activeCompany={activeCompany}
+                onBack={() => setActiveTab('payroll')}
+              />
+            ) : (
+              <CompanySelection
+                companies={companies}
+                onAddCompany={handleAddCompany}
+                onUpdateCompany={handleUpdateCompany}
+                onDeleteCompany={handleDeleteCompany}
+                onSelectCompany={handleSelectCompany}
+                title="Recibos Avulsos"
+                description="Selecione uma empresa para gerar recibos avulsos."
+                buttonText="Gerenciar Recibos"
+              />
+            )}
+          </>
         )}
 
         {activeTab === 'campo' && (
