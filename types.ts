@@ -276,3 +276,29 @@ export interface Transferencia {
   created_at?: string;
   updated_at?: string;
 }
+
+// --- RECEIPT TYPES ---
+
+export interface ReceiptInput {
+  payeeName: string;
+  payeeDocument?: string;
+  value: number;
+  date: string;
+  description: string;
+  paymentMethod: string;
+  pixKey?: string;
+  bankInfo?: string;
+  category?: string;
+}
+
+export interface ReceiptResult {
+  valueInWords: string;
+}
+
+export interface ReceiptHistoryItem {
+  id: string;
+  timestamp: string;
+  rawDate: string;
+  input: ReceiptInput;
+  result: ReceiptResult;
+}

@@ -580,5 +580,17 @@ export const SupabaseService = {
             return 0;
         }
         return count || 0;
+    },
+
+    // --- RECEIPTS HISTORY ---
+    async getReceiptsHistory(companyId: string): Promise<any[]> {
+        const id = `receipts_history_${companyId}`;
+        const data = await this.getConfig(id);
+        return Array.isArray(data) ? data : [];
+    },
+
+    async saveReceiptsHistory(companyId: string, history: any[]): Promise<boolean> {
+        const id = `receipts_history_${companyId}`;
+        return this.saveConfig(id, history);
     }
 };
