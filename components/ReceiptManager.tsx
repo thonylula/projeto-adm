@@ -232,6 +232,24 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
         reader.readAsDataURL(file);
     };
 
+    const handleCopyText = (item: ReceiptHistoryItem) => {
+        const period = item.input.serviceEndDate
+            ? `${formatDateSafe(item.input.serviceDate)} À ${formatDateSafe(item.input.serviceEndDate)}`
+            : formatDateSafe(item.input.serviceDate);
+
+        const text = `📄 *RECIBO DE PAGAMENTO*
+----------------------------
+👤 *Beneficiário:* ${item.input.payeeName}
+💰 *Valor:* ${formatCurrency(item.input.value)}
+📝 *Referente a:* ${item.input.description}
+📅 *Data/Período:* ${period}
+🔑 *CHAVE PIX:* ${item.input.pixKey || 'N/A'}
+----------------------------`;
+
+        navigator.clipboard.writeText(text);
+        alert("Informações do recibo copiadas para o clipboard!");
+    };
+
     const handleAiScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -603,6 +621,13 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                                                         >
                                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                                             VER
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleCopyText(item)}
+                                                            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                                            title="Copiar Dados para Pagamento"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
                                                         </button>
                                                         <button
                                                             onClick={() => handleEdit(item)}
