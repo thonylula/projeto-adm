@@ -283,7 +283,8 @@ export interface ReceiptInput {
   payeeName: string;
   payeeDocument?: string;
   value: number;
-  date: string;
+  date: string; // Data de Emissão
+  serviceDate: string; // Data da Prestação do Serviço
   description: string;
   paymentMethod: string;
   pixKey?: string;
