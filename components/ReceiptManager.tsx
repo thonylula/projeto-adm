@@ -30,9 +30,11 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
     const [loading, setLoading] = useState(false);
     const [showReceipt, setShowReceipt] = useState<ReceiptHistoryItem | null>(null);
     const [isExporting, setIsExporting] = useState(false);
+    const [receiptLogo, setReceiptLogo] = useState<string | null>(null);
 
     const { processFile, isProcessing: isAiProcessing } = useGeminiParser();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const logoInputRef = useRef<HTMLInputElement>(null);
 
     const [employees, setEmployees] = useState<RegistryEmployee[]>([]);
     const [suppliers, setSuppliers] = useState<RegistrySupplier[]>([]);
@@ -43,16 +45,18 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
-            const [h, emp, sup, cli] = await Promise.all([
+            const [h, emp, sup, cli, logo] = await Promise.all([
                 SupabaseService.getReceiptsHistory(activeCompany.id),
                 SupabaseService.getEmployees(),
                 SupabaseService.getSuppliers(),
-                SupabaseService.getClients()
+                SupabaseService.getClients(),
+                SupabaseService.getConfig(`receipt_logo_${activeCompany.id}`)
             ]);
             setHistory(h);
             setEmployees(emp);
             setSuppliers(sup);
             setClients(cli);
+            setReceiptLogo(logo as string);
             setLoading(false);
         };
         loadData();
@@ -148,6 +152,19 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
         }
     };
 
+    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            const base64 = reader.result as string;
+            setReceiptLogo(base64);
+            await SupabaseService.saveConfig(`receipt_logo_${activeCompany.id}`, base64);
+        };
+        reader.readAsDataURL(file);
+    };
+
     const handleAiScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -196,6 +213,21 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                     <p className="text-slate-500 text-sm italic">Ferramenta ágil para criação de recibos avulsos</p>
                 </div>
                 <div className="flex items-center gap-3 self-start">
+                    <input
+                        type="file"
+                        ref={logoInputRef}
+                        onChange={handleLogoUpload}
+                        accept="image/*"
+                        className="hidden"
+                    />
+                    <button
+                        onClick={() => logoInputRef.current?.click()}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all"
+                        title="Configurar Logo Permanente"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        LOGO
+                    </button>
                     <input
                         type="file"
                         ref={fileInputRef}
@@ -493,57 +525,100 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                         </div>
 
                         <div className="p-8 bg-slate-50 flex justify-center">
-                            <div ref={receiptRef} className="bg-white shadow-xl w-full max-w-[500px] p-10 space-y-8 border border-slate-200 rounded-sm">
-                                <div className="flex flex-col items-center gap-4 text-center">
-                                    {activeCompany.logoUrl && (
-                                        <img src={activeCompany.logoUrl} alt="Logo" className="h-12 w-auto object-contain mb-2" />
-                                    )}
-                                    <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter border-b-2 border-slate-900 pb-1">Recibo de Pagamento</h1>
-                                    <div className="bg-slate-900 text-white px-6 py-2 rounded-lg font-black text-xl">
-                                        {formatCurrency(showReceipt.input.value)}
+                            <div ref={receiptRef} className="bg-white shadow-xl w-full max-w-[800px] p-10 space-y-12 border border-slate-200">
+                                {/* 1ª VIA */}
+                                <ReceiptTemplate
+                                    item={showReceipt}
+                                    company={activeCompany}
+                                    logo={receiptLogo}
+                                    via="1ª VIA"
+                                    formatCurrency={formatCurrency}
+                                />
+
+                                {/* Separator line for cutting */}
+                                <div className="border-t-2 border-dashed border-slate-200 relative">
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-4 py-1 text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                                        Tesoura aqui para separar as vias
                                     </div>
                                 </div>
 
-                                <div className="space-y-6 text-sm leading-relaxed text-justify text-slate-800">
-                                    <p>
-                                        Recebi de <strong className="font-black uppercase">{activeCompany.name}</strong>, a importância de
-                                        <strong className="font-bold italic"> {showReceipt.result.valueInWords.toUpperCase()}</strong>,
-                                        referente a <strong className="font-bold uppercase">{showReceipt.input.description}</strong>.
-                                    </p>
-
-                                    <p>
-                                        Pela clareza e verdade, firmo o presente recibo para que produza seus efeitos legais, dando plena quitação pelo valor recebido.
-                                    </p>
-
-                                    <div className="pt-4 space-y-2">
-                                        <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                            <span>Forma de Pgto: {showReceipt.input.paymentMethod}</span>
-                                            <span>Data: {new Date(showReceipt.input.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
-                                        </div>
-                                        {showReceipt.input.pixKey && (
-                                            <div className="text-[10px] font-mono text-slate-500 bg-slate-100 p-2 rounded">
-                                                PIX: {showReceipt.input.pixKey}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="mt-12 pt-8 border-t border-slate-300 flex flex-col items-center">
-                                        <div className="w-full max-w-[250px] border-b border-slate-400 mb-2"></div>
-                                        <p className="font-black uppercase text-sm tracking-tight">{showReceipt.input.payeeName}</p>
-                                        {showReceipt.input.payeeDocument && (
-                                            <p className="text-[10px] text-slate-500 font-mono mt-1">{showReceipt.input.payeeDocument}</p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="text-[9px] text-slate-300 text-center uppercase tracking-[0.3em] mt-8 pt-4 border-t border-slate-50">
-                                    Gerado em {showReceipt.timestamp}
-                                </div>
+                                {/* 2ª VIA */}
+                                <ReceiptTemplate
+                                    item={showReceipt}
+                                    company={activeCompany}
+                                    logo={receiptLogo}
+                                    via="2ª VIA"
+                                    formatCurrency={formatCurrency}
+                                />
                             </div>
                         </div>
                     </div>
                 </div>
             )}
+        </div>
+    );
+};
+
+// Sub-component for individual receipt copy
+const ReceiptTemplate: React.FC<{
+    item: ReceiptHistoryItem;
+    company: Company;
+    logo: string | null;
+    via: string;
+    formatCurrency: (val: number) => string;
+}> = ({ item, company, logo, via, formatCurrency }) => {
+    return (
+        <div className="space-y-8 relative">
+            <div className="absolute top-0 right-0 text-[10px] font-black text-slate-400 tracking-tighter italic">
+                {via}
+            </div>
+
+            <div className="flex justify-between items-start pt-4">
+                <div className="flex-1 flex justify-center pl-24">
+                    {logo ? (
+                        <img src={logo} alt="Logo" className="h-16 w-auto object-contain" />
+                    ) : (
+                        <div className="h-16 w-32 bg-slate-50 border border-dashed border-slate-200 rounded flex items-center justify-center text-[10px] text-slate-400 font-bold uppercase">
+                            Sem Logo
+                        </div>
+                    )}
+                </div>
+                <div className="bg-white border-2 border-slate-900 px-6 py-2 rounded-lg font-black text-2xl text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+                    {formatCurrency(item.input.value)}
+                </div>
+            </div>
+
+            <div className="text-center">
+                <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
+            </div>
+
+            <div className="space-y-6 text-[15px] leading-[1.8] text-slate-800 text-justify">
+                <p>
+                    Recebi de <strong className="font-black uppercase text-slate-900">{company.name}</strong>, a importância de
+                    <strong className="font-bold border-b border-slate-300"> {item.result.valueInWords.toUpperCase()}</strong>,
+                    referente a <strong className="font-bold uppercase">{item.input.description}</strong>.
+                </p>
+
+                <p>
+                    Para maior clareza, firmo o presente recibo, que comprova o recebimento integral do valor mencionado, concedendo <strong className="font-black underline uppercase">quitação plena, geral e irrevogável</strong> pela quantia recebida.
+                </p>
+
+                <div className="text-sm font-medium text-slate-700">
+                    <p>Pagamento recebido por <strong className="font-bold uppercase">{item.input.payeeName}</strong> através da chave Pix: <strong className="font-mono">{item.input.pixKey || 'N/A'}</strong>.</p>
+                </div>
+            </div>
+
+            <div className="flex flex-col items-end gap-1 pt-4 font-bold text-slate-500 uppercase text-[11px] italic">
+                <p>CANAVIEIRAS, {new Date(item.input.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}</p>
+            </div>
+
+            <div className="pt-8 flex flex-col items-center">
+                <div className="w-full max-w-[400px] border-b-2 border-slate-200 mb-2"></div>
+                <p className="font-black uppercase text-base tracking-tight text-slate-900">{item.input.payeeName}</p>
+                {item.input.payeeDocument && (
+                    <p className="text-[11px] text-slate-500 font-mono font-bold">{item.input.payeeDocument}</p>
+                )}
+            </div>
         </div>
     );
 };
