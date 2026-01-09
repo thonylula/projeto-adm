@@ -85,32 +85,54 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
             return;
         }
 
-        const result: ReceiptResult = {
-            valueInWords: handleCalculateValueInWords(form.value)
-        };
+        setLoading(true);
+        try {
+            const result: ReceiptResult = {
+                valueInWords: handleCalculateValueInWords(form.value)
+            };
 
-        const newItem: ReceiptHistoryItem = {
-            id: editingId || crypto.randomUUID(),
-            timestamp: new Date().toLocaleString('pt-BR'),
-            rawDate: new Date().toISOString(),
-            input: {
-                ...form,
-                date: new Date().toISOString().split('T')[0] // Always today for Emission
-            },
-            result
-        };
+            const newItem: ReceiptHistoryItem = {
+                id: editingId || crypto.randomUUID(),
+                timestamp: new Date().toLocaleString('pt-BR'),
+                rawDate: new Date().toISOString(),
+                input: {
+                    ...form,
+                    date: new Date().toISOString().split('T')[0] // Always today for Emission
+                },
+                result
+            };
 
-        let newHistory;
-        if (editingId) {
-            newHistory = history.map(h => h.id === editingId ? newItem : h);
-            setEditingId(null);
-        } else {
-            newHistory = [newItem, ...history];
+            let success = false;
+            if (editingId) {
+                // Update existing receipt
+                success = await SupabaseService.updateReceiptItem(newItem);
+                if (success) {
+                    setHistory(history.map(h => h.id === editingId ? newItem : h));
+                    setEditingId(null);
+                    alert('✅ Recibo atualizado com sucesso!');
+                } else {
+                    alert('❌ Erro ao atualizar recibo. Tente novamente.');
+                }
+            } else {
+                // Add new receipt
+                success = await SupabaseService.addReceiptItem(activeCompany.id, newItem);
+                if (success) {
+                    setHistory([newItem, ...history]);
+                    alert('✅ Recibo criado com sucesso!');
+                } else {
+                    alert('❌ Erro ao criar recibo. Tente novamente.');
+                }
+            }
+
+            if (success) {
+                setForm(INITIAL_INPUT);
+            }
+        } catch (error) {
+            console.error('Error saving receipt:', error);
+            alert('❌ Erro inesperado ao salvar recibo.');
+        } finally {
+            setLoading(false);
         }
-
-        setHistory(newHistory);
-        await SupabaseService.saveReceiptsHistory(activeCompany.id, newHistory);
-        setForm(INITIAL_INPUT);
     };
 
     const handleEdit = (item: ReceiptHistoryItem) => {
@@ -120,9 +142,22 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
 
     const handleDelete = async (id: string) => {
         if (!window.confirm("Deseja excluir este recibo?")) return;
-        const newHistory = history.filter(h => h.id !== id);
-        setHistory(newHistory);
-        await SupabaseService.saveReceiptsHistory(activeCompany.id, newHistory);
+
+        setLoading(true);
+        try {
+            const success = await SupabaseService.deleteReceiptItem(id);
+            if (success) {
+                setHistory(history.filter(h => h.id !== id));
+                alert('✅ Recibo excluído com sucesso!');
+            } else {
+                alert('❌ Erro ao excluir recibo. Tente novamente.');
+            }
+        } catch (error) {
+            console.error('Error deleting receipt:', error);
+            alert('❌ Erro inesperado ao excluir recibo.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSelectPayee = (type: string, id: string) => {
@@ -304,15 +339,26 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                 });
 
                 if (newItems.length > 0) {
-                    const updatedHistory = [...newItems, ...history];
-                    setHistory(updatedHistory);
-                    await SupabaseService.saveReceiptsHistory(activeCompany.id, updatedHistory);
-                    alert(`${newItems.length} recibos extraídos e salvos no histórico com sucesso!`);
+                    // Save each receipt individually
+                    let successCount = 0;
+                    for (const item of newItems) {
+                        const success = await SupabaseService.addReceiptItem(activeCompany.id, item);
+                        if (success) successCount++;
+                    }
 
-                    // If only one, also put it in the form for immediate editing if needed
-                    if (newItems.length === 1) {
-                        setForm(newItems[0].input);
-                        setEditingId(newItems[0].id);
+                    if (successCount > 0) {
+                        // Refresh history from database
+                        const updatedHistory = await SupabaseService.getReceiptsHistory(activeCompany.id);
+                        setHistory(updatedHistory);
+                        alert(`✅ ${successCount} de ${newItems.length} recibos salvos com sucesso!`);
+
+                        // If only one, also put it in the form for immediate editing if needed
+                        if (newItems.length === 1) {
+                            setForm(newItems[0].input);
+                            setEditingId(newItems[0].id);
+                        }
+                    } else {
+                        alert('❌ Erro ao salvar recibos. Tente novamente.');
                     }
                 }
             } else {
@@ -320,7 +366,7 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
             }
         } catch (error) {
             console.error("AI Scan error:", error);
-            alert("Erro ao analisar arquivo com IA.");
+            alert("❌ Erro ao analisar arquivo com IA.");
         } finally {
             if (fileInputRef.current) fileInputRef.current.value = '';
         }
