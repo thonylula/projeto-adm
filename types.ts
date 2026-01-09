@@ -285,6 +285,7 @@ export interface ReceiptInput {
   value: number;
   date: string; // Data de Emissão
   serviceDate: string; // Data da Prestação do Serviço
+  serviceEndDate?: string; // Data Final da Prestação do Serviço (Opcional)
   description: string;
   paymentMethod: string;
   pixKey?: string;
