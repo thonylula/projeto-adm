@@ -169,32 +169,68 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const prompt = `Analise este comprovante/recibo e extraia os dados para preencher um recibo de pagamento.
-        Retorne APENAS um JSON plano com os seguintes campos:
+        const prompt = `Analise este comprovante/recibo ou lista de pagamentos e extraia os dados de TODOS os registros encontrados.
+        Retorne APENAS um JSON plano contendo um array "records" com os seguintes campos para cada pessoa:
         {
-          "payeeName": "nome de quem recebe",
-          "payeeDocument": "CPF ou CNPJ se disponível",
-          "value": 123.45,
-          "date": "YYYY-MM-DD",
-          "description": "breve resumo do que se trata o pagamento",
-          "paymentMethod": "PIX",
-          "pixKey": "chave pix se encontrada"
+          "records": [
+            {
+              "payeeName": "nome completo",
+              "payeeDocument": "CPF ou CNPJ (apenas números)",
+              "value": 123.45,
+              "date": "YYYY-MM-DD",
+              "description": "descrição do pagamento",
+              "paymentMethod": "PIX",
+              "pixKey": "chave pix se encontrada"
+            }
+          ]
         }
-        Converta datas para o formato ISO YYYY-MM-DD. Remova símbolos de moeda. Se não encontrar algo, deixe string vazia ou use valores padrão.`;
+        Notas:
+        1. Se for uma tabela com várias pessoas, extraia todas.
+        2. Converta datas para YYYY-MM-DD. Se a data estiver no cabeçalho e for única para todos, use-a.
+        3. Remova símbolos de moeda.
+        4. O campo "paymentMethod" deve ser um dos: PIX, DINHEIRO, TRANSFERÊNCIA.
+        5. Se não encontrar CPF ou Chave Pix, deixe string vazia.`;
 
         try {
             const data = await processFile(file, prompt);
-            if (data && typeof data === 'object') {
-                setForm(prev => ({
-                    ...prev,
-                    payeeName: data.payeeName || prev.payeeName,
-                    payeeDocument: data.payeeDocument || prev.payeeDocument,
-                    value: data.value || prev.value,
-                    date: data.date || prev.date,
-                    description: data.description || prev.description,
-                    paymentMethod: data.paymentMethod || prev.paymentMethod,
-                    pixKey: data.pixKey || prev.pixKey
-                }));
+            if (data && data.records && Array.isArray(data.records)) {
+                const newItems: ReceiptHistoryItem[] = data.records.map((rec: any) => {
+                    const result: ReceiptResult = {
+                        valueInWords: handleCalculateValueInWords(rec.value || 0)
+                    };
+                    return {
+                        id: crypto.randomUUID(),
+                        timestamp: new Date().toLocaleString('pt-BR'),
+                        rawDate: new Date().toISOString(),
+                        input: {
+                            payeeName: rec.payeeName || '',
+                            payeeDocument: rec.payeeDocument || '',
+                            value: rec.value || 0,
+                            date: rec.date || new Date().toISOString().split('T')[0],
+                            description: rec.description || '',
+                            paymentMethod: rec.paymentMethod || 'PIX',
+                            pixKey: rec.pixKey || '',
+                            bankInfo: '',
+                            category: 'OUTROS'
+                        },
+                        result
+                    };
+                });
+
+                if (newItems.length > 0) {
+                    const updatedHistory = [...newItems, ...history];
+                    setHistory(updatedHistory);
+                    await SupabaseService.saveReceiptsHistory(activeCompany.id, updatedHistory);
+                    alert(`${newItems.length} recibos extraídos e salvos no histórico com sucesso!`);
+
+                    // If only one, also put it in the form for immediate editing if needed
+                    if (newItems.length === 1) {
+                        setForm(newItems[0].input);
+                        setEditingId(newItems[0].id);
+                    }
+                }
+            } else {
+                alert("Nenhum dado encontrado ou formato inválido.");
             }
         } catch (error) {
             console.error("AI Scan error:", error);
