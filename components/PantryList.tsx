@@ -3,39 +3,37 @@ import type { InvoiceData, ItemAllocationConfig } from '../types';
 
 interface PantryListProps {
     items: any[];
-    employeeNames: string[];
+    employees: { name: string; isNonDrinker: boolean }[];
     motivationalMessages?: string[];
     sloganImage?: string | null;
     companyName: string;
     recipientCnpj?: string;
     companyLogo?: string | null;
-    selectedNonDrinkers?: number[];
     itemAllocation?: Record<string, ItemAllocationConfig>;
     appMode?: 'BASIC' | 'CHRISTMAS' | null;
 }
 
 export const PantryList: React.FC<PantryListProps> = ({
     items,
-    employeeNames,
+    employees,
     motivationalMessages = [],
     companyName,
     recipientCnpj,
     companyLogo,
     sloganImage,
-    selectedNonDrinkers = [],
     itemAllocation = {},
     appMode = 'BASIC'
 }) => {
     const formatQty = (qty: number) => qty.toLocaleString('pt-BR', { minimumFractionDigits: 3 });
 
-    const totalEmployees = (employeeNames || []).length;
-    const nonDrinkerCount = (selectedNonDrinkers || []).length;
+    const totalEmployees = (employees || []).length;
+    const nonDrinkerCount = (employees || []).filter(e => e.isNonDrinker).length;
     const drinkerCount = totalEmployees - nonDrinkerCount;
 
     return (
         <div className="space-y-8 print:space-y-4 print:grid print:grid-cols-2 print:gap-4">
-            {(employeeNames || []).map((name, index) => {
-                const isNonDrinker = (selectedNonDrinkers || []).includes(index);
+            {(employees || []).map((emp, index) => {
+                const { name, isNonDrinker } = emp;
 
                 // Filter items based on allocation
                 const visibleItems = (items || []).filter(item => {
@@ -87,7 +85,7 @@ export const PantryList: React.FC<PantryListProps> = ({
                         {/* Motivational Message */}
                         <div className="p-1 px-4 text-center">
                             <p className="text-indigo-600 font-black italic text-[11px] leading-tight">
-                                "{motivationalMessages[index] || "Sua dedicação é a força que impulsiona nosso sucesso. Obrigado!"}"
+                                "{emp.message || "Sua dedicação é a força que impulsiona nosso sucesso. Obrigado!"}"
                             </p>
                         </div>
 
