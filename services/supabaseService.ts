@@ -87,7 +87,15 @@ export const SupabaseService = {
         try {
             const { data, error } = await supabase.from('employees').select('*');
             if (error || !data || !Array.isArray(data)) return [];
-            return data.map(item => ({ ...item, photoUrl: item.photo_url, admissionDate: item.admission_date, isNonDrinker: item.is_non_drinker }));
+            return data.map(item => ({
+                ...item,
+                photoUrl: item.photo_url,
+                admissionDate: item.admission_date,
+                isNonDrinker: item.is_non_drinker,
+                zipCode: item.zip_code,
+                bankName: item.bank_name,
+                pixKey: item.pix_key
+            }));
         } catch (e) {
             console.error("[Supabase] Error fetching employees:", e);
             return [];
@@ -129,7 +137,15 @@ export const SupabaseService = {
     async getSuppliers(): Promise<RegistrySupplier[]> {
         const { data, error } = await supabase.from('suppliers').select('*');
         if (error) return [];
-        return data.map(item => ({ ...item, companyName: item.company_name, tradeName: item.trade_name, contactPerson: item.contact_person }));
+        return data.map(item => ({
+            ...item,
+            companyName: item.company_name,
+            tradeName: item.trade_name,
+            contactPerson: item.contact_person,
+            zipCode: item.zip_code,
+            bankName: item.bank_name,
+            pixKey: item.pix_key
+        }));
     },
 
     async saveSupplier(supplier: RegistrySupplier): Promise<boolean> {
@@ -164,7 +180,12 @@ export const SupabaseService = {
     async getClients(): Promise<RegistryClient[]> {
         const { data, error } = await supabase.from('clients').select('*');
         if (error) return [];
-        return data;
+        return (data || []).map(item => ({
+            ...item,
+            zipCode: item.zip_code,
+            bankName: item.bank_name,
+            pixKey: item.pix_key
+        }));
     },
 
     async saveClient(client: RegistryClient): Promise<boolean> {
