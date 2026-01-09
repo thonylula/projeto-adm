@@ -63,6 +63,16 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
         loadData();
     }, [activeCompany.id]);
 
+    useEffect(() => {
+        const handleEsc = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setShowReceipt(null);
+            }
+        };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, []);
+
     const handleCalculateValueInWords = (val: number) => {
         return numberToWordsBRL(val);
     };
@@ -131,6 +141,33 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
 
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+    };
+
+    const handleExportPDF = async () => {
+        if (!receiptRef.current) return;
+        setIsExporting(true);
+        try {
+            const canvas = await html2canvas(receiptRef.current, {
+                scale: 3, // Higher scale for better PDF quality
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            });
+            const imgData = canvas.toDataURL('image/png');
+
+            // A5 dimensions in mm: 148 x 210
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a5'
+            });
+
+            pdf.addImage(imgData, 'PNG', 0, 0, 148, 210);
+            pdf.save(`recibo_${showReceipt?.input.payeeName.replace(/\s+/g, '_').toLowerCase()}.pdf`);
+        } catch (e) {
+            console.error("Erro exportando PDF:", e);
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     const handleExportPNG = async () => {
@@ -546,7 +583,10 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
 
             {/* --- RECEIPT PREVIEW MODAL --- */}
             {showReceipt && (
-                <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 overflow-y-auto print:bg-transparent print:p-0">
+                <div
+                    className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300 overflow-y-auto print:bg-transparent print:p-0"
+                    onClick={(e) => e.target === e.currentTarget && setShowReceipt(null)}
+                >
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[650px] overflow-hidden flex flex-col border border-slate-200 print:shadow-none print:border-none print:w-full print:max-w-none">
                         {/* Modal Header */}
                         <div className="flex items-center justify-between px-8 py-4 border-b border-slate-100 bg-slate-50/50 print:hidden">
@@ -561,14 +601,25 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                             </div>
                             <div className="flex items-center gap-3">
                                 <button
+                                    onClick={handleExportPDF}
+                                    disabled={isExporting}
+                                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all font-black text-[10px] shadow-lg shadow-indigo-200/50 disabled:bg-slate-300"
+                                >
+                                    {isExporting ? 'PROCESSANDO...' : 'SALVAR PDF'}
+                                </button>
+                                <button
                                     onClick={handleExportPNG}
                                     disabled={isExporting}
-                                    className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-black text-xs shadow-lg shadow-emerald-200/50 disabled:bg-slate-300"
+                                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-black text-[10px] shadow-lg shadow-emerald-200/50 disabled:bg-slate-300"
                                 >
-                                    {isExporting ? 'EXPORTANDO...' : 'SALVAR PNG'}
+                                    {isExporting ? '...' : 'SALVAR PNG'}
                                 </button>
-                                <button onClick={() => setShowReceipt(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                                <button
+                                    onClick={() => setShowReceipt(null)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-black text-white rounded-xl transition-all font-black text-[10px] shadow-lg shadow-slate-200/50"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                                    SAIR
                                 </button>
                             </div>
                         </div>
@@ -622,31 +673,31 @@ const ReceiptTemplate: React.FC<{
     formatCurrency: (val: number) => string;
 }> = ({ item, company, logo, via, formatCurrency }) => {
     return (
-        <div className="space-y-6 relative">
-            <div className="absolute top-0 right-0 text-[10px] font-black text-slate-400 tracking-tighter italic">
+        <div className="space-y-3 relative">
+            <div className="absolute top-0 right-0 text-[8px] font-black text-slate-300 tracking-tighter italic">
                 {via}
             </div>
 
             <div className="flex justify-between items-start pt-4">
                 <div className="flex-1 flex justify-center pl-24">
                     {logo ? (
-                        <img src={logo} alt="Logo" className="h-16 w-auto object-contain" />
+                        <img src={logo} alt="Logo" className="h-8 w-auto object-contain" />
                     ) : (
-                        <div className="h-16 w-32 bg-slate-50 border border-dashed border-slate-200 rounded flex items-center justify-center text-[10px] text-slate-400 font-bold uppercase">
+                        <div className="h-8 w-20 bg-slate-50 border border-dashed border-slate-200 rounded flex items-center justify-center text-[7px] text-slate-400 font-bold uppercase">
                             Sem Logo
                         </div>
                     )}
                 </div>
-                <div className="bg-white border-2 border-slate-900 px-6 py-2 rounded-lg font-black text-2xl text-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+                <div className="bg-white border-2 border-slate-900 px-3 py-0.5 rounded-lg font-black text-lg text-slate-900 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)]">
                     {formatCurrency(item.input.value)}
                 </div>
             </div>
 
             <div className="text-center">
-                <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
+                <h1 className="text-lg font-black text-slate-900 uppercase tracking-tight">Recibo de Pagamento</h1>
             </div>
 
-            <div className="space-y-6 text-[15px] leading-[1.8] text-slate-800 text-justify">
+            <div className="space-y-3 text-[11px] leading-[1.6] text-slate-800 text-justify">
                 <p>
                     Recebi de <strong className="font-black uppercase text-slate-900">{company.name}</strong>, a importância de
                     <strong className="font-bold border-b border-slate-300"> {item.result.valueInWords.toUpperCase()}</strong>,
@@ -658,21 +709,21 @@ const ReceiptTemplate: React.FC<{
                     Para maior clareza, firmo o presente recibo, que comprova o recebimento integral do valor mencionado, concedendo <strong className="font-black underline uppercase">quitação plena, geral e irrevogável</strong> pela quantia recebida.
                 </p>
 
-                <div className="text-sm font-medium text-slate-700">
+                <div className="text-[10px] font-medium text-slate-700">
                     <p>Pagamento recebido por <strong className="font-bold uppercase">{item.input.payeeName}</strong> através da chave Pix: <strong className="font-mono">{item.input.pixKey || 'N/A'}</strong>.</p>
                 </div>
             </div>
 
-            <div className="flex flex-col items-end gap-1 pt-2 font-bold text-slate-500 uppercase text-[10px] italic">
+            <div className="flex flex-col items-end gap-1 pt-0 font-bold text-slate-400 uppercase text-[8px] italic">
                 <p>EMISSÃO: {new Date(item.input.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}</p>
                 <p>CANAVIEIRAS - BA</p>
             </div>
 
-            <div className="pt-8 flex flex-col items-center">
-                <div className="w-full max-w-[400px] border-b-2 border-slate-200 mb-2"></div>
-                <p className="font-black uppercase text-base tracking-tight text-slate-900">{item.input.payeeName}</p>
+            <div className="pt-2 flex flex-col items-center">
+                <div className="w-full max-w-[250px] border-b border-slate-300 mb-1"></div>
+                <p className="font-black uppercase text-xs tracking-tight text-slate-900">{item.input.payeeName}</p>
                 {item.input.payeeDocument && (
-                    <p className="text-[11px] text-slate-500 font-mono font-bold">{item.input.payeeDocument}</p>
+                    <p className="text-[9px] text-slate-400 font-mono font-bold">{item.input.payeeDocument}</p>
                 )}
             </div>
         </div>
