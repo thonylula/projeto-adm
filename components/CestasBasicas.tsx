@@ -288,7 +288,17 @@ export const CestasBasicas: React.FC = () => {
     };
 
     // Filter out excluded employees for the current month
-    const activeEmployees = (actualEmployees || []).filter(name => !(excludedEmployees || []).includes(name));
+    // Filter out excluded employees and sort alphabetically
+    const activeEmployees = useMemo(() => {
+        return (actualEmployees || [])
+            .map((name, index) => ({
+                name,
+                isNonDrinker: (selectedNonDrinkers || []).includes(index),
+                message: motivationalMessages[index] || "Sua dedicação é a força que impulsiona nosso sucesso. Obrigado!"
+            }))
+            .filter(emp => !(excludedEmployees || []).includes(emp.name))
+            .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+    }, [actualEmployees, selectedNonDrinkers, excludedEmployees, motivationalMessages]);
 
     // Helper to calculate smart distribution
     const computeSmartDistribution = (
@@ -1202,15 +1212,13 @@ export const CestasBasicas: React.FC = () => {
                                 {activeTab === 'pantry' && (
                                     <PantryList
                                         items={invoiceData?.items || []}
-                                        employeeNames={activeEmployees.map(e => e.name)}
+                                        employees={activeEmployees}
                                         companyName={companyName}
                                         recipientCnpj={invoiceData?.recipientCnpj}
                                         companyLogo={companyLogoBase64}
                                         sloganImage={sloganImageBase64}
-                                        selectedNonDrinkers={selectedNonDrinkers}
                                         itemAllocation={itemAllocation}
                                         appMode={appMode}
-                                        motivationalMessages={motivationalMessages}
                                     />
                                 )}
                             </div>
@@ -1247,15 +1255,13 @@ export const CestasBasicas: React.FC = () => {
                                     <div className="pantry-full-list">
                                         <PantryList
                                             items={invoiceData?.items || []}
-                                            employeeNames={activeEmployees.map(e => e.name)}
+                                            employees={activeEmployees}
                                             companyName={companyName}
                                             recipientCnpj={invoiceData?.recipientCnpj}
                                             companyLogo={companyLogoBase64}
                                             sloganImage={sloganImageBase64}
-                                            selectedNonDrinkers={selectedNonDrinkers}
                                             itemAllocation={itemAllocation}
                                             appMode={appMode}
-                                            motivationalMessages={motivationalMessages}
                                         />
                                     </div>
                                 </div>
