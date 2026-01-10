@@ -20,7 +20,7 @@ export const MortalidadeDashboard: React.FC<MortalidadeDashboardProps> = ({ data
         let totalBiomass = 0;
 
         const tankMetrics = (data.records || []).map(record => {
-            const mortality = (record.dailyRecords || []).reduce((s, day) => s + (day.mort || 0), 0);
+            const mortality = (record.dailyRecords || []).reduce((s, day) => s + (day.mortality || 0), 0);
             const feed = (record.dailyRecords || []).reduce((s, day) => s + (day.feed || 0), 0);
             // ADJUST: Population inputs are in thousands (e.g., 372 = 372,000)
             const realInitialPop = record.initialPopulation * 1000;

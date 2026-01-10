@@ -1,5 +1,5 @@
 import React, { useState, useCallback, FC } from 'react';
-import { extractInvoiceData } from '../services/geminiService';
+import { getOrchestrator } from '../services/agentService';
 import { InvoiceData, InvoiceItem, Company } from '../types';
 import { ImageUploader } from './ImageUploader';
 import { exportToPdf } from '../utils/exportUtils';
@@ -40,12 +40,17 @@ export const BudgetPage: FC<BudgetPageProps> = ({ activeCompany }) => {
         setError(null);
         try {
             const allItems: InvoiceItem[] = [];
+            const orchestrator = getOrchestrator();
             for (const file of files) {
                 const fc = await fileToBase64(file);
-                const data = await extractInvoiceData(fc.base64, fc.mimeType);
+
+                const data = await orchestrator.routeToAgent('budget-management', {
+                    image: fc.base64,
+                    mimeType: fc.mimeType
+                });
 
                 // Map issuer info to each item for the table
-                const itemsWithIssuer = data.items.map(item => ({
+                const itemsWithIssuer = data.items.map((item: any) => ({
                     ...item,
                     issuerName: data.issuerName,
                     issuerAddress: data.issuerAddress

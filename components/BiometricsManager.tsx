@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import html2canvas from 'html2canvas';
 import html2pdf from 'html2pdf.js';
 import { safeIncludes } from '../utils';
-import { useGeminiParser } from '../hooks/useGeminiParser';
+import { getOrchestrator } from '../services/agentService';
 import { SupabaseService } from '../services/supabaseService';
 
 // --- LOGO PADRÃO CARAPITANGA (SVG Data URI) ---
@@ -54,8 +54,8 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     const [needsSave, setNeedsSave] = useState(false);
     const [biometryDate, setBiometryDate] = useState(new Date().toISOString().split('T')[0]);
     const [loadedRecordId, setLoadedRecordId] = useState<string | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-    const { processFile, isProcessing } = useGeminiParser();
     const [filterText, setFilterText] = useState(initialFilter);
     const [showReferenceTable, setShowReferenceTable] = useState(false);
 
@@ -92,23 +92,31 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
         const performSave = async () => {
             if (needsSave && currentData.length > 0) {
                 const label = `Biometria ${new Date(biometryDate + 'T12:00:00').toLocaleDateString('pt-BR')}`;
+                const orchestrator = getOrchestrator();
 
                 showToast('Salvando biometria...');
-                const success = await SupabaseService.saveBiometry(
-                    currentData,
-                    label,
-                    new Date(biometryDate + 'T12:00:00').toISOString()
-                );
+                try {
+                    const success = await orchestrator.routeToAgent('biometry-storage', {
+                        operation: 'save',
+                        data: currentData,
+                        label: label,
+                        timestamp: new Date(biometryDate + 'T12:00:00').toISOString()
+                    });
 
-                setNeedsSave(false);
+                    setNeedsSave(false);
 
-                if (success) {
-                    showToast('✅ Biometria salva com sucesso!');
-                    // Recarregar histórico
-                    const updatedHistory = await SupabaseService.getBiometricsHistory();
-                    setBiometricsHistory(updatedHistory);
-                } else {
-                    showToast('❌ Erro ao salvar biometria. Verifique se a tabela biometrics existe no Supabase.');
+                    if (success) {
+                        showToast('✅ Biometria salva com sucesso!');
+                        // Recarregar histórico usando o agente
+                        const updatedHistory = await orchestrator.routeToAgent('biometry-storage', { operation: 'list' });
+                        setBiometricsHistory(updatedHistory);
+                    } else {
+                        showToast('❌ Erro ao salvar biometria.');
+                    }
+                } catch (error) {
+                    console.error("Save error", error);
+                    showToast('❌ Erro ao salvar biometria.');
+                    setNeedsSave(false);
                 }
             }
         };
@@ -218,28 +226,12 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
     const handleProcess = async () => {
         setStep('PROCESSING');
+        const orchestrator = getOrchestrator();
 
         if (files.length > 0) {
             try {
-                const prompt = `
-                    ANALISE A IMAGEM E EXTRAIA ** TODOS ** OS DADOS DA TABELA PARA JSON.
-                    
-                    Retorne UM ARRAY DE OBJETOS no seguinte formato:
-    {
-        "viveiro": "string",
-        "dataPovoamento": "string (DD/MM/AAAA)",
-        "diasCultivo": number,
-        "pMedStr": "string (ex: 5,25)",
-        "quat": number,
-        "pAntStr": "string (ex: 4,25)"
-    }
-                    
-                    Instruções CRÍTICAS:
-1. Extraia linha por linha, sem pular nenhuma.
-                    2. NÃO use markdown, APENAS o JSON puro.
-                `;
-
-                const result = await processFile(files[0], prompt);
+                const extraction = await orchestrator.routeToAgent('biometry-data', { image: files[0] });
+                const result = extraction.data;
 
                 if (Array.isArray(result)) {
                     // Normalização de Nomes e Datas
@@ -304,6 +296,29 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
         setCurrentData(newData);
         showToast('✅ Biometria anterior carregada! Preencha os novos pesos médios.');
+    };
+
+    const handleAIAnalysis = async () => {
+        if (currentData.length === 0) return;
+        setIsAnalyzing(true);
+        const orchestrator = getOrchestrator();
+
+        try {
+            // 1. Análise Técnica
+            const analysis = await orchestrator.routeToAgent('biometry-analysis', currentData);
+
+            // 2. Relatório Executivo
+            const report = await orchestrator.routeToAgent('biometry-report', analysis);
+
+            if (report.success) {
+                alert(`📊 RELATÓRIO DE PERFORMANCE IA\n\n${report.formattedText}\n\nAlertas Críticos:\n${report.criticalAlerts.join('\n') || 'Nenhum'}`);
+            }
+        } catch (error) {
+            console.error("AI Analysis Error", error);
+            showToast("Erro na análise inteligente.");
+        } finally {
+            setIsAnalyzing(false);
+        }
     };
 
     const handleSaveBiometry = () => {
@@ -958,6 +973,17 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
                             Nova Biometria
+                        </button>
+                        <button
+                            onClick={handleAIAnalysis}
+                            disabled={isAnalyzing}
+                            className={`flex items-center gap-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg shadow-sm transition-all ${isAnalyzing ? 'opacity-50 cursor-wait' : ''}`}
+                            title="Realizar análise zootécnica inteligente via IA"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${isAnalyzing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            {isAnalyzing ? 'Analisando...' : 'Analisar com IA'}
                         </button>
                         {loadedRecordId && (
                             <button

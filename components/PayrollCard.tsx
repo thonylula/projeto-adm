@@ -6,6 +6,7 @@ import { jsPDF } from 'jspdf';
 import { useGeminiParser } from '../hooks/useGeminiParser';
 import { numberToWordsBRL } from '../utils';
 import { SupabaseService } from '../services/supabaseService';
+import { getOrchestrator } from '../services/agentService';
 
 interface PayrollCardProps {
   activeCompany: Company;
@@ -181,6 +182,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const [copiedSummaryId, setCopiedSummaryId] = useState<string | null>(null);
   const [receiptItem, setReceiptItem] = useState<PayrollHistoryItem | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [loading, setLoading] = useState(false);
 
 
   // Lista de funcionários cadastrados para importação
@@ -533,24 +535,11 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const handleSmartUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
     const file = e.target.files[0];
+    const orchestrator = getOrchestrator();
 
     try {
-      const prompt = `
-                Analise este documento (Holerite, Recibo de Pagamento, Ficha Financeira). 
-                Extraia a data de competência (Mês/Ano), Nome do Funcionário, Cargo e Salário Base.
-                
-                Retorne um JSON estrito com as chaves:
-                {
-                    "referenceMonth": number (1-12),
-                    "referenceYear": number (ex: 2024),
-                    "employeeName": "Nome Completo",
-                    "baseSalary": number (valor numérico puro, ex: 1518.00),
-                    "role": "Cargo"
-                }
-                Se não encontrar algum dado, ignore-o.
-            `;
-
-      const data = await processFile(file, prompt);
+      // Usamos o novo agente especializado
+      const data = await orchestrator.routeToAgent('payroll-smart-upload', { image: file });
 
       if (data) {
         setFormState(prev => ({
@@ -559,14 +548,18 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
           referenceYear: data.referenceYear || prev.referenceYear,
           employeeName: data.employeeName || prev.employeeName,
           baseSalary: data.baseSalary || prev.baseSalary,
-          // We don't have a 'role' field in the main input state visible to user directly 
-          // (it's mostly for print/record), but we can perhaps store it if we add it to 'notes' or similar?
-          // For now, let's just use what matches.
+          overtimeHours: data.overtimeHours || prev.overtimeHours,
+          overtimePercentage: data.overtimePercentage || prev.overtimePercentage,
+          nightHours: data.nightHours || prev.nightHours,
+          bankName: data.bankName || prev.bankName,
+          pixKey: data.pixKey || prev.pixKey,
         }));
+        alert(`✅ IA extraiu dados com sucesso!\nAgente: ${orchestrator.getHistory().pop()?.agentId || 'SmartUpload'}`);
       }
 
     } catch (error) {
       console.error("Smart Upload Error", error);
+      alert("❌ Falha na extração inteligente. Certifique-se de que o arquivo está legível.");
     } finally {
       e.target.value = '';
     }
@@ -800,6 +793,38 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       calculationMode: formState.calculationMode, // Mantém o modo
       thirteenthCalculationType: formState.thirteenthCalculationType // Mantém o tipo
     });
+  };
+
+  const handleAuditAI = async () => {
+    if (!formState.baseSalary) return;
+    const orchestrator = getOrchestrator();
+    setLoading(true);
+
+    try {
+      // 1. Cálculo com IA
+      const calcResult = await orchestrator.routeToAgent('payroll-calculation', formState);
+
+      // 2. Validação com IA
+      const validation = await orchestrator.routeToAgent('payroll-validation', {
+        input: formState,
+        result: calcResult
+      });
+
+      setResult(calcResult);
+
+      if (validation.errors && validation.errors.length > 0) {
+        alert(`🚨 Alertas da Auditoria IA:\n\n${validation.errors.join('\n')}`);
+      } else if (validation.warnings && validation.warnings.length > 0) {
+        alert(`⚠️ Avisos da IA:\n\n${validation.warnings.join('\n')}`);
+      } else {
+        alert("✅ Auditoria Digital Concluída: Cálculos validados conforme CLT.");
+      }
+    } catch (error) {
+      console.error("Audit AI Error", error);
+      alert("❌ Erro ao realizar auditoria inteligente.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditClick = (e: React.MouseEvent, item: PayrollHistoryItem) => {
@@ -1640,7 +1665,18 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                 </div>
               </div>
 
-              <div className="pt-6 flex gap-3">
+              <div className="pt-6 flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={handleAuditAI}
+                  disabled={loading || !formState.baseSalary}
+                  className="flex-1 py-4 px-6 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold rounded-xl flex items-center justify-center gap-2 transition-all border border-emerald-200"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  AUDITAR COM IA
+                </button>
                 {editingId && (
                   <button type="button" onClick={handleCancelEdit} className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">Cancelar</button>
                 )}
@@ -1770,6 +1806,35 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                                   <path fillRule="evenodd" d="M4.848 2.771A49.144 49.144 0 0112 2.25c2.43 0 4.817.178 7.152.52 1.978.292 3.348 2.024 3.348 3.97v6.02c0 1.946-1.37 3.678-3.348 3.97a48.901 48.901 0 01-3.476.383.39.39 0 00-.297.17l-2.755 4.133a.75.75 0 01-1.248 0l-2.755-4.133a.39.39 0 00-.297-.17 48.9 48.9 0 01-3.476-.384c-1.978-.29-3.348-2.024-3.348-3.97V6.741c0-1.946 1.37-3.68 3.348-3.97z" clipRule="evenodd" />
                                 </svg>
                               )}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const orchestrator = getOrchestrator();
+                                try {
+                                  const report = await orchestrator.routeToAgent('payroll-generate-report', {
+                                    format: 'text',
+                                    item,
+                                    companyName: activeCompany.name
+                                  });
+                                  if (report.success && report.textFormat) {
+                                    await navigator.clipboard.writeText(report.textFormat);
+                                    alert("📋 Contracheque Profissional (IA) copiado para a área de transferência!");
+                                  }
+                                } catch (err) {
+                                  console.error(err);
+                                  alert("Erro ao gerar holerite com IA.");
+                                }
+                              }}
+                              className="p-1 text-white bg-indigo-600 hover:bg-indigo-700 rounded shadow-sm flex items-center gap-1 px-2 text-[10px] font-bold"
+                              title="Copiar Holerite Profissional (IA)"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              HOLERITE IA
                             </button>
 
                             <button

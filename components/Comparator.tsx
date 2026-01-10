@@ -1,6 +1,6 @@
 // [AI-LOCK: CLOSED]
 import React, { useState, useEffect, useRef } from 'react';
-import { useGeminiParser } from '../hooks/useGeminiParser';
+import { getOrchestrator } from '../services/agentService';
 import { SupabaseService } from '../services/supabaseService';
 
 interface ComparisonRecord {
@@ -19,7 +19,7 @@ export const Comparator: React.FC = () => {
     const [history, setHistory] = useState<ComparisonRecord[]>([]);
     const [queuedDivergences, setQueuedDivergences] = useState<any[]>([]);
     const [reportLogo, setReportLogo] = useState<string | null>(null);
-    const { processFiles, isProcessing } = useGeminiParser();
+    const [isProcessing, setIsProcessing] = useState(false);
 
     useEffect(() => {
         loadHistory();
@@ -152,24 +152,49 @@ export const Comparator: React.FC = () => {
       `;
 
 
-        const analysis = await processFiles(files, prompt, 'gemini-3-pro');
-        if (analysis) {
-            // Ordenar divergências por data (cronologicamente)
-            if (analysis.divergences && Array.isArray(analysis.divergences)) {
-                analysis.divergences.sort((a: any, b: any) => {
-                    if (!a.date) return 1;
-                    if (!b.date) return -1;
-                    return a.date.localeCompare(b.date);
-                });
-            }
+        setIsProcessing(true);
+        try {
+            const orchestrator = getOrchestrator();
 
-            setResult(analysis);
-            await SupabaseService.saveComparison({
-                source_a_label: sourceA.label,
-                source_b_label: sourceB.label,
-                analysis_result: { ...analysis, analysis_type: analysisType }
+            // Prepare inputs
+            const toBase64 = (f: File): Promise<string> => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(f);
+                reader.onload = () => resolve(reader.result?.toString().split(',')[1] || '');
+                reader.onerror = error => reject(error);
             });
-            loadHistory();
+
+            const sourceAData = sourceA.file ? await toBase64(sourceA.file) : sourceA.text;
+            const sourceBData = sourceB.file ? await toBase64(sourceB.file) : sourceB.text;
+
+            const analysis = await orchestrator.routeToAgent('comparison', {
+                sourceA: sourceAData,
+                sourceB: sourceBData,
+                type: analysisType
+            });
+            if (analysis) {
+                // Ordenar divergências por data (cronologicamente)
+                if (analysis.divergences && Array.isArray(analysis.divergences)) {
+                    analysis.divergences.sort((a: any, b: any) => {
+                        if (!a.date) return 1;
+                        if (!b.date) return -1;
+                        return a.date.localeCompare(b.date);
+                    });
+                }
+
+                setResult(analysis);
+                await SupabaseService.saveComparison({
+                    source_a_label: sourceA.label,
+                    source_b_label: sourceB.label,
+                    analysis_result: { ...analysis, analysis_type: analysisType }
+                });
+                loadHistory();
+            }
+        } catch (error) {
+            console.error("Erro na comparação:", error);
+            alert("Erro ao realizar comparação com Agente de Auditoria.");
+        } finally {
+            setIsProcessing(false);
         }
     };
 

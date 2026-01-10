@@ -212,4 +212,62 @@ export abstract class BaseAgent {
                 console.log(`${prefix} ℹ️`, message);
         }
     }
+
+    /**
+     * Extracts and parses JSON from a string that might contain extra text.
+     * Supports both objects {} and arrays [].
+     */
+    protected safeExtractJson(content: string): any {
+        const firstBrace = content.indexOf('{');
+        const firstBracket = content.indexOf('[');
+
+        // Determine if we're looking for an object or an array based on which comes first
+        let startChar = '';
+        let endChar = '';
+        let startIndex = -1;
+
+        if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+            startChar = '{';
+            endChar = '}';
+            startIndex = firstBrace;
+        } else if (firstBracket !== -1) {
+            startChar = '[';
+            endChar = ']';
+            startIndex = firstBracket;
+        }
+
+        if (startIndex === -1) {
+            throw new Error(`[${this.name}] No JSON (brace or bracket) found in response`);
+        }
+
+        let charCount = 0;
+        let lastIndex = -1;
+
+        for (let i = startIndex; i < content.length; i++) {
+            if (content[i] === startChar) charCount++;
+            else if (content[i] === endChar) charCount--;
+
+            if (charCount === 0) {
+                lastIndex = i;
+                break;
+            }
+        }
+
+        if (lastIndex === -1) {
+            throw new Error(`[${this.name}] No matching closing ${endChar} found`);
+        }
+
+        const jsonStr = content.substring(startIndex, lastIndex + 1);
+        try {
+            return JSON.parse(jsonStr);
+        } catch (e) {
+            // Se falhar o parse direto, tenta limpar vírgulas extras no final (comum em IAs)
+            try {
+                const cleaned = jsonStr.replace(/,\s*([}\]])/g, '$1');
+                return JSON.parse(cleaned);
+            } catch (e2) {
+                throw new Error(`[${this.name}] Failed to parse extracted JSON: ${e2}`);
+            }
+        }
+    }
 }

@@ -64,18 +64,26 @@ export type AgentIntent =
     | 'analyze-mortality'
     | 'predict-harvest'
     | 'generate-mortality-report'
+    | 'store-mortality-data'
     // Ponds
-    | 'manage-pond-map'
-    | 'update-pond-data'
-    | 'analyze-pond-performance'
+    | 'analyze-pond-map'
+    | 'extract-pond-data'
+    | 'analyze-pond-health'
     // Delivery
-    | 'create-delivery-order'
+    | 'extract-delivery-order'
     | 'generate-delivery-document'
-    | 'store-delivery'
-    // Others
+    | 'store-delivery-data'
+    // Registration
     | 'manage-registration'
+    | 'extract-registration-data'
+    | 'store-registration-data'
+    // Fiscal
     | 'identify-tax'
+    | 'generate-tax-report'
     | 'manage-budget'
+    | 'calculate-roi'
+    | 'summarize-showcase'
+    | 'suggest-pricing'
     | 'compare-documents'
     | 'generate-showcase'
     | 'manage-pricing';
