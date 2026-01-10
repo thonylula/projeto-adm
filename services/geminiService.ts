@@ -152,6 +152,7 @@ export async function generateText(
         temperature?: number;
         maxOutputTokens?: number;
         systemInstruction?: string;
+        responseMimeType?: string;
     }
 ): Promise<string> {
     try {
@@ -168,10 +169,11 @@ export async function generateText(
             };
         }
 
-        if (options?.temperature !== undefined) {
+        if (options?.temperature !== undefined || options?.responseMimeType) {
             requestBody.generationConfig = {
-                temperature: options.temperature,
-                maxOutputTokens: options.maxOutputTokens || 8192
+                temperature: options?.temperature ?? 0.7,
+                maxOutputTokens: options?.maxOutputTokens || 8192,
+                responseMimeType: options?.responseMimeType
             };
         }
 

@@ -20,7 +20,10 @@ export abstract class BaseAgent {
         this.systemPrompt = config.systemPrompt;
         this.temperature = config.temperature ?? 0.7;
         this.maxTokens = config.maxTokens ?? 8192;
+        this.responseMimeType = config.responseMimeType;
     }
+
+    protected responseMimeType?: string;
 
     /**
      * Main processing method - must be implemented by each agent
@@ -44,7 +47,8 @@ export abstract class BaseAgent {
                 model: this.model,
                 temperature: this.temperature,
                 maxOutputTokens: this.maxTokens,
-                systemInstruction: this.systemPrompt
+                systemInstruction: this.systemPrompt,
+                responseMimeType: this.responseMimeType
             });
 
             return {

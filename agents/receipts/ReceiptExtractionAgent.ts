@@ -50,6 +50,7 @@ export class ReceiptExtractionAgent extends BaseAgent {
         super({
             name: 'ReceiptExtractionAgent',
             model: 'gemini-2.0-flash-exp',
+            responseMimeType: 'application/json',
             systemPrompt: `Você é um especialista em extração de dados de recibos e comprovantes de pagamento.
 
 Sua expertise inclui:

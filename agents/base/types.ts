@@ -8,6 +8,7 @@ export interface AgentConfig {
     systemPrompt: string;
     temperature?: number;
     maxTokens?: number;
+    responseMimeType?: string;
 }
 
 export interface AgentInteraction {
