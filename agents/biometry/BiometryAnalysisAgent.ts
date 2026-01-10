@@ -58,7 +58,8 @@ Retorne EXCLUSIVAMENTE um array JSON de objetos no formato:
         this.log(`Analyzing ${data.length} biometry entries`);
 
         try {
-            const prompt = `Analise estes dados de biometria e forneça classificação zootécnica para cada um.`;
+            const prompt = `Analise estes dados de biometria e forneça classificação zootécnica para cada um. 
+            IMPORTANTE: Responda APENAS com o JSON. Não inclua texto explicativo, markdown ou nada fora do array.`;
             const response = await this.callLLM(prompt, { biometryData: data });
 
             const analyzed = this.safeExtractJson(response.content);
