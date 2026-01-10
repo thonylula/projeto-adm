@@ -29,9 +29,15 @@ export abstract class BaseAgent {
 
     /**
      * Call LLM with agent's system prompt and user prompt
+     * Supports text and image inputs
      */
     protected async callLLM(userPrompt: string, context?: any): Promise<LLMResponse> {
         try {
+            // Check if context contains an image/file
+            if (context && context.image instanceof File) {
+                return await this.callLLMWithImage(userPrompt, context.image);
+            }
+
             const fullPrompt = this.buildPrompt(userPrompt, context);
 
             const response = await generateText(fullPrompt, {
@@ -54,16 +60,87 @@ export abstract class BaseAgent {
     }
 
     /**
+     * Call LLM with image using direct API call
+     */
+    private async callLLMWithImage(prompt: string, file: File): Promise<LLMResponse> {
+        try {
+            const base64 = await this.fileToBase64(file);
+            const fullPrompt = `${this.systemPrompt}\n\n${prompt}`;
+
+            const response = await fetch('/api/generative', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        role: 'user',
+                        parts: [
+                            { text: fullPrompt },
+                            {
+                                inlineData: {
+                                    data: base64.replace(/^data:.*?;base64,/, ''),
+                                    mimeType: file.type
+                                }
+                            }
+                        ]
+                    }]
+                })
+            });
+
+            const payload = await response.json();
+
+            if (!response.ok || !payload.ok) {
+                throw new Error(payload.error?.message || 'API call failed');
+            }
+
+            const text = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!text) throw new Error('Empty response from AI');
+
+            return {
+                content: text,
+                metadata: {
+                    model: this.model
+                }
+            };
+        } catch (error) {
+            this.log(`Image processing failed: ${error}`, 'error');
+            throw error;
+        }
+    }
+
+    /**
+     * Convert file to base64
+     */
+    private fileToBase64(file: File): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    /**
      * Build complete prompt with context
      */
     protected buildPrompt(userPrompt: string, context?: any): string {
         if (!context) return userPrompt;
 
-        const contextStr = typeof context === 'string'
-            ? context
-            : JSON.stringify(context, null, 2);
+        let contextStr = '';
+        if (typeof context === 'string') {
+            contextStr = context;
+        } else {
+            // Remove huge binary data if present before stringifying
+            const cleanContext = { ...context };
+            if (cleanContext.image instanceof File) delete cleanContext.image;
 
-        return `${userPrompt}\n\nContexto:\n${contextStr}`;
+            contextStr = Object.keys(cleanContext).length > 0
+                ? JSON.stringify(cleanContext, null, 2)
+                : '';
+        }
+
+        return contextStr
+            ? `${userPrompt}\n\nContexto:\n${contextStr}`
+            : userPrompt;
     }
 
     /**
