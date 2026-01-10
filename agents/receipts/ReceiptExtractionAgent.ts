@@ -112,13 +112,27 @@ Se a data estiver no cabeçalho e for única para todos, use-a para todos os reg
 
     private parseExtractionResponse(content: string): ExtractedReceiptData {
         try {
-            // Try to extract JSON from response
-            const jsonMatch = content.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) {
-                throw new Error('No JSON found in response');
+            this.log(`AI Raw Content Length: ${content.length}`);
+
+            // 1. Clean markdown code blocks if present
+            let cleaned = content;
+            if (content.includes('```')) {
+                const match = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+                if (match) {
+                    cleaned = match[1];
+                }
             }
 
-            const data = JSON.parse(jsonMatch[0]);
+            const jsonStr = this.safeExtractJson(cleaned);
+            this.log(`Extracted JSON (first 50 chars): ${jsonStr.substring(0, 50)}...`);
+
+            let data;
+            try {
+                data = JSON.parse(jsonStr);
+            } catch (parseError) {
+                this.log(`JSON.parse failed on: ${jsonStr.substring(0, 100)}...`, 'error');
+                throw parseError;
+            }
 
             if (!data.records || !Array.isArray(data.records)) {
                 throw new Error('Invalid response format: missing records array');
@@ -126,8 +140,8 @@ Se a data estiver no cabeçalho e for única para todos, use-a para todos os reg
 
             const receipts: ReceiptData[] = data.records.map((rec: any) => ({
                 payeeName: rec.payeeName || '',
-                payeeDocument: rec.payeeDocument || '',
-                value: parseFloat(rec.value) || 0,
+                payeeDocument: String(rec.payeeDocument || '').replace(/\D/g, ''),
+                value: typeof rec.value === 'number' ? rec.value : parseFloat(String(rec.value).replace(/[^\d.,]/g, '').replace(',', '.')) || 0,
                 date: rec.date || new Date().toISOString().split('T')[0],
                 serviceDate: rec.date || new Date().toISOString().split('T')[0],
                 description: rec.description || '',
@@ -147,7 +161,42 @@ Se a data estiver no cabeçalho e for única para todos, use-a para todos os reg
             };
         } catch (error) {
             this.log(`Failed to parse extraction response: ${error}`, 'error');
-            throw new Error('Failed to parse AI response');
+            // Try to return a partial result if possible, or rethrow
+            throw new Error(`Failed to parse AI response: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
+    }
+
+    /**
+     * Extracts JSON from string by finding the first '{' and its matching '}'
+     * Handles extra text and multiple JSON blocks by isolating the first complete object.
+     */
+    private safeExtractJson(content: string): string {
+        const firstBrace = content.indexOf('{');
+        if (firstBrace === -1) throw new Error('No opening brace found');
+
+        let braceCount = 0;
+        let lastBrace = -1;
+
+        for (let i = firstBrace; i < content.length; i++) {
+            if (content[i] === '{') braceCount++;
+            else if (content[i] === '}') {
+                braceCount--;
+                if (braceCount === 0) {
+                    lastBrace = i;
+                    break;
+                }
+            }
+        }
+
+        if (lastBrace === -1) {
+            // Fallback: try to find the very last brace if counting failed
+            const finalBrace = content.lastIndexOf('}');
+            if (finalBrace > firstBrace) {
+                return content.substring(firstBrace, finalBrace + 1);
+            }
+            throw new Error('No matching closing brace found');
+        }
+
+        return content.substring(firstBrace, lastBrace + 1);
     }
 }
