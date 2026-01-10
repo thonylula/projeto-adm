@@ -9,6 +9,7 @@ export class TaxIdentificationAgent extends BaseAgent {
     constructor() {
         super({
             name: 'TaxIdentificationAgent',
+            responseMimeType: 'application/json',
             systemPrompt: `Você é um Especialista em Direito Tributário e Contabilidade para Agronegócio (Carcinicultura).
     Sua função é identificar a Natureza da Operação (OpeNat), CFOP, NCM e impostos aplicáveis.
 

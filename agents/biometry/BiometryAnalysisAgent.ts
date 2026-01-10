@@ -22,6 +22,7 @@ export class BiometryAnalysisAgent extends BaseAgent {
         super({
             name: 'BiometryAnalysisAgent',
             model: 'gemini-2.0-flash-exp',
+            responseMimeType: 'application/json',
             systemPrompt: `Você é um analista de produção sênior especializado em carcinicultura.
             
 Sua expertise:
