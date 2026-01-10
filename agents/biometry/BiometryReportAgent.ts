@@ -13,7 +13,12 @@ export interface BiometryReportResult {
  * Biometry Report Agent
  * Specializes in generating executive summaries and management insights
  */
-systemPrompt: `Você é um consultor técnico em carcinicultura responsável por relatórios executivos.
+export class BiometryReportAgent extends BaseAgent {
+    constructor() {
+        super({
+            name: 'BiometryReportAgent',
+            model: 'gemini-2.0-flash-exp',
+            systemPrompt: `Você é um consultor técnico em carcinicultura responsável por relatórios executivos.
             
 Sua tarefa é sintetizar dados complexos de biometria em insights gerenciais claros e diretos.
 
@@ -31,26 +36,28 @@ REGRAS CRÍTICAS DE SAÍDA:
 
 Exemplo de saída esperada:
 {"summary": "Produção estável...", "criticalAlerts": ["OC-02 sem biometria"], "topPerformers": ["OC-01"], "formattedText": "### Relatório...\\n\\nViveiros..." }`,
-    temperature: 0.0
-
-    async process(data: BiometryAnalysisResult[]): Promise < BiometryReportResult > {
-    this.log('Generating biometry report');
-
-    try {
-        const prompt = `Gere um relatório gerencial baseado nestas análises de biometria.`;
-        const response = await this.callLLM(prompt, { analyses: data });
-
-        const report = this.safeExtractJson(response.content);
-        return {
-            success: true,
-            summary: report.summary || '',
-            criticalAlerts: report.criticalAlerts || [],
-            topPerformers: report.topPerformers || [],
-            formattedText: report.formattedText || report.summary || ''
-        };
-    } catch(error) {
-        this.log(`Report generation failed: ${error}`, 'error');
-        throw error;
+            temperature: 0.0
+        });
     }
-}
+
+    async process(data: BiometryAnalysisResult[]): Promise<BiometryReportResult> {
+        this.log('Generating biometry report');
+
+        try {
+            const prompt = `Gere um relatório gerencial baseado nestas análises de biometria.`;
+            const response = await this.callLLM(prompt, { analyses: data });
+
+            const report = this.safeExtractJson(response.content);
+            return {
+                success: true,
+                summary: report.summary || '',
+                criticalAlerts: report.criticalAlerts || [],
+                topPerformers: report.topPerformers || [],
+                formattedText: report.formattedText || report.summary || ''
+            };
+        } catch (error) {
+            this.log(`Report generation failed: ${error}`, 'error');
+            throw error;
+        }
+    }
 }
