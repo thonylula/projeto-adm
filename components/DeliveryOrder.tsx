@@ -635,7 +635,7 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                                     className="hidden"
                                     onChange={handleSmartUpload}
                                     accept="image/*,application/pdf"
-                                    disabled={isProcessing}
+                                    disabled={isAnalyzing}
                                 />
                             </label>
                         </div>
