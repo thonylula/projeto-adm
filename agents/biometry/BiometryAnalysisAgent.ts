@@ -30,27 +30,11 @@ Sua expertise:
 - Classificação de performance baseada em curvas de crescimento (DOC - Days of Culture)
 - Identicação de anomalias no crescimento (estagnação, perda de peso)
 
-Categorias:
-1. ESPETACULAR: Supera as melhores metas do setor.
-2. OTIMO: Crescimento ideal.
-3. BOM: Dentro da meta produtiva.
-4. REGULAR: Crescimento abaixo do esperado, requer atenção.
-5. RUIM: Crítico, sugere problemas de manejo ou sanidade.
-6. PESSIMO: Perda de lucratividade imediata.
+Retorne APENAS um array JSON de objetos no formato abaixo. SEM conversas, SEM markdown blocks.
 
-Retorne EXCLUSIVAMENTE um array JSON de objetos no formato:
-[{
-    "viveiro": "string",
-    "doc": number,
-    "pMed": number,
-    "pAnt": number,
-    "incSemanal": number,
-    "gpd": number,
-    "status": "string (ex: Crescimento Estável)",
-    "classification": "ESPETACULAR" | "OTIMO" | "BOM" | "REGULAR" | "RUIM" | "PESSIMO",
-    "recommendations": ["string"]
-}]`,
-            temperature: 0.1
+Exemplo:
+[{"viveiro":"OC-01","doc":30,"pMed":2.5,"pAnt":2.0,"incSemanal":0.5,"gpd":0.07,"status":"OK","classification":"BOM","recommendations":[]}]`,
+            temperature: 0.0
         });
     }
 
