@@ -313,9 +313,9 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
             if (report.success) {
                 alert(`📊 RELATÓRIO DE PERFORMANCE IA\n\n${report.formattedText}\n\nAlertas Críticos:\n${report.criticalAlerts.join('\n') || 'Nenhum'}`);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("AI Analysis Error", error);
-            showToast("Erro na análise inteligente.");
+            showToast(`❌ Erro na análise: ${error.message || 'Falha na comunicação com Agente'}`);
         } finally {
             setIsAnalyzing(false);
         }

@@ -28,9 +28,7 @@ Sua expertise:
 - Cálculo de Ganho de Peso Diário (GPD)
 - Análise de Conversão Alimentar (FCA)
 - Classificação de performance baseada em curvas de crescimento (DOC - Days of Culture)
-- Identificação de anomalias no crescimento (estagnação, perda de peso)
-
-Você deve analisar os dados de biometria e classificar cada viveiro seguindo padrões rigorosos de mercado.
+- Identicação de anomalias no crescimento (estagnação, perda de peso)
 
 Categorias:
 1. ESPETACULAR: Supera as melhores metas do setor.
@@ -38,7 +36,20 @@ Categorias:
 3. BOM: Dentro da meta produtiva.
 4. REGULAR: Crescimento abaixo do esperado, requer atenção.
 5. RUIM: Crítico, sugere problemas de manejo ou sanidade.
-6. PESSIMO: Perda de lucratividade imediata.`,
+6. PESSIMO: Perda de lucratividade imediata.
+
+Retorne EXCLUSIVAMENTE um array JSON de objetos no formato:
+[{
+    "viveiro": "string",
+    "doc": number,
+    "pMed": number,
+    "pAnt": number,
+    "incSemanal": number,
+    "gpd": number,
+    "status": "string (ex: Crescimento Estável)",
+    "classification": "ESPETACULAR" | "OTIMO" | "BOM" | "REGULAR" | "RUIM" | "PESSIMO",
+    "recommendations": ["string"]
+}]`,
             temperature: 0.1
         });
     }
