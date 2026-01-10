@@ -4,6 +4,13 @@ import {
     ReceiptValidationAgent,
     ReceiptGenerationAgent
 } from '../agents/receipts';
+import {
+    PayrollCalculationAgent,
+    PayrollValidationAgent,
+    PayrollSmartUploadAgent,
+    PayrollReportAgent,
+    PayrollStorageAgent
+} from '../agents/payroll';
 
 /**
  * Initialize all agents and register them with the orchestrator
@@ -12,7 +19,7 @@ import {
 export function initializeAgents(): void {
     const orchestrator = getOrchestrator();
 
-    // Register Receipt Agents
+    // ========== RECEIPT AGENTS ==========
     orchestrator.registerAgent('receipt-extraction', new ReceiptExtractionAgent(), {
         category: 'receipts',
         intents: ['extract-receipt'],
@@ -29,6 +36,37 @@ export function initializeAgents(): void {
         category: 'receipts',
         intents: ['generate-receipt'],
         description: 'Generates formatted receipts and saves to database'
+    });
+
+    // ========== PAYROLL AGENTS ==========
+    orchestrator.registerAgent('payroll-calculation', new PayrollCalculationAgent(), {
+        category: 'payroll',
+        intents: ['calculate-payroll'],
+        description: 'Calculates payroll with CLT rules'
+    });
+
+    orchestrator.registerAgent('payroll-validation', new PayrollValidationAgent(), {
+        category: 'payroll',
+        intents: ['validate-payroll'],
+        description: 'Validates payroll data against legal requirements'
+    });
+
+    orchestrator.registerAgent('payroll-smart-upload', new PayrollSmartUploadAgent(), {
+        category: 'payroll',
+        intents: ['upload-payroll'],
+        description: 'Extracts payroll data from uploaded documents'
+    });
+
+    orchestrator.registerAgent('payroll-report', new PayrollReportAgent(), {
+        category: 'payroll',
+        intents: ['generate-payroll-report'],
+        description: 'Generates formatted payroll reports and payslips'
+    });
+
+    orchestrator.registerAgent('payroll-storage', new PayrollStorageAgent(), {
+        category: 'payroll',
+        intents: ['store-payroll'],
+        description: 'Manages payroll data persistence in Supabase'
     });
 
     // Log summary
