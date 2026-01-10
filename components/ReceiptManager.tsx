@@ -289,85 +289,64 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const prompt = `Analise este comprovante/recibo ou lista de pagamentos e extraia os dados de TODOS os registros encontrados.
-        Retorne APENAS um JSON plano contendo um array "records" com os seguintes campos para cada pessoa:
-        {
-          "records": [
-            {
-              "payeeName": "nome completo",
-              "payeeDocument": "CPF ou CNPJ (apenas números)",
-              "value": 123.45,
-              "date": "YYYY-MM-DD",
-              "description": "descrição do pagamento",
-              "paymentMethod": "PIX",
-              "pixKey": "chave pix se encontrada"
-            }
-          ]
-        }
-        Notas:
-        1. Se for uma tabela com várias pessoas, extraia todas.
-        2. Converta datas para YYYY-MM-DD. Se a data estiver no cabeçalho e for única para todos, use-a.
-        3. Remova símbolos de moeda.
-        4. O campo "paymentMethod" deve ser um dos: PIX, DINHEIRO, TRANSFERÊNCIA.
-        5. Se não encontrar CPF ou Chave Pix, deixe string vazia.`;
-
+        setLoading(true);
         try {
-            const data = await processFile(file, prompt);
-            if (data && data.records && Array.isArray(data.records)) {
-                const newItems: ReceiptHistoryItem[] = data.records.map((rec: any) => {
-                    const result: ReceiptResult = {
-                        valueInWords: handleCalculateValueInWords(rec.value || 0)
-                    };
-                    return {
-                        id: crypto.randomUUID(),
-                        timestamp: new Date().toLocaleString('pt-BR'),
-                        rawDate: new Date().toISOString(),
-                        input: {
-                            payeeName: rec.payeeName || '',
-                            payeeDocument: rec.payeeDocument || '',
-                            value: rec.value || 0,
-                            date: new Date().toISOString().split('T')[0],
-                            serviceDate: rec.date || new Date().toISOString().split('T')[0],
-                            description: rec.description || '',
-                            paymentMethod: rec.paymentMethod || 'PIX',
-                            pixKey: rec.pixKey || '',
-                            bankInfo: '',
-                            category: 'OUTROS'
-                        },
-                        result
-                    };
-                });
+            // Use Multi-Agent System
+            const { getOrchestrator } = await import('../services/agentService');
+            const orchestrator = getOrchestrator();
 
-                if (newItems.length > 0) {
-                    // Save each receipt individually
-                    let successCount = 0;
-                    for (const item of newItems) {
-                        const success = await SupabaseService.addReceiptItem(activeCompany.id, item);
-                        if (success) successCount++;
-                    }
+            // Step 1: Extract receipt data from image
+            const extracted = await orchestrator.handleIntent('extract-receipt', { image: file });
 
-                    if (successCount > 0) {
-                        // Refresh history from database
-                        const updatedHistory = await SupabaseService.getReceiptsHistory(activeCompany.id);
-                        setHistory(updatedHistory);
-                        alert(`✅ ${successCount} de ${newItems.length} recibos salvos com sucesso!`);
+            if (!extracted || !extracted.receipts || extracted.receipts.length === 0) {
+                alert('❌ Nenhum recibo encontrado na imagem');
+                return;
+            }
 
-                        // If only one, also put it in the form for immediate editing if needed
-                        if (newItems.length === 1) {
-                            setForm(newItems[0].input);
-                            setEditingId(newItems[0].id);
-                        }
-                    } else {
-                        alert('❌ Erro ao salvar recibos. Tente novamente.');
+            // Step 2 & 3: Validate and generate for each extracted receipt
+            const generatedReceipts = [];
+            for (const receiptData of extracted.receipts) {
+                try {
+                    // Validation
+                    const validated = await orchestrator.routeToAgent('receipt-validation', receiptData);
+
+                    // Generation and storage
+                    const generated = await orchestrator.routeToAgent('receipt-generation', {
+                        receipt: validated,
+                        companyId: activeCompany.id,
+                        companyName: activeCompany.name
+                    });
+
+                    generatedReceipts.push(generated);
+                } catch (error) {
+                    console.error('Error processing receipt:', error);
+                }
+            }
+
+            if (generatedReceipts.length > 0) {
+                // Refresh history from database
+                const updatedHistory = await SupabaseService.getReceiptsHistory(activeCompany.id);
+                setHistory(updatedHistory);
+
+                const successCount = generatedReceipts.filter(r => r.saved).length;
+                alert(`✅ ${successCount} de ${extracted.receipts.length} recibos salvos com sucesso!`);
+
+                // If only one, put it in the form for editing
+                if (generatedReceipts.length === 1 && generatedReceipts[0].saved) {
+                    const item = updatedHistory.find(h => h.id === generatedReceipts[0].id);
+                    if (item) {
+                        setForm(item.input);
+                        setEditingId(item.id);
                     }
                 }
             } else {
-                alert("Nenhum dado encontrado ou formato inválido.");
+                alert('❌ Erro ao salvar recibos. Tente novamente.');
             }
         } catch (error) {
             console.error("AI Scan error:", error);
             alert("❌ Erro ao analisar arquivo com IA.");
         } finally {
+            setLoading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
