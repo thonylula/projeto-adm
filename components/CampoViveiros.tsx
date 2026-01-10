@@ -4,7 +4,7 @@ import { SupabaseService } from '../services/supabaseService';
 import { BiometricsManager } from './BiometricsManager';
 import { InsumosWidget } from './InsumosWidget';
 import { TransferManager } from './TransferManager';
-import { useAuth } from '../hooks/useAuth';
+import { getOrchestrator } from '../services/agentService';
 
 interface CampoViveirosProps {
     activeCompany?: any;
@@ -42,6 +42,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
 
     // --- Layout Lock State ---
     const [isLayoutLocked, setIsLayoutLocked] = useState(true);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     const statusColors: Record<ViveiroStatus, string> = {
         'VAZIO': 'bg-[#c0c0c0]', // Cinza
@@ -241,14 +242,73 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                 setEditingArea(v.area_m2.toString());
                 setEditingStatus(v.status || 'VAZIO');
                 break;
+            case 'analise_ia':
+                handlePondAIAnalysis(v);
+                break;
             default:
                 console.log(`Action ${action} triggered for ${v.name}`);
-                // Optional: alert(`Funcionalidade: ${action} \n(Em desenvolvimento)`);
                 break;
         }
 
         // Close Menu
         setActiveContextMenu(null);
+    };
+
+    const handlePondAIAnalysis = async (v: Viveiro) => {
+        setIsAnalyzing(true);
+        const orchestrator = getOrchestrator();
+        try {
+            // Get current month/year
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            const year = now.getFullYear();
+
+            // Load related data (Mortality/Feed)
+            const mortalityData = await orchestrator.routeToAgent('mortality-storage', {
+                operation: 'load',
+                companyId: activeCompany.id,
+                month,
+                year
+            });
+
+            const analytics = await orchestrator.routeToAgent('pond-analytics', {
+                pond: v,
+                mortality: mortalityData?.records?.find((r: any) => r.ve === v.name || r.ve === v.name.replace(/\D/g, '')),
+                history: [] // Could load more history if needed
+            });
+
+            if (analytics) {
+                alert(`🧬 ANÁLISE BIOLÓGICA IA: ${v.name}\n\n` +
+                    `Pontuação de Saúde: ${analytics.healthScore || 'N/A'}/100\n` +
+                    `Status: ${analytics.status || 'Analizado'}\n\n` +
+                    `Principais Insights:\n${analytics.insights?.join('\n') || 'Nenhuma anormalidade detectada.'}\n\n` +
+                    `Recomendação: ${analytics.recommendation || 'Manter manejo atual.'}`);
+            }
+        } catch (error) {
+            console.error("AI Analysis Error", error);
+            alert("Erro ao realizar análise inteligente do viveiro.");
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
+    const handleLayoutSuggestion = async () => {
+        setIsAnalyzing(true);
+        const orchestrator = getOrchestrator();
+        try {
+            const result = await orchestrator.routeToAgent('pond-map', {
+                viveiros: viveiros.map(v => ({ id: v.id, name: v.name, coords: v.coordinates })),
+                action: 'suggest-layout'
+            });
+
+            if (result && result.suggestion) {
+                alert(`🗺️ SUGESTÃO DE LAYOUT IA\n\n${result.suggestion}`);
+            }
+        } catch (error) {
+            console.error("Layout AI Error", error);
+        } finally {
+            setIsAnalyzing(false);
+        }
     };
 
     const handleSaveViveiro = async () => {
@@ -369,6 +429,23 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                             </button>
                         )}
 
+                        {!isPublic && !isLayoutLocked && (
+                            <button
+                                onClick={handleLayoutSuggestion}
+                                disabled={isAnalyzing}
+                                className="absolute top-20 right-4 z-[60] bg-gradient-to-r from-purple-600 to-blue-600 text-white p-3 rounded-full shadow-lg transition-all border-2 border-purple-400 hover:scale-105 active:scale-95 flex items-center gap-2 group overflow-hidden"
+                            >
+                                {isAnalyzing ? (
+                                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    <span className="text-lg">🤖</span>
+                                )}
+                                <span className="max-w-0 group-hover:max-w-xs transition-all duration-500 overflow-hidden whitespace-nowrap text-xs font-black uppercase">
+                                    Sugestão IA
+                                </span>
+                            </button>
+                        )}
+
                         {/* Alignment Lines */}
                         {alignmentLines.map((line, idx) => (
                             <div
@@ -452,6 +529,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                             { label: 'Parâmetros', action: 'parametros' },
                             { label: 'Custos', action: 'custos' },
                             { label: 'Biometria', action: 'biometria' },
+                            { label: 'Análise de Saúde (IA)', action: 'analise_ia' },
                             { label: 'Despesca', action: 'despesca', separator: true },
                             { label: 'Ficha de Viveiro', action: 'ficha_viveiro' },
                             { label: 'Ficha Técnica', action: 'ficha_tecnica' },

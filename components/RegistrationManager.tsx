@@ -4,6 +4,7 @@ import html2canvas from 'html2canvas';
 import { RegistryEmployee, RegistrySupplier, RegistryClient } from '../types';
 import { useGeminiParser } from '../hooks/useGeminiParser';
 import { SupabaseService } from '../services/supabaseService';
+import { getOrchestrator } from '../services/agentService';
 
 // Helper for ID generation
 const generateId = () => {
@@ -121,17 +122,18 @@ export const RegistrationManager: React.FC = () => {
     useEffect(() => {
         const load = async () => {
             try {
+                const orchestrator = getOrchestrator();
                 const [e, s, c] = await Promise.all([
-                    SupabaseService.getEmployees(),
-                    SupabaseService.getSuppliers(),
-                    SupabaseService.getClients()
+                    orchestrator.routeToAgent('registration-storage', { operation: 'load', type: 'EMPLOYEE' }),
+                    orchestrator.routeToAgent('registration-storage', { operation: 'load', type: 'SUPPLIER' }),
+                    orchestrator.routeToAgent('registration-storage', { operation: 'load', type: 'CLIENT' })
                 ]);
 
-                setEmployees(e);
-                setSuppliers(s);
-                setClients(c);
+                setEmployees(e || []);
+                setSuppliers(s || []);
+                setClients(c || []);
             } catch (err) {
-                console.error("Failed to load registrations from Supabase", err);
+                console.error("Failed to load registrations from Agent Storage", err);
             }
         };
 
@@ -152,76 +154,31 @@ export const RegistrationManager: React.FC = () => {
 
     // Persistence handled via SupabaseService in save/delete handlers
 
-    // --- AI SMART UPLOAD ---
-    const { processFile, isProcessing } = useGeminiParser({
-        onError: (err) => alert(`Erro na Inteligência Artificial: ${err.message}`)
-    });
+    // --- AGENT SMART UPLOAD ---
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     const handleSmartUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || !e.target.files[0]) return;
         const file = e.target.files[0];
+        setIsAnalyzing(true);
 
         try {
-            let prompt = "";
-            if (activeType === 'EMPLOYEE') {
-                prompt = `
-                    Analise este documento (RG, CNH, Ficha). Extraia dados para cadastro de FUNCIONÁRIO.
-                    Retorne JSON estrito:
-                    {
-                        "name": "Nome Completo",
-                        "cpf": "000.000.000-00",
-                        "role": "Cargo/Função",
-                        "phone": "Telefone",
-                        "email": "Email",
-                        "address": "Logradouro",
-                        "number": "Número",
-                        "district": "Bairro",
-                        "city": "Cidade",
-                        "state": "UF (Sigla)",
-                        "zipCode": "CEP",
-                        "admissionDate": "DD/MM/AAAA"
-                    }
-                    Se não encontrar algo, deixe em branco ou null.`;
-            } else if (activeType === 'SUPPLIER') {
-                prompt = `
-                    Analise este documento (Cartão CNPJ, Fatura, Cartão de Visita). Extraia dados para cadastro de FORNECEDOR.
-                    Retorne JSON estrito:
-                    {
-                        "companyName": "Razão Social",
-                        "tradeName": "Nome Fantasia",
-                        "cnpj": "CNPJ formatado",
-                        "contactPerson": "Nome do contato",
-                        "phone": "Telefone",
-                        "email": "Email",
-                        "address": "Logradouro",
-                        "number": "Número",
-                        "district": "Bairro",
-                        "city": "Cidade",
-                        "state": "UF (Sigla)",
-                        "zipCode": "CEP"
-                    }
-                `;
-            } else {
-                prompt = `
-                    Analise este documento. Extraia dados para cadastro de CLIENTE.
-                    Retorne JSON estrito:
-                    {
-                        "name": "Nome/Razão Social",
-                        "document": "CPF ou CNPJ",
-                        "phone": "Telefone",
-                        "email": "Email",
-                        "address": "Logradouro",
-                        "number": "Número",
-                        "district": "Bairro",
-                        "city": "Cidade",
-                        "state": "UF (Sigla)",
-                        "zipCode": "CEP",
-                        "type": "PF" ou "PJ"
-                    }
-                `;
-            }
+            const orchestrator = getOrchestrator();
 
-            const data = await processFile(file, prompt);
+            // Helper to convert file to base64
+            const toBase64 = (f: File): Promise<string> => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(f);
+                reader.onload = () => resolve(reader.result?.toString().split(',')[1] || '');
+                reader.onerror = error => reject(error);
+            });
+
+            const base64 = await toBase64(file);
+            const data = await orchestrator.routeToAgent('registration-data', {
+                type: activeType,
+                image: base64,
+                mimeType: file.type
+            });
 
             if (data) {
                 if (activeType === 'EMPLOYEE') {
@@ -234,9 +191,10 @@ export const RegistrationManager: React.FC = () => {
             }
 
         } catch (error) {
-            console.error("Smart Upload Error", error);
+            console.error("Agent Smart Upload Error", error);
+            alert("Erro ao processar documento com Agente de IA.");
         } finally {
-            // Clear input
+            setIsAnalyzing(false);
             e.target.value = '';
         }
     };
@@ -245,11 +203,12 @@ export const RegistrationManager: React.FC = () => {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+        const orchestrator = getOrchestrator();
 
         if (activeType === 'EMPLOYEE') {
             const id = editingId || generateId();
             const newEmployee = { id, ...empForm };
-            await SupabaseService.saveEmployee(newEmployee as RegistryEmployee);
+            await orchestrator.routeToAgent('registration-storage', { operation: 'save', type: 'EMPLOYEE', data: newEmployee });
 
             if (editingId) {
                 setEmployees(prev => prev.map(item => item.id === editingId ? newEmployee as RegistryEmployee : item));
@@ -260,7 +219,7 @@ export const RegistrationManager: React.FC = () => {
         } else if (activeType === 'SUPPLIER') {
             const id = editingId || generateId();
             const newSupplier = { id, ...supForm };
-            await SupabaseService.saveSupplier(newSupplier as RegistrySupplier);
+            await orchestrator.routeToAgent('registration-storage', { operation: 'save', type: 'SUPPLIER', data: newSupplier });
 
             if (editingId) {
                 setSuppliers(prev => prev.map(item => item.id === editingId ? newSupplier as RegistrySupplier : item));
@@ -271,7 +230,7 @@ export const RegistrationManager: React.FC = () => {
         } else if (activeType === 'CLIENT') {
             const id = editingId || generateId();
             const newClient = { id, ...cliForm };
-            await SupabaseService.saveClient(newClient as RegistryClient);
+            await orchestrator.routeToAgent('registration-storage', { operation: 'save', type: 'CLIENT', data: newClient });
 
             if (editingId) {
                 setClients(prev => prev.map(item => item.id === editingId ? newClient as RegistryClient : item));
@@ -303,15 +262,16 @@ export const RegistrationManager: React.FC = () => {
 
     const handleDelete = async (id: string) => {
         if (!window.confirm("Tem certeza que deseja excluir este registro permanentemente?")) return;
+        const orchestrator = getOrchestrator();
 
         if (activeType === 'EMPLOYEE') {
-            await SupabaseService.deleteEmployee(id);
+            await orchestrator.routeToAgent('registration-storage', { operation: 'delete', type: 'EMPLOYEE', id });
             setEmployees(prev => prev.filter(e => e.id !== id));
         } else if (activeType === 'SUPPLIER') {
-            await SupabaseService.deleteSupplier(id);
+            await orchestrator.routeToAgent('registration-storage', { operation: 'delete', type: 'SUPPLIER', id });
             setSuppliers(prev => prev.filter(s => s.id !== id));
         } else if (activeType === 'CLIENT') {
-            await SupabaseService.deleteClient(id);
+            await orchestrator.routeToAgent('registration-storage', { operation: 'delete', type: 'CLIENT', id });
             setClients(prev => prev.filter(c => c.id !== id));
         }
 
@@ -431,16 +391,16 @@ export const RegistrationManager: React.FC = () => {
                                 className="hidden"
                                 onChange={handleSmartUpload}
                                 accept="image/*,application/pdf"
-                                disabled={isProcessing}
+                                disabled={isAnalyzing}
                             />
                             <label
                                 htmlFor="smart-upload-reg"
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider cursor-pointer transition-all ${isProcessing ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-md hover:scale-105'}`}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider cursor-pointer transition-all ${isAnalyzing ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-md hover:scale-105'}`}
                             >
-                                {isProcessing ? (
+                                {isAnalyzing ? (
                                     <>
                                         <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                        Lendo Documento...
+                                        Processando...
                                     </>
                                 ) : (
                                     <>
@@ -617,7 +577,8 @@ export const RegistrationManager: React.FC = () => {
                         </div>
                     </form>
                 </div>
-            )}
+            )
+            }
 
             {/* --- LIST TABLE --- */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -772,131 +733,133 @@ export const RegistrationManager: React.FC = () => {
             </div>
 
             {/* --- HIDDEN PRINTABLE SHEET (TEMPLATE) --- */}
-            {exportItem && (
-                <div
-                    ref={sheetRef}
-                    style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '800px' }}
-                    className="bg-white p-10 font-sans text-gray-800"
-                >
-                    <div className="border-2 border-gray-800 p-8 min-h-[1000px] relative">
-                        {/* Header */}
-                        <div className="flex justify-between items-start border-b-2 border-gray-800 pb-6 mb-6">
-                            <div>
-                                <h1 className="text-2xl font-bold uppercase tracking-wide">Ficha Cadastral</h1>
-                                <p className="text-sm font-semibold text-gray-500 mt-1 uppercase">Registro de Funcionário</p>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-xs text-gray-400">Data de Emissão</p>
-                                <p className="font-mono text-sm">{new Date().toLocaleDateString('pt-BR')}</p>
-                            </div>
-                        </div>
-
-                        {/* Content Grid */}
-                        <div className="flex gap-8">
-
-                            {/* Left: Photo */}
-                            <div className="w-40 flex-shrink-0">
-                                <div className="w-36 h-48 border border-gray-300 bg-gray-50 flex items-center justify-center overflow-hidden mb-2">
-                                    {exportItem.photoUrl ? (
-                                        <img src={exportItem.photoUrl} alt="Foto" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <span className="text-gray-400 text-xs text-center p-2">Sem Foto</span>
-                                    )}
+            {
+                exportItem && (
+                    <div
+                        ref={sheetRef}
+                        style={{ position: 'absolute', top: '-9999px', left: '-9999px', width: '800px' }}
+                        className="bg-white p-10 font-sans text-gray-800"
+                    >
+                        <div className="border-2 border-gray-800 p-8 min-h-[1000px] relative">
+                            {/* Header */}
+                            <div className="flex justify-between items-start border-b-2 border-gray-800 pb-6 mb-6">
+                                <div>
+                                    <h1 className="text-2xl font-bold uppercase tracking-wide">Ficha Cadastral</h1>
+                                    <p className="text-sm font-semibold text-gray-500 mt-1 uppercase">Registro de Funcionário</p>
                                 </div>
-                                <div className="text-center">
-                                    <p className="text-[10px] text-gray-400 uppercase">Assinatura do Funcionário</p>
-                                    <div className="h-8 border-b border-gray-400 mt-4"></div>
+                                <div className="text-right">
+                                    <p className="text-xs text-gray-400">Data de Emissão</p>
+                                    <p className="font-mono text-sm">{new Date().toLocaleDateString('pt-BR')}</p>
                                 </div>
                             </div>
 
-                            {/* Right: Data */}
-                            <div className="flex-1 space-y-6">
+                            {/* Content Grid */}
+                            <div className="flex gap-8">
 
-                                {/* Personal Data */}
-                                <section>
-                                    <h3 className="text-sm font-bold bg-gray-100 p-2 uppercase border-l-4 border-gray-800 mb-3">Dados Pessoais</h3>
-                                    <div className="grid grid-cols-2 gap-4 text-sm">
-                                        <div className="col-span-2">
-                                            <span className="block text-xs text-gray-500 uppercase">Nome Completo</span>
-                                            <span className="font-bold text-lg">{exportItem.name}</span>
-                                        </div>
-                                        <div>
-                                            <span className="block text-xs text-gray-500 uppercase">CPF</span>
-                                            <span className="font-mono font-bold">{exportItem.cpf}</span>
-                                        </div>
-                                        <div>
-                                            <span className="block text-xs text-gray-500 uppercase">Cargo / Função</span>
-                                            <span className="font-bold">{exportItem.role}</span>
-                                        </div>
-                                        <div>
-                                            <span className="block text-xs text-gray-500 uppercase">Salário Base</span>
-                                            <span className="font-bold">{formatCurrency(exportItem.salary)}</span>
-                                        </div>
-                                        <div>
-                                            <span className="block text-xs text-gray-500 uppercase">Data de Admissão</span>
-                                            <span className="font-bold">{exportItem.admissionDate || '-'}</span>
-                                        </div>
+                                {/* Left: Photo */}
+                                <div className="w-40 flex-shrink-0">
+                                    <div className="w-36 h-48 border border-gray-300 bg-gray-50 flex items-center justify-center overflow-hidden mb-2">
+                                        {exportItem.photoUrl ? (
+                                            <img src={exportItem.photoUrl} alt="Foto" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-gray-400 text-xs text-center p-2">Sem Foto</span>
+                                        )}
                                     </div>
-                                </section>
+                                    <div className="text-center">
+                                        <p className="text-[10px] text-gray-400 uppercase">Assinatura do Funcionário</p>
+                                        <div className="h-8 border-b border-gray-400 mt-4"></div>
+                                    </div>
+                                </div>
 
-                                {/* Contact */}
-                                <section>
-                                    <h3 className="text-sm font-bold bg-gray-100 p-2 uppercase border-l-4 border-gray-800 mb-3">Contato</h3>
-                                    <div className="grid grid-cols-2 gap-4 text-sm">
-                                        <div>
-                                            <span className="block text-xs text-gray-500 uppercase">Telefone</span>
-                                            <span className="font-bold">{exportItem.phone}</span>
-                                        </div>
-                                        <div>
-                                            <span className="block text-xs text-gray-500 uppercase">Email</span>
-                                            <span className="font-bold">{exportItem.email}</span>
-                                        </div>
-                                    </div>
-                                </section>
+                                {/* Right: Data */}
+                                <div className="flex-1 space-y-6">
 
-                                {/* Address */}
-                                <section>
-                                    <h3 className="text-sm font-bold bg-gray-100 p-2 uppercase border-l-4 border-gray-800 mb-3">Endereço</h3>
-                                    <div className="text-sm space-y-2">
-                                        <p><span className="font-bold">{exportItem.address}, {exportItem.number}</span></p>
-                                        <p>{exportItem.district} - {exportItem.city} / {exportItem.state}</p>
-                                        <p className="font-mono text-xs text-gray-600">CEP: {exportItem.zipCode}</p>
-                                    </div>
-                                </section>
+                                    {/* Personal Data */}
+                                    <section>
+                                        <h3 className="text-sm font-bold bg-gray-100 p-2 uppercase border-l-4 border-gray-800 mb-3">Dados Pessoais</h3>
+                                        <div className="grid grid-cols-2 gap-4 text-sm">
+                                            <div className="col-span-2">
+                                                <span className="block text-xs text-gray-500 uppercase">Nome Completo</span>
+                                                <span className="font-bold text-lg">{exportItem.name}</span>
+                                            </div>
+                                            <div>
+                                                <span className="block text-xs text-gray-500 uppercase">CPF</span>
+                                                <span className="font-mono font-bold">{exportItem.cpf}</span>
+                                            </div>
+                                            <div>
+                                                <span className="block text-xs text-gray-500 uppercase">Cargo / Função</span>
+                                                <span className="font-bold">{exportItem.role}</span>
+                                            </div>
+                                            <div>
+                                                <span className="block text-xs text-gray-500 uppercase">Salário Base</span>
+                                                <span className="font-bold">{formatCurrency(exportItem.salary)}</span>
+                                            </div>
+                                            <div>
+                                                <span className="block text-xs text-gray-500 uppercase">Data de Admissão</span>
+                                                <span className="font-bold">{exportItem.admissionDate || '-'}</span>
+                                            </div>
+                                        </div>
+                                    </section>
 
-                                {/* Bank Data */}
-                                <section>
-                                    <h3 className="text-sm font-bold bg-gray-100 p-2 uppercase border-l-4 border-gray-800 mb-3">Dados Bancários</h3>
-                                    <div className="grid grid-cols-3 gap-4 text-sm">
-                                        <div className="col-span-3 md:col-span-1">
-                                            <span className="block text-xs text-gray-500 uppercase">Banco</span>
-                                            <span className="font-bold">{exportItem.bankName || '-'}</span>
+                                    {/* Contact */}
+                                    <section>
+                                        <h3 className="text-sm font-bold bg-gray-100 p-2 uppercase border-l-4 border-gray-800 mb-3">Contato</h3>
+                                        <div className="grid grid-cols-2 gap-4 text-sm">
+                                            <div>
+                                                <span className="block text-xs text-gray-500 uppercase">Telefone</span>
+                                                <span className="font-bold">{exportItem.phone}</span>
+                                            </div>
+                                            <div>
+                                                <span className="block text-xs text-gray-500 uppercase">Email</span>
+                                                <span className="font-bold">{exportItem.email}</span>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="block text-xs text-gray-500 uppercase">Agência</span>
-                                            <span className="font-bold">{exportItem.agency || '-'}</span>
+                                    </section>
+
+                                    {/* Address */}
+                                    <section>
+                                        <h3 className="text-sm font-bold bg-gray-100 p-2 uppercase border-l-4 border-gray-800 mb-3">Endereço</h3>
+                                        <div className="text-sm space-y-2">
+                                            <p><span className="font-bold">{exportItem.address}, {exportItem.number}</span></p>
+                                            <p>{exportItem.district} - {exportItem.city} / {exportItem.state}</p>
+                                            <p className="font-mono text-xs text-gray-600">CEP: {exportItem.zipCode}</p>
                                         </div>
-                                        <div>
-                                            <span className="block text-xs text-gray-500 uppercase">Conta</span>
-                                            <span className="font-bold">{exportItem.account || '-'}</span>
+                                    </section>
+
+                                    {/* Bank Data */}
+                                    <section>
+                                        <h3 className="text-sm font-bold bg-gray-100 p-2 uppercase border-l-4 border-gray-800 mb-3">Dados Bancários</h3>
+                                        <div className="grid grid-cols-3 gap-4 text-sm">
+                                            <div className="col-span-3 md:col-span-1">
+                                                <span className="block text-xs text-gray-500 uppercase">Banco</span>
+                                                <span className="font-bold">{exportItem.bankName || '-'}</span>
+                                            </div>
+                                            <div>
+                                                <span className="block text-xs text-gray-500 uppercase">Agência</span>
+                                                <span className="font-bold">{exportItem.agency || '-'}</span>
+                                            </div>
+                                            <div>
+                                                <span className="block text-xs text-gray-500 uppercase">Conta</span>
+                                                <span className="font-bold">{exportItem.account || '-'}</span>
+                                            </div>
+                                            <div className="col-span-3">
+                                                <span className="block text-xs text-gray-500 uppercase">Chave PIX</span>
+                                                <span className="font-bold">{exportItem.pixKey || '-'}</span>
+                                            </div>
                                         </div>
-                                        <div className="col-span-3">
-                                            <span className="block text-xs text-gray-500 uppercase">Chave PIX</span>
-                                            <span className="font-bold">{exportItem.pixKey || '-'}</span>
-                                        </div>
-                                    </div>
-                                </section>
+                                    </section>
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Footer */}
-                        <div className="absolute bottom-8 left-8 right-8 border-t border-gray-300 pt-4 flex justify-between text-xs text-gray-400">
-                            <p>Documento gerado eletronicamente.</p>
-                            <p>Sistema ADM Integrado</p>
+                            {/* Footer */}
+                            <div className="absolute bottom-8 left-8 right-8 border-t border-gray-300 pt-4 flex justify-between text-xs text-gray-400">
+                                <p>Documento gerado eletronicamente.</p>
+                                <p>Sistema ADM Integrado</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };

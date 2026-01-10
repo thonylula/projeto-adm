@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { getOrchestrator } from '../services/agentService';
 
 interface ShowcaseSection {
     id: string;
@@ -65,6 +66,24 @@ const SECTIONS: ShowcaseSection[] = [
 export const ShowcaseManager: React.FC = () => {
     const [selectedIds, setSelectedIds] = useState<string[]>(['showcase']);
     const [copied, setCopied] = useState(false);
+    const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+    const [aiSummary, setAiSummary] = useState<string | null>(null);
+
+    const handleGenerateSummary = async () => {
+        setIsGeneratingSummary(true);
+        try {
+            const orchestrator = getOrchestrator();
+            const result = await orchestrator.routeToAgent('showcase', {
+                sections: selectedIds.map(id => SECTIONS.find(s => s.id === id)?.label || id),
+                data: { timestamp: new Date().toISOString(), modulesCount: selectedIds.length }
+            });
+            setAiSummary(result.summary);
+        } catch (error) {
+            console.error("Showcase summary error", error);
+        } finally {
+            setIsGeneratingSummary(false);
+        }
+    };
 
     const toggleSection = (id: string) => {
         setSelectedIds(prev =>
@@ -157,6 +176,19 @@ export const ShowcaseManager: React.FC = () => {
                         <div className="mt-4 p-3 bg-slate-800 rounded-xl border border-slate-700 font-mono text-xs text-orange-400 break-all">
                             {generateLink()}
                         </div>
+                        {aiSummary && (
+                            <div className="mt-4 p-4 bg-orange-500/10 rounded-xl border border-orange-500/20 text-sm italic text-orange-200">
+                                <span className="block font-black text-xs uppercase text-orange-500 mb-1">Resumo Executivo (IA)</span>
+                                {aiSummary}
+                            </div>
+                        )}
+                        <button
+                            onClick={handleGenerateSummary}
+                            disabled={isGeneratingSummary}
+                            className="mt-4 text-xs font-bold text-slate-500 hover:text-orange-500 transition-colors uppercase tracking-widest flex items-center gap-2"
+                        >
+                            {isGeneratingSummary ? 'Gerando...' : '⚙️ Gerar Resumo Executivo para o Gestor'}
+                        </button>
                     </div>
 
                     <button

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 
 import { safeIncludes } from '../utils';
-import { useGeminiParser } from '../hooks/useGeminiParser';
+import { getOrchestrator } from '../services/agentService';
 
 interface OpeNatItem {
     code: string;
@@ -45,8 +45,7 @@ export const OpeNatIdentifier: React.FC = () => {
     const [codeListFiles, setCodeListFiles] = useState<File[]>([]);
     const [aiResult, setAiResult] = useState<AIResult | null>(null);
     const [isDragOver, setIsDragOver] = useState(false);
-
-    const { processFiles, isProcessing } = useGeminiParser();
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // Context Form State
     const [showContextModal, setShowContextModal] = useState(false);
@@ -136,34 +135,30 @@ export const OpeNatIdentifier: React.FC = () => {
         if (!invoiceFile) return;
 
         setShowContextModal(false); // Close modal
+        setIsProcessing(true);
+
         try {
-            // 5 Seconds Delay (User Request)
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            const orchestrator = getOrchestrator();
 
-            const prompt = `
-            Você é um especialista em classificação fiscal e contábil, com foco em carcinicultura (criação de camarão).
-            Analise a Nota Fiscal fornecida (imagem/PDF) e consulte as Tabelas de Códigos fornecidas (se houver).
+            // Helper to convert file to base64
+            const toBase64 = (f: File): Promise<string> => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(f);
+                reader.onload = () => resolve(reader.result?.toString().split(',')[1] || '');
+                reader.onerror = error => reject(error);
+            });
 
-            Contexto Adicional Fornecido pelo Usuário:
-            - Categoria do Produto: ${userContext.category}
-            - Uso Previsto: ${userContext.usage}
+            // Prepare files
+            const invoiceBase64 = await toBase64(invoiceFile);
+            const tablesContent = await Promise.all(codeListFiles.map(f => f.name)); // Just listing for now as context
 
-            Tarefa:
-            1. Identifique os itens principais na Nota Fiscal.
-            2. Com base na natureza do produto e seu uso na carcinicultura, determine o código OPE/NAT mais adequado.
-            3. Se houver tabelas de códigos anexadas, tente encontrar uma correspondência exata ou aproximada.
-
-            Responda EXCLUSIVAMENTE com um objeto JSON válido (sem blocos de código markdown) no seguinte formato:
-            {
-                "code": "CÓDIGO_ENCONTRADO",
-                "description": "DESCRIÇÃO_DO_CÓDIGO",
-                "reasoning": "Explique por que este código foi escolhido, citando o uso e a categoria.",
-                "items": ["Lista", "dos", "itens", "identificados"]
-            }
-            `;
-
-            const allFiles = [invoiceFile, ...codeListFiles];
-            const result = await processFiles(allFiles, prompt);
+            const result = await orchestrator.routeToAgent('tax-identification', {
+                image: invoiceBase64,
+                mimeType: invoiceFile.type,
+                category: userContext.category,
+                usage: userContext.usage,
+                codeTables: tablesContent
+            });
 
             if (result && typeof result === 'object' && !Array.isArray(result)) {
                 setAiResult(result as AIResult);

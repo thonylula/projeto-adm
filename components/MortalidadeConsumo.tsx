@@ -1,9 +1,9 @@
 // [AI-LOCK: OPEN]
 import React, { useState, useEffect, useCallback } from 'react';
 import { Company, MonthlyMortalityData, MortalityTankRecord, MortalityDailyRecord } from '../types';
-import { SupabaseService } from '../services/supabaseService';
+import { getOrchestrator } from '../services/agentService';
 import { exportToPdf, exportToPngPuppeteer, exportToHtml, shareAsImage } from '../utils/exportUtils';
-import { useGeminiParser } from '../hooks/useGeminiParser';
+import { fileToBase64 } from '../utils/fileUtils';
 import { MortalidadeDashboard } from './MortalidadeDashboard';
 
 interface MortalidadeConsumoProps {
@@ -28,6 +28,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [showLayoutSettings, setShowLayoutSettings] = useState(false);
     const [activeView, setActiveView] = useState<'table' | 'dashboard'>('table');
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [tableConfig, setTableConfig] = useState(() => {
         const saved = localStorage.getItem(`mortalidade_layout_${activeCompany?.id || 'default'}`);
         return saved ? JSON.parse(saved) : {
@@ -44,9 +45,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         localStorage.setItem(`mortalidade_layout_${activeCompany?.id || 'default'}`, JSON.stringify(tableConfig));
     }, [tableConfig, activeCompany?.id]);
 
-    const { processFile, isProcessing: isAIProcessing } = useGeminiParser({
-        onError: (err) => setMessage({ text: `Erro na IA: ${err.message}`, type: 'error' })
-    });
+    // Removed useGeminiParser as we now use agents
 
     useEffect(() => {
         setMonth(activeMonth);
@@ -76,7 +75,14 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         if (!activeCompany?.id) return;
         setIsLoading(true);
         try {
-            const savedData = await SupabaseService.getMortalityData(activeCompany.id, month, year);
+            const orchestrator = getOrchestrator();
+            const savedData = await orchestrator.routeToAgent('mortality-storage', {
+                operation: 'load',
+                companyId: activeCompany.id,
+                month,
+                year
+            });
+
             if (savedData) {
                 setData(savedData);
             } else {
@@ -273,9 +279,16 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         `;
 
         try {
-            // Usando Gemini 3 Pro conforme solicitado para inteligência pericial
-            const result = await processFile(file, systemPrompt, 'gemini-3-pro');
-            const parsedData = result?.data || result; // Suporta tanto o objeto envelopado quanto o array direto
+            const orchestrator = getOrchestrator();
+            const fc = await fileToBase64(file);
+
+            const result = await orchestrator.routeToAgent('mortality-data', {
+                image: fc.base64,
+                mimeType: fc.mimeType,
+                year
+            });
+
+            const parsedData = result?.data || result;
 
             if (parsedData && Array.isArray(parsedData)) {
                 const newRecords = parsedData.map((dr: any) => ({
@@ -328,12 +341,55 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
     const handleSave = async () => {
         if (!activeCompany?.id || !data) return;
-        const success = await SupabaseService.saveMortalityData(activeCompany.id, month, year, data);
-        if (success) {
-            setMessage({ text: 'Dados salvos com sucesso!', type: 'success' });
-            setTimeout(() => setMessage(null), 3000);
-        } else {
-            setMessage({ text: 'Erro ao salvar dados.', type: 'error' });
+
+        try {
+            const orchestrator = getOrchestrator();
+            const success = await orchestrator.routeToAgent('mortality-storage', {
+                operation: 'save',
+                companyId: activeCompany.id,
+                month,
+                year,
+                data
+            });
+
+            if (success) {
+                setMessage({ text: 'Dados salvos com sucesso!', type: 'success' });
+                setTimeout(() => setMessage(null), 3000);
+            } else {
+                setMessage({ text: 'Erro ao salvar dados.', type: 'error' });
+            }
+        } catch (error) {
+            console.error(error);
+            setMessage({ text: 'Erro crítico ao salvar dados.', type: 'error' });
+        }
+    };
+
+    const handleAIAnalysis = async () => {
+        if (!data || !data.records || data.records.length === 0) return;
+        setIsAnalyzing(true);
+        const orchestrator = getOrchestrator();
+
+        try {
+            // 1. Relatório Biológico e Alertas
+            const report = await orchestrator.routeToAgent('mortality-report', data);
+
+            // 2. Predição de Despesca
+            const prediction = await orchestrator.routeToAgent('mortality-prediction', {
+                records: data.records
+            });
+
+            if (report.success) {
+                const alerts = report.criticalAlerts.length > 0
+                    ? `\n\n🚨 ALERTAS CRÍTICOS:\n${report.criticalAlerts.join('\n')}`
+                    : '\n\n✅ Nenhum alerta biológico crítico detectado.';
+
+                alert(`📊 RELATÓRIO TÉCNICO IA\n\n${report.technicalSummary}${alerts}\n\n🔮 PREVISÃO DE COLHEITA:\n${JSON.stringify(prediction, null, 2)}`);
+            }
+        } catch (error) {
+            console.error("AI Analysis Error", error);
+            setMessage({ text: 'Erro na análise inteligente da mortalidade.', type: 'error' });
+        } finally {
+            setIsAnalyzing(false);
         }
     };
 
@@ -497,18 +553,37 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                         <input type="file" ref={fileInputRef} onChange={handleAIPreencher} accept="image/*" className="hidden" />
                         <button
                             onClick={() => fileInputRef.current?.click()}
-                            disabled={isAIProcessing}
+                            disabled={isAnalyzing}
                             className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg text-xs font-black uppercase hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg active:scale-95 flex items-center gap-2 disabled:opacity-50"
                         >
-                            {isAIProcessing ? (
+                            {isAnalyzing ? (
                                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             ) : (
                                 <span>🪄</span>
                             )}
-                            {isAIProcessing ? 'Processando...' : 'IA Preencher Tudo'}
+                            {isAnalyzing ? 'Processando...' : 'IA Preencher Tudo'}
                         </button>
                     </>
                 )}
+
+                {!isPublic && (
+                    <>
+                        <div className="w-px h-8 bg-slate-200 mx-2" />
+                        <button
+                            onClick={handleAIAnalysis}
+                            disabled={isAnalyzing}
+                            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg text-xs font-black uppercase hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                        >
+                            {isAnalyzing ? (
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <span>📈</span>
+                            )}
+                            Análise Inteligente
+                        </button>
+                    </>
+                )}
+
                 <div className="w-px h-8 bg-slate-200 mx-2" />
                 <button onClick={handleShare} className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-emerald-700 transition-all shadow-lg active:scale-95">Compartilhar</button>
 

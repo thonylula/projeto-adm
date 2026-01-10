@@ -1,9 +1,9 @@
 // [AI-LOCK: CLOSED]
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useGeminiParser } from '../hooks/useGeminiParser';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { SupabaseService } from '../services/supabaseService';
+import { getOrchestrator } from '../services/agentService';
 
 // --- Interfaces based on User Data ---
 interface HarvestData {
@@ -96,7 +96,7 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
     const [data, setData] = useState<HarvestData[]>(INITIAL_HARVEST_DATA);
     const [logo, setLogo] = useState<string | null>(null);
 
-    // --- Detect Showcase Mode from URL ---
+    // --- DETECT SHOWCASE MODE ---
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         if (params.get('showcase') === 'true') {
@@ -104,30 +104,29 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
         }
     }, []);
 
-    // --- PERSISTÊNCIA AUTOMÁTICA (SUPABASE) ---
+    // --- PERSISTÊNCIA AUTOMÁTICA (AGENT STORAGE) ---
     useEffect(() => {
         const load = async () => {
-            const { data, logo } = await SupabaseService.getDeliveryOrders();
-            if (data.length > 0) {
-                // Clean up existing duplicates immediately on load
-                const uniqueData = removeDuplicates(data);
+            const orchestrator = getOrchestrator();
+            const result = await orchestrator.routeToAgent('delivery-storage', { operation: 'load' });
 
-                // Se o tamanho mudou, significa que limpamos duplicatas. Vamos persistir essa limpeza no banco.
-                if (uniqueData.length < data.length) {
-                    console.log(`Limpando ${data.length - uniqueData.length} duplicatas do banco de dados...`);
-                    await SupabaseService.saveDeliveryOrders(uniqueData, logo);
-                }
-
+            if (result && result.data && result.data.length > 0) {
+                const uniqueData = removeDuplicates(result.data);
                 setData(uniqueData);
+                if (result.logo) setLogo(result.logo);
             }
-            if (logo) setLogo(logo);
         };
         load();
     }, []);
 
     useEffect(() => {
         if (data.length > 0 || logo) {
-            SupabaseService.saveDeliveryOrders(data, logo);
+            const orchestrator = getOrchestrator();
+            orchestrator.routeToAgent('delivery-storage', {
+                operation: 'save',
+                data,
+                logo
+            });
         }
     }, [data, logo]);
 
@@ -175,53 +174,19 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
         });
     };
 
-    // --- AI SMART UPLOAD ---
-    const { processFile, processText, isProcessing } = useGeminiParser({
-        onError: (err) => alert(`Erro na Inteligência Artificial: ${err.message}`)
-    });
+    // --- AGENT SMART UPLOAD ---
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-    const HARVEST_PROMPT = `
-        Analise este documento (Recibo de Despesca, Planilha ou Anotação Manual).
-        Extraia a lista de despescas realizadas.
-        
-        ### REGRAS CRÍTICAS DE FORMATAÇÃO:
-        1. **Números e Milhar (BRASIL)**: No contexto brasileiro, o ponto (.) é separador de MILHAR. 
-           - Exemplo: "3.728" deve ser interpretado como 3728 (três mil setecentos e vinte e oito).
-           - "3 kg" é 3.
-           - Certifique-se de remover pontos de milhar antes de retornar o número.
-        2. **Múltiplos Clientes**: Se uma entrada/venda citar mais de um cliente (ex: "Victor, Henrique" ou "Victor e Henrique"), você **DEVE** gerar um objeto JSON separado para cada um.
-           - Se houver apenas um peso total para ambos, divida a produção proporcionalmente ou conforme indicado. Se não houver indicação, divida por 2.
-           - A sobrevivência, FCA, Dias de Cultivo e outros parâmetros técnicos devem ser os mesmos para ambos os registros.
-        
-        Retorne um JSON estrito contendo APENAS uma lista (array) de objetos.
-        Cada objeto deve ter as chaves (USE SEMPRE STRING para os valores numéricos para preservar a formatação original):
-        {
-            "data": "DD/MM/AAAA",
-            "viveiro": "Nome do Viveiro",
-            "cliente": "Nome do Cliente",
-            "producao": "string (ex: '3.675' ou '3728')",
-            "preco": "string (ex: '22,00')",
-            "pesoMedio": "string",
-            "sobrevivencia": "string com %",
-            "fca": "string",
-            "diasCultivo": "string",
-            "laboratorio": "Nome",
-            "notas": "Obs"
-        }
-    `;
-
-    // --- Actions ---
     const handleProcess = async () => {
         if (!inputText.trim()) return;
+        setIsAnalyzing(true);
 
         try {
-            // NÃO limpar dados anteriores para permitir acúmulo (solicitação do usuário)
-            // setData([]);
+            const orchestrator = getOrchestrator();
+            const results = await orchestrator.routeToAgent('delivery-order', { text: inputText });
 
-            const results = await processText(HARVEST_PROMPT, inputText);
-
-            if (results) {
-                const newItems: HarvestData[] = (Array.isArray(results) ? results : [results]).map((item: any) => ({
+            if (results && Array.isArray(results)) {
+                const newItems: HarvestData[] = results.map((item: any) => ({
                     id: Date.now() + Math.random(),
                     data: item.data || new Date().toLocaleDateString(),
                     viveiro: item.viveiro || "---",
@@ -240,18 +205,16 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                 setData(prev => {
                     const existingFingerprints = new Set(prev.map(getRecordFingerprint));
                     const uniqueNewItems = newItems.filter(item => !existingFingerprints.has(getRecordFingerprint(item)));
-
-                    if (uniqueNewItems.length < newItems.length) {
-                        alert(`${newItems.length - uniqueNewItems.length} itens duplicados foram ignorados.`);
-                    }
-
                     return [...prev, ...uniqueNewItems];
                 });
                 setInputText('');
                 setView('DASHBOARD');
             }
         } catch (error) {
-            console.error("Text Processing Error", error);
+            console.error("Agent Processing Error", error);
+            alert("Erro ao processar dados com IA.");
+        } finally {
+            setIsAnalyzing(false);
         }
     };
 
@@ -316,14 +279,27 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
     const handleSmartUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || !e.target.files[0]) return;
         const file = e.target.files[0];
+        setIsAnalyzing(true);
 
         try {
-            // NÃO limpar dados anteriores para permitir acúmulo
-            // setData([]); 
-            const results = await processFile(file, HARVEST_PROMPT);
+            const orchestrator = getOrchestrator();
 
-            if (results) {
-                const newItems: HarvestData[] = (Array.isArray(results) ? results : [results]).map((item: any) => ({
+            // Helper to convert file to base64
+            const toBase64 = (f: File): Promise<string> => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(f);
+                reader.onload = () => resolve(reader.result?.toString().split(',')[1] || '');
+                reader.onerror = error => reject(error);
+            });
+
+            const base64 = await toBase64(file);
+            const results = await orchestrator.routeToAgent('delivery-order', {
+                image: base64,
+                mimeType: file.type
+            });
+
+            if (results && Array.isArray(results)) {
+                const newItems: HarvestData[] = results.map((item: any) => ({
                     id: Date.now() + Math.random(),
                     data: item.data || new Date().toLocaleDateString(),
                     viveiro: item.viveiro || "---",
@@ -342,18 +318,15 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                 setData(prev => {
                     const existingFingerprints = new Set(prev.map(getRecordFingerprint));
                     const uniqueNewItems = newItems.filter(item => !existingFingerprints.has(getRecordFingerprint(item)));
-
-                    if (uniqueNewItems.length < newItems.length) {
-                        alert(`${newItems.length - uniqueNewItems.length} itens duplicados foram ignorados.`);
-                    }
-
                     return [...prev, ...uniqueNewItems];
                 });
                 setView('DASHBOARD');
             }
         } catch (error) {
             console.error("Smart Upload Error", error);
+            alert("Erro ao processar arquivo com IA.");
         } finally {
+            setIsAnalyzing(false);
             e.target.value = '';
         }
     };
@@ -431,39 +404,19 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
             return;
         }
 
-        const mediaPreco = clientSummary.value / clientSummary.biomass;
-        const mediaGramatura = clientSummary.gramaturas.reduce((a, b) => a + b, 0) / clientSummary.count;
-
-        const systemPrompt = "Você é um assistente de faturamento da Carapitanga, uma empresa de aquicultura (criação de camarão). Seu tom é profissional, amigável e conciso. Gere apenas o corpo do e-mail, sem a saudação ('Prezado...') e sem a assinatura final (como 'Atenciosamente'). O e-mail deve ser em Português do Brasil.";
-
-        const userQuery = `
-            Gere um breve e-mail de faturamento para o cliente ${cliente}.
-            
-            Detalhes da Fatura:
-            - Cliente: ${cliente}
-            - Biomassa Total (Faturada): ${formatNumber(clientSummary.biomass, ' kg')}
-            - Valor Total: ${formatCurrency(clientSummary.value)}
-            - Preço Médio Ponderado: ${formatCurrency(mediaPreco)}/kg
-            - Gramatura Média: ${formatGrams(mediaGramatura)}
-            - Prazo de Pagamento: ${info.prazo}
-            
-            O e-mail deve:
-            1. Informar o fechamento do faturamento referente às últimas entregas.
-            2. Listar os totais de forma clara (Biomassa Total e Valor Total).
-            3. Mencionar que o prazo de pagamento é de ${info.prazo}.
-            4. Manter um tom cordial e profissional.
-        `;
-
         try {
-            const fullPrompt = `${systemPrompt}\n\n---\n\n${userQuery}`;
-            const result = await processText(fullPrompt, ""); // processText(prompt, userText)
+            const orchestrator = getOrchestrator();
+            const result = await orchestrator.routeToAgent('delivery-document', {
+                type: 'email',
+                client: cliente,
+                data: clientSummary,
+                paymentTerms: info.prazo
+            });
 
-            if (typeof result === 'string') {
-                setGeneratedEmail(result);
-            } else if (result && result.text) {
-                setGeneratedEmail(result.text);
+            if (result && result.content) {
+                setGeneratedEmail(result.content);
             } else {
-                throw new Error("Resposta da IA inválida.");
+                throw new Error("Resposta do Agente inválida.");
             }
         } catch (e) {
             console.error(e);
@@ -673,7 +626,7 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                                     </svg>
                                     <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Clique para enviar</span> ou arraste e solte</p>
                                     <p className="text-xs text-gray-500">
-                                        {isProcessing ? 'PROCESSANDO COM IA...' : 'Imagem ou PDF (IA Integrada)'}
+                                        {isAnalyzing ? 'PROCESSANDO COM AGENTE...' : 'Imagem ou PDF (Agente Logístico)'}
                                     </p>
                                 </div>
                                 <input

@@ -1,6 +1,6 @@
 // [AI-LOCK: CLOSED]
 import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { extractInvoiceData, generateMotivationalMessages } from '../services/geminiService';
+import { getOrchestrator } from '../services/agentService';
 import type { InvoiceData, ItemAllocationConfig, ItemConfiguration } from '../types';
 import { ImageUploader } from './ImageUploader';
 import { InvoiceSummary } from './InvoiceSummary';
@@ -123,6 +123,7 @@ export const CestasBasicas: React.FC = () => {
     const [currentStep, setCurrentStep] = useState<number>(1);
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+    const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
 
     // Load persistent quota timer on mount
     useEffect(() => {
@@ -433,6 +434,46 @@ export const CestasBasicas: React.FC = () => {
         };
     };
 
+    const handleAIBasketAnalysis = async () => {
+        if (!invoiceData?.items) return;
+        setIsAnalyzing(true);
+        const orchestrator = getOrchestrator();
+
+        try {
+            // 1. Sugestão de Alocação Inteligente
+            const allocation = await orchestrator.routeToAgent('basket-allocation', {
+                items: invoiceData.items,
+                totalEmployees: activeEmployees.length,
+                nonDrinkerCount: (selectedNonDrinkers || []).length,
+                currentAllocations: itemAllocation
+            });
+
+            if (allocation.itemAllocations) {
+                setItemAllocation(allocation.itemAllocations);
+            }
+
+            // 2. Validação da Distribuição
+            const validation = await orchestrator.routeToAgent('basket-validation', {
+                items: invoiceData.items,
+                allocations: allocation.itemAllocations || allocation, // Handle different return formats
+                totalEmployees: activeEmployees.length,
+                nonDrinkerCount: (selectedNonDrinkers || []).length
+            });
+
+            if (validation.isValid) {
+                alert("✅ Alocação inteligente concluída com sucesso! Todos os itens foram distribuídos seguindo as regras de negócio.");
+            } else if (validation.errors && validation.errors.length > 0) {
+                alert(`⚠️ Alerta de Validação IA:\n\n${validation.errors.join('\n')}`);
+            }
+
+        } catch (error) {
+            console.error("AI Analysis Error", error);
+            setError("Erro na análise inteligente da cesta.");
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
     const summary = getDistributionSummary();
 
     const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -467,12 +508,20 @@ export const CestasBasicas: React.FC = () => {
         try {
             const results: InvoiceData[] = [];
 
+            const orchestrator = getOrchestrator();
+
             // Process sequential to avoid RPM limits
             for (let i = 0; i < (files || []).length; i++) {
                 const file = files[i];
                 const fc = await fileToBase64(file);
-                const data = await extractInvoiceData(fc.base64, fc.mimeType);
-                results.push(data);
+
+                // Use Agent instead of direct service call
+                const extraction = await orchestrator.routeToAgent('basket-invoice-extraction', {
+                    image: fc.base64,
+                    mimeType: fc.mimeType
+                });
+
+                results.push(extraction.data || extraction);
 
                 // Small delay between requests to be gentle with Rate Limits
                 if (i < (files || []).length - 1) {
@@ -480,8 +529,15 @@ export const CestasBasicas: React.FC = () => {
                 }
             }
 
-            const aiMessages = await generateMotivationalMessages(actualEmployees);
-            setMotivationalMessages(aiMessages);
+            // Generate messages via Report Agent
+            const reportResult = await orchestrator.routeToAgent('basket-report', {
+                employees: actualEmployees,
+                appMode: appMode || 'BASIC',
+                totalValue: results.reduce((sum, data) => sum + (data.totalValue || 0), 0),
+                itemCount: results.flatMap(data => data.items || []).length
+            });
+
+            setMotivationalMessages(reportResult.messages || []);
 
             if (results.length > 0) {
                 const aggregatedData: InvoiceData = {
@@ -558,16 +614,22 @@ export const CestasBasicas: React.FC = () => {
         const configId = `basket_dist_${new Date().getFullYear()}_${(new Date().getMonth() + 1).toString().padStart(2, '0')}_${new Date().getDate()}_${new Date().getTime()}`;
 
         try {
-            const success = await SupabaseService.saveConfig(configId, payload);
+            const orchestrator = getOrchestrator();
+            const success = await orchestrator.routeToAgent('basket-storage', {
+                operation: 'save',
+                id: configId,
+                data: payload
+            });
+
             if (success) {
                 setSaveSuccess(true);
                 setTimeout(() => setSaveSuccess(false), 5000);
             } else {
-                alert("Falha ao salvar no banco de dados.");
+                alert("Falha ao salvar no banco de dados via Agente de Storage.");
             }
         } catch (e) {
             console.error(e);
-            alert("Erro ao conectar com o Supabase.");
+            alert("Erro ao conectar com o Agente de Storage.");
         } finally {
             setIsSaving(false);
         }
@@ -964,9 +1026,36 @@ export const CestasBasicas: React.FC = () => {
                         {currentStep === 3 && (
                             <div className="mt-8 pt-8 border-t border-slate-200 animate-in slide-in-from-right-8 duration-500 print:hidden hidden-in-export">
                                 <div className="mb-8">
-                                    <div className="mb-4">
-                                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">2. Alocação de Alimentos</h3>
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Defina quais itens vão para cada grupo</p>
+                                    <div className="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                                        <div>
+                                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-tighter">2. Alocação de Alimentos</h3>
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Defina quais itens vão para cada grupo</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={calculateExactQuantities}
+                                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase rounded-sm transition-all flex items-center gap-2"
+                                                title="Calcula quantidades exatas ignorando as regras de IA"
+                                            >
+                                                🤖 Cálculo Matemático
+                                            </button>
+                                            <button
+                                                onClick={handleAIBasketAnalysis}
+                                                disabled={isAnalyzing}
+                                                className={`px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase rounded-sm transition-all shadow-md flex items-center gap-2 ${isAnalyzing ? 'opacity-50 cursor-wait' : ''}`}
+                                            >
+                                                {isAnalyzing ? (
+                                                    <>
+                                                        <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                                        Analisando...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <span>✨</span> Análise Inteligente IA
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                         {(invoiceData?.items || []).map(item => {

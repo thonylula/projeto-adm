@@ -1,6 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { getOrchestrator } from '../services/agentService';
 
 export const PlansPrices: React.FC = () => {
+    const [roiAnalysis, setRoiAnalysis] = useState<string | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+    const handleAnalyzeROI = async () => {
+        setIsAnalyzing(true);
+        try {
+            const orchestrator = getOrchestrator();
+            const result = await orchestrator.routeToAgent('pricing', { productionData: 'Generic Farm' });
+            setRoiAnalysis(result.suggestion);
+        } catch (error) {
+            console.error("ROI error", error);
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
     const plans = [
         {
             name: "Lançamento / Individual",
@@ -63,6 +80,21 @@ export const PlansPrices: React.FC = () => {
                 <p className="text-slate-500 font-medium">
                     Menos do que você imagina. Compare com serviços do dia a dia e veja como o retorno sobre o investimento (ROI) é imediato ao evitar perdas.
                 </p>
+
+                <button
+                    onClick={handleAnalyzeROI}
+                    disabled={isAnalyzing}
+                    className="mt-6 px-6 py-3 bg-slate-100 border-2 border-slate-200 rounded-2xl text-xs font-black uppercase text-slate-600 hover:bg-white hover:border-orange-500 hover:text-orange-600 transition-all shadow-sm"
+                >
+                    {isAnalyzing ? 'Calculando ROI...' : '🧠 Analisar ROI para minha Fazenda (IA)'}
+                </button>
+
+                {roiAnalysis && (
+                    <div className="mt-8 p-6 bg-orange-50 border-2 border-orange-200 rounded-3xl text-sm text-orange-800 text-left relative animate-in fade-in zoom-in duration-500">
+                        <div className="absolute -top-3 left-6 px-3 py-1 bg-orange-500 text-white text-[10px] font-black rounded-full uppercase">Análise de Viabilidade</div>
+                        <p className="italic leading-relaxed">"{roiAnalysis}"</p>
+                    </div>
+                )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto px-4">
@@ -70,8 +102,8 @@ export const PlansPrices: React.FC = () => {
                     <div
                         key={idx}
                         className={`relative flex flex-col p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl border ${plan.isPopular
-                                ? 'bg-white border-orange-500 shadow-orange-100 shadow-lg ring-1 ring-orange-500/20'
-                                : 'bg-white border-slate-200 shadow-sm'
+                            ? 'bg-white border-orange-500 shadow-orange-100 shadow-lg ring-1 ring-orange-500/20'
+                            : 'bg-white border-slate-200 shadow-sm'
                             }`}
                     >
                         {plan.isPopular && (
@@ -105,8 +137,8 @@ export const PlansPrices: React.FC = () => {
                         </div>
 
                         <button className={`w-full py-4 rounded-xl font-bold uppercase tracking-wider text-sm transition-all focus:ring-4 focus:ring-${plan.color}-500/20 active:scale-95 ${plan.isPopular
-                                ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50'
-                                : `bg-slate-900 text-white hover:bg-slate-800`
+                            ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50'
+                            : `bg-slate-900 text-white hover:bg-slate-800`
                             }`}>
                             {plan.cta}
                         </button>
