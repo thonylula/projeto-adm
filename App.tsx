@@ -106,6 +106,18 @@ export default function App() {
 
     loadFromSupabase();
 
+    // Initialize Multi-Agent System
+    const initAgents = async () => {
+      try {
+        const { initializeAgents } = await import('./services/agentService');
+        initializeAgents();
+        console.log('🤖 Multi-Agent System initialized');
+      } catch (error) {
+        console.warn('Failed to initialize agents:', error);
+      }
+    };
+    initAgents();
+
     // Listen for data updates (from AI Assistant or other components)
     window.addEventListener('app-data-updated', loadFromSupabase);
 

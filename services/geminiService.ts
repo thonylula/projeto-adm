@@ -138,3 +138,66 @@ export async function generateMotivationalMessages(names: string[]): Promise<str
         return names.map(() => "Sua dedicação é a força que impulsiona nosso sucesso. Obrigado!");
     }
 }
+
+/**
+ * General text generation function for agents
+ * @param prompt The user prompt
+ * @param options Optional configuration
+ * @returns The generated text response
+ */
+export async function generateText(
+    prompt: string,
+    options?: {
+        model?: string;
+        temperature?: number;
+        maxOutputTokens?: number;
+        systemInstruction?: string;
+    }
+): Promise<string> {
+    try {
+        const contents = [{
+            role: 'user',
+            parts: [{ text: prompt }]
+        }];
+
+        const requestBody: any = { contents };
+
+        if (options?.systemInstruction) {
+            requestBody.systemInstruction = {
+                parts: [{ text: options.systemInstruction }]
+            };
+        }
+
+        if (options?.temperature !== undefined) {
+            requestBody.generationConfig = {
+                temperature: options.temperature,
+                maxOutputTokens: options.maxOutputTokens || 8192
+            };
+        }
+
+        const response = await fetch('/api/generative', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+        });
+
+        const payload = await response.json();
+
+        if (!response.ok || !payload.ok) {
+            const errorObj = payload.error;
+            const errorMsg = typeof errorObj === 'object'
+                ? (errorObj.message || errorObj.error?.message || JSON.stringify(errorObj))
+                : (errorObj || 'Erro na API.');
+            throw new Error(errorMsg);
+        }
+
+        const text = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error('Resposta vazia da IA');
+
+        return text;
+    } catch (error) {
+        console.error('Erro ao gerar texto:', error);
+        throw error;
+    }
+}
+
