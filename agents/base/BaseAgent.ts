@@ -221,6 +221,11 @@ export abstract class BaseAgent {
         const firstBrace = content.indexOf('{');
         const firstBracket = content.indexOf('[');
 
+        if (firstBrace === -1 && firstBracket === -1) {
+            console.error(`[${this.name}] Raw AI Response (No JSON found):`, content);
+            throw new Error(`[${this.name}] No JSON (brace or bracket) found in response`);
+        }
+
         // Determine if we're looking for an object or an array based on which comes first
         let startChar = '';
         let endChar = '';
@@ -230,14 +235,10 @@ export abstract class BaseAgent {
             startChar = '{';
             endChar = '}';
             startIndex = firstBrace;
-        } else if (firstBracket !== -1) {
+        } else {
             startChar = '[';
             endChar = ']';
             startIndex = firstBracket;
-        }
-
-        if (startIndex === -1) {
-            throw new Error(`[${this.name}] No JSON (brace or bracket) found in response`);
         }
 
         let charCount = 0;
@@ -254,6 +255,7 @@ export abstract class BaseAgent {
         }
 
         if (lastIndex === -1) {
+            console.error(`[${this.name}] Raw AI Response (Incomplete JSON):`, content);
             throw new Error(`[${this.name}] No matching closing ${endChar} found`);
         }
 
@@ -266,6 +268,7 @@ export abstract class BaseAgent {
                 const cleaned = jsonStr.replace(/,\s*([}\]])/g, '$1');
                 return JSON.parse(cleaned);
             } catch (e2) {
+                console.error(`[${this.name}] Raw AI Response (Failed Parse):`, content);
                 throw new Error(`[${this.name}] Failed to parse extracted JSON: ${e2}`);
             }
         }
