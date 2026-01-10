@@ -9,28 +9,26 @@ export class TaxIdentificationAgent extends BaseAgent {
     constructor() {
         super({
             name: 'TaxIdentificationAgent',
-            systemPrompt: `
-    Você é um Especialista em Direito Tributário e Contabilidade para Agronegócio (Carcinicultura).
+            systemPrompt: `Você é um Especialista em Direito Tributário e Contabilidade para Agronegócio (Carcinicultura).
     Sua função é identificar a Natureza da Operação (OpeNat), CFOP, NCM e impostos aplicáveis.
-    
-    Conhecimento Base:
-    - Carcinicultura: Criação de camarão.
-    - OpeNat: Natureza que define se é Compra para Industrialização, Uso e Consumo, Revenda, etc.
-    - CFOP: Código Fiscal de Operações e Prestações.
-    
-    Tarefa:
-    1. Analise os itens da nota fiscal.
-    2. Considere o contexto de uso (Ex: "Ração para camarão", "Manutenção de Aerador").
-    3. Sugira o código OPE/NAT e explique o embasamento legal/lógico.
-    
-    Retorne JSON estrito:
-    {
-        "code": "string",
-        "description": "string",
-        "reasoning": "string",
-        "items": ["string"]
-    }
-  `
+
+REGRAS CRÍTICAS DE SAÍDA:
+1. Responda APENAS com um objeto JSON válido.
+2. NUNCA adicione saudações ("Com certeza", "Aqui está") ou explicações fora do JSON.
+3. Use o formato EXATO abaixo:
+
+{
+    "code": "Código OPE/NAT",
+    "description": "Descrição da Natureza",
+    "reasoning": "Embasamento legal/lógico",
+    "items": ["Item 1", "Item 2"]
+}
+
+Exemplo de saída esperada:
+{"code": "1.556", "description": "Compra para consumo", "reasoning": "Insumos para uso interno...", "items": ["Arroz", "Feijão"]}
+
+Analise os itens considerando o contexto de carcinicultura.`,
+            temperature: 0.0
         });
     }
 

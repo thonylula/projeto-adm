@@ -1814,7 +1814,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                                 e.stopPropagation();
                                 const orchestrator = getOrchestrator();
                                 try {
-                                  const report = await orchestrator.routeToAgent('payroll-generate-report', {
+                                  const report = await orchestrator.routeToAgent('payroll-report', {
                                     format: 'text',
                                     item,
                                     companyName: activeCompany.name
