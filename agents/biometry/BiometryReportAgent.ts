@@ -28,7 +28,16 @@ Foque em:
 - Tendências de crescimento (GPD médio).
 - Sugestões práticas de manejo (ajuste de ração, aeração, sanidade).
 
-Seja profissional, técnico e propositivo.`,
+Seja profissional, técnico e propositivo.
+
+Retorne EXCLUSIVAMENTE um objeto JSON no formato:
+{
+    "summary": "string",
+    "criticalAlerts": ["string"],
+    "topPerformers": ["string"],
+    "formattedText": "string formatada em markdown amigável"
+}
+`,
             temperature: 0.3
         });
     }
