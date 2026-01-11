@@ -292,11 +292,23 @@ export const CestasBasicas: React.FC = () => {
     // Filter out excluded employees and sort alphabetically
     const activeEmployees = useMemo(() => {
         return (actualEmployees || [])
-            .map((name, index) => ({
-                name,
-                isNonDrinker: (selectedNonDrinkers || []).includes(index),
-                message: motivationalMessages[index] || "Sua dedicação é a força que impulsiona nosso sucesso. Obrigado!"
-            }))
+            .map((name, index) => {
+                const msgRaw = motivationalMessages[index];
+                let messageStr = "Sua dedicação é a força que impulsiona nosso sucesso. Obrigado!";
+
+                if (typeof msgRaw === 'string') {
+                    messageStr = msgRaw;
+                } else if (typeof msgRaw === 'object' && msgRaw !== null) {
+                    // Extract message from object if agent returned object
+                    messageStr = (msgRaw as any).message || (msgRaw as any).text || JSON.stringify(msgRaw);
+                }
+
+                return {
+                    name,
+                    isNonDrinker: (selectedNonDrinkers || []).includes(index),
+                    message: messageStr
+                };
+            })
             .filter(emp => !(excludedEmployees || []).includes(emp.name))
             .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
     }, [actualEmployees, selectedNonDrinkers, excludedEmployees, motivationalMessages]);
