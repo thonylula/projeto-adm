@@ -8,6 +8,7 @@ export class ComparisonAgent extends BaseAgent {
     constructor() {
         super({
             name: 'ComparisonAgent',
+            responseMimeType: 'application/json',
             systemPrompt: `
     Você é um Auditor Digital de Elite.
     Sua missão é comparar dois conjuntos de dados (A e B) e encontrar divergências com precisão cirúrgica.

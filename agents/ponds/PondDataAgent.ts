@@ -8,6 +8,7 @@ export class PondDataAgent extends BaseAgent {
     constructor() {
         super({
             name: 'PondDataAgent',
+            responseMimeType: 'application/json',
             systemPrompt: `
     Você é um assistente técnico de carcinicultura especialista em extração de dados.
     Sua função é extrair parâmetros técnicos de viveiros a partir de imagens ou textos.

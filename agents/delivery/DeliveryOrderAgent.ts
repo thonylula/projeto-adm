@@ -9,6 +9,7 @@ export class DeliveryOrderAgent extends BaseAgent {
     constructor() {
         super({
             name: 'DeliveryOrderAgent',
+            responseMimeType: 'application/json',
             systemPrompt: `
     Você é um Especialista em Logística e Faturamento de Aquicultura.
     Sua função é extrair dados de despesca com precisão pericial.

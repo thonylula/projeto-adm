@@ -24,6 +24,7 @@ export class BiometryDataAgent extends BaseAgent {
         super({
             name: 'BiometryDataAgent',
             model: 'gemini-2.0-flash-exp',
+            responseMimeType: 'application/json',
             systemPrompt: `Você é um especialista em transcrição de dados de planilhas e anotações de campo de carcinicultura (criação de camarão).
             
 Sua tarefa é extrair tabelas de biometria de imagens ou texto com precisão absoluta.

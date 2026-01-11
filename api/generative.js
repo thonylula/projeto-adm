@@ -88,12 +88,15 @@ export default async function handler(req, res) {
             const { model: requestedModel, prompt, contents } = req.body;
 
             // Adapt input to Google API Body
-            let bodyPayload;
+            let bodyPayload = { ...req.body };
+            delete bodyPayload.model; // Model goes into the URL
+
             if (contents) {
-                bodyPayload = { contents };
+                bodyPayload.contents = contents;
             } else if (prompt) {
                 if (typeof prompt === 'string') {
-                    bodyPayload = { contents: [{ parts: [{ text: prompt }] }] };
+                    bodyPayload.contents = [{ parts: [{ text: prompt }] }];
+                    delete bodyPayload.prompt;
                 } else {
                     bodyPayload = prompt;
                 }
