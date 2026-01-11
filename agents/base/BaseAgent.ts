@@ -305,7 +305,24 @@ export abstract class BaseAgent {
         }
 
         if (lastIndex === -1) {
-            this.log(`Incomplete JSON Response Detected. BraceCount: ${braceCount}, BracketCount: ${bracketCount}`, 'error');
+            this.log(`Incomplete JSON Response Detected. BraceCount: ${braceCount}, BracketCount: ${bracketCount}. Length: ${content.length}. Tail: ${content.substring(content.length - 20)}`, 'error');
+
+            // Auto-repair attempt for arrays: if it's an array and truncated, try to close it
+            if (startIndex === firstBracket && bracketCount > 0) {
+                try {
+                    this.log(`Attempting to repair truncated JSON array...`, 'warn');
+                    let repaired = content.substring(startIndex);
+                    // Find the last complete object "}," or "}"
+                    const lastGoodObject = Math.max(repaired.lastIndexOf('},'), repaired.lastIndexOf('}'));
+                    if (lastGoodObject !== -1) {
+                        repaired = repaired.substring(0, lastGoodObject + 1) + ']';
+                        return JSON.parse(repaired);
+                    }
+                } catch (repairError) {
+                    this.log(`Auto-repair failed: ${repairError}`, 'error');
+                }
+            }
+
             const type = startIndex === firstBracket ? ']' : '}';
             throw new Error(`[${this.name}] No matching closing ${type} found (Response may be truncated)`);
         }

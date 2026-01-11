@@ -44,16 +44,37 @@ Exemplo:
     async process(data: BiometryRawData[]): Promise<BiometryAnalysisResult[]> {
         this.log(`Analyzing ${data.length} biometry entries`);
 
-        try {
-            const prompt = `Analise estes dados de biometria e forneça classificação zootécnica para cada um. 
-            IMPORTANTE: Responda APENAS com o JSON. Não inclua texto explicativo, markdown ou nada fora do array.`;
-            const response = await this.callLLM(prompt, { biometryData: data });
+        // Safety check
+        if (!data || data.length === 0) return [];
 
-            const analyzed = this.safeExtractJson(response.content);
-            return Array.isArray(analyzed) ? analyzed : (analyzed.results || []);
-        } catch (error) {
-            this.log(`Analysis failed: ${error}`, 'error');
-            throw error;
+        const CHUNK_SIZE = 20; // Conservative limit to avoid token overflow
+        const results: BiometryAnalysisResult[] = [];
+
+        for (let i = 0; i < data.length; i += CHUNK_SIZE) {
+            const chunk = data.slice(i, i + CHUNK_SIZE);
+            this.log(`Processing chunk ${Math.floor(i / CHUNK_SIZE) + 1}/${Math.ceil(data.length / CHUNK_SIZE)} (${chunk.length} items)`);
+
+            try {
+                const prompt = `Analise estes dados de biometria e forneça classificação zootécnica para cada um. 
+                IMPORTANTE: Responda APENAS com o JSON. Não inclua texto explicativo, markdown ou nada fora do array.`;
+
+                const response = await this.callLLM(prompt, { biometryData: chunk });
+                const analyzed = this.safeExtractJson(response.content);
+
+                if (Array.isArray(analyzed)) {
+                    results.push(...analyzed);
+                } else if (analyzed && Array.isArray(analyzed.results)) {
+                    results.push(...analyzed.results);
+                }
+            } catch (error) {
+                this.log(`Analysis failed for chunk starting at index ${i}: ${error}`, 'error');
+                // Continue identifying other chunks instead of failing everything?
+                // For now, let's throw to warn user, or maybe return partial?
+                // Throwing is safer so they know it failed.
+                throw error;
+            }
         }
+
+        return results;
     }
 }
