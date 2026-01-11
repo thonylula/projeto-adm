@@ -227,6 +227,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     const handleAIPreencher = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !data) return;
+        setIsAnalyzing(true);
 
         const systemPrompt = `
         PROMPT DETALHADO — Extrator de Tabelas Pericial (Alta Velocidade)
@@ -317,6 +318,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             console.error("Erro no preenchimento IA:", err);
             setMessage({ text: 'Erro na extração pericial. Verifique o console.', type: 'error' });
         } finally {
+            setIsAnalyzing(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };

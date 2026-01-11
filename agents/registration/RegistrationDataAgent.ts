@@ -8,6 +8,7 @@ export class RegistrationDataAgent extends BaseAgent {
     constructor() {
         super({
             name: 'RegistrationDataAgent',
+            responseMimeType: 'application/json',
             systemPrompt: `
     Você é um Especialista em Processamento de Documentos de Identidade e Corporativos.
     Sua missão é extrair dados para cadastros com precisão absoluta.

@@ -36,9 +36,9 @@ export abstract class BaseAgent {
      */
     protected async callLLM(userPrompt: string, context?: any): Promise<LLMResponse> {
         try {
-            // Check if context contains an image/file
-            if (context && context.image instanceof File) {
-                return await this.callLLMWithImage(userPrompt, context.image);
+            // Check if context contains an image/file (File OR Base64)
+            if (context && context.image) {
+                return await this.callLLMWithImage(userPrompt, context.image, context.mimeType);
             }
 
             const fullPrompt = this.buildPrompt(userPrompt, context);
@@ -66,10 +66,18 @@ export abstract class BaseAgent {
     /**
      * Call LLM with image using direct API call
      */
-    private async callLLMWithImage(prompt: string, file: File): Promise<LLMResponse> {
+    private async callLLMWithImage(prompt: string, image: File | string, mimeType?: string): Promise<LLMResponse> {
         try {
-            const base64 = await this.fileToBase64(file);
-            const fullPrompt = `${this.systemPrompt}\n\n${prompt}`;
+            let base64 = '';
+            let finalMimeType = mimeType || 'image/jpeg';
+
+            if (image instanceof File) {
+                base64 = await this.fileToBase64(image);
+                base64 = base64.replace(/^data:.*?;base64,/, '');
+                finalMimeType = image.type;
+            } else {
+                base64 = image.replace(/^data:.*?;base64,/, '');
+            }
 
             const response = await fetch('/api/generative', {
                 method: 'POST',
@@ -78,15 +86,23 @@ export abstract class BaseAgent {
                     contents: [{
                         role: 'user',
                         parts: [
-                            { text: fullPrompt },
+                            { text: prompt },
                             {
                                 inlineData: {
-                                    data: base64.replace(/^data:.*?;base64,/, ''),
-                                    mimeType: file.type
+                                    data: base64,
+                                    mimeType: finalMimeType
                                 }
                             }
                         ]
-                    }]
+                    }],
+                    systemInstruction: {
+                        parts: [{ text: this.systemPrompt }]
+                    },
+                    generationConfig: {
+                        temperature: this.temperature,
+                        maxOutputTokens: this.maxTokens,
+                        responseMimeType: this.responseMimeType
+                    }
                 })
             });
 
@@ -135,7 +151,7 @@ export abstract class BaseAgent {
         } else {
             // Remove huge binary data if present before stringifying
             const cleanContext = { ...context };
-            if (cleanContext.image instanceof File) delete cleanContext.image;
+            if (cleanContext.image) delete cleanContext.image;
 
             contextStr = Object.keys(cleanContext).length > 0
                 ? JSON.stringify(cleanContext, null, 2)

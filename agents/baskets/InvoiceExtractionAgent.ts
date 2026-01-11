@@ -10,6 +10,7 @@ export class InvoiceExtractionAgent extends BaseAgent {
         super({
             name: 'InvoiceExtractionAgent',
             model: 'gemini-2.0-flash-exp',
+            responseMimeType: 'application/json',
             systemPrompt: `Você é um especialista em extração de dados de Notas Fiscais (NF-e e NFC-e).
 Sua tarefa é analisar imagens ou PDFs de notas de supermercado/fornecedores e extrair a lista detalhada de itens.
 
@@ -57,7 +58,7 @@ Retorne APENAS um JSON puro que siga a interface InvoiceData.`,
                 // For now, I'll proceed assuming I can send the base64.
 
                 const response = await this.callLLM(prompt, {
-                    image_base64: data.image,
+                    image: data.image,
                     mimeType: data.mimeType
                 });
                 return this.safeExtractJson(response.content);

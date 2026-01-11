@@ -9,6 +9,7 @@ export class MortalityDataAgent extends BaseAgent {
         super({
             name: 'MortalityDataAgent',
             model: 'gemini-2.0-flash-exp',
+            responseMimeType: 'application/json',
             systemPrompt: `Você é um Extrator de Tabelas Pericial especializado em Aquicultura.
 Sua tarefa é extrair rigorosamente os dados da planilha de "Mortalidade e Consumo".
 

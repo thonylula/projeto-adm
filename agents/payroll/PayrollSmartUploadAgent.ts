@@ -17,6 +17,7 @@ export class PayrollSmartUploadAgent extends BaseAgent {
         super({
             name: 'PayrollSmartUploadAgent',
             model: 'gemini-2.0-flash-exp',
+            responseMimeType: 'application/json',
             systemPrompt: `Você é um especialista em extração de dados de contracheques e documentos trabalhistas brasileiros.
 
 Sua expertise inclui:
@@ -117,15 +118,12 @@ Se um campo não for encontrado, deixe como 0 ou string vazia.`;
                 employeeName: data.employeeName || '',
                 baseSalary: parseFloat(data.baseSalary) || 0,
                 overtimeHours: parseFloat(data.overtimeHours) || 0,
-                overtimePercentage: parseFloat(data.overtimePercentage) || 50,
+                overtimePercentage: (parseFloat(data.overtimePercentage) === 100 ? 100 : 50) as 50 | 100,
                 nightHours: parseFloat(data.nightHours) || 0,
-                mealAllowance: parseFloat(data.mealAllowance) || 0,
-                transportAllowance: parseFloat(data.transportAllowance) || 0,
-                healthInsurance: parseFloat(data.healthInsurance) || 0,
-                advancePayment: parseFloat(data.advancePayment) || 0,
+                costAllowance: (parseFloat(data.mealAllowance) || 0) + (parseFloat(data.transportAllowance) || 0),
+                loanDiscountValue: parseFloat(data.advancePayment) || 0,
                 pixKey: data.pixKey || '',
-                position: data.position || '',
-                admissionDate: data.admissionDate || '',
+                bankName: data.bankName || '',
                 calculationMode: 'MONTHLY' // Default
             };
 
