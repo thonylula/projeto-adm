@@ -237,58 +237,89 @@ export abstract class BaseAgent {
      * Extracts and parses JSON from a string that might contain extra text.
      * Supports both objects {} and arrays [].
      */
+    /**
+     * Extracts and parses JSON from a string that might contain extra text.
+     * Supports both objects {} and arrays [].
+     * Industrial-grade extraction: handles string literals, escaped characters, and nesting.
+     */
     protected safeExtractJson(content: string): any {
+        if (!content) return null;
+
+        // 1. Try direct parse first (cleanest case)
+        const cleanContent = content.trim().replace(/^```json/g, '').replace(/```$/g, '').trim();
+        try {
+            return JSON.parse(cleanContent);
+        } catch (e) {
+            // Direct parse failed, proceed to deep extraction
+        }
+
         const firstBrace = content.indexOf('{');
         const firstBracket = content.indexOf('[');
 
         if (firstBrace === -1 && firstBracket === -1) {
-            console.error(`[${this.name}] Raw AI Response (No JSON found):`, content);
+            this.log(`Raw AI Response (No JSON found): ${content}`, 'error');
             throw new Error(`[${this.name}] No JSON (brace or bracket) found in response`);
         }
 
-        // Determine if we're looking for an object or an array based on which comes first
-        let startChar = '';
-        let endChar = '';
-        let startIndex = -1;
+        // Determine real start index
+        const startIndex = (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket))
+            ? firstBrace
+            : firstBracket;
 
-        if (firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
-            startChar = '{';
-            endChar = '}';
-            startIndex = firstBrace;
-        } else {
-            startChar = '[';
-            endChar = ']';
-            startIndex = firstBracket;
-        }
-
-        let charCount = 0;
+        let braceCount = 0;
+        let bracketCount = 0;
+        let inString = false;
+        let escape = false;
         let lastIndex = -1;
 
         for (let i = startIndex; i < content.length; i++) {
-            if (content[i] === startChar) charCount++;
-            else if (content[i] === endChar) charCount--;
+            const char = content[i];
 
-            if (charCount === 0) {
-                lastIndex = i;
-                break;
+            if (escape) {
+                escape = false;
+                continue;
+            }
+
+            if (char === '\\') {
+                escape = true;
+                continue;
+            }
+
+            if (char === '"') {
+                inString = !inString;
+                continue;
+            }
+
+            if (!inString) {
+                if (char === '{') braceCount++;
+                else if (char === '}') braceCount--;
+                else if (char === '[') bracketCount++;
+                else if (char === ']') bracketCount--;
+
+                // If we returned to baseline on the main structure type, we're done
+                if (braceCount === 0 && bracketCount === 0) {
+                    lastIndex = i;
+                    break;
+                }
             }
         }
 
         if (lastIndex === -1) {
-            console.error(`[${this.name}] Raw AI Response (Incomplete JSON):`, content);
-            throw new Error(`[${this.name}] No matching closing ${endChar} found`);
+            this.log(`Incomplete JSON Response Detected. BraceCount: ${braceCount}, BracketCount: ${bracketCount}`, 'error');
+            const type = startIndex === firstBracket ? ']' : '}';
+            throw new Error(`[${this.name}] No matching closing ${type} found (Response may be truncated)`);
         }
 
         const jsonStr = content.substring(startIndex, lastIndex + 1);
         try {
             return JSON.parse(jsonStr);
         } catch (e) {
-            // Se falhar o parse direto, tenta limpar vírgulas extras no final (comum em IAs)
+            // Tenta limpar vírgulas extras no final antes de desistir
             try {
                 const cleaned = jsonStr.replace(/,\s*([}\]])/g, '$1');
                 return JSON.parse(cleaned);
             } catch (e2) {
-                console.error(`[${this.name}] Raw AI Response (Failed Parse):`, content);
+                this.log(`Failed Parse on Extracted String: ${jsonStr}`, 'error');
                 throw new Error(`[${this.name}] Failed to parse extracted JSON: ${e2}`);
             }
         }

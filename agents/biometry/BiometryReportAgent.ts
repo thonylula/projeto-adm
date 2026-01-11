@@ -18,6 +18,8 @@ export class BiometryReportAgent extends BaseAgent {
         super({
             name: 'BiometryReportAgent',
             model: 'gemini-2.0-flash-exp',
+            responseMimeType: 'application/json',
+            maxTokens: 8192,
             systemPrompt: `Você é um consultor técnico em carcinicultura responsável por relatórios executivos.
             
 Sua tarefa é sintetizar dados complexos de biometria em insights gerenciais claros e diretos.
