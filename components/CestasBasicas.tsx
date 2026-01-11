@@ -516,7 +516,7 @@ export const CestasBasicas: React.FC = () => {
                 const fc = await fileToBase64(file);
 
                 // Use Agent instead of direct service call
-                const extraction = await orchestrator.routeToAgent('basket-invoice-extraction', {
+                const extraction = await orchestrator.routeToAgent('basket-extraction', {
                     image: fc.base64,
                     mimeType: fc.mimeType
                 });
