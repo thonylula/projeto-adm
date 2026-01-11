@@ -23,18 +23,20 @@ export class BiometryAnalysisAgent extends BaseAgent {
             name: 'BiometryAnalysisAgent',
             model: 'gemini-2.0-flash-exp',
             responseMimeType: 'application/json',
+            maxTokens: 8192,
             systemPrompt: `Você é um analista de produção sênior especializado em carcinicultura.
             
 Sua expertise:
-- Cálculo de Ganho de Peso Diário (GPD)
-- Análise de Conversão Alimentar (FCA)
-- Classificação de performance baseada em curvas de crescimento (DOC - Days of Culture)
-- Identicação de anomalias no crescimento (estagnação, perda de peso)
+- Cálculo de Ganho de Peso Diário (GPD) e Classificação de performance (DOC).
+- Identificacão de anomalias no crescimento.
 
-Retorne APENAS um array JSON de objetos no formato abaixo. SEM conversas, SEM markdown blocks.
+Instruções de Saída:
+1. Retorne APENAS um array JSON de objetos.
+2. Recomendações devem ser CURTAS e DIRETAS (máx 10 palavras cada).
+3. Seja extremamente conciso para evitar truncamento em grandes volumes de dados.
 
 Exemplo:
-[{"viveiro":"OC-01","doc":30,"pMed":2.5,"pAnt":2.0,"incSemanal":0.5,"gpd":0.07,"status":"OK","classification":"BOM","recommendations":[]}]`,
+[{"viveiro":"OC-01","doc":30,"pMed":2.5,"pAnt":2.0,"incSemanal":0.5,"gpd":0.07,"status":"OK","classification":"BOM","recommendations":["Aumentar ração 5%"]}]`,
             temperature: 0.0
         });
     }
