@@ -44,8 +44,24 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
     const [isLayoutLocked, setIsLayoutLocked] = useState(true);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+    // --- Helpers para Datas Brasileiras ---
+    const parseBrDate = (dateStr: string): Date => {
+        if (!dateStr) return new Date();
+        const [d, m, y] = dateStr.split('/').map(Number);
+        if (isNaN(d) || isNaN(m) || isNaN(y)) return new Date();
+        return new Date(y, m - 1, d);
+    };
+
+    const formatDateBr = (date: Date): string => {
+        const d = String(date.getDate()).padStart(2, '0');
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const y = date.getFullYear();
+        return `${d}/${m}/${y}`;
+    };
+
     const statusColors: Record<ViveiroStatus, string> = {
         'VAZIO': 'bg-[#c0c0c0]', // Cinza
+        'PREPARACAO': 'bg-[#dcedc8]', // Verde Água (Igual Mortalidade)
         'PREPARADO': 'bg-[#008000]', // Verde Escuro
         'POVOADO': 'bg-[#00ffff]', // Ciano Vibrante
         'DESPESCA': 'bg-[#0000ff]' // Azul Royal
@@ -53,6 +69,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
 
     const statusTextColors: Record<ViveiroStatus, string> = {
         'VAZIO': 'text-slate-700',
+        'PREPARACAO': 'text-green-900',
         'PREPARADO': 'text-white',
         'POVOADO': 'text-slate-900',
         'DESPESCA': 'text-white'
@@ -242,6 +259,13 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                 setEditingArea(v.area_m2.toString());
                 setEditingStatus(v.status || 'VAZIO');
                 break;
+            case 'preparacao':
+                handlePreparacaoAction(v);
+                break;
+            case 'despesca':
+                // Just update status to DESPESCA
+                SupabaseService.updateViveiro(v.id, { status: 'DESPESCA' }).then(() => loadViveiros());
+                break;
             case 'analise_ia':
                 handlePondAIAnalysis(v);
                 break;
@@ -252,6 +276,90 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
 
         // Close Menu
         setActiveContextMenu(null);
+    };
+
+    const handlePreparacaoAction = async (v: Viveiro) => {
+        if (!activeCompany) return;
+
+        // 1. Fetch Harvests from MOSTURÁRIO/FATURAMENTO
+        const { data: harvests } = await SupabaseService.getDeliveryOrders();
+
+        // 2. Find latest harvest for this pond
+        const pondName = v.name.toUpperCase();
+        const pondHarvests = (harvests || []).filter(h => h.viveiro?.toUpperCase() === pondName);
+
+        let baseDate = new Date();
+        if (pondHarvests.length > 0) {
+            // Sort by date (DD/MM/YYYY)
+            const sorted = pondHarvests.sort((a, b) => {
+                const dateA = parseBrDate(a.data);
+                const dateB = parseBrDate(b.data);
+                return dateB.getTime() - dateA.getTime();
+            });
+            const latestHarvest = sorted[0];
+            baseDate = parseBrDate(latestHarvest.data);
+        }
+
+        // 3. Add 1 day (Regra de negócio: 1 dia após despesca)
+        const prepDate = new Date(baseDate);
+        prepDate.setDate(prepDate.getDate() + 1);
+        const formattedPrepDate = formatDateBr(prepDate);
+
+        // 4. Update Viveiro status in DB (for the map)
+        await SupabaseService.updateViveiro(v.id, { status: 'PREPARACAO' });
+
+        // 5. Update Mortality data (for the table)
+        const month = prepDate.getMonth() + 1;
+        const year = prepDate.getFullYear();
+        let mortalityData = await SupabaseService.getMortalityData(activeCompany.id, month, year);
+
+        const daysInTargetMonth = new Date(year, month, 0).getDate();
+
+        if (!mortalityData) {
+            mortalityData = {
+                id: crypto.randomUUID(),
+                companyId: activeCompany.id,
+                month,
+                year,
+                records: []
+            };
+        }
+
+        const records = [...mortalityData.records];
+        // Match by name or normalized name (digits only for numeric names)
+        const recordIndex = records.findIndex(r =>
+            r.ve === v.name ||
+            r.ve === v.name.replace(/\D/g, '') ||
+            v.name === r.ve.replace(/\D/g, '')
+        );
+
+        if (recordIndex >= 0) {
+            records[recordIndex] = {
+                ...records[recordIndex],
+                status: 'preparacao',
+                stockingDate: formattedPrepDate
+            };
+        } else {
+            // Add new record if not exists
+            records.push({
+                id: crypto.randomUUID(),
+                ve: v.name,
+                stockingDate: formattedPrepDate,
+                area: v.area_m2,
+                initialPopulation: 0,
+                density: 0,
+                biometry: '',
+                status: 'preparacao',
+                dailyRecords: Array.from({ length: daysInTargetMonth }, (_, i) => ({ day: i + 1, feed: 0, mortality: 0 }))
+            });
+        }
+        await SupabaseService.saveMortalityData(activeCompany.id, month, year, { ...mortalityData, records });
+
+        // Refresh Map
+        await loadViveiros();
+        // Emit event to refresh other components (like MortalidadeConsumo if open)
+        window.dispatchEvent(new CustomEvent('app-data-updated'));
+        alert(`🏁 Viveiro ${v.name} em PREPARAÇÃO!\nData de Início: ${formattedPrepDate} (Baseado na última despesca)`);
     };
 
     const handlePondAIAnalysis = async (v: Viveiro) => {
@@ -603,7 +711,8 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                 className="w-full mt-1 px-3 py-2 border rounded-lg bg-white"
                             >
                                 <option value="VAZIO">⚪ Vazio</option>
-                                <option value="PREPARADO">🟢 Preparado</option>
+                                <option value="PREPARACAO">🛠️ Em Preparação</option>
+                                <option value="PREPARADO">✅ Preparado</option>
                                 <option value="POVOADO">💎 Povoado</option>
                                 <option value="DESPESCA">🔵 Em Despesca</option>
                             </select>
@@ -673,7 +782,11 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                         <div key={pondName} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs ${existing ? statusColors[existing.status || 'VAZIO'] : 'bg-slate-100 text-slate-400'}`}>
-                                                    {existing ? (existing.status === 'PREPARADO' || existing.status === 'DESPESCA' ? '⚪' : (existing.status === 'POVOADO' ? '🦐' : '⭕')) : '+'}
+                                                    {existing ? (
+                                                        existing.status === 'PREPARACAO' ? '🟢' :
+                                                            (existing.status === 'PREPARADO' || existing.status === 'DESPESCA' ? '⚪' :
+                                                                (existing.status === 'POVOADO' ? '🦐' : '⭕'))
+                                                    ) : '+'}
                                                 </div>
                                                 <div>
                                                     <div className="font-bold text-slate-800">{pondName}</div>
