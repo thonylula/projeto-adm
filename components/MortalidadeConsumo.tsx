@@ -899,7 +899,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                             {(data?.records || []).map((record, index) => (
                                                 <React.Fragment key={record.id}>
                                                     <tr className={`transition-all font-bold text-slate-700 group hover:bg-slate-50 ${record.status === 'preparacao' ? 'bg-[#dcedc8] hover:!bg-[#c5e1a5]' : ''}`} style={{ height: `${tableConfig.lineHeight}px` }}>
-                                                        <td className="p-0 border border-slate-100 sticky left-0 z-10 bg-white" style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>
+                                                        <td className={`p-0 border border-slate-100 sticky left-0 z-10 ${record.status === 'preparacao' ? 'bg-[#dcedc8]' : 'bg-white'}`} style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>
                                                             <div className="relative h-full flex items-center justify-center font-black text-slate-900 bg-slate-50 border-r border-slate-200" style={{ minHeight: `${tableConfig.lineHeight * 2}px` }}>
                                                                 <input
                                                                     type="text"
@@ -916,7 +916,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                                 </button>
                                                             </div>
                                                         </td>
-                                                        <td className="p-1 border border-slate-100 sticky z-10 bg-white w-[140px]" style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>
+                                                        <td className={`p-1 border border-slate-100 sticky z-10 w-[140px] ${record.status === 'preparacao' ? 'bg-[#dcedc8]' : 'bg-white'}`} style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>
                                                             <input type="text" value={record.stockingDate} onChange={e => handleUpdateHeader(index, 'stockingDate', e.target.value)} onPaste={e => handlePaste(e, index, 1)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-600 outline-none text-[1em]" placeholder="00/00/0000" />
                                                         </td>
                                                         <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
@@ -969,7 +969,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                             </div>
                                                         </td>
                                                     </tr>
-                                                    <tr className="bg-pink-50/10" style={{ height: `${tableConfig.lineHeight}px` }}>
+                                                    <tr className={record.status === 'preparacao' ? 'bg-[#dcedc8]' : 'bg-pink-50/10'} style={{ height: `${tableConfig.lineHeight}px` }}>
                                                         <td className="border border-slate-100 text-pink-400 text-center tracking-tighter italic border-r-2 border-r-pink-100 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px` }}>Mort.</td>
                                                         {daysArray.map(d => {
                                                             const val = (record.dailyRecords || []).find(dr => dr.day === d)?.mortality;
