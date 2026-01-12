@@ -854,7 +854,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     }}
                                     data-html2canvas-ignore
                                 >
-                                    <div style={{ width: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '1px' }} />
+                                    <div style={{ width: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '1px' }} />
                                 </div>
                                 <div
                                     ref={scrollRef}
@@ -864,7 +864,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     }}
                                 >
                                     <table className="w-full border-collapse" style={{
-                                        minWidth: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`,
+                                        minWidth: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`,
                                         fontSize: `${tableConfig.fontSize}px`
                                     }}>
                                         <thead>
@@ -888,7 +888,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                             ? 'text-red-500 font-black'
                                                             : 'text-slate-300 font-bold'
                                                             }`}
-                                                        style={{ minWidth: `${tableConfig.dayColWidth}px` }}
+                                                        style={{ width: `${tableConfig.dayColWidth}px`, minWidth: `${tableConfig.dayColWidth}px` }}
                                                     >
                                                         {d}
                                                     </th>
@@ -996,7 +996,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
                                             {!isPublic && (
                                                 <tr className="bg-slate-50 border-t-2 border-slate-200" data-html2canvas-ignore>
-                                                    <td colSpan={7} className="p-3">
+                                                    <td colSpan={8} className="p-3">
                                                         <div className="flex items-center gap-3">
                                                             <div className="flex bg-white rounded-lg shadow-sm border border-slate-200 p-0.5">
                                                                 <input
@@ -1021,7 +1021,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                         </tbody>
                                         <tfoot>
                                             <tr className="bg-slate-900 shadow-[0_-10px_20px_rgba(0,0,0,0.1)] relative z-30">
-                                                <td colSpan={7} className="p-3 text-right border-r border-slate-800 sticky left-0 z-20 bg-slate-900" style={{ left: 0 }}>
+                                                <td colSpan={8} className="p-3 text-right border-r border-slate-800 sticky left-0 z-20 bg-slate-900" style={{ left: 0 }}>
                                                     <span className="text-white font-black uppercase tracking-widest text-[1em]">Total do Dia</span>
                                                 </td>
                                                 {daysArray.map(d => (
