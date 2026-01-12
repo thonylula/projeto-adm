@@ -346,23 +346,27 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
         try {
             const orchestrator = getOrchestrator();
+            // Force status defaults to ensure no nulls
+            const sanitizedRecords = data.records.map(r => ({ ...r, status: r.status || 'em_curso' }));
+
             const success = await orchestrator.routeToAgent('mortality-storage', {
                 operation: 'save',
                 companyId: activeCompany.id,
                 month,
                 year,
-                data
+                data: { ...data, records: sanitizedRecords }
             });
 
-            if (success) {
-                setMessage({ text: 'Dados salvos com sucesso!', type: 'success' });
+            if (success && success.success) {
+                setMessage({ text: 'Dados salvos com sucesso no Banco de Dados!', type: 'success' });
                 setTimeout(() => setMessage(null), 3000);
             } else {
-                setMessage({ text: 'Erro ao salvar dados.', type: 'error' });
+                // If success is false but no throw, it likely failed silently or returned error
+                setMessage({ text: '⚠️ Falha ao salvar. A tabela global_configs existe no Supabase?', type: 'error' });
             }
         } catch (error) {
-            console.error(error);
-            setMessage({ text: 'Erro crítico ao salvar dados.', type: 'error' });
+            console.error("Save Error:", error);
+            setMessage({ text: 'Erro crítico de conexão. Verifique se o SQL foi executado.', type: 'error' });
         }
     };
 
@@ -900,7 +904,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 <React.Fragment key={record.id}>
                                                     <tr className={`transition-all font-bold text-slate-700 group hover:bg-slate-50 ${record.status === 'preparacao' ? 'bg-[#dcedc8] hover:!bg-[#c5e1a5]' : ''}`} style={{ height: `${tableConfig.lineHeight}px` }}>
                                                         <td className={`p-0 border border-slate-100 sticky left-0 z-10 ${record.status === 'preparacao' ? 'bg-[#dcedc8]' : 'bg-white'}`} style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>
-                                                            <div className="relative h-full flex items-center justify-center font-black text-slate-900 bg-slate-50 border-r border-slate-200" style={{ minHeight: `${tableConfig.lineHeight * 2}px` }}>
+                                                            <div className={`relative h-full flex items-center justify-center font-black text-slate-900 border-r border-slate-200 ${record.status === 'preparacao' ? 'bg-transparent' : 'bg-slate-50'}`} style={{ minHeight: `${tableConfig.lineHeight * 2}px` }}>
                                                                 <input
                                                                     type="text"
                                                                     value={record.ve}
@@ -933,7 +937,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         </td>
                                                         <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 2px`, backgroundColor: record.status === 'preparacao' ? '#dcedc8' : 'white' }} rowSpan={2}>
                                                             <select
-                                                                value={record.status || 'em_curso'}
+                                                                value={record.status === 'preparacao' ? 'preparacao' : 'em_curso'}
                                                                 onChange={(e) => handleUpdateHeader(index, 'status', e.target.value)}
                                                                 className={`w-full text-center border-none focus:ring-0 font-bold outline-none text-[0.8em] uppercase ${record.status === 'preparacao' ? 'text-green-800 bg-transparent' : 'text-slate-500 bg-transparent'}`}
                                                             >
