@@ -150,9 +150,12 @@ export default function App() {
 
       if (carapitangaCompanies.length > 1) {
         // Ordenar por número de funcionários (menor primeiro = efetivados, maior = diaristas)
-        const sorted = [...carapitangaCompanies].sort(
-          (a, b) => (a.employees?.length || 0) - (b.employees?.length || 0)
-        );
+        const sorted = [...carapitangaCompanies].sort((a, b) => {
+          const lenDiff = (a.employees?.length || 0) - (b.employees?.length || 0);
+          if (lenDiff !== 0) return lenDiff;
+          // Stable tie-breaker: ID to ensure consistent selection on refresh
+          return (a.id || '').localeCompare(b.id || '');
+        });
 
         const efetivadosCompany = sorted[0]; // Empresa com menos funcionários (4)
         const diaristasCompany = sorted[1]; // Empresa com mais funcionários (11)
