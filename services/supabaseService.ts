@@ -10,7 +10,8 @@ export const SupabaseService = {
     async getCompanies(): Promise<Company[]> {
         const { data, error } = await supabase
             .from('companies')
-            .select('*');
+            .select('*')
+            .order('name', { ascending: true });
 
         if (error) {
             console.error("Error fetching companies:", error);
