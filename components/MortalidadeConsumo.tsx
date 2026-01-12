@@ -678,14 +678,12 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
                 <div className="w-px h-8 bg-slate-200 mx-2" />
                 <div className="relative">
-                    {!isPublic && (
-                        <button
-                            onClick={() => setShowLayoutSettings(!showLayoutSettings)}
-                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-lg active:scale-95 flex items-center gap-2 ${showLayoutSettings ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-                        >
-                            <span>⚙️</span> Ajustar Layout
-                        </button>
-                    )}
+                    <button
+                        onClick={() => setShowLayoutSettings(!showLayoutSettings)}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-lg active:scale-95 flex items-center gap-2 ${showLayoutSettings ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                    >
+                        <span>⚙️</span> Ajustar Layout
+                    </button>
 
                     {/* Visitor Zoom Controls */}
                     {isPublic && (
@@ -706,6 +704,12 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 <h3 className="font-black text-[10px] text-slate-900 uppercase">Ajustes de Tabela</h3>
                                 <button onClick={() => setShowLayoutSettings(false)} className="text-slate-400 hover:text-slate-600">✕</button>
                             </div>
+                            {isPublic && (
+                                <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <p className="text-[8px] text-blue-700 font-bold uppercase tracking-wide">💡 Ajustes Locais</p>
+                                    <p className="text-[8px] text-blue-600 mt-1">Suas preferências ficam salvas apenas no seu navegador.</p>
+                                </div>
+                            )}
 
                             <div className="space-y-4">
                                 <div className="space-y-1.5">
@@ -780,25 +784,27 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     Resetar para Padrão
                                 </button>
 
-                                <button
-                                    onClick={() => {
-                                        if (activeCompany?.id) {
-                                            const orchestrator = getOrchestrator();
-                                            orchestrator.routeToAgent('mortality-storage', {
-                                                operation: 'save',
-                                                companyId: activeCompany.id,
-                                                month: 0,
-                                                year: 0,
-                                                data: { layout: tableConfig }
-                                            });
-                                            setMessage({ text: 'Layout sincronizado com a nuvem!', type: 'success' });
-                                            setTimeout(() => setMessage(null), 3000);
-                                        }
-                                    }}
-                                    className="w-full py-2 bg-indigo-600 text-white text-[9px] font-bold rounded-lg hover:bg-indigo-700 transition-colors uppercase mt-2 shadow-sm"
-                                >
-                                    ☁️ Sincronizar Layout (Global)
-                                </button>
+                                {!isPublic && (
+                                    <button
+                                        onClick={() => {
+                                            if (activeCompany?.id) {
+                                                const orchestrator = getOrchestrator();
+                                                orchestrator.routeToAgent('mortality-storage', {
+                                                    operation: 'save',
+                                                    companyId: activeCompany.id,
+                                                    month: 0,
+                                                    year: 0,
+                                                    data: { layout: tableConfig }
+                                                });
+                                                setMessage({ text: 'Layout sincronizado com a nuvem!', type: 'success' });
+                                                setTimeout(() => setMessage(null), 3000);
+                                            }
+                                        }}
+                                        className="w-full py-2 bg-indigo-600 text-white text-[9px] font-bold rounded-lg hover:bg-indigo-700 transition-colors uppercase mt-2 shadow-sm"
+                                    >
+                                        ☁️ Sincronizar Layout (Global)
+                                    </button>
+                                )}
                             </div>
                         </div>
                     )}
