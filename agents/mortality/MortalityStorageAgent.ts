@@ -14,11 +14,18 @@ Sua função é garantir que os dados de mortalidade e ração sejam salvos corr
         });
     }
 
-    async process(data: { operation: 'save' | 'load', companyId: string, month: number, year: number, records?: any }): Promise<any> {
+    async process(data: { operation: 'save' | 'load', companyId: string, month: number, year: number, records?: any, data?: any }): Promise<any> {
         this.log(`Mortality Storage: ${data.operation}`);
 
         if (data.operation === 'save') {
-            const result = await SupabaseService.saveMortalityData(data.companyId, data.month, data.year, data.records);
+            // detailed payload structure check: caller sends 'data' property containing the full object
+            const payloadToSave = data.data || data.records;
+
+            if (!payloadToSave) {
+                return { success: false, error: 'Erro Interno: Payload de dados vazio (Agent)' };
+            }
+
+            const result = await SupabaseService.saveMortalityData(data.companyId, data.month, data.year, payloadToSave);
             return result;
         }
 

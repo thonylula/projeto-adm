@@ -363,10 +363,13 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             } else {
                 // Determine specific error message
                 const errorMsg = success?.error || 'Erro desconhecido';
-                const isTableMissing = errorMsg.includes('42P01') || errorMsg.includes('global_configs');
+                const isTableMissing = errorMsg.includes('42P01') || (errorMsg.includes('global_configs') && errorMsg.includes('does not exist'));
+                const isNullError = errorMsg.includes('23502');
 
                 if (isTableMissing) {
                     setMessage({ text: `🚨 ERRO CRÍTICO: Tabela inexistente (${errorMsg}). Execute o SQL enviado!`, type: 'error' });
+                } else if (isNullError) {
+                    setMessage({ text: `⚠️ Erro de Validação: Tentativa de salvar dados vazios (${errorMsg}).`, type: 'error' });
                 } else {
                     setMessage({ text: `⚠️ Falha ao salvar: ${errorMsg}. Verifique permissões.`, type: 'error' });
                 }
