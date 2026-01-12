@@ -757,6 +757,26 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 >
                                     Resetar para Padrão
                                 </button>
+
+                                <button
+                                    onClick={() => {
+                                        if (activeCompany?.id) {
+                                            const orchestrator = getOrchestrator();
+                                            orchestrator.routeToAgent('mortality-storage', {
+                                                operation: 'save',
+                                                companyId: activeCompany.id,
+                                                month: 0,
+                                                year: 0,
+                                                data: { layout: tableConfig }
+                                            });
+                                            setMessage({ text: 'Layout sincronizado com a nuvem!', type: 'success' });
+                                            setTimeout(() => setMessage(null), 3000);
+                                        }
+                                    }}
+                                    className="w-full py-2 bg-indigo-600 text-white text-[9px] font-bold rounded-lg hover:bg-indigo-700 transition-colors uppercase mt-2 shadow-sm"
+                                >
+                                    ☁️ Sincronizar Layout (Global)
+                                </button>
                             </div>
                         </div>
                     )}
