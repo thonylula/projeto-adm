@@ -60,7 +60,9 @@ const NavItem: React.FC<{
         <span className={`${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
           {item.icon}
         </span>
-        <span className="font-medium text-sm uppercase text-left leading-tight">{item.label}</span>
+        <span className="font-medium text-sm uppercase text-left leading-tight">
+          {item.id === 'showcase' && isPublic ? 'Faturamento' : item.label}
+        </span>
 
         {/* Lock Toggle - Hidden for visitors */}
         {!isPublic && (
