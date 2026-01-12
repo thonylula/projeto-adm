@@ -946,203 +946,204 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 <div
                                     ref={scrollRef}
                                     className="overflow-x-auto"
-                                    if (topScrollRef.current) topScrollRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
-                                }}
-                                style={{
-                                    transform: isPublic ? `scale(${zoomLevel})` : 'none',
-                                    transformOrigin: 'top left',
-                                    width: isPublic ? `${(1 / zoomLevel) * 100}%` : 'auto'
-                                }}
-                            >
-                                <table className="w-full border-collapse" style={{
-                                    minWidth: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`,
-                                    fontSize: `${tableConfig.fontSize}px`
-                                }}>
-                                    <thead>
-                                        <tr className="bg-slate-900" style={{ height: `${tableConfig.rowHeight * 6}px` }}>
-                                            <th className="p-2 text-white border border-slate-800 font-black uppercase tracking-wider sticky left-0 z-20 bg-slate-900 text-center" style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>VE</th>
-                                            <th className="p-2 text-white border border-slate-800 font-bold uppercase sticky z-20 bg-slate-900 w-[140px] text-center" style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>Data Povoa</th>
-                                            <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: '90px' }} rowSpan={2}>Área</th>
-                                            <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Pop.Ini</th>
-                                            <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Dens.</th>
-                                            <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Biom..</th>
-                                            <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `80px` }} rowSpan={2}>Situação</th>
-                                            <th className="p-1 text-slate-400 bg-slate-900 border border-slate-800 font-black text-[0.8em] uppercase text-center min-w-[50px]" rowSpan={2}>Tipo</th>
-                                            <th className="p-1 border border-slate-800 text-center text-slate-400 font-black uppercase tracking-widest text-[0.9em]" colSpan={daysArray.length}>Dias do Mês</th>
-                                            <th className="p-2 text-white border border-slate-800 font-black uppercase sticky right-0 z-20 bg-slate-900 w-20 text-center" rowSpan={2}>Total</th>
-                                        </tr>
-                                        <tr className="bg-slate-800" style={{ height: `${tableConfig.rowHeight * 4}px` }}>
-                                            {daysArray.map(d => (
-                                                <th
-                                                    key={d}
-                                                    className={`p-1 text-[0.9em] border border-slate-700 text-center ${isWeekend(d)
-                                                        ? 'text-red-500 font-black'
-                                                        : 'text-slate-300 font-bold'
-                                                        }`}
-                                                    style={{ width: `${tableConfig.dayColWidth}px`, minWidth: `${tableConfig.dayColWidth}px` }}
-                                                >
-                                                    {d}
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(data?.records || []).map((record, index) => (
-                                            <React.Fragment key={record.id}>
-                                                <tr className={`transition-all font-bold text-slate-700 group hover:bg-slate-50 ${record.status === 'preparacao' ? 'bg-[#dcedc8] hover:!bg-[#c5e1a5]' : ''}`} style={{ height: `${tableConfig.lineHeight}px` }}>
-                                                    <td className={`p-0 border border-slate-100 sticky left-0 z-10 ${record.status === 'preparacao' ? 'bg-[#dcedc8]' : 'bg-white'}`} style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>
-                                                        <div className={`relative h-full flex items-center justify-center font-black text-slate-900 border-r border-slate-200 ${record.status === 'preparacao' ? 'bg-transparent' : 'bg-slate-50'}`} style={{ minHeight: `${tableConfig.lineHeight * 2}px` }}>
-                                                            <input
-                                                                type="text"
-                                                                value={record.ve}
-                                                                onChange={e => handleUpdateHeader(index, 've', e.target.value)}
-                                                                className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-slate-900 outline-none text-[1.1em]"
-                                                            />
-                                                            <button
-                                                                onClick={() => removeTank(index)}
-                                                                className="absolute left-1 top-1/2 -translate-y-1/2 bg-red-50 text-red-400 p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white print:hidden shadow-sm z-30"
-                                                                data-html2canvas-ignore
+                                    onScroll={(e) => {
+                                        if (topScrollRef.current) topScrollRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
+                                    }}
+                                    style={{
+                                        transform: isPublic ? `scale(${zoomLevel})` : 'none',
+                                        transformOrigin: 'top left',
+                                        width: isPublic ? `${(1 / zoomLevel) * 100}%` : 'auto'
+                                    }}
+                                >
+                                    <table className="w-full border-collapse" style={{
+                                        minWidth: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`,
+                                        fontSize: `${tableConfig.fontSize}px`
+                                    }}>
+                                        <thead>
+                                            <tr className="bg-slate-900" style={{ height: `${tableConfig.rowHeight * 6}px` }}>
+                                                <th className="p-2 text-white border border-slate-800 font-black uppercase tracking-wider sticky left-0 z-20 bg-slate-900 text-center" style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>VE</th>
+                                                <th className="p-2 text-white border border-slate-800 font-bold uppercase sticky z-20 bg-slate-900 w-[140px] text-center" style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>Data Povoa</th>
+                                                <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: '90px' }} rowSpan={2}>Área</th>
+                                                <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Pop.Ini</th>
+                                                <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Dens.</th>
+                                                <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Biom..</th>
+                                                <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `80px` }} rowSpan={2}>Situação</th>
+                                                <th className="p-1 text-slate-400 bg-slate-900 border border-slate-800 font-black text-[0.8em] uppercase text-center min-w-[50px]" rowSpan={2}>Tipo</th>
+                                                <th className="p-1 border border-slate-800 text-center text-slate-400 font-black uppercase tracking-widest text-[0.9em]" colSpan={daysArray.length}>Dias do Mês</th>
+                                                <th className="p-2 text-white border border-slate-800 font-black uppercase sticky right-0 z-20 bg-slate-900 w-20 text-center" rowSpan={2}>Total</th>
+                                            </tr>
+                                            <tr className="bg-slate-800" style={{ height: `${tableConfig.rowHeight * 4}px` }}>
+                                                {daysArray.map(d => (
+                                                    <th
+                                                        key={d}
+                                                        className={`p-1 text-[0.9em] border border-slate-700 text-center ${isWeekend(d)
+                                                            ? 'text-red-500 font-black'
+                                                            : 'text-slate-300 font-bold'
+                                                            }`}
+                                                        style={{ width: `${tableConfig.dayColWidth}px`, minWidth: `${tableConfig.dayColWidth}px` }}
+                                                    >
+                                                        {d}
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {(data?.records || []).map((record, index) => (
+                                                <React.Fragment key={record.id}>
+                                                    <tr className={`transition-all font-bold text-slate-700 group hover:bg-slate-50 ${record.status === 'preparacao' ? 'bg-[#dcedc8] hover:!bg-[#c5e1a5]' : ''}`} style={{ height: `${tableConfig.lineHeight}px` }}>
+                                                        <td className={`p-0 border border-slate-100 sticky left-0 z-10 ${record.status === 'preparacao' ? 'bg-[#dcedc8]' : 'bg-white'}`} style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>
+                                                            <div className={`relative h-full flex items-center justify-center font-black text-slate-900 border-r border-slate-200 ${record.status === 'preparacao' ? 'bg-transparent' : 'bg-slate-50'}`} style={{ minHeight: `${tableConfig.lineHeight * 2}px` }}>
+                                                                <input
+                                                                    type="text"
+                                                                    value={record.ve}
+                                                                    onChange={e => handleUpdateHeader(index, 've', e.target.value)}
+                                                                    className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-slate-900 outline-none text-[1.1em]"
+                                                                />
+                                                                <button
+                                                                    onClick={() => removeTank(index)}
+                                                                    className="absolute left-1 top-1/2 -translate-y-1/2 bg-red-50 text-red-400 p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white print:hidden shadow-sm z-30"
+                                                                    data-html2canvas-ignore
+                                                                >
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-2.5 h-2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" /></svg>
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                        <td className={`p-1 border border-slate-100 sticky z-10 w-[140px] ${record.status === 'preparacao' ? 'bg-[#dcedc8]' : 'bg-white'}`} style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>
+                                                            <input type="text" value={record.stockingDate} onChange={e => handleUpdateHeader(index, 'stockingDate', e.target.value)} onPaste={e => handlePaste(e, index, 1)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-600 outline-none text-[1em]" placeholder="00/00/0000" />
+                                                        </td>
+                                                        <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
+                                                            <input type="number" value={record.area || ''} onChange={e => handleUpdateHeader(index, 'area', parseFloat(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 2)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-500 outline-none text-[1em]" />
+                                                        </td>
+                                                        <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
+                                                            <input type="number" value={record.initialPopulation || ''} onChange={e => handleUpdateHeader(index, 'initialPopulation', parseInt(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 3)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-500 outline-none text-[1em]" />
+                                                        </td>
+                                                        <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
+                                                            <input type="number" value={record.density || ''} onChange={e => handleUpdateHeader(index, 'density', parseFloat(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 4)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-500 outline-none text-[1em]" />
+                                                        </td>
+                                                        <td className="border border-slate-100 bg-indigo-50/10" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
+                                                            <input type="text" value={record.biometry} onChange={e => handleUpdateHeader(index, 'biometry', e.target.value)} onPaste={e => handlePaste(e, index, 5)} className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-indigo-600 outline-none text-[1em]" placeholder="..." />
+                                                        </td>
+                                                        <td className="border border-slate-100 relative group/select" style={{ padding: 0, backgroundColor: record.status === 'preparacao' ? '#dcedc8' : 'white' }} rowSpan={2}>
+                                                            <div className={`absolute inset-0 flex items-center justify-center font-bold text-[0.8em] uppercase ${record.status === 'preparacao' ? 'text-green-800' : 'text-slate-500'}`}>
+                                                                {record.status === 'preparacao' ? 'PREPARAÇÃO' : 'EM CURSO'}
+                                                            </div>
+                                                            <select
+                                                                value={record.status === 'preparacao' ? 'preparacao' : 'em_curso'}
+                                                                onChange={(e) => handleUpdateHeader(index, 'status', e.target.value)}
+                                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer appearance-none"
                                                             >
-                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-2.5 h-2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" /></svg>
+                                                                <option value="em_curso">Em Curso</option>
+                                                                <option value="preparacao">Preparação</option>
+                                                            </select>
+                                                        </td>
+                                                        <td className="border border-slate-100 bg-slate-50/50 font-black text-slate-400 text-center tracking-tighter italic border-r-2 border-r-slate-200 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px`, minWidth: '45px' }}>Ração</td>
+                                                        {daysArray.map(d => {
+                                                            const val = (record.dailyRecords || []).find(dr => dr.day === d)?.feed;
+                                                            return (
+                                                                <td key={d} className="p-0 border border-slate-100 hover:bg-orange-50/30" style={{ minWidth: `${tableConfig.dayColWidth}px` }}>
+                                                                    <input
+                                                                        type="number"
+                                                                        value={val === 0 ? '' : val}
+                                                                        onChange={e => handleUpdateDay(index, d, 'feed', e.target.value)}
+                                                                        onPaste={e => handlePaste(e, index, 'feed', d)}
+                                                                        className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-700 outline-none text-[1em]"
+                                                                        style={{
+                                                                            padding: `${Math.max(0, tableConfig.rowHeight)}px 2px`,
+                                                                            marginTop: `${Math.min(0, tableConfig.rowHeight)}px`,
+                                                                            marginBottom: `${Math.min(0, tableConfig.rowHeight)}px`
+                                                                        }}
+                                                                    />
+                                                                </td>
+                                                            );
+                                                        })}
+                                                        <td className="p-1 border border-slate-100 sticky right-0 z-10 bg-orange-50 font-black text-orange-700 text-center shadow-[-4px_0_10px_rgba(0,0,0,0.02)] min-w-[75px]" rowSpan={2}>
+                                                            <div className="flex flex-col gap-0.5 items-center justify-center italic">
+                                                                <span className="text-[11px]">{calculateRowTotal(record, 'feed')} kg</span>
+                                                                <div className="w-6 h-px bg-orange-200" />
+                                                                <span className="text-pink-600 text-[10px]">{calculateRowTotal(record, 'mortality')} un</span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr className={record.status === 'preparacao' ? 'bg-[#dcedc8]' : 'bg-pink-50/10'} style={{ height: `${tableConfig.lineHeight}px` }}>
+                                                        <td className="border border-slate-100 text-pink-400 text-center tracking-tighter italic border-r-2 border-r-pink-100 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px` }}>Mort.</td>
+                                                        {daysArray.map(d => {
+                                                            const val = (record.dailyRecords || []).find(dr => dr.day === d)?.mortality;
+                                                            return (
+                                                                <td key={d} className="p-0 border border-slate-100 hover:bg-pink-50/50">
+                                                                    <input
+                                                                        type="number"
+                                                                        value={val === 0 ? '' : val}
+                                                                        onChange={e => handleUpdateDay(index, d, 'mortality', e.target.value)}
+                                                                        onPaste={e => handlePaste(e, index, 'mortality', d)}
+                                                                        className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-pink-600 outline-none text-[1em]"
+                                                                        style={{
+                                                                            padding: `${Math.max(0, tableConfig.rowHeight)}px 2px`,
+                                                                            marginTop: `${Math.min(0, tableConfig.rowHeight)}px`,
+                                                                            marginBottom: `${Math.min(0, tableConfig.rowHeight)}px`
+                                                                        }}
+                                                                    />
+                                                                </td>
+                                                            );
+                                                        })}
+                                                    </tr>
+                                                </React.Fragment>
+                                            ))}
+
+                                            {!isPublic && (
+                                                <tr className="bg-slate-50 border-t-2 border-slate-200" data-html2canvas-ignore>
+                                                    <td colSpan={8} className="p-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="flex bg-white rounded-lg shadow-sm border border-slate-200 p-0.5">
+                                                                <input
+                                                                    type="number"
+                                                                    value={tankQuantity}
+                                                                    onChange={(e) => setTankQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                                                    className="w-10 text-center bg-transparent border-none focus:ring-0 font-bold text-slate-600 text-xs"
+                                                                />
+                                                            </div>
+                                                            <button
+                                                                onClick={addTank}
+                                                                className="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase hover:bg-slate-800 transition-all flex items-center gap-2"
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3.5 h-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                                                                Adicionar Viveiros
                                                             </button>
                                                         </div>
                                                     </td>
-                                                    <td className={`p-1 border border-slate-100 sticky z-10 w-[140px] ${record.status === 'preparacao' ? 'bg-[#dcedc8]' : 'bg-white'}`} style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>
-                                                        <input type="text" value={record.stockingDate} onChange={e => handleUpdateHeader(index, 'stockingDate', e.target.value)} onPaste={e => handlePaste(e, index, 1)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-600 outline-none text-[1em]" placeholder="00/00/0000" />
-                                                    </td>
-                                                    <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
-                                                        <input type="number" value={record.area || ''} onChange={e => handleUpdateHeader(index, 'area', parseFloat(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 2)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-500 outline-none text-[1em]" />
-                                                    </td>
-                                                    <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
-                                                        <input type="number" value={record.initialPopulation || ''} onChange={e => handleUpdateHeader(index, 'initialPopulation', parseInt(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 3)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-500 outline-none text-[1em]" />
-                                                    </td>
-                                                    <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
-                                                        <input type="number" value={record.density || ''} onChange={e => handleUpdateHeader(index, 'density', parseFloat(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 4)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-500 outline-none text-[1em]" />
-                                                    </td>
-                                                    <td className="border border-slate-100 bg-indigo-50/10" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
-                                                        <input type="text" value={record.biometry} onChange={e => handleUpdateHeader(index, 'biometry', e.target.value)} onPaste={e => handlePaste(e, index, 5)} className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-indigo-600 outline-none text-[1em]" placeholder="..." />
-                                                    </td>
-                                                    <td className="border border-slate-100 relative group/select" style={{ padding: 0, backgroundColor: record.status === 'preparacao' ? '#dcedc8' : 'white' }} rowSpan={2}>
-                                                        <div className={`absolute inset-0 flex items-center justify-center font-bold text-[0.8em] uppercase ${record.status === 'preparacao' ? 'text-green-800' : 'text-slate-500'}`}>
-                                                            {record.status === 'preparacao' ? 'PREPARAÇÃO' : 'EM CURSO'}
-                                                        </div>
-                                                        <select
-                                                            value={record.status === 'preparacao' ? 'preparacao' : 'em_curso'}
-                                                            onChange={(e) => handleUpdateHeader(index, 'status', e.target.value)}
-                                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer appearance-none"
-                                                        >
-                                                            <option value="em_curso">Em Curso</option>
-                                                            <option value="preparacao">Preparação</option>
-                                                        </select>
-                                                    </td>
-                                                    <td className="border border-slate-100 bg-slate-50/50 font-black text-slate-400 text-center tracking-tighter italic border-r-2 border-r-slate-200 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px`, minWidth: '45px' }}>Ração</td>
-                                                    {daysArray.map(d => {
-                                                        const val = (record.dailyRecords || []).find(dr => dr.day === d)?.feed;
-                                                        return (
-                                                            <td key={d} className="p-0 border border-slate-100 hover:bg-orange-50/30" style={{ minWidth: `${tableConfig.dayColWidth}px` }}>
-                                                                <input
-                                                                    type="number"
-                                                                    value={val === 0 ? '' : val}
-                                                                    onChange={e => handleUpdateDay(index, d, 'feed', e.target.value)}
-                                                                    onPaste={e => handlePaste(e, index, 'feed', d)}
-                                                                    className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-700 outline-none text-[1em]"
-                                                                    style={{
-                                                                        padding: `${Math.max(0, tableConfig.rowHeight)}px 2px`,
-                                                                        marginTop: `${Math.min(0, tableConfig.rowHeight)}px`,
-                                                                        marginBottom: `${Math.min(0, tableConfig.rowHeight)}px`
-                                                                    }}
-                                                                />
-                                                            </td>
-                                                        );
-                                                    })}
-                                                    <td className="p-1 border border-slate-100 sticky right-0 z-10 bg-orange-50 font-black text-orange-700 text-center shadow-[-4px_0_10px_rgba(0,0,0,0.02)] min-w-[75px]" rowSpan={2}>
-                                                        <div className="flex flex-col gap-0.5 items-center justify-center italic">
-                                                            <span className="text-[11px]">{calculateRowTotal(record, 'feed')} kg</span>
-                                                            <div className="w-6 h-px bg-orange-200" />
-                                                            <span className="text-pink-600 text-[10px]">{calculateRowTotal(record, 'mortality')} un</span>
-                                                        </div>
-                                                    </td>
+                                                    <td colSpan={daysArray.length + 1}></td>
                                                 </tr>
-                                                <tr className={record.status === 'preparacao' ? 'bg-[#dcedc8]' : 'bg-pink-50/10'} style={{ height: `${tableConfig.lineHeight}px` }}>
-                                                    <td className="border border-slate-100 text-pink-400 text-center tracking-tighter italic border-r-2 border-r-pink-100 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px` }}>Mort.</td>
-                                                    {daysArray.map(d => {
-                                                        const val = (record.dailyRecords || []).find(dr => dr.day === d)?.mortality;
-                                                        return (
-                                                            <td key={d} className="p-0 border border-slate-100 hover:bg-pink-50/50">
-                                                                <input
-                                                                    type="number"
-                                                                    value={val === 0 ? '' : val}
-                                                                    onChange={e => handleUpdateDay(index, d, 'mortality', e.target.value)}
-                                                                    onPaste={e => handlePaste(e, index, 'mortality', d)}
-                                                                    className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-pink-600 outline-none text-[1em]"
-                                                                    style={{
-                                                                        padding: `${Math.max(0, tableConfig.rowHeight)}px 2px`,
-                                                                        marginTop: `${Math.min(0, tableConfig.rowHeight)}px`,
-                                                                        marginBottom: `${Math.min(0, tableConfig.rowHeight)}px`
-                                                                    }}
-                                                                />
-                                                            </td>
-                                                        );
-                                                    })}
-                                                </tr>
-                                            </React.Fragment>
-                                        ))}
-
-                                        {!isPublic && (
-                                            <tr className="bg-slate-50 border-t-2 border-slate-200" data-html2canvas-ignore>
-                                                <td colSpan={8} className="p-3">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex bg-white rounded-lg shadow-sm border border-slate-200 p-0.5">
-                                                            <input
-                                                                type="number"
-                                                                value={tankQuantity}
-                                                                onChange={(e) => setTankQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                                                                className="w-10 text-center bg-transparent border-none focus:ring-0 font-bold text-slate-600 text-xs"
-                                                            />
+                                            )}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr className="bg-slate-900 shadow-[0_-10px_20px_rgba(0,0,0,0.1)] relative z-30">
+                                                <td colSpan={8} className="p-3 text-right border-r border-slate-800 sticky left-0 z-20 bg-slate-900" style={{ left: 0 }}>
+                                                    <span className="text-white font-black uppercase tracking-widest text-[1em]">Total do Dia</span>
+                                                </td>
+                                                {daysArray.map(d => (
+                                                    <td key={d} className="p-1 border-r border-slate-800">
+                                                        <div className="flex flex-col items-center justify-center gap-0">
+                                                            <span className="text-orange-400 font-black text-[10px] leading-tight">{calculateDayTotal('feed', d) || 0}</span>
+                                                            <span className="text-pink-400 font-bold text-[8px] leading-tight">{calculateDayTotal('mortality', d) || 0}</span>
                                                         </div>
-                                                        <button
-                                                            onClick={addTank}
-                                                            className="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase hover:bg-slate-800 transition-all flex items-center gap-2"
-                                                        >
-                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3.5 h-3.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                                                            Adicionar Viveiros
-                                                        </button>
+                                                    </td>
+                                                ))}
+                                                <td className="p-3 bg-orange-600 text-center sticky right-0 z-20">
+                                                    <div className="flex flex-col items-center gap-0">
+                                                        <span className="text-white font-black text-sm leading-none">
+                                                            {data ? (data.records || []).reduce((sum, tank) => sum + calculateRowTotal(tank, 'feed'), 0).toLocaleString('pt-BR') : 0}
+                                                        </span>
+                                                        <span className="text-orange-200 text-[8px] font-bold uppercase tracking-tighter">TOTAL KG</span>
                                                     </div>
                                                 </td>
-                                                <td colSpan={daysArray.length + 1}></td>
                                             </tr>
-                                        )}
-                                    </tbody>
-                                    <tfoot>
-                                        <tr className="bg-slate-900 shadow-[0_-10px_20px_rgba(0,0,0,0.1)] relative z-30">
-                                            <td colSpan={8} className="p-3 text-right border-r border-slate-800 sticky left-0 z-20 bg-slate-900" style={{ left: 0 }}>
-                                                <span className="text-white font-black uppercase tracking-widest text-[1em]">Total do Dia</span>
-                                            </td>
-                                            {daysArray.map(d => (
-                                                <td key={d} className="p-1 border-r border-slate-800">
-                                                    <div className="flex flex-col items-center justify-center gap-0">
-                                                        <span className="text-orange-400 font-black text-[10px] leading-tight">{calculateDayTotal('feed', d) || 0}</span>
-                                                        <span className="text-pink-400 font-bold text-[8px] leading-tight">{calculateDayTotal('mortality', d) || 0}</span>
-                                                    </div>
-                                                </td>
-                                            ))}
-                                            <td className="p-3 bg-orange-600 text-center sticky right-0 z-20">
-                                                <div className="flex flex-col items-center gap-0">
-                                                    <span className="text-white font-black text-sm leading-none">
-                                                        {data ? (data.records || []).reduce((sum, tank) => sum + calculateRowTotal(tank, 'feed'), 0).toLocaleString('pt-BR') : 0}
-                                                    </span>
-                                                    <span className="text-orange-200 text-[8px] font-bold uppercase tracking-tighter">TOTAL KG</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
+                                        </tfoot>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                    </div>
-            </>
-            )}
-        </div>
-    </div >
-);
+                    </>
+                )}
+            </div>
+        </div >
+    );
 };
