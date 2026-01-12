@@ -1,15 +1,20 @@
--- SQL Schema for global_configs table
--- Run this in Supabase SQL Editor to enable Mortality Data Persistence
+-- SQL Schema for global_configs table (ROBUST VERSION)
+-- Run this in Supabase SQL Editor
 
--- 1. Create table
+-- 1. Create table if not exists (Generic JSON Storage)
 CREATE TABLE IF NOT EXISTS global_configs (
   id TEXT PRIMARY KEY,
   value JSONB,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 2. Disable RLS (Critical for persistence without auth rules)
+-- 2. Disable RLS (Legacy approach for quick access)
 ALTER TABLE global_configs DISABLE ROW LEVEL SECURITY;
 
--- 3. Comment
-COMMENT ON TABLE global_configs IS 'Tabela genérica para armazenar configurações e dados JSON (Mortalidade, Históricos, etc)';
+-- 3. EXPLICIT GRANTS (Fix for "Permission Denied" even with RLS disabled in some setups)
+GRANT ALL ON TABLE global_configs TO anon;
+GRANT ALL ON TABLE global_configs TO authenticated;
+GRANT ALL ON TABLE global_configs TO service_role;
+
+-- 4. Comment
+COMMENT ON TABLE global_configs IS 'Tabela de configuração global com permissões públicas para app JS.';
