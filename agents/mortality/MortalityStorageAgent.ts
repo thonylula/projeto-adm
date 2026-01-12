@@ -18,8 +18,8 @@ Sua função é garantir que os dados de mortalidade e ração sejam salvos corr
         this.log(`Mortality Storage: ${data.operation}`);
 
         if (data.operation === 'save') {
-            const success = await SupabaseService.saveMortalityData(data.companyId, data.month, data.year, data.records);
-            return { success };
+            const result = await SupabaseService.saveMortalityData(data.companyId, data.month, data.year, data.records);
+            return result;
         }
 
         if (data.operation === 'load') {

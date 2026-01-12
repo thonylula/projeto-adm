@@ -425,7 +425,7 @@ export const SupabaseService = {
         }
     },
 
-    async saveConfig(id: string, value: any): Promise<boolean> {
+    async saveConfig(id: string, value: any): Promise<{ success: boolean; error?: string }> {
         try {
             const { error } = await supabase
                 .from('global_configs')
@@ -433,12 +433,12 @@ export const SupabaseService = {
 
             if (error) {
                 console.error(`[Supabase Error] saveConfig(${id}):`, error.message, error.details);
-                return false;
+                return { success: false, error: `${error.code} - ${error.message}` };
             }
-            return true;
-        } catch (e) {
+            return { success: true };
+        } catch (e: any) {
             console.error(`[Supabase Exception] saveConfig(${id}):`, e);
-            return false;
+            return { success: false, error: e.message || 'Unknown Exception' };
         }
     },
 
@@ -482,7 +482,7 @@ export const SupabaseService = {
         return this.getConfig(id);
     },
 
-    async saveMortalityData(companyId: string, month: number, year: number, data: any): Promise<boolean> {
+    async saveMortalityData(companyId: string, month: number, year: number, data: any): Promise<{ success: boolean; error?: string }> {
         const id = `mortality_${companyId}_${year}_${month}`;
         return this.saveConfig(id, data);
     },

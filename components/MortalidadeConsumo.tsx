@@ -361,12 +361,19 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                 setMessage({ text: 'Dados salvos com sucesso no Banco de Dados!', type: 'success' });
                 setTimeout(() => setMessage(null), 3000);
             } else {
-                // If success is false but no throw, it likely failed silently or returned error
-                setMessage({ text: '⚠️ Falha ao salvar. A tabela global_configs existe no Supabase?', type: 'error' });
+                // Determine specific error message
+                const errorMsg = success?.error || 'Erro desconhecido';
+                const isTableMissing = errorMsg.includes('42P01') || errorMsg.includes('global_configs');
+
+                if (isTableMissing) {
+                    setMessage({ text: `🚨 ERRO CRÍTICO: Tabela inexistente (${errorMsg}). Execute o SQL enviado!`, type: 'error' });
+                } else {
+                    setMessage({ text: `⚠️ Falha ao salvar: ${errorMsg}. Verifique permissões.`, type: 'error' });
+                }
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Save Error:", error);
-            setMessage({ text: 'Erro crítico de conexão. Verifique se o SQL foi executado.', type: 'error' });
+            setMessage({ text: `Erro de conexão: ${error.message || 'Desconhecido'}`, type: 'error' });
         }
     };
 
@@ -935,11 +942,14 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         <td className="border border-slate-100 bg-indigo-50/10" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
                                                             <input type="text" value={record.biometry} onChange={e => handleUpdateHeader(index, 'biometry', e.target.value)} onPaste={e => handlePaste(e, index, 5)} className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-indigo-600 outline-none text-[1em]" placeholder="..." />
                                                         </td>
-                                                        <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 2px`, backgroundColor: record.status === 'preparacao' ? '#dcedc8' : 'white' }} rowSpan={2}>
+                                                        <td className="border border-slate-100 relative group/select" style={{ padding: 0, backgroundColor: record.status === 'preparacao' ? '#dcedc8' : 'white' }} rowSpan={2}>
+                                                            <div className={`absolute inset-0 flex items-center justify-center font-bold text-[0.8em] uppercase ${record.status === 'preparacao' ? 'text-green-800' : 'text-slate-500'}`}>
+                                                                {record.status === 'preparacao' ? 'PREPARAÇÃO' : 'EM CURSO'}
+                                                            </div>
                                                             <select
                                                                 value={record.status === 'preparacao' ? 'preparacao' : 'em_curso'}
                                                                 onChange={(e) => handleUpdateHeader(index, 'status', e.target.value)}
-                                                                className={`w-full text-center border-none focus:ring-0 font-bold outline-none text-[0.8em] uppercase ${record.status === 'preparacao' ? 'text-green-800 bg-transparent' : 'text-slate-500 bg-transparent'}`}
+                                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer appearance-none"
                                                             >
                                                                 <option value="em_curso">Em Curso</option>
                                                                 <option value="preparacao">Preparação</option>
