@@ -137,6 +137,14 @@ export default function App() {
     };
   }, []);
 
+  // Auto-select first company for Public Showcase if none selected
+  useEffect(() => {
+    if (isPublicShowcase && companies.length > 0 && !activeCompanyId) {
+      console.log("Public Showcase: Auto-selecting first company", companies[0].name);
+      setActiveCompanyId(companies[0].id);
+    }
+  }, [isPublicShowcase, companies, activeCompanyId]);
+
   // Mesclar empresas CARAPITANGA para mostrar efetivados e diaristas juntos
   const activeCompany = useMemo(() => {
     const selected = companies.find(c => c.id === activeCompanyId);
