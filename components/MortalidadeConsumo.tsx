@@ -42,8 +42,44 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     });
 
     useEffect(() => {
-        localStorage.setItem(`mortalidade_layout_${activeCompany?.id || 'default'}`, JSON.stringify(tableConfig));
-    }, [tableConfig, activeCompany?.id]);
+        const layoutKey = `mortalidade_layout_${activeCompany?.id || 'default'}`;
+        localStorage.setItem(layoutKey, JSON.stringify(tableConfig));
+
+        // Sync with DB if user is admin (authenticated) and not public view
+        if (!isPublic && activeCompany?.id) {
+            const orchestrator = getOrchestrator();
+            // Debounce save to prevent too many requests
+            const timeoutId = setTimeout(() => {
+                orchestrator.routeToAgent('mortality-storage', {
+                    operation: 'save',
+                    companyId: activeCompany.id,
+                    month: 0, // 0 indicates config/metadata storage
+                    year: 0,
+                    data: { layout: tableConfig }
+                });
+            }, 2000);
+            return () => clearTimeout(timeoutId);
+        }
+    }, [tableConfig, activeCompany?.id, isPublic]);
+
+    // Load layout from DB on mount (for everyone, including visitors)
+    useEffect(() => {
+        const loadRemoteLayout = async () => {
+            if (activeCompany?.id) {
+                const orchestrator = getOrchestrator();
+                const remoteConfig = await orchestrator.routeToAgent('mortality-storage', {
+                    operation: 'load',
+                    companyId: activeCompany.id,
+                    month: 0,
+                    year: 0
+                });
+                if (remoteConfig && remoteConfig.layout) {
+                    setTableConfig(remoteConfig.layout);
+                }
+            }
+        };
+        loadRemoteLayout();
+    }, [activeCompany?.id]);
 
     // Removed useGeminiParser as we now use agents
 

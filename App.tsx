@@ -48,13 +48,19 @@ export default function App() {
     return params.get('tab') || (sharedTabs.length > 0 ? sharedTabs[0] : (localStorage.getItem('activeTab') || 'payroll'));
   });
 
-  // Year/Month with persistence
+  // Year/Month with persistence (Bypass cache for Showcases to ensure fresh view)
   const [activeYear, setActiveYear] = useState<number | null>(() => {
+    const isShowcase = new URLSearchParams(window.location.search).get('showcase') === 'true';
+    if (isShowcase) return new Date().getFullYear();
+
     const saved = localStorage.getItem('activeYear');
     return saved ? parseInt(saved) : new Date().getFullYear();
   });
 
   const [activeMonth, setActiveMonth] = useState<number | null>(() => {
+    const isShowcase = new URLSearchParams(window.location.search).get('showcase') === 'true';
+    if (isShowcase) return new Date().getMonth() + 1;
+
     const saved = localStorage.getItem('activeMonth');
     return saved ? parseInt(saved) : new Date().getMonth() + 1;
   });
