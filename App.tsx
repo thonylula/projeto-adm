@@ -356,7 +356,7 @@ export default function App() {
             onSaveBulk={() => { }}
           />
         )}
-        {effectiveTab === 'mortalidade' && activeCompany && <MortalidadeConsumo activeCompany={activeCompany} activeYear={activeYear || 2025} activeMonth={activeMonth || 12} isPublic={true} />}
+        {effectiveTab === 'mortalidade' && activeCompany && <MortalidadeConsumo activeCompany={activeCompany} activeYear={activeYear || new Date().getFullYear()} activeMonth={activeMonth || new Date().getMonth() + 1} isPublic={true} />}
         {effectiveTab === 'campo' && activeCompany && <CampoViveiros activeCompany={activeCompany} isPublic={true} />}
 
         {/* Fallback if no company is selected but needed (Public view usually expects a default or selected company from context) */}
