@@ -875,6 +875,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Pop.Ini</th>
                                                 <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Dens.</th>
                                                 <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Biom..</th>
+                                                <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `80px` }} rowSpan={2}>Situação</th>
                                                 <th className="p-1 text-slate-400 bg-slate-900 border border-slate-800 font-black text-[0.8em] uppercase text-center min-w-[50px]" rowSpan={2}>Tipo</th>
                                                 <th className="p-1 border border-slate-800 text-center text-slate-400 font-black uppercase tracking-widest text-[0.9em]" colSpan={daysArray.length}>Dias do Mês</th>
                                                 <th className="p-2 text-white border border-slate-800 font-black uppercase sticky right-0 z-20 bg-slate-900 w-20 text-center" rowSpan={2}>Total</th>
@@ -897,7 +898,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                         <tbody>
                                             {(data?.records || []).map((record, index) => (
                                                 <React.Fragment key={record.id}>
-                                                    <tr className="group hover:bg-slate-50 transition-all font-bold text-slate-700" style={{ height: `${tableConfig.lineHeight}px` }}>
+                                                    <tr className={`transition-all font-bold text-slate-700 group hover:bg-slate-50 ${record.status === 'preparacao' ? 'bg-[#dcedc8] hover:!bg-[#c5e1a5]' : ''}`} style={{ height: `${tableConfig.lineHeight}px` }}>
                                                         <td className="p-0 border border-slate-100 sticky left-0 z-10 bg-white" style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>
                                                             <div className="relative h-full flex items-center justify-center font-black text-slate-900 bg-slate-50 border-r border-slate-200" style={{ minHeight: `${tableConfig.lineHeight * 2}px` }}>
                                                                 <input
@@ -929,6 +930,16 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         </td>
                                                         <td className="border border-slate-100 bg-indigo-50/10" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
                                                             <input type="text" value={record.biometry} onChange={e => handleUpdateHeader(index, 'biometry', e.target.value)} onPaste={e => handlePaste(e, index, 5)} className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-indigo-600 outline-none text-[1em]" placeholder="..." />
+                                                        </td>
+                                                        <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 2px`, backgroundColor: record.status === 'preparacao' ? '#dcedc8' : 'white' }} rowSpan={2}>
+                                                            <select
+                                                                value={record.status || 'em_curso'}
+                                                                onChange={(e) => handleUpdateHeader(index, 'status', e.target.value)}
+                                                                className={`w-full text-center border-none focus:ring-0 font-bold outline-none text-[0.8em] uppercase ${record.status === 'preparacao' ? 'text-green-800 bg-transparent' : 'text-slate-500 bg-transparent'}`}
+                                                            >
+                                                                <option value="em_curso">Em Curso</option>
+                                                                <option value="preparacao">Preparação</option>
+                                                            </select>
                                                         </td>
                                                         <td className="border border-slate-100 bg-slate-50/50 font-black text-slate-400 text-center tracking-tighter italic border-r-2 border-r-slate-200 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px`, minWidth: '45px' }}>Ração</td>
                                                         {daysArray.map(d => {

@@ -250,7 +250,8 @@ export interface MortalityTankRecord {
   area: number;
   initialPopulation: number;
   density: number;
-  biometry?: string; // Manual biometry data
+  biometry: string;
+  status?: 'em_curso' | 'preparacao'; // Novo campo de status
   dailyRecords: MortalityDailyRecord[];
 }
 
