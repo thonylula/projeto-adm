@@ -967,7 +967,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Dens.</th>
                                                 <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Biom..</th>
                                                 <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `80px` }} rowSpan={2}>Situação</th>
-                                                <th className="p-1 text-slate-400 bg-slate-900 border border-slate-800 font-black text-[0.8em] uppercase text-center min-w-[50px]" rowSpan={2}>Tipo</th>
+                                                <th className="p-1 text-slate-400 bg-slate-900 border border-slate-800 font-black text-[0.8em] uppercase text-center" style={{ width: '50px', minWidth: '50px' }} rowSpan={2}>Tipo</th>
                                                 <th className="p-1 border border-slate-800 text-center text-slate-400 font-black uppercase tracking-widest text-[0.9em]" colSpan={daysArray.length}>Dias do Mês</th>
                                                 <th className="p-2 text-white border border-slate-800 font-black uppercase sticky right-0 z-20 bg-slate-900 w-20 text-center" rowSpan={2}>Total</th>
                                             </tr>
@@ -1035,7 +1035,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                                 <option value="preparacao">Preparação</option>
                                                             </select>
                                                         </td>
-                                                        <td className="border border-slate-100 bg-slate-50/50 font-black text-slate-400 text-center tracking-tighter italic border-r-2 border-r-slate-200 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px`, minWidth: '45px' }}>Ração</td>
+                                                        <td className="border border-slate-100 bg-slate-50/50 font-black text-slate-400 text-center tracking-tighter italic border-r-2 border-r-slate-200 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px`, width: '50px', minWidth: '50px' }}>Ração</td>
                                                         {daysArray.map(d => {
                                                             const val = (record.dailyRecords || []).find(dr => dr.day === d)?.feed;
                                                             return (
@@ -1064,7 +1064,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                         </td>
                                                     </tr>
                                                     <tr className={record.status === 'preparacao' ? 'bg-[#dcedc8]' : 'bg-pink-50/10'} style={{ height: `${tableConfig.lineHeight}px` }}>
-                                                        <td className="border border-slate-100 text-pink-400 text-center tracking-tighter italic border-r-2 border-r-pink-100 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px` }}>Mort.</td>
+                                                        <td className="border border-slate-100 text-pink-400 text-center tracking-tighter italic border-r-2 border-r-pink-100 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px`, width: '50px', minWidth: '50px' }}>Mort.</td>
                                                         {daysArray.map(d => {
                                                             const val = (record.dailyRecords || []).find(dr => dr.day === d)?.mortality;
                                                             return (
