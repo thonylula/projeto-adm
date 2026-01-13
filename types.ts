@@ -190,6 +190,7 @@ export interface RegistryEmployee extends AddressData, BankData {
   email: string;
   active: boolean;
   isNonDrinker: boolean;
+  inactivityReason?: 'DISMISSED' | 'INSS' | 'OTHER' | null;
 }
 
 export interface RegistrySupplier extends AddressData, BankData {
