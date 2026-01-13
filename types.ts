@@ -12,7 +12,14 @@ export interface PayrollInput {
   companyLogo: string | null;
 
   // --- MODO DE CÁLCULO (NOVO) ---
-  calculationMode: 'MONTHLY' | '13TH';
+  calculationMode: 'MONTHLY' | '13TH' | 'TERMINATION';
+
+  // --- RESCISÃO (DEMISSÃO) ---
+  terminationDate?: string;
+  terminationReason?: 'DISMISSAL_NO_CAUSE' | 'DISMISSAL_CAUSE' | 'RESIGNATION' | 'AGREEMENT';
+  noticePeriodType?: 'WORKED' | 'INDEMNIFIED' | 'DISPENSED';
+  fgtsBalance?: number; // Saldo do FGTS para multa
+  admissionDate?: string; // Data de Admissão (pode vir do cadastro)
 
   // 13º Salário Detalhado
   thirteenthDetailedDays: Record<number, number>; // Mapa: Mês (1-12) -> Dias Trabalhados
@@ -111,6 +118,14 @@ export interface PayrollResult {
   // 13º Salário Específico
   thirteenthTotalAvos?: number; // Avos finais considerados (CLT)
   thirteenthTotalDays?: number; // Dias totais considerados (Avulso)
+
+  // Rescisão (Demissão)
+  terminationSalaryBalance?: number; // Saldo de Salário
+  terminationThirteenthProp?: number; // 13º Proporcional
+  terminationVacationProp?: number; // Férias Proporcionais
+  terminationVacationOneThird?: number; // 1/3 de Férias
+  terminationNoticePeriod?: number; // Aviso Prévio Indenizado
+  terminationFgtsFine?: number; // Multa 40% (ou 20%)
 }
 
 export interface PayrollHistoryItem {
