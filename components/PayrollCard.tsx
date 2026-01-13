@@ -91,6 +91,13 @@ const INITIAL_INPUT_STATE: Omit<PayrollInput, 'companyName' | 'companyLogo'> = {
 
   bankName: '',
   pixKey: '',
+
+  // Rescisão
+  terminationDate: '',
+  terminationReason: 'DISMISSAL_NO_CAUSE',
+  noticePeriodType: 'INDEMNIFIED',
+  fgtsBalance: 0,
+  admissionDate: '',
 };
 
 // Helper seguro para gerar IDs
@@ -745,9 +752,97 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     };
   };
 
+  // --- FUNÇÃO DE CÁLCULO DE RESCISÃO ---
+  const calculateTermination = (input: PayrollInput): PayrollResult => {
+    const baseSalary = safeNum(input.baseSalary);
+    const admission = input.admissionDate ? new Date(input.admissionDate + 'T00:00:00') : null;
+    const termination = input.terminationDate ? new Date(input.terminationDate + 'T00:00:00') : null;
+
+    if (!admission || !termination || termination < admission) {
+      return { proportionalSalary: 0, hourlyRate: 0, hazardPayValue: 0, effectiveNightHours: 0, nightShiftValue: 0, dsrNightShiftValue: 0, overtimeValue: 0, overtime1Value: 0, overtime2Value: 0, holidayValue: 0, dsrOvertimeValue: 0, sundayBonusValue: 0, visitsTotalValue: 0, grossSalary: 0, loanDiscountValue: 0 };
+    }
+
+    // 1. Saldo de Salário
+    const daysInMonth = termination.getDate();
+    const salaryBalance = (baseSalary / 30) * daysInMonth;
+
+    // 2. 13º Proporcional
+    // Simplificado: Assume que cada mês com 15+ dias conta 1 avo
+    const monthOfTermination = termination.getMonth() + 1;
+    const yearsOfService = termination.getFullYear() - admission.getFullYear();
+    let thirteenthAvos = 0;
+    if (termination.getFullYear() > admission.getFullYear()) {
+      thirteenthAvos = monthOfTermination - (termination.getDate() >= 15 ? 0 : 1);
+    } else {
+      thirteenthAvos = (monthOfTermination - (admission.getMonth() + 1)) + (termination.getDate() >= 15 ? 1 : 0);
+    }
+    thirteenthAvos = Math.max(0, Math.min(12, thirteenthAvos));
+    const thirteenthProp = (baseSalary / 12) * thirteenthAvos;
+
+    // 3. Férias Proporcionais
+    // Diferença total de meses entre admissão e demissão
+    const diffTime = termination.getTime() - admission.getTime();
+    const diffMonths = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 30.44));
+    const vacationAvos = diffMonths % 12;
+    const vacationProp = (baseSalary / 12) * vacationAvos;
+    const vacationOneThird = vacationProp / 3;
+
+    // 4. Aviso Prévio Indenizado
+    let noticePeriodValue = 0;
+    if (input.noticePeriodType === 'INDEMNIFIED' && input.terminationReason !== 'RESIGNATION' && input.terminationReason !== 'DISMISSAL_CAUSE') {
+      const extraDays = Math.min(60, Math.floor(yearsOfService) * 3);
+      const totalDays = 30 + extraDays;
+      noticePeriodValue = (baseSalary / 30) * totalDays;
+    }
+
+    // 5. Multa FGTS (40%)
+    let fgtsFine = 0;
+    if (input.terminationReason === 'DISMISSAL_NO_CAUSE') {
+      fgtsFine = safeNum(input.fgtsBalance) * 0.40;
+    } else if (input.terminationReason === 'AGREEMENT') {
+      fgtsFine = safeNum(input.fgtsBalance) * 0.20;
+    }
+
+    // Soma Total
+    let grossSalary = salaryBalance + thirteenthProp + vacationProp + vacationOneThird + noticePeriodValue + fgtsFine;
+
+    // Pedido de demissão ou Justa causa removem algumas verbas
+    if (input.terminationReason === 'RESIGNATION') {
+      grossSalary = salaryBalance + thirteenthProp + vacationProp + vacationOneThird;
+    } else if (input.terminationReason === 'DISMISSAL_CAUSE') {
+      grossSalary = salaryBalance;
+    }
+
+    return {
+      proportionalSalary: baseSalary,
+      hourlyRate: baseSalary / 220,
+      hazardPayValue: 0,
+      effectiveNightHours: 0,
+      nightShiftValue: 0,
+      dsrNightShiftValue: 0,
+      overtimeValue: 0,
+      overtime1Value: 0,
+      overtime2Value: 0,
+      holidayValue: 0,
+      dsrOvertimeValue: 0,
+      sundayBonusValue: 0,
+      visitsTotalValue: 0,
+      grossSalary,
+      loanDiscountValue: 0,
+      terminationSalaryBalance: salaryBalance,
+      terminationThirteenthProp: thirteenthProp,
+      terminationVacationProp: vacationProp,
+      terminationVacationOneThird: vacationOneThird,
+      terminationNoticePeriod: noticePeriodValue,
+      terminationFgtsFine: fgtsFine
+    };
+  };
+
   const handleCalculate = (e: React.FormEvent) => {
     e.preventDefault();
-    const calculatedResult = performCalculation(formState);
+    const calculatedResult = formState.calculationMode === 'TERMINATION'
+      ? calculateTermination(formState)
+      : performCalculation(formState);
     setResult(calculatedResult);
 
     const timestamp = new Date().toLocaleString('pt-BR');
@@ -870,6 +965,15 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
         ? `${result.thirteenthTotalAvos}/12 AVOS`
         : `${result.thirteenthTotalDays}D`;
       parts.push(`13º PAGT. REF ${input.referenceYear} (${label})`);
+    } else if (input.calculationMode === 'TERMINATION') {
+      const reasonMap: any = {
+        'DISMISSAL_NO_CAUSE': 'SEM JUSTA CAUSA',
+        'DISMISSAL_CAUSE': 'COM JUSTA CAUSA',
+        'RESIGNATION': 'PEDIDO DE DEMISSÃO',
+        'AGREEMENT': 'ACORDO'
+      };
+      const dateStr = input.terminationDate ? new Date(input.terminationDate + 'T00:00:00').toLocaleDateString('pt-BR') : '';
+      parts.push(`RESCISÃO EM ${dateStr} (${reasonMap[input.terminationReason || ''] || ''})`);
     } else {
       const label = input.workScale === '12x36' ? `${input.daysWorked} PLANTÕES` : `${input.daysWorked} DIAS TRAB.`;
       parts.push(`PAGT. REF ${input.referenceMonth}/${input.referenceYear} (${label})`);
@@ -908,6 +1012,16 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     if (input.costAllowance > 0) parts.push(`AJ. DE CUSTO ${formatCurrency(input.costAllowance)}`);
     if (result.visitsTotalValue > 0) parts.push(`VISIT. (${input.visitsAmount}) ${formatCurrency(result.visitsTotalValue)}`);
     if (input.productionBonus > 0) parts.push(`PROD. ${formatCurrency(input.productionBonus)}`);
+
+    // Rescisão Específicos
+    if (input.calculationMode === 'TERMINATION') {
+      if (result.terminationSalaryBalance && result.terminationSalaryBalance > 0) parts.push(`SALDO SAL. ${formatCurrency(result.terminationSalaryBalance)}`);
+      if (result.terminationNoticePeriod && result.terminationNoticePeriod > 0) parts.push(`AVISO PRÉVIO ${formatCurrency(result.terminationNoticePeriod)}`);
+      if (result.terminationThirteenthProp && result.terminationThirteenthProp > 0) parts.push(`13º PROP. ${formatCurrency(result.terminationThirteenthProp)}`);
+      if (result.terminationVacationProp && result.terminationVacationProp > 0) parts.push(`FÉRIAS PROP. ${formatCurrency(result.terminationVacationProp)}`);
+      if (result.terminationVacationOneThird && result.terminationVacationOneThird > 0) parts.push(`1/3 FÉRIAS ${formatCurrency(result.terminationVacationOneThird)}`);
+      if (result.terminationFgtsFine && result.terminationFgtsFine > 0) parts.push(`MULTA FGTS ${formatCurrency(result.terminationFgtsFine)}`);
+    }
 
     // Empréstimo
     if (input.loanTotalValue > 0 || result.loanDiscountValue > 0) {
@@ -1208,7 +1322,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                 {editingId && <span className="text-xs font-bold text-white bg-black/20 px-2 py-1 rounded-full uppercase tracking-wide">Editando</span>}
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight uppercase">
-                {activeCompany.name} {isThirteenthMode ? '13º Proporcional' : ''}
+                {activeCompany.name} {isThirteenthMode ? '13º Proporcional' : formState.calculationMode === 'TERMINATION' ? 'Rescisão' : ''}
               </h1>
               <p className="text-white/80 text-sm mt-2 font-medium">Folha de Pagamento Inteligente (Multi-Escala)</p>
             </div>
@@ -1233,6 +1347,13 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
               className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${isThirteenthMode ? 'bg-white text-red-600 shadow-sm border border-red-200' : 'text-gray-400 hover:text-gray-600'}`}
             >
               13º Salário
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormState(prev => ({ ...prev, calculationMode: 'TERMINATION' }))}
+              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${formState.calculationMode === 'TERMINATION' ? 'bg-white text-orange-600 shadow-sm border border-orange-200' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              Demissão
             </button>
           </div>
 
@@ -1296,6 +1417,85 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                     >
                       Cálculo Avulso (Por Dias)
                     </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* BANNER DEMISSÃO */}
+            {formState.calculationMode === 'TERMINATION' && (
+              <div className="mb-8 animate-in fade-in">
+                <div className="p-4 bg-orange-50 border border-orange-100 rounded-xl text-center mb-6">
+                  <h3 className="text-lg font-bold text-orange-600 uppercase mb-1">CÁLCULO DE RESCISÃO CONTRATUAL</h3>
+                  <p className="text-xs text-orange-400">Preencha os dados abaixo para calcular as verbas rescisórias.</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-2xl border border-gray-200">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Motivo da Demissão</label>
+                    <select
+                      name="terminationReason"
+                      value={formState.terminationReason}
+                      onChange={handleInputChange}
+                      className="w-full p-3 bg-white border border-gray-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-orange-500"
+                    >
+                      <option value="DISMISSAL_NO_CAUSE">Dispensa Sem Justa Causa</option>
+                      <option value="DISMISSAL_CAUSE">Dispensa Com Justa Causa</option>
+                      <option value="RESIGNATION">Pedido de Demissão</option>
+                      <option value="AGREEMENT">Acordo (Art. 484-A CLT)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Aviso Prévio</label>
+                    <select
+                      name="noticePeriodType"
+                      value={formState.noticePeriodType}
+                      onChange={handleInputChange}
+                      className="w-full p-3 bg-white border border-gray-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-orange-500"
+                    >
+                      <option value="INDEMNIFIED">Indenizado</option>
+                      <option value="WORKED">Trabalhado</option>
+                      <option value="DISPENSED">Dispensado / Não Cumprido</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Data de Admissão</label>
+                    <input
+                      type="date"
+                      name="admissionDate"
+                      value={formState.admissionDate}
+                      onChange={handleInputChange}
+                      className="w-full p-3 bg-white border border-gray-300 rounded-xl text-sm font-medium"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Data de Demissão</label>
+                    <input
+                      type="date"
+                      name="terminationDate"
+                      value={formState.terminationDate}
+                      onChange={handleInputChange}
+                      className="w-full p-3 bg-white border border-gray-300 rounded-xl text-sm font-medium shadow-sm border-orange-200"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Saldo p/ Fins Rescisórios (FGTS)</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><span className="text-gray-400 sm:text-sm">R$</span></div>
+                      <input
+                        type="number"
+                        name="fgtsBalance"
+                        value={formState.fgtsBalance}
+                        onChange={handleInputChange}
+                        className="w-full pl-10 p-3 bg-white border border-gray-300 rounded-xl text-sm font-bold text-orange-700"
+                        placeholder="0,00"
+                      />
+                    </div>
+                    <p className="mt-1 text-[10px] text-gray-400 italic">Usado para calcular a multa de 40% (ou 20% em caso de acordo).</p>
                   </div>
                 </div>
               </div>
@@ -1760,7 +1960,9 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                             ? (item.input.thirteenthCalculationType === 'CLT'
                               ? <span className="text-red-600 font-bold">[13º CLT] {(item.result.thirteenthTotalAvos || 0)}/12</span>
                               : <span className="text-blue-600 font-bold">[13º Avulso] {(item.result.thirteenthTotalDays || 0)} dias</span>)
-                            : `Ref: ${item.input.referenceMonth}/${item.input.referenceYear}`
+                            : item.input.calculationMode === 'TERMINATION'
+                              ? <span className="text-orange-600 font-bold">[RESCISÃO] {item.input.terminationDate ? new Date(item.input.terminationDate + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</span>
+                              : `Ref: ${item.input.referenceMonth}/${item.input.referenceYear}`
                           }
                           {item.input.loanTotalInstallments > 0 && (
                             <span className="block text-[9px] font-bold text-red-500 mt-1 italic">
