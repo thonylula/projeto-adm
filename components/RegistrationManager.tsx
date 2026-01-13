@@ -26,6 +26,7 @@ const INITIAL_COMMON = {
 
 const INITIAL_EMPLOYEE: Omit<RegistryEmployee, 'id'> = {
     name: '', photoUrl: null, cpf: '', role: '', admissionDate: '', salary: 0, phone: '', email: '', active: true, isNonDrinker: false,
+    inactivityReason: null,
     ...INITIAL_COMMON
 };
 
@@ -474,12 +475,39 @@ export const RegistrationManager: React.FC = () => {
                                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
                                             <input type="email" value={empForm.email} onChange={e => setEmpForm({ ...empForm, email: e.target.value })} className={inputClass} />
                                         </div>
-                                        <div className="flex items-center gap-2 pt-4">
-                                            <label className="relative inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" checked={empForm.isNonDrinker} onChange={e => setEmpForm({ ...empForm, isNonDrinker: e.target.checked })} className="sr-only peer" />
-                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                                                <span className="ml-3 text-xs font-bold text-gray-700 uppercase">Não Consome Álcool</span>
-                                            </label>
+                                        <div className="flex flex-col gap-2 pt-2 bg-white/50 p-3 rounded-lg border border-gray-100">
+                                            <div className="flex items-center gap-2">
+                                                <label className="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" checked={empForm.active} onChange={e => setEmpForm({ ...empForm, active: e.target.checked })} className="sr-only peer" />
+                                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                                    <span className={`ml-3 text-xs font-bold uppercase transition-colors ${empForm.active ? 'text-emerald-700' : 'text-red-600'}`}>
+                                                        {empForm.active ? 'Funcionário Ativo' : 'Funcionário Inativo'}
+                                                    </span>
+                                                </label>
+                                            </div>
+
+                                            {!empForm.active && (
+                                                <div className="animate-in slide-in-from-left-2 duration-300 scale-95 origin-left">
+                                                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Motivo da Inatividade</label>
+                                                    <select
+                                                        value={empForm.inactivityReason || 'OTHER'}
+                                                        onChange={e => setEmpForm({ ...empForm, inactivityReason: e.target.value as any })}
+                                                        className="text-xs p-2 border border-red-200 rounded bg-white text-red-700 font-bold focus:ring-1 focus:ring-red-400 focus:border-red-400 outline-none"
+                                                    >
+                                                        <option value="DISMISSED">Demissão / Rescisão</option>
+                                                        <option value="INSS">Encostamento INSS</option>
+                                                        <option value="OTHER">Outros Motivos</option>
+                                                    </select>
+                                                </div>
+                                            )}
+
+                                            <div className="flex items-center gap-2 pt-1">
+                                                <label className="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" checked={empForm.isNonDrinker} onChange={e => setEmpForm({ ...empForm, isNonDrinker: e.target.checked })} className="sr-only peer" />
+                                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                                    <span className="ml-3 text-xs font-bold text-gray-700 uppercase">Não Consome Álcool</span>
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -597,8 +625,8 @@ export const RegistrationManager: React.FC = () => {
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {/* EMPLOYEE LIST */}
-                        {activeType === 'EMPLOYEE' && employees.map(emp => (
-                            <tr key={emp.id} className="hover:bg-gray-50 group">
+                        {activeType === 'EMPLOYEE' && employees.sort((a, b) => Number(b.active) - Number(a.active)).map(emp => (
+                            <tr key={emp.id} className={`hover:bg-gray-50 group transition-all ${!emp.active ? 'bg-gray-50/50 opacity-60' : ''}`}>
                                 <td className="px-6 py-4 flex items-center gap-3">
                                     {emp.photoUrl ? (
                                         <img src={emp.photoUrl} alt="Foto" className="w-10 h-12 object-cover rounded shadow-sm bg-gray-100 border border-gray-200" />
@@ -610,6 +638,11 @@ export const RegistrationManager: React.FC = () => {
                                     <div>
                                         <p className="font-bold text-gray-900 flex items-center gap-2">
                                             {emp.name}
+                                            {!emp.active && (
+                                                <span className="bg-red-100 text-red-700 text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase flex items-center gap-1">
+                                                    INATIVO: {emp.inactivityReason === 'DISMISSED' ? 'DEMISSÃO' : emp.inactivityReason === 'INSS' ? 'INSS' : 'OUTRO'}
+                                                </span>
+                                            )}
                                             {emp.isNonDrinker && <span className="bg-indigo-100 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded-full font-black uppercase">Abstêmio</span>}
                                         </p>
                                         <p className="text-xs text-gray-500">{emp.role} • {formatCurrency(emp.salary)}</p>
