@@ -28,7 +28,8 @@ const NavItem: React.FC<{
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedYear, setExpandedYear] = useState<number | null>(new Date().getFullYear());
 
-  const years = [2024, 2025, 2026];
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 2024 + 1 }, (_, i) => 2024 + i);
   const months = [
     { id: 1, label: 'JAN' }, { id: 2, label: 'FEV' }, { id: 3, label: 'MAR' },
     { id: 4, label: 'ABR' }, { id: 5, label: 'MAI' }, { id: 6, label: 'JUN' },
@@ -140,7 +141,10 @@ const NavItem: React.FC<{
                 {isYearExpanded && (
                   <div className="grid grid-cols-2 gap-1 px-1">
                     {months
-                      .filter(month => month.id === 11 || month.id === 12) // Mostrar apenas NOV e DEZ
+                      .filter(m => {
+                        if (year < currentYear) return true;
+                        return m.id <= currentMonth + 1;
+                      })
                       .map(month => {
                         // Determine if this is the current or previous month in the current year
                         const isCurrentMonth = year === currentYear && month.id === currentMonth;
