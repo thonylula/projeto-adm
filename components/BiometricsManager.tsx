@@ -1102,16 +1102,16 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                 {/* --- PREMIUM HEADER --- */}
                 <header className="bg-white px-6 py-8 md:px-10 md:py-10 flex flex-col md:flex-row items-center justify-between gap-6 border-b border-gray-50">
 
-                    {/* Left: Branding */}
-                    <div className="flex-1 flex justify-start items-center gap-4">
+                    {/* Left: Branding (Enlarged and text removed) */}
+                    <div className="flex-1 flex justify-start items-center">
                         <div
                             onClick={() => document.getElementById('logo-upload-input')?.click()}
-                            className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center flex-shrink-0 shadow-xl shadow-gray-200/50 border border-gray-50/50 overflow-hidden group cursor-pointer hover:border-orange-200 transition-all"
+                            className="w-24 h-24 md:w-32 md:h-32 rounded-2xl md:rounded-[32px] bg-white flex items-center justify-center flex-shrink-0 shadow-xl shadow-gray-200/50 border border-gray-50/50 overflow-hidden group cursor-pointer hover:border-orange-200 transition-all"
                         >
                             {logo ? (
-                                <img src={logo} alt="Logo" className="w-10 h-10 object-contain hover:scale-110 transition-transform duration-500" />
+                                <img src={logo} alt="Logo" className="w-20 h-20 md:w-28 md:h-28 object-contain hover:scale-110 transition-transform duration-500" />
                             ) : (
-                                <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center text-white font-black text-xl">C</div>
+                                <div className="w-20 h-20 bg-orange-500 rounded-lg flex items-center justify-center text-white font-black text-3xl">C</div>
                             )}
                             <input
                                 id="logo-upload-input"
@@ -1120,10 +1120,6 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                 onChange={handleLogoUpload}
                                 accept="image/*"
                             />
-                        </div>
-                        <div className="flex flex-col">
-                            <h2 className="text-xl font-black text-slate-800 tracking-tighter leading-tight">CARAPITANGA</h2>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-none">Gestão Inteligente</span>
                         </div>
                     </div>
 
