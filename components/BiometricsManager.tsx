@@ -937,273 +937,191 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 `}</style>
 
             {!isPublic && (
-                <div className="mb-6 flex flex-wrap justify-between items-center gap-4 no-print">
-                    <div className="flex items-center gap-3">
-                        <button onClick={handleReset} className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-900 bg-white px-4 py-2 rounded-lg border shadow-sm">
-                            Inserir Novos Dados
-                        </button>
-                        <div className="h-8 w-[1px] bg-gray-200 mx-1"></div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase">Data da Biometria:</span>
-                            <input
-                                type="date"
-                                value={biometryDate}
-                                onChange={(e) => setBiometryDate(e.target.value)}
-                                className="text-xs font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-orange-200 transition-all cursor-pointer"
-                            />
+                <div className="mb-8 flex flex-wrap justify-between items-center gap-4 no-print bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                    <div className="flex items-center gap-4">
+                        <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Data Biometria:</span>
+                            <div className="relative group">
+                                <input
+                                    type="date"
+                                    value={biometryDate}
+                                    onChange={(e) => setBiometryDate(e.target.value)}
+                                    className="text-sm font-bold text-slate-700 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all cursor-pointer min-w-[180px]"
+                                />
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div className="flex gap-2">
+
+                    <div className="flex flex-wrap items-end gap-3 pt-4 md:pt-0">
                         <button
                             onClick={() => setShowHistory(true)}
-                            className="flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-lg border border-blue-200 shadow-sm transition-all"
-                            title="Ver histórico de todas as biometrias"
+                            className="flex items-center gap-2 h-11 px-5 rounded-xl text-sm font-bold text-slate-600 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             Histórico
                         </button>
+
                         <button
                             onClick={handleNewBiometry}
-                            className="flex items-center gap-2 text-sm font-bold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-lg border border-orange-200 shadow-sm transition-all"
-                            title="Criar nova biometria usando dados da anterior"
+                            className="flex items-center gap-2 h-11 px-5 rounded-xl text-sm font-bold text-orange-600 bg-white border-2 border-orange-500 hover:bg-orange-50 transition-all shadow-sm"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            Nova Biometria
+                            <span className="text-lg">+</span> Nova Biometria
                         </button>
+
                         <button
                             onClick={handleAIAnalysis}
                             disabled={isAnalyzing}
-                            className={`flex items-center gap-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg shadow-sm transition-all ${isAnalyzing ? 'opacity-50 cursor-wait' : ''}`}
-                            title="Realizar análise zootécnica inteligente via IA"
+                            className={`flex items-center gap-2 h-11 px-5 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all ${isAnalyzing ? 'opacity-50' : ''}`}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${isAnalyzing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                            {isAnalyzing ? 'Analisando...' : 'Analisar com IA'}
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${isAnalyzing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            Analisar com IA
                         </button>
-                        {loadedRecordId && (
-                            <button
-                                onClick={handleDeleteCurrent}
-                                className="flex items-center gap-2 text-sm font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg border border-red-200 shadow-sm transition-all"
-                                title="Excluir este registro permanentemente do banco"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                                Excluir
-                            </button>
-                        )}
+
                         <button
                             onClick={handleSaveBiometry}
-                            className="flex items-center gap-2 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg shadow-sm transition-all"
-                            title="Salvar biometria atual no histórico"
+                            className="flex items-center gap-2 h-11 px-6 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                             Salvar Biometria
                         </button>
                     </div>
                 </div>
             )}
 
-            <div id="dashboard-content" ref={dashboardRef} className="w-full max-w-5xl mx-auto bg-white rounded-3xl shadow-xl border border-orange-100 overflow-hidden relative">
+            <div id="dashboard-content" ref={dashboardRef} className="w-full max-w-5xl mx-auto bg-white rounded-[32px] shadow-2xl shadow-blue-900/5 border border-gray-100 overflow-hidden relative">
 
-                {/* --- HEADER --- */}
-                {/* --- HEADER (SPEC COMPLIANT) --- */}
-                <header className="bg-[#FFF8F2] px-[8mm] py-[8mm] border-b border-orange-100 flex items-center justify-between h-auto box-border gap-4 print:px-[5mm] print:py-[4mm]">
+                {/* --- PREMIUM HEADER --- */}
+                <header className="bg-white px-10 py-10 flex items-center justify-between gap-6 border-b border-gray-50">
 
-                    {/* 1. Coluna Esquerda: Logo (25%) */}
-                    <div className="flex-1 flex justify-start items-center min-w-0">
-                        {logo ? (
-                            <div className="relative group max-w-[90%]">
-                                <img src={logo} alt="Logo" className="h-20 w-auto object-contain mix-blend-multiply print:h-12" />
-                                <label
-                                    htmlFor="logo-upload"
-                                    className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 cursor-pointer flex items-center justify-center rounded transition-opacity no-print"
-                                    data-html2canvas-ignore="true"
-                                >
-                                    <span className="text-[9px] bg-white px-2 py-1 rounded shadow-sm text-gray-600 font-medium whitespace-nowrap">Alterar Logo</span>
-                                </label>
-                                <input type="file" id="logo-upload" accept="image/*" className="hidden" onChange={handleLogoUpload} />
-                            </div>
-                        ) : null}
+                    {/* Left: Branding */}
+                    <div className="flex-1 flex justify-start items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center text-white font-bold flex-shrink-0 shadow-md">
+                            C
+                        </div>
+                        <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">Carapitanga</h2>
                     </div>
 
-                    {/* 2. Coluna Central: Título e Subtítulo (50%) */}
-                    <div className="flex-[2] flex flex-col items-center justify-center text-center min-w-0 px-4 print:px-2">
-                        <div className="flex items-center gap-2 mb-2 no-print opacity-50">
-                            <span className="text-[10px] uppercase font-bold text-gray-400">Relatório Técnico</span>
-                            <span className="text-[10px] text-gray-300">•</span>
-                            <span className="text-[10px] text-gray-400">{new Date().toLocaleDateString('pt-BR')}</span>
-                        </div>
-                        <h1 className="text-3xl md:text-4xl font-extrabold text-[#431407] tracking-tight leading-none mb-2 print:text-2xl print:mb-1" style={{ fontFamily: "'Inter', 'Poppins', sans-serif" }}>
+                    {/* Center: Title Section */}
+                    <div className="flex-[2] flex flex-col items-center text-center">
+                        <h1 className="text-5xl font-black text-slate-800 tracking-tighter leading-none mb-2">
                             BIOMETRIA
                         </h1>
-                        <p className="text-xs md:text-sm font-bold text-[#9A3412]/80 uppercase tracking-[0.2em] print:text-[9px] print:tracking-[0.1em]" style={{ fontFamily: "'Inter', sans-serif" }}>
+                        <p className="text-sm font-bold text-orange-500 uppercase tracking-[0.3em] font-sans">
                             Análise de Performance
                         </p>
                     </div>
 
-                    {/* 3. Coluna Direita: Nomes e Funções (25%) */}
-                    <div className="flex-1 flex flex-col items-end justify-center text-right gap-[8px] min-w-0 print:gap-[4px]" style={{ fontFamily: "'Inter', sans-serif" }}>
-                        <p className="text-right leading-none print:text-[9px]">
-                            <span className="text-[11px] text-[#7A7A7A] font-normal print:text-[9px]">Gerente: </span>
-                            <span className="text-[13px] text-[#0F1B2D] font-bold ml-1 print:text-[10px]">Cleiton Manoel de Lima</span>
+                    {/* Right: Metadata */}
+                    <div className="flex-1 flex flex-col items-end text-right gap-1 font-sans">
+                        <div className="text-[10px] items-center gap-2 font-bold text-gray-400 uppercase tracking-widest mb-1 flex">
+                            Relatório Técnico <span className="w-1 h-1 rounded-full bg-gray-300"></span> {new Date(biometryDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                        </div>
+                        <p className="text-xs leading-none">
+                            <span className="text-gray-400 font-medium">Gerente:</span>
+                            <span className="text-slate-800 font-bold ml-1">Cleiton Manoel de Lima</span>
                         </p>
-                        <p className="text-right leading-none print:text-[9px]">
-                            <span className="text-[11px] text-[#7A7A7A] font-normal print:text-[9px]">Analista Adm: </span>
-                            <span className="text-[13px] text-[#0F1B2D] font-bold ml-1 print:text-[10px]">Luanthony L. Oliveira</span>
+                        <p className="text-xs leading-none">
+                            <span className="text-gray-400 font-medium">Analista Adm:</span>
+                            <span className="text-slate-800 font-bold ml-1">Luanthony L. Oliveira</span>
                         </p>
                     </div>
 
                 </header>
 
                 {/* Tabela Principal */}
-                <main className="p-4 bg-white print:p-2">
-                    <div className="rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                        <table className="w-full text-[11px] text-left print:text-[8px]">
-                            <thead className="bg-[#FFEDD5] text-[#7C2D12] uppercase font-bold border-b border-[#FED7AA]">
+                <main className="px-6 pb-6 bg-white">
+                    <div className="rounded-2xl border border-gray-100 overflow-hidden mb-8">
+                        <table className="w-full text-xs text-left">
+                            <thead className="bg-[#F8FAFC] text-slate-500 uppercase font-black tracking-widest border-b border-gray-100">
                                 <tr>
-                                    <th className="px-1.5 py-2 min-w-[65px] print:px-1 print:py-1 print:min-w-[45px]">
-                                        <div className="flex flex-col gap-1">
-                                            <span>VIV.</span>
-                                            <input
-                                                type="text"
-                                                placeholder="Filtrar..."
-                                                className="w-full text-[8.5px] p-0.5 rounded border border-orange-200 focus:outline-none focus:border-orange-500 font-normal normal-case text-gray-600 placeholder-gray-400 print-hidden"
-                                                value={filterText}
-                                                onChange={(e) => setFilterText(e.target.value)}
-                                            />
-                                        </div>
-                                    </th>
-                                    <th className="px-1.5 py-2 text-center bg-orange-100/30 min-w-[75px] print:min-w-[65px]">D. POV</th>
-                                    <th className="px-1.5 py-2 text-center min-w-[35px] print:min-w-[30px]">DIAS</th>
-                                    <th className="px-1.5 py-2 text-right min-w-[60px] print:min-w-[50px]">P.M (g)</th>
-                                    <th className="px-1.5 py-2 text-right min-w-[55px] print:min-w-[45px]">QUANT.</th>
-                                    <th className="px-1.5 py-2 text-right text-gray-600 bg-gray-50 min-w-[80px] print:min-w-[70px]">PESO TOTAL</th>
-                                    <th className="px-1.5 py-2 text-right text-gray-400 min-w-[60px] print:min-w-[50px]">P.M ANT</th>
-                                    <th className="px-1.5 py-2 text-right text-[#C2410C] bg-orange-50/30 min-w-[60px] print:min-w-[50px]" title="Incremento Semanal">Inc. Sem.</th>
-                                    <th className="px-1.5 py-2 text-right text-[#9A3412] bg-orange-50/50 min-w-[70px] print:min-w-[60px]">GPD</th>
-                                    <th className="px-3 py-2 text-left">Status Analysis</th>
+                                    <th className="px-5 py-4 min-w-[80px]">VIV.</th>
+                                    <th className="px-4 py-4 text-center">D. POV.</th>
+                                    <th className="px-4 py-4 text-center">DIAS</th>
+                                    <th className="px-4 py-4 text-right">P.M (G)</th>
+                                    <th className="px-4 py-4 text-right">QUANT.</th>
+                                    <th className="px-4 py-4 text-right">PESO TOTAL</th>
+                                    <th className="px-4 py-4 text-right">P.M ANT.</th>
+                                    <th className="px-4 py-4 text-right">INC. SEM.</th>
+                                    <th className="px-4 py-4 text-right">GPD</th>
+                                    <th className="px-6 py-4 text-left">STATUS ANALYSIS</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {processedData.map((item, idx) => (
-                                    <tr key={idx} className={`${item.rowBgColor} transition-colors border-b border-gray-50 last:border-0`}>
-                                        <td className="px-1.5 py-1.5 font-bold text-gray-800 print:py-0.5">{item.viveiro}</td>
+                                    <tr key={idx} className="hover:bg-slate-50/50 transition-colors border-b border-gray-50 last:border-0 group">
+                                        <td className="px-5 py-4 font-bold text-slate-800">{item.viveiro}</td>
 
-                                        {/* DATA POVOAMENTO (Novo Input) */}
-                                        <td className="px-1 py-1 text-center bg-orange-50/20 print:bg-transparent">
-                                            <div className="print-visible font-bold text-slate-900 text-[9.5px]">
+                                        <td className="px-4 py-4 text-center">
+                                            <span className="bg-gray-100 text-slate-500 font-bold px-3 py-1.5 rounded-lg text-[10px]">
                                                 {item.dataPovoamento ? (item.dataPovoamento.includes('-') ? item.dataPovoamento.split('-').reverse().join('/') : item.dataPovoamento) : '-'}
-                                            </div>
-                                            {isPublic ? (
-                                                <div className="font-bold text-slate-900 text-[9.5px]">
-                                                    {item.dataPovoamento ? item.dataPovoamento.split('-').reverse().join('/') : '-'}
-                                                </div>
-                                            ) : (
-                                                <input
-                                                    type="text"
-                                                    placeholder="DD/MM/AAAA"
-                                                    maxLength={10}
-                                                    className="print-hidden w-[75px] text-center bg-white text-[10px] font-bold text-gray-900 border border-gray-300 rounded-md focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none h-7 px-1 shadow-sm placeholder-gray-300"
-                                                    value={item.dataPovoamento ? item.dataPovoamento.split('-').reverse().join('/') : ''}
-                                                    onChange={(e) => {
-                                                        let val = e.target.value.replace(/\D/g, '');
-                                                        if (val.length > 2) val = val.slice(0, 2) + '/' + val.slice(2);
-                                                        if (val.length > 5) val = val.slice(0, 5) + '/' + val.slice(5);
-
-                                                        if (val.length === 10) {
-                                                            const [d, m, y] = val.split('/');
-                                                            const iso = `${y}-${m}-${d}`;
-                                                            if (!isNaN(new Date(iso).getTime())) {
-                                                                handleUpdateRow(item.viveiro, 'dataPovoamento', iso);
-                                                            } else {
-                                                                handleUpdateRow(item.viveiro, 'dataPovoamento', val);
-                                                            }
-                                                        } else {
-                                                            handleUpdateRow(item.viveiro, 'dataPovoamento', val);
-                                                        }
-                                                    }}
-                                                />
-                                            )}
-                                        </td>
-
-                                        <td className="px-1.5 py-1.5 text-center font-mono font-bold text-gray-600 bg-gray-50">{item.diasCultivo}</td>
-
-                                        {/* Input Editável Peso */}
-                                        <td className="px-1.5 py-1.5 text-right">
-                                            <div className="print-visible font-mono font-bold text-black text-[10px]">
-                                                {item.pMedInputValue}
-                                            </div>
-                                            {isPublic ? (
-                                                <div className="font-mono font-bold text-black text-[10px]">
-                                                    {item.pMedInputValue || '-'}
-                                                </div>
-                                            ) : (
-                                                <input
-                                                    type="text"
-                                                    value={item.pMedInputValue}
-                                                    onChange={(e) => handleUpdateRow(item.viveiro, 'pMedStr', e.target.value)}
-                                                    className="print-hidden w-full text-right bg-transparent font-bold text-black text-[10px] outline-none border-b border-transparent focus:border-orange-500"
-                                                />
-                                            )}
-                                        </td>
-
-                                        {/* QUANTIDADE (Input Editável) */}
-                                        <td className="px-1.5 py-1.5 text-right">
-                                            <div className="print-visible font-mono font-bold text-gray-700 text-[10px]">
-                                                {item.quatInputValue}
-                                            </div>
-                                            {isPublic ? (
-                                                <div className="font-mono font-bold text-gray-700 text-[10px]">
-                                                    {item.quatInputValue || '-'}
-                                                </div>
-                                            ) : (
-                                                <input
-                                                    type="text"
-                                                    value={item.quatInputValue}
-                                                    onChange={(e) => handleUpdateRow(item.viveiro, 'quat', e.target.value)}
-                                                    className="print-hidden w-full text-right bg-transparent font-bold text-gray-700 text-[10px] outline-none border-b border-transparent focus:border-orange-500"
-                                                />
-                                            )}
-                                        </td>
-
-                                        {/* PESO TOTAL (Editável) */}
-                                        <td className="px-1.5 py-1.5 text-right bg-gray-50/50">
-                                            <div className="print-visible font-mono font-bold text-gray-600 text-[10px]">
-                                                {item.pesoTotal}
-                                            </div>
-                                            <input
-                                                type="text"
-                                                value={item.pesoTotalInputValue}
-                                                onChange={(e) => handleUpdateRow(item.viveiro, 'pesoTotalStr', e.target.value)}
-                                                className="print-hidden w-full text-right bg-transparent font-bold text-gray-600 text-[10px] outline-none border-b border-transparent focus:border-orange-500"
-                                            />
-                                        </td>
-
-                                        {/* P.M ANTERIOR (Agora Editável) */}
-                                        <td className="px-1.5 py-1.5 text-right">
-                                            <input
-                                                type="text"
-                                                value={item.pAntStr || ''}
-                                                onChange={(e) => handleUpdateRow(item.viveiro, 'pAntStr', e.target.value)}
-                                                className="print-hidden w-full text-right bg-transparent font-mono text-gray-500 text-[10px] outline-none border-b border-transparent focus:border-orange-500 hover:border-gray-200 transaction-colors"
-                                                placeholder="-"
-                                            />
-                                            <div className="print-visible hidden font-mono text-gray-500 text-[10px]">{item.pAntDisplay}</div>
-                                        </td>
-                                        <td className="px-1.5 py-1.5 text-right font-mono font-bold text-gray-700 text-[10px] bg-orange-50/10">{item.incSemanalStr}</td>
-                                        <td className="px-1.5 py-1.5 text-right font-mono font-black text-[#9A3412] text-[10px] bg-orange-50/20">{item.gpdDisplay}</td>
-                                        <td className="px-2 py-1.5 text-left flex justify-start">
-                                            <span className={`inline - flex items - center px - 1.5 py - 0.5 rounded - full text - [8.5px] font - bold uppercase tracking - wider ${item.statusTextColor} ${item.rowBgColor.replace('bg-', 'bg-opacity-50 min-w-[110px] justify-start ')} border border - current / 10 shadow - sm print: min - w - [100px]`}>
-                                                {item.analysisStatus}
                                             </span>
+                                        </td>
+
+                                        <td className="px-4 py-4 text-center font-bold text-slate-400">{item.diasCultivo}</td>
+
+                                        <td className="px-4 py-4 text-right font-black text-slate-800 text-sm">
+                                            {item.pMedInputValue}
+                                        </td>
+
+                                        <td className="px-4 py-4 text-right font-bold text-slate-400">
+                                            {item.quatInputValue}
+                                        </td>
+
+                                        <td className="px-4 py-4 text-right font-black text-slate-800">
+                                            {item.pesoTotal}
+                                        </td>
+
+                                        <td className="px-4 py-4 text-right font-bold text-slate-300">
+                                            {item.pAntDisplay}
+                                        </td>
+
+                                        <td className={`px-4 py-4 text-right font-black ${item.incSemanalStr.includes('+') ? 'text-emerald-500' : 'text-slate-400'}`}>
+                                            {item.incSemanalStr}
+                                        </td>
+
+                                        <td className="px-4 py-4 text-right font-bold text-slate-400">
+                                            {item.gpdDisplay}
+                                        </td>
+
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2">
+                                                {/* Logic for Status Badge based on analysisStatus */}
+                                                {(() => {
+                                                    const status = item.analysisStatus.split(':')[0].toUpperCase();
+                                                    const label = item.analysisStatus.split(':')[0];
+                                                    const subLabel = item.analysisStatus.split(':')[1] || '';
+
+                                                    let badgeClass = "";
+                                                    let icon = null;
+
+                                                    if (status.includes('ESPETACULAR') || status.includes('ÓTIMO')) {
+                                                        badgeClass = "bg-emerald-50 text-emerald-600 border-emerald-100";
+                                                        icon = <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" /></svg>;
+                                                    } else if (status.includes('REGULAR') || status.includes('BOM')) {
+                                                        badgeClass = "bg-blue-50 text-blue-600 border-blue-100";
+                                                        icon = <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" /></svg>;
+                                                    } else if (status.includes('RUIM')) {
+                                                        badgeClass = "bg-orange-50 text-orange-600 border-orange-100";
+                                                        icon = <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>;
+                                                    } else {
+                                                        badgeClass = "bg-rose-50 text-rose-600 border-rose-100";
+                                                        icon = <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>;
+                                                    }
+
+                                                    return (
+                                                        <div className={`flex flex-col border rounded-xl px-3 py-1.5 min-w-[140px] shadow-sm ${badgeClass}`}>
+                                                            <div className="flex items-center gap-1.5 font-black uppercase text-[10px]">
+                                                                {icon}
+                                                                {label}
+                                                            </div>
+                                                            <div className="text-[9px] font-bold opacity-80">{subLabel.replace('(', '').replace(')', '')}</div>
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -1211,30 +1129,46 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                         </table>
                     </div>
 
-                    {/* Footer Info */}
-                    <div className="mt-4 flex flex-col md:flex-row justify-between gap-4 text-[10px] text-gray-500 bg-gray-50 p-4 rounded-lg">
-                        <div className="flex items-center gap-4">
-                            <div>
-                                <p className="font-bold text-gray-700 mb-1">Legenda de Status</p>
-                                <div className="flex flex-wrap gap-3">
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#FFEDD5] border border-orange-300"></div> Espetacular</span>
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-[#FFF7ED] border border-orange-200"></div> Ótimo</span>
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-white border border-gray-200"></div> Bom</span>
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-white border border-gray-200 opacity-80"></div> Regular</span>
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-white border border-gray-200 opacity-60"></div> Ruim</span>
-                                    <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-red-50 border border-red-200"></div> Péssimo</span>
-                                </div>
+                    {/* Summary Stats Footer */}
+                    <div className="mt-4 flex flex-col md:flex-row justify-between items-center bg-[#F8FAFC] p-8 rounded-[24px] border border-gray-100">
+                        <div className="flex flex-wrap gap-12">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Média de Peso</span>
+                                <span className="text-2xl font-black text-slate-800">
+                                    {(processedData.reduce((acc, curr) => acc + (parseFloat(curr.pMedInputValue) || 0), 0) / (processedData.length || 1)).toFixed(2)} G
+                                </span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Biomassa</span>
+                                <span className="text-2xl font-black text-slate-800">
+                                    {processedData.reduce((acc, curr) => acc + (parseFloat(curr.pesoTotal) || 0), 0).toLocaleString('pt-BR')} KG
+                                </span>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Crescimento Médio</span>
+                                <span className="text-2xl font-black text-emerald-500">
+                                    {(processedData.reduce((acc, curr) => acc + (parseFloat(curr.gpdDisplay) || 0), 0) / (processedData.length || 1) * 7).toFixed(2)} G/Sem
+                                </span>
                             </div>
                         </div>
-                        <div className="text-right flex flex-col items-end">
+
+                        <div className="flex flex-col items-end">
                             <button
                                 onClick={() => setShowReferenceTable(!showReferenceTable)}
-                                className="text-indigo-600 font-bold hover:underline mb-1 no-print"
+                                className="flex items-center gap-2 text-xs font-black text-slate-400 hover:text-slate-800 uppercase tracking-widest transition-all group"
                             >
-                                {showReferenceTable ? 'Ocultar Tabela de Metas' : 'Ver Tabela de Metas'}
+                                Ver Tabela de Metas
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
                             </button>
-                            <p className="text-gray-400">Classificação baseada em tabela de crescimento padrão.</p>
                         </div>
+                    </div>
+
+                    {/* Status Legend */}
+                    <div className="mt-8 flex justify-center items-center gap-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-emerald-500"></div> Ótimo</span>
+                        <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-blue-500"></div> Regular / Bom</span>
+                        <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-orange-500"></div> Ruim</span>
+                        <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-rose-500"></div> Crítico</span>
                     </div>
 
                     {/* Tabela de Referência (Toggle) */}

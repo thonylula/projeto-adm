@@ -1310,48 +1310,44 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       {!isPublic && (
         <div className={`w-full max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border transition-all duration-300 mb-12 print:hidden ${editingId ? 'border-amber-300 ring-4 ring-amber-50 shadow-amber-100' : 'border-gray-200/60 hover:shadow-2xl'}`}>
 
-          <header className={`px-6 py-6 text-center relative overflow-hidden ${editingId ? 'bg-amber-500' : isThirteenthMode ? 'bg-slate-900' : 'bg-slate-900'}`}>
+          <header className={`px-8 py-10 text-center relative overflow-hidden bg-slate-900 shadow-lg`}>
             <div className="relative z-10">
-              <div className="flex justify-between items-center mb-2">
-                <button onClick={onBack} className="text-xs text-white/70 hover:text-white flex items-center gap-1 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              <div className="flex justify-between items-center mb-6">
+                <button onClick={onBack} className="text-[10px] font-black uppercase tracking-widest text-white/50 hover:text-white flex items-center gap-2 transition-colors group">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3 h-3 group-hover:-translate-x-1 transition-transform">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                   </svg>
                   Trocar Empresa
                 </button>
-                {editingId && <span className="text-xs font-bold text-white bg-black/20 px-2 py-1 rounded-full uppercase tracking-wide">Editando</span>}
+                {editingId && <span className="text-[10px] font-black text-white bg-orange-500 px-3 py-1 rounded-full uppercase tracking-widest shadow-lg shadow-orange-500/30">Modo Edição</span>}
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight uppercase">
-                {activeCompany.name} {isThirteenthMode ? '13º Proporcional' : formState.calculationMode === 'TERMINATION' ? 'Rescisão' : ''}
+              <h1 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">
+                {activeCompany.name}
               </h1>
-              <p className="text-white/80 text-sm mt-2 font-medium">Folha de Pagamento Inteligente (Multi-Escala)</p>
+              <p className="text-orange-500 text-[10px] font-black uppercase tracking-[0.3em]">Folha de Pagamento Inteligente</p>
             </div>
-            {isThirteenthMode
-              ? <div className="absolute top-0 left-0 w-full h-full opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-200 via-orange-600 to-red-900" />
-              : !editingId && <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-500 via-purple-500 to-pink-500" />
-            }
           </header>
 
           {/* --- SELETOR DE MODO DE CÁLCULO --- */}
-          <div className="bg-slate-50 border-b border-gray-200 p-2 flex justify-center gap-2">
+          <div className="bg-white border-b border-gray-100 p-2 flex justify-center gap-3 px-6">
             <button
               type="button"
               onClick={() => setFormState(prev => ({ ...prev, calculationMode: 'MONTHLY' }))}
-              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${!isThirteenthMode ? 'bg-white text-indigo-700 shadow-sm border border-indigo-200' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${formState.calculationMode === 'MONTHLY' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-gray-50'}`}
             >
               Folha Mensal
             </button>
             <button
               type="button"
               onClick={() => setFormState(prev => ({ ...prev, calculationMode: '13TH' }))}
-              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${isThirteenthMode ? 'bg-white text-red-600 shadow-sm border border-red-200' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${formState.calculationMode === '13TH' ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-slate-400 hover:bg-gray-50'}`}
             >
               13º Salário
             </button>
             <button
               type="button"
               onClick={() => setFormState(prev => ({ ...prev, calculationMode: 'TERMINATION' }))}
-              className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${formState.calculationMode === 'TERMINATION' ? 'bg-white text-orange-600 shadow-sm border border-orange-200' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${formState.calculationMode === 'TERMINATION' ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'text-slate-400 hover:bg-gray-50'}`}
             >
               Demissão
             </button>

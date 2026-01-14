@@ -2,15 +2,51 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CSS Reset and Variables */
+/* CSS Reset and Variables - Premium Palette */
 :root {
-  --primary: #4F46E5;
-  --secondary: #10B981;
+  --primary: #0F172A;
+  /* Deep Navy */
+  --accent: #F97316;
+  /* Vibrant Orange */
+  --success: #10B981;
+  /* Emerald Green */
+  --warning: #F59E0B;
+  /* Amber */
+  --danger: #EF4444;
+  /* Red */
+  --ai: #6366F1;
+  /* Indigo/AI Purple */
+  --bg-main: #F8FAFC;
+  /* Slate 50 - Soft Background */
 }
 
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-main);
+  color: #1E293B;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Base Card Style */
+.premium-card {
+  background: white;
+  border-radius: 24px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 12px -4px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Premium Badges */
+.badge-premium {
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 @media print {
