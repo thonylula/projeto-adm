@@ -58,6 +58,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
     const [filterText, setFilterText] = useState(initialFilter);
     const [showReferenceTable, setShowReferenceTable] = useState(false);
+    const [showNewBiometryOptions, setShowNewBiometryOptions] = useState(false);
 
     // --- NEWS ROTATION STATE ---
     const [newsList, setNewsList] = useState<string[]>(NEWS_HEADLINES_SOURCE);
@@ -65,6 +66,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
     const dashboardRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const aiFileInputRef = useRef<HTMLInputElement>(null);
 
     // --- PERSISTÊNCIA AUTOMÁTICA (SUPABASE) ---
     useEffect(() => {
@@ -214,9 +216,40 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
         }
     };
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, isAI: boolean = false) => {
         if (e.target.files && e.target.files.length > 0) {
-            setFiles(Array.from(e.target.files));
+            const selectedFiles = Array.from(e.target.files);
+            setFiles(selectedFiles);
+            if (isAI) {
+                handleProcessAI(selectedFiles[0]);
+            }
+        }
+    };
+
+    const handleProcessAI = async (file: File) => {
+        setStep('PROCESSING');
+        const orchestrator = getOrchestrator();
+        try {
+            const extraction = await orchestrator.routeToAgent('biometry-data', { image: file });
+            const result = extraction.data;
+
+            if (Array.isArray(result)) {
+                const normalized = result.map(item => ({
+                    ...item,
+                    viveiro: item.viveiro?.toUpperCase().trim().replace('OS-005', 'OC-005').replace('OS 005', 'OC-005') || item.viveiro,
+                    dataPovoamento: item.dataPovoamento || null
+                }));
+
+                setCurrentData(sortData(normalized));
+                setStep('DASHBOARD');
+                showToast(`✅ IA: ${result.length} viveiros processados!`);
+            } else {
+                throw new Error("Resposta da IA inválida.");
+            }
+        } catch (error: any) {
+            console.error("Erro AI:", error);
+            showToast(`❌ Erro IA: ${error.message}`);
+            setStep('DASHBOARD');
         }
     };
 
@@ -279,6 +312,10 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     };
 
     const handleNewBiometry = () => {
+        setShowNewBiometryOptions(true);
+    };
+
+    const startNewBiometryFromPrevious = () => {
         if (currentData.length === 0) {
             showToast('Nenhuma biometria anterior para carregar.');
             return;
@@ -295,7 +332,13 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
         }));
 
         setCurrentData(newData);
+        setShowNewBiometryOptions(false);
         showToast('✅ Biometria anterior carregada! Preencha os novos pesos médios.');
+    };
+
+    const startNewBiometryFromIA = () => {
+        setShowNewBiometryOptions(false);
+        aiFileInputRef.current?.click();
     };
 
     const handleAIAnalysis = async () => {
@@ -990,6 +1033,66 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     </div>
                 </div>
             )}
+
+            {/* Modal de Seleção: Nova Biometria */}
+            {showNewBiometryOptions && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/40 backdrop-blur-md animate-in fade-in duration-300 no-print">
+                    <div className="bg-white w-full max-sm:max-w-xs max-w-sm rounded-[32px] shadow-2xl border border-gray-100 p-8 animate-in zoom-in-95 duration-300">
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
+                                📊
+                            </div>
+                            <h3 className="text-xl font-black text-slate-800 tracking-tight">Nova Biometria</h3>
+                            <p className="text-sm text-gray-500 font-medium mt-2">Como deseja iniciar os lançamentos?</p>
+                        </div>
+
+                        <div className="space-y-4">
+                            <button
+                                onClick={startNewBiometryFromPrevious}
+                                className="w-full flex items-center gap-4 p-5 rounded-[20px] bg-slate-50 border border-slate-100 hover:bg-orange-50 hover:border-orange-200 transition-all group text-left"
+                            >
+                                <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                                    📋
+                                </div>
+                                <div>
+                                    <span className="block font-black text-slate-800 text-sm uppercase tracking-wider">Basear na Anterior</span>
+                                    <span className="block text-xs text-gray-400 font-bold uppercase mt-0.5">Viveiros & Pesos Antigos</span>
+                                </div>
+                            </button>
+
+                            <button
+                                onClick={startNewBiometryFromIA}
+                                className="w-full flex items-center gap-4 p-5 rounded-[20px] bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 hover:border-indigo-300 transition-all group text-left"
+                            >
+                                <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                                    🪄
+                                </div>
+                                <div>
+                                    <span className="block font-black text-indigo-700 text-sm uppercase tracking-wider">Importar via IA</span>
+                                    <span className="block text-[10px] text-indigo-400 font-black uppercase mt-0.5">Imagem ou Documento</span>
+                                </div>
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={() => setShowNewBiometryOptions(false)}
+                            className="w-full mt-8 py-4 text-xs font-black text-gray-400 hover:text-slate-600 uppercase tracking-[0.2em] transition-colors"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Hidden AI File Input */}
+            <input
+                type="file"
+                ref={aiFileInputRef}
+                className="hidden"
+                accept="image/*,application/pdf"
+                onChange={(e) => handleFileSelect(e, true)}
+                data-html2canvas-ignore="true"
+            />
 
             <div id="dashboard-content" ref={dashboardRef} className="w-full max-w-5xl mx-auto bg-white rounded-[32px] shadow-2xl shadow-blue-900/5 border border-gray-100 overflow-hidden relative">
 
