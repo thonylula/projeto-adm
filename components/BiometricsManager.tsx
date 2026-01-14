@@ -1042,7 +1042,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                     <th className="px-4 py-4 text-center">DIAS</th>
                                     <th className="px-4 py-4 text-right">P.M (G)</th>
                                     <th className="px-4 py-4 text-right">QUANT.</th>
-                                    <th className="px-4 py-4 text-right">PESO TOTAL</th>
+                                    <th className="px-4 py-4 text-right">PESO TOTAL (G)</th>
                                     <th className="px-4 py-4 text-right">P.M ANT.</th>
                                     <th className="px-4 py-4 text-right">INC. SEM.</th>
                                     <th className="px-4 py-4 text-right">GPD</th>
@@ -1129,46 +1129,23 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                         </table>
                     </div>
 
-                    {/* Summary Stats Footer */}
-                    <div className="mt-4 flex flex-col md:flex-row justify-between items-center bg-[#F8FAFC] p-8 rounded-[24px] border border-gray-100">
-                        <div className="flex flex-wrap gap-12">
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Média de Peso</span>
-                                <span className="text-2xl font-black text-slate-800">
-                                    {(processedData.reduce((acc, curr) => acc + (parseFloat(curr.pMedInputValue) || 0), 0) / (processedData.length || 1)).toFixed(2)} G
-                                </span>
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Biomassa</span>
-                                <span className="text-2xl font-black text-slate-800">
-                                    {processedData.reduce((acc, curr) => acc + (parseFloat(curr.pesoTotal) || 0), 0).toLocaleString('pt-BR')} KG
-                                </span>
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Crescimento Médio</span>
-                                <span className="text-2xl font-black text-emerald-500">
-                                    {(processedData.reduce((acc, curr) => acc + (parseFloat(curr.gpdDisplay) || 0), 0) / (processedData.length || 1) * 7).toFixed(2)} G/Sem
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col items-end">
-                            <button
-                                onClick={() => setShowReferenceTable(!showReferenceTable)}
-                                className="flex items-center gap-2 text-xs font-black text-slate-400 hover:text-slate-800 uppercase tracking-widest transition-all group"
-                            >
-                                Ver Tabela de Metas
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
-                            </button>
-                        </div>
-                    </div>
 
                     {/* Status Legend */}
-                    <div className="mt-8 flex justify-center items-center gap-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-emerald-500"></div> Ótimo</span>
-                        <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-blue-500"></div> Regular / Bom</span>
-                        <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-orange-500"></div> Ruim</span>
-                        <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-rose-500"></div> Crítico</span>
+                    <div className="mt-8 flex flex-col md:flex-row justify-between items-center gap-6 no-print">
+                        <div className="flex justify-center items-center gap-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                            <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-emerald-500"></div> Ótimo</span>
+                            <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-blue-500"></div> Regular / Bom</span>
+                            <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-orange-500"></div> Ruim</span>
+                            <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-rose-500"></div> Crítico</span>
+                        </div>
+
+                        <button
+                            onClick={() => setShowReferenceTable(!showReferenceTable)}
+                            className="flex items-center gap-2 text-xs font-black text-slate-400 hover:text-slate-800 uppercase tracking-widest transition-all group"
+                        >
+                            {showReferenceTable ? 'Ocultar Tabela de Metas' : 'Ver Tabela de Metas'}
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${showReferenceTable ? 'rotate-90' : 'group-hover:translate-x-1'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                        </button>
                     </div>
 
                     {/* Tabela de Referência (Toggle) */}
