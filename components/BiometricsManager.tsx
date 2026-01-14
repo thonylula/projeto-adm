@@ -1090,10 +1090,10 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                 data-html2canvas-ignore="true"
             />
 
-            <div id="dashboard-content" ref={dashboardRef} className="w-full max-w-5xl mx-auto bg-white rounded-[32px] shadow-2xl shadow-blue-900/5 border border-gray-100 overflow-hidden relative">
+            <div id="dashboard-content" ref={dashboardRef} className="w-full max-w-5xl mx-auto bg-white rounded-2xl md:rounded-[32px] shadow-2xl shadow-blue-900/5 border border-gray-100 overflow-hidden relative">
 
                 {/* --- PREMIUM HEADER --- */}
-                <header className="bg-white px-10 py-10 flex items-center justify-between gap-6 border-b border-gray-50">
+                <header className="bg-white px-6 py-8 md:px-10 md:py-10 flex flex-col md:flex-row items-center justify-between gap-6 border-b border-gray-50">
 
                     {/* Left: Branding */}
                     <div className="flex-1 flex justify-start items-center gap-3">
@@ -1107,25 +1107,25 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     </div>
 
                     {/* Center: Title Section */}
-                    <div className="flex-[2] flex flex-col items-center text-center">
-                        <h1 className="text-5xl font-black text-slate-800 tracking-tighter leading-none mb-2">
+                    <div className="flex-[2] flex flex-col items-center text-center order-first md:order-none">
+                        <h1 className="text-3xl md:text-5xl font-black text-slate-800 tracking-tighter leading-none mb-2">
                             BIOMETRIA
                         </h1>
-                        <p className="text-sm font-bold text-orange-500 uppercase tracking-[0.3em] font-sans">
+                        <p className="text-[10px] md:text-sm font-bold text-orange-500 uppercase tracking-[0.3em] font-sans">
                             Análise de Performance
                         </p>
                     </div>
 
                     {/* Right: Metadata */}
-                    <div className="flex-1 flex flex-col items-end text-right gap-1 font-sans">
+                    <div className="flex-1 flex flex-col items-center md:items-end text-center md:text-right gap-1 font-sans">
                         <div className="text-[10px] items-center gap-2 font-bold text-gray-400 uppercase tracking-widest mb-1 flex">
                             Relatório Técnico <span className="w-1 h-1 rounded-full bg-gray-300"></span> {new Date(biometryDate + 'T12:00:00').toLocaleDateString('pt-BR')}
                         </div>
-                        <p className="text-xs leading-none">
+                        <p className="text-[10px] md:text-xs leading-none">
                             <span className="text-gray-400 font-medium">Gerente:</span>
                             <span className="text-slate-800 font-bold ml-1">Cleiton Manoel de Lima</span>
                         </p>
-                        <p className="text-xs leading-none">
+                        <p className="text-[10px] md:text-xs leading-none">
                             <span className="text-gray-400 font-medium">Analista Adm:</span>
                             <span className="text-slate-800 font-bold ml-1">Luanthony L. Oliveira</span>
                         </p>
@@ -1134,12 +1134,12 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                 </header>
 
                 {/* Tabela Principal */}
-                <main className="px-6 pb-6 bg-white">
-                    <div className="rounded-2xl border border-gray-100 overflow-hidden mb-8">
-                        <table className="w-full text-xs text-left">
+                <main className="px-4 md:px-6 pb-6 bg-white">
+                    <div className="rounded-2xl border border-gray-100 overflow-x-auto mb-8 scrollbar-thin scrollbar-thumb-gray-200">
+                        <table className="w-full text-[10px] md:text-xs text-left min-w-[1000px] md:min-w-0">
                             <thead className="bg-[#F8FAFC] text-slate-500 uppercase font-black tracking-widest border-b border-gray-100">
                                 <tr>
-                                    <th className="px-5 py-4 min-w-[80px]">VIV.</th>
+                                    <th className="px-5 py-4 min-w-[80px] sticky left-0 bg-[#F8FAFC] z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">VIV.</th>
                                     <th className="px-4 py-4 text-center">D. POV.</th>
                                     <th className="px-4 py-4 text-center">DIAS</th>
                                     <th className="px-4 py-4 text-right">P.M (G)</th>
@@ -1154,7 +1154,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                             <tbody className="divide-y divide-gray-50">
                                 {processedData.map((item, idx) => (
                                     <tr key={idx} className="hover:bg-slate-50/50 transition-colors border-b border-gray-50 last:border-0 group">
-                                        <td className="px-5 py-4 font-bold text-slate-800">{item.viveiro}</td>
+                                        <td className="px-5 py-4 font-bold text-slate-800 sticky left-0 bg-white group-hover:bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">{item.viveiro}</td>
 
                                         <td className="px-4 py-4 text-center group/date relative">
                                             <input
@@ -1228,12 +1228,12 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                                     }
 
                                                     return (
-                                                        <div className={`flex flex-col border rounded-xl px-3 py-1.5 min-w-[140px] shadow-sm ${badgeClass}`}>
-                                                            <div className="flex items-center gap-1.5 font-black uppercase text-[10px]">
+                                                        <div className={`flex flex-col border rounded-xl px-2 md:px-3 py-1 md:py-1.5 min-w-[120px] md:min-w-[140px] shadow-sm ${badgeClass}`}>
+                                                            <div className="flex items-center gap-1.5 font-black uppercase text-[9px] md:text-[10px]">
                                                                 {icon}
                                                                 {label}
                                                             </div>
-                                                            <div className="text-[9px] font-bold opacity-80">{subLabel.replace('(', '').replace(')', '')}</div>
+                                                            <div className="text-[8px] md:text-[9px] font-bold opacity-80 leading-none mt-0.5">{subLabel.replace('(', '').replace(')', '')}</div>
                                                         </div>
                                                     );
                                                 })()}
@@ -1248,11 +1248,11 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
                     {/* Status Legend */}
                     <div className="mt-8 flex flex-col md:flex-row justify-between items-center gap-6 no-print">
-                        <div className="flex justify-center items-center gap-6 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                            <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-emerald-500"></div> Ótimo</span>
-                            <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-blue-500"></div> Regular / Bom</span>
-                            <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-orange-500"></div> Ruim</span>
-                            <span className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-rose-500"></div> Crítico</span>
+                        <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-3 text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-400">
+                            <span className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> Ótimo</span>
+                            <span className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div> Regular / Bom</span>
+                            <span className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div> Ruim</span>
+                            <span className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div> Crítico</span>
                         </div>
 
                         <button
