@@ -985,7 +985,8 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                     type="date"
                                     value={biometryDate}
                                     onChange={(e) => setBiometryDate(e.target.value)}
-                                    className="text-sm font-bold text-slate-700 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all cursor-pointer min-w-[180px]"
+                                    disabled={isPublic}
+                                    className={`text-sm font-bold text-slate-700 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 outline-none transition-all min-w-[180px] ${isPublic ? 'cursor-default opacity-80' : 'focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer'}`}
                                 />
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -994,39 +995,41 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-end gap-3 pt-4 md:pt-0">
-                        <button
-                            onClick={() => setShowHistory(true)}
-                            className="flex items-center gap-2 h-11 px-5 rounded-xl text-sm font-bold text-slate-600 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            Histórico
-                        </button>
+                    {!isPublic && (
+                        <div className="flex flex-wrap items-end gap-3 pt-4 md:pt-0">
+                            <button
+                                onClick={() => setShowHistory(true)}
+                                className="flex items-center gap-2 h-11 px-5 rounded-xl text-sm font-bold text-slate-600 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                Histórico
+                            </button>
 
-                        <button
-                            onClick={handleNewBiometry}
-                            className="flex items-center gap-2 h-11 px-5 rounded-xl text-sm font-bold text-orange-600 bg-white border-2 border-orange-500 hover:bg-orange-50 transition-all shadow-sm"
-                        >
-                            <span className="text-lg">+</span> Nova Biometria
-                        </button>
+                            <button
+                                onClick={handleNewBiometry}
+                                className="flex items-center gap-2 h-11 px-5 rounded-xl text-sm font-bold text-orange-600 bg-white border-2 border-orange-500 hover:bg-orange-50 transition-all shadow-sm"
+                            >
+                                <span className="text-lg">+</span> Nova Biometria
+                            </button>
 
-                        <button
-                            onClick={handleAIAnalysis}
-                            disabled={isAnalyzing}
-                            className={`flex items-center gap-2 h-11 px-5 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all ${isAnalyzing ? 'opacity-50' : ''}`}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${isAnalyzing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                            Analisar com IA
-                        </button>
+                            <button
+                                onClick={handleAIAnalysis}
+                                disabled={isAnalyzing}
+                                className={`flex items-center gap-2 h-11 px-5 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all ${isAnalyzing ? 'opacity-50' : ''}`}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${isAnalyzing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                Analisar com IA
+                            </button>
 
-                        <button
-                            onClick={handleSaveBiometry}
-                            className="flex items-center gap-2 h-11 px-6 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                            Salvar Biometria
-                        </button>
-                    </div>
+                            <button
+                                onClick={handleSaveBiometry}
+                                className="flex items-center gap-2 h-11 px-6 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                                Salvar Biometria
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -1157,23 +1160,33 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                         <td className="px-5 py-4 font-bold text-slate-800 sticky left-0 bg-white group-hover:bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">{item.viveiro}</td>
 
                                         <td className="px-4 py-4 text-center group/date relative">
-                                            <input
-                                                type="date"
-                                                value={item.dataPovoamento || ''}
-                                                onChange={(e) => handleUpdateRow(item.viveiro, 'dataPovoamento', e.target.value)}
-                                                className="bg-gray-100 text-slate-500 font-bold px-3 py-1.5 rounded-lg text-[10px] border-none outline-none focus:ring-2 focus:ring-orange-500/20 transition-all cursor-pointer w-[110px]"
-                                            />
+                                            {isPublic ? (
+                                                <span className="bg-gray-100 text-slate-500 font-bold px-3 py-1.5 rounded-lg text-[10px] w-[110px] inline-block">
+                                                    {item.dataPovoamento ? (item.dataPovoamento.includes('-') ? item.dataPovoamento.split('-').reverse().join('/') : item.dataPovoamento) : '-'}
+                                                </span>
+                                            ) : (
+                                                <input
+                                                    type="date"
+                                                    value={item.dataPovoamento || ''}
+                                                    onChange={(e) => handleUpdateRow(item.viveiro, 'dataPovoamento', e.target.value)}
+                                                    className="bg-gray-100 text-slate-500 font-bold px-3 py-1.5 rounded-lg text-[10px] border-none outline-none focus:ring-2 focus:ring-orange-500/20 transition-all cursor-pointer w-[110px]"
+                                                />
+                                            )}
                                         </td>
 
                                         <td className="px-4 py-4 text-center font-bold text-slate-400">{item.diasCultivo}</td>
 
                                         <td className="px-4 py-4 text-right">
-                                            <input
-                                                type="text"
-                                                value={item.pMedInputValue}
-                                                onChange={(e) => handleUpdateRow(item.viveiro, 'pMedStr', e.target.value)}
-                                                className="w-16 text-right bg-transparent border-b border-transparent focus:border-slate-200 outline-none transition-all font-bold text-slate-400"
-                                            />
+                                            {isPublic ? (
+                                                <span className="font-bold text-slate-400">{item.pMedInputValue}</span>
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    value={item.pMedInputValue}
+                                                    onChange={(e) => handleUpdateRow(item.viveiro, 'pMedStr', e.target.value)}
+                                                    className="w-16 text-right bg-transparent border-b border-transparent focus:border-slate-200 outline-none transition-all font-bold text-slate-400"
+                                                />
+                                            )}
                                         </td>
 
                                         <td
