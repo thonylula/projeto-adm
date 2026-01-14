@@ -1097,10 +1097,13 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
                     {/* Left: Branding */}
                     <div className="flex-1 flex justify-start items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center text-white font-bold flex-shrink-0 shadow-md">
+                        <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-white font-black flex-shrink-0 shadow-lg shadow-orange-500/20">
                             C
                         </div>
-                        <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">Carapitanga</h2>
+                        <div className="flex flex-col">
+                            <h2 className="text-lg font-black text-slate-800 tracking-tighter leading-none">CARAPITANGA</h2>
+                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Gestão Inteligente</span>
+                        </div>
                     </div>
 
                     {/* Center: Title Section */}
@@ -1164,12 +1167,12 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
                                         <td className="px-4 py-4 text-center font-bold text-slate-400">{item.diasCultivo}</td>
 
-                                        <td className="px-4 py-4 text-right font-black text-slate-800 text-sm">
+                                        <td className="px-4 py-4 text-right">
                                             <input
                                                 type="text"
                                                 value={item.pMedInputValue}
                                                 onChange={(e) => handleUpdateRow(item.viveiro, 'pMedStr', e.target.value)}
-                                                className="w-16 text-right bg-transparent border-b border-transparent focus:border-slate-300 outline-none transition-all"
+                                                className="w-16 text-right bg-transparent border-b border-transparent focus:border-slate-200 outline-none transition-all font-bold text-slate-400"
                                             />
                                         </td>
 
