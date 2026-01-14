@@ -6,8 +6,8 @@ import { safeIncludes } from '../utils';
 import { getOrchestrator } from '../services/agentService';
 import { SupabaseService } from '../services/supabaseService';
 
-// --- LOGO PADRÃO CARAPITANGA (SVG Data URI) ---
-const DEFAULT_LOGO = "data:image/svg+xml;charset=utf-8,%3Csvg%20viewBox%3D%270%200%20100%20100%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20fill%3D%27none%27%3E%3Cpath%20d%3D%27M78%2035C75%2025%2065%2018%2052%2018C35%2018%2022%2030%2022%2048C22%2062%2030%2072%2040%2078C45%2081%2052%2082%2058%2080%27%20stroke%3D%27%23f97316%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M25%2045C28%2042%2035%2040%2040%2042%27%20stroke%3D%27%23fdba74%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M26%2055C30%2052%2038%2050%2044%2052%27%20stroke%3D%27%23fdba74%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M32%2065C36%2062%2044%2060%2050%2062%27%20stroke%3D%27%23fdba74%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M78%2035C82%2038%2084%2045%2080%2052C76%2058%2070%2060%2065%2058%27%20stroke%3D%27%23f97316%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Ccircle%20cx%3D%2770%27%20cy%3D%2732%27%20r%3D%273%27%20fill%3D%27black%27%2F%3E%3Cpath%20d%3D%27M78%2035C85%2025%2095%2020%2098%2015%27%20stroke%3D%27%23ea580c%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M75%2035C85%2010%2060%205%2050%208%27%20stroke%3D%27%23ea580c%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M58%2080L62%2088M58%2080L54%2090M58%2080L66%2085%27%20stroke%3D%27%23f97316%27%20stroke-width%3D%274%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E";
+const DEFAULT_LOGO = "https://lh3.googleusercontent.com/d/1dxnfHKS09Mu424q1TiXUcUB6WJhAjWrG"; // Logo Carapitanga Oficial
+const SHRIMP_LOGO = "data:image/svg+xml;charset=utf-8,%3Csvg%20viewBox%3D%270%200%20100%20100%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20fill%3D%27none%27%3E%3Cpath%20d%3D%27M78%2035C75%2025%2065%2018%2052%2018C35%2018%2022%2030%2022%2048C22%2062%2030%2072%2040%2078C45%2081%2052%2082%2058%2080%27%20stroke%3D%27%23f97316%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M25%2045C28%2042%2035%2040%2040%2042%27%20stroke%3D%27%23fdba74%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M26%2055C30%2052%2038%2050%2044%2052%27%20stroke%3D%27%23fdba74%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M32%2065C36%2062%2044%2060%2050%2062%27%20stroke%3D%27%23fdba74%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M78%2035C82%2038%2084%2045%2080%2052C76%2058%2070%2060%2065%2058%27%20stroke%3D%27%23f97316%27%20stroke-width%3D%276%27%20stroke-linecap%3D%27round%27%2F%3E%3Ccircle%20cx%3D%2770%27%20cy%3D%2732%27%20r%3D%273%27%20fill%3D%27black%27%2F%3E%3Cpath%20d%3D%27M78%2035C85%2025%2095%2020%2098%2015%27%20stroke%3D%27%23ea580c%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M75%2035C85%2010%2060%205%2050%208%27%20stroke%3D%27%23ea580c%27%20stroke-width%3D%271.5%27%20stroke-linecap%3D%27round%27%2F%3E%3Cpath%20d%3D%27M58%2080L62%2088M58%2080L54%2090M58%2080L66%2085%27%20stroke%3D%27%23f97316%27%20stroke-width%3D%274%27%20stroke-linecap%3D%27round%27%2F%3E%3C%2Fsvg%3E";
 
 // --- TABELA DE REFERÊNCIA DE CRESCIMENTO (ATUALIZADA) ---
 const GROWTH_TABLE = [
@@ -904,8 +904,12 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
             <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
                 <div className="p-10 border-b border-gray-100 flex flex-col items-center justify-center text-center hover:bg-orange-50/30 cursor-pointer" onDragOver={(e) => e.preventDefault()} onDrop={handleFileDrop}>
-                    <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-6">
-                        <span className="text-4xl">🦐</span>
+                    <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-gray-100">
+                        {logo ? (
+                            <img src={logo} alt="Logo" className="w-14 h-14 object-contain" />
+                        ) : (
+                            <span className="text-4xl text-orange-500">🦐</span>
+                        )}
                     </div>
                     <h3 className="text-xl font-bold text-gray-800 mb-2">Importar Biometria</h3>
                     <p className="text-sm text-gray-500 mb-6">Arraste a foto do boletim ou planilha.</p>
@@ -1099,13 +1103,27 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                 <header className="bg-white px-6 py-8 md:px-10 md:py-10 flex flex-col md:flex-row items-center justify-between gap-6 border-b border-gray-50">
 
                     {/* Left: Branding */}
-                    <div className="flex-1 flex justify-start items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center text-white font-black flex-shrink-0 shadow-lg shadow-orange-500/20">
-                            C
+                    <div className="flex-1 flex justify-start items-center gap-4">
+                        <div
+                            onClick={() => document.getElementById('logo-upload-input')?.click()}
+                            className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center flex-shrink-0 shadow-xl shadow-gray-200/50 border border-gray-50/50 overflow-hidden group cursor-pointer hover:border-orange-200 transition-all"
+                        >
+                            {logo ? (
+                                <img src={logo} alt="Logo" className="w-10 h-10 object-contain hover:scale-110 transition-transform duration-500" />
+                            ) : (
+                                <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center text-white font-black text-xl">C</div>
+                            )}
+                            <input
+                                id="logo-upload-input"
+                                type="file"
+                                className="hidden"
+                                onChange={handleLogoUpload}
+                                accept="image/*"
+                            />
                         </div>
                         <div className="flex flex-col">
-                            <h2 className="text-lg font-black text-slate-800 tracking-tighter leading-none">CARAPITANGA</h2>
-                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Gestão Inteligente</span>
+                            <h2 className="text-xl font-black text-slate-800 tracking-tighter leading-tight">CARAPITANGA</h2>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-none">Gestão Inteligente</span>
                         </div>
                     </div>
 
