@@ -1153,23 +1153,37 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                     <tr key={idx} className="hover:bg-slate-50/50 transition-colors border-b border-gray-50 last:border-0 group">
                                         <td className="px-5 py-4 font-bold text-slate-800">{item.viveiro}</td>
 
-                                        <td className="px-4 py-4 text-center">
-                                            <span className="bg-gray-100 text-slate-500 font-bold px-3 py-1.5 rounded-lg text-[10px]">
-                                                {item.dataPovoamento ? (item.dataPovoamento.includes('-') ? item.dataPovoamento.split('-').reverse().join('/') : item.dataPovoamento) : '-'}
-                                            </span>
+                                        <td className="px-4 py-4 text-center group/date relative">
+                                            <input
+                                                type="date"
+                                                value={item.dataPovoamento || ''}
+                                                onChange={(e) => handleUpdateRow(item.viveiro, 'dataPovoamento', e.target.value)}
+                                                className="bg-gray-100 text-slate-500 font-bold px-3 py-1.5 rounded-lg text-[10px] border-none outline-none focus:ring-2 focus:ring-orange-500/20 transition-all cursor-pointer w-[110px]"
+                                            />
                                         </td>
 
                                         <td className="px-4 py-4 text-center font-bold text-slate-400">{item.diasCultivo}</td>
 
                                         <td className="px-4 py-4 text-right font-black text-slate-800 text-sm">
-                                            {item.pMedInputValue}
+                                            <input
+                                                type="text"
+                                                value={item.pMedInputValue}
+                                                onChange={(e) => handleUpdateRow(item.viveiro, 'pMedStr', e.target.value)}
+                                                className="w-16 text-right bg-transparent border-b border-transparent focus:border-slate-300 outline-none transition-all"
+                                            />
                                         </td>
 
-                                        <td className="px-4 py-4 text-right font-bold text-slate-400">
+                                        <td
+                                            onClick={() => handleCopy(item.quatInputValue, 'Quantidade')}
+                                            className="px-4 py-4 text-right font-bold text-slate-400 cursor-copy hover:text-slate-600 transition-colors"
+                                        >
                                             {item.quatInputValue}
                                         </td>
 
-                                        <td className="px-4 py-4 text-right font-black text-slate-800">
+                                        <td
+                                            onClick={() => handleCopy(item.pesoTotal, 'Peso Total')}
+                                            className="px-4 py-4 text-right font-black text-slate-800 cursor-copy hover:text-slate-900 transition-colors"
+                                        >
                                             {item.pesoTotal}
                                         </td>
 
