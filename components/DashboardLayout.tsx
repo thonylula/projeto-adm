@@ -54,8 +54,8 @@ const NavItem: React.FC<{
           }
         }}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-          ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/50'
-          : 'hover:bg-slate-800 hover:text-white'
+          ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/20 active:scale-[0.98]'
+          : 'hover:bg-slate-800/50 hover:text-white'
           }`}
       >
         <span className={`${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
@@ -404,17 +404,19 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         md:relative md:translate-x-0 flex flex-col
       `}>
-        {/* Sidebar Header */}
-        <div className="p-6 border-b border-slate-800">
+        {/* Sidebar Header - Carapitanga Style */}
+        <div className="p-6">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-orange-500 flex items-center justify-center text-white font-bold flex-shrink-0">
-              A
+            <div className="w-10 h-10 rounded-xl bg-orange-500 shadow-lg shadow-orange-500/30 flex items-center justify-center text-white flex-shrink-0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+              </svg>
             </div>
             <div className="overflow-hidden">
-              <h1 className="text-white font-bold text-sm leading-tight truncate" title={`Adm: ${currentUser}`}>
-                Adm: {currentUser}
+              <h1 className="text-white font-black text-base leading-none tracking-tight uppercase">
+                Carapitanga
               </h1>
-              <p className="text-xs text-slate-500">Gestão Inteligente</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Gestão Inteligente</p>
             </div>
           </div>
         </div>
@@ -435,24 +437,24 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           ))}
         </nav>
 
-        {/* User Footer - Hidden for visitors */}
+        {/* User Footer - Carapitanga Style */}
         {!isPublic && (
-          <div className="p-4 border-t border-slate-800 bg-slate-900/50">
+          <div className="p-4 mt-auto border-t border-slate-800/50 bg-slate-900/30">
             <div className="flex items-center gap-3 mb-4 px-2">
-              <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white uppercase flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-sm font-bold text-white uppercase flex-shrink-0">
                 {currentUser.substring(0, 2)}
               </div>
               <div className="overflow-hidden">
-                <p className="text-sm text-white font-medium truncate" title={currentUser}>{currentUser}</p>
-                <p className="text-xs text-slate-500">Administrador</p>
+                <p className="text-sm text-white font-bold truncate" title={currentUser}>{currentUser}</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase">Administrador</p>
               </div>
             </div>
 
             <button
               onClick={onLogout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-red-900/30 hover:text-red-400 text-slate-400 rounded-lg text-sm transition-colors border border-slate-700 hover:border-red-900/50"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl text-xs font-bold transition-all border border-slate-700/50"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
               </svg>
               Sair do Sistema
