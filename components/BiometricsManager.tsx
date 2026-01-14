@@ -130,24 +130,24 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
         if (currentData.length > 0) {
             setCurrentData(prev => prev.map(item => {
                 let itemDataPovoamento = item.dataPovoamento;
+                if (!itemDataPovoamento) return item;
 
-                // Se o formato for DD/MM/AAAA, converter para ISO para salvar/processar
-                if (itemDataPovoamento && itemDataPovoamento.includes('/')) {
-                    const [d, m, y] = itemDataPovoamento.split('/');
-                    if (y && m && d) itemDataPovoamento = `${y}-${m}-${d}`;
+                // Normalização robusta de data (DD/MM/YY ou DD/MM/YYYY para YYYY-MM-DD)
+                if (itemDataPovoamento.includes('/')) {
+                    let [d, m, y] = itemDataPovoamento.split('/');
+                    if (y && y.length === 2) y = '20' + y;
+                    if (y && m && d) itemDataPovoamento = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
                 }
 
-                if (itemDataPovoamento) {
-                    try {
-                        const pDate = new Date(itemDataPovoamento);
-                        const bDate = new Date(biometryDate);
-                        if (!isNaN(pDate.getTime()) && !isNaN(bDate.getTime())) {
-                            const diffTime = Math.abs(bDate.getTime() - pDate.getTime());
-                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                            return { ...item, dataPovoamento: itemDataPovoamento, diasCultivo: diffDays };
-                        }
-                    } catch (e) { }
-                }
+                try {
+                    const pDate = new Date(itemDataPovoamento + 'T12:00:00');
+                    const bDate = new Date(biometryDate + 'T12:00:00');
+                    if (!isNaN(pDate.getTime()) && !isNaN(bDate.getTime())) {
+                        const diffTime = (bDate.getTime() - pDate.getTime());
+                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                        return { ...item, dataPovoamento: itemDataPovoamento, diasCultivo: diffDays > 0 ? diffDays : 0 };
+                    }
+                } catch (e) { }
                 return item;
             }));
         }
@@ -626,27 +626,23 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
             let doc = item.diasCultivo;
             let dataPov = item.dataPovoamento;
 
-            // Converter data Pov se estiver em formato brasileiro
+            // Normalização robusta de data no processamento
             if (dataPov && dataPov.includes('/')) {
-                const [d, m, y] = dataPov.split('/');
-                if (y && m && d) dataPov = `${y}-${m}-${d}`;
+                let [d, m, y] = dataPov.split('/');
+                if (y && y.length === 2) y = '20' + y;
+                if (y && m && d) dataPov = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
             }
 
-            // Se não tem data mas tem dias, inferir a data
-            if (!dataPov && doc && biometryDate) {
+            // Sempre recalcular os dias se tiver as duas datas para evitar dessincronização
+            if (dataPov && biometryDate) {
                 try {
-                    const bDate = new Date(biometryDate);
-                    const pTime = bDate.getTime() - (doc * 24 * 60 * 60 * 1000);
-                    dataPov = new Date(pTime).toISOString().split('T')[0];
-                } catch (e) { }
-            }
-
-            // Se não tem dias mas tem data, calcular os dias
-            if (!doc && dataPov && biometryDate) {
-                try {
-                    const pDate = new Date(dataPov);
-                    const bDate = new Date(biometryDate);
-                    doc = Math.ceil(Math.abs(bDate.getTime() - pDate.getTime()) / (1000 * 60 * 60 * 24));
+                    const pDate = new Date(dataPov + 'T12:00:00');
+                    const bDate = new Date(biometryDate + 'T12:00:00');
+                    if (!isNaN(pDate.getTime()) && !isNaN(bDate.getTime())) {
+                        const diffTime = (bDate.getTime() - pDate.getTime());
+                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                        doc = diffDays > 0 ? diffDays : 0;
+                    }
                 } catch (e) { }
             }
 
