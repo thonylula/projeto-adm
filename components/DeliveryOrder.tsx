@@ -30,6 +30,7 @@ interface ClientInfo {
 interface DeliveryOrderProps {
     isPublic?: boolean;
     initialView?: 'INPUT' | 'DASHBOARD' | 'HISTORY' | 'SHOWCASE';
+    isDarkMode?: boolean;
 }
 
 // --- Hardcoded Data (Ported from User Source) ---
@@ -90,7 +91,7 @@ const safeParseNumber = (val: any): number => {
     return 0;
 };
 
-export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, initialView }) => {
+export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, initialView, isDarkMode = false }) => {
     const [view, setView] = useState<'INPUT' | 'DASHBOARD' | 'HISTORY' | 'SHOWCASE'>(initialView || 'INPUT');
     const [inputText, setInputText] = useState('');
     const [data, setData] = useState<HarvestData[]>(INITIAL_HARVEST_DATA);
@@ -598,16 +599,16 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
 
     if (view === 'INPUT') {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 bg-white rounded-lg shadow-sm">
+            <div className={`flex flex-col items-center justify-center min-h-[60vh] p-6 rounded-lg transition-colors duration-500 ${isDarkMode ? 'bg-[#1E293B] shadow-none' : 'bg-white shadow-sm'}`}>
                 <div className="w-full max-w-2xl space-y-6">
                     <div className="text-center space-y-2">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-orange-100 text-orange-600 mb-4">
+                        <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 transition-colors ${isDarkMode ? 'bg-orange-900/30 text-orange-500' : 'bg-orange-100 text-orange-600'}`}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-900">Importar Ordem de Entrega</h2>
-                        <p className="text-gray-500">Cole o código ou texto com os dados da despesca abaixo para gerar o resumo.</p>
+                        <h2 className={`text-2xl font-bold transition-colors ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Importar Ordem de Entrega</h2>
+                        <p className={isDarkMode ? 'text-slate-400' : 'text-gray-500'}>Cole o código ou texto com os dados da despesca abaixo para gerar o resumo.</p>
                     </div>
 
                     <div className="space-y-4">
@@ -615,17 +616,17 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                             value={inputText}
                             onChange={(e) => setInputText(e.target.value)}
                             placeholder="Cole os dados aqui..."
-                            className="w-full h-48 p-4 rounded-lg border border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all font-mono text-sm resize-none"
+                            className={`w-full h-48 p-4 rounded-lg border focus:ring-2 focus:ring-orange-200 transition-all font-mono text-sm resize-none ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white focus:border-orange-500' : 'bg-white border-gray-300 focus:border-orange-500'}`}
                         />
 
                         <div className="flex items-center justify-center w-full">
-                            <label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-all">
+                            <label htmlFor="file-upload" className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-all ${isDarkMode ? 'bg-slate-800/50 border-slate-700 hover:bg-slate-800' : 'bg-gray-50 border-gray-300 hover:bg-gray-100'}`}>
                                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                    <svg className="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                    <svg className={`w-8 h-8 mb-4 ${isDarkMode ? 'text-slate-500' : 'text-gray-500'}`} aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
                                         <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
                                     </svg>
-                                    <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Clique para enviar</span> ou arraste e solte</p>
-                                    <p className="text-xs text-gray-500">
+                                    <p className={`mb-2 text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}><span className="font-semibold">Clique para enviar</span> ou arraste e solte</p>
+                                    <p className={`text-xs ${isDarkMode ? 'text-slate-500' : 'text-gray-500'}`}>
                                         {isAnalyzing ? 'PROCESSANDO COM AGENTE...' : 'Imagem ou PDF (Agente Logístico)'}
                                     </p>
                                 </div>
@@ -653,7 +654,7 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
 
                             <button
                                 onClick={() => setView('DASHBOARD')}
-                                className="w-full py-3 px-6 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:shadow-slate-200 transition-all flex items-center justify-center gap-2"
+                                className={`w-full py-3 px-6 font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 ${isDarkMode ? 'bg-slate-700 hover:bg-slate-600 text-white shadow-slate-900/20' : 'bg-slate-800 hover:bg-slate-900 text-white hover:shadow-slate-200'}`}
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
@@ -663,7 +664,7 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                         </div>
 
                         <div className="flex justify-center">
-                            <label className="max-w-xs w-full py-2 px-6 bg-white border border-gray-200 text-gray-500 hover:bg-gray-50 font-medium rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer text-xs text-center">
+                            <label className={`max-w-xs w-full py-2 px-6 border font-medium rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer text-xs text-center ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700' : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                                 </svg>
@@ -769,47 +770,47 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
             {view === 'HISTORY' ? (
                 <div className="space-y-8">
                     {/* FILTERS */}
-                    <section className="bg-white p-6 rounded-2xl shadow-lg border border-orange-50 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <section className={`p-6 rounded-2xl shadow-lg border grid grid-cols-1 md:grid-cols-4 gap-4 items-end transition-colors duration-500 ${isDarkMode ? 'bg-[#1E293B] border-slate-700 shadow-none' : 'bg-white border-orange-50'}`}>
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Data Início</label>
+                            <label className={`block text-sm font-bold mb-2 ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>Data Início</label>
                             <input
                                 type="date"
                                 value={historyFilters.startDate}
                                 onChange={e => setHistoryFilters({ ...historyFilters, startDate: e.target.value })}
-                                className="w-full p-2 border rounded-lg focus:ring-[#f26522] focus:border-[#f26522]"
+                                className={`w-full p-2 border rounded-lg focus:ring-[#f26522] focus:border-[#f26522] transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300'}`}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Data Fim</label>
+                            <label className={`block text-sm font-bold mb-2 ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>Data Fim</label>
                             <input
                                 type="date"
                                 value={historyFilters.endDate}
                                 onChange={e => setHistoryFilters({ ...historyFilters, endDate: e.target.value })}
-                                className="w-full p-2 border rounded-lg focus:ring-[#f26522] focus:border-[#f26522]"
+                                className={`w-full p-2 border rounded-lg focus:ring-[#f26522] focus:border-[#f26522] transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300'}`}
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Cliente</label>
+                            <label className={`block text-sm font-bold mb-2 ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>Cliente</label>
                             <select
                                 value={historyFilters.cliente}
                                 onChange={e => setHistoryFilters({ ...historyFilters, cliente: e.target.value })}
-                                className="w-full p-2 border rounded-lg focus:ring-[#f26522] focus:border-[#f26522]"
+                                className={`w-full p-2 border rounded-lg focus:ring-[#f26522] focus:border-[#f26522] transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300'}`}
                             >
                                 <option value="">Todos</option>
                                 {uniqueClients.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                         </div>
-                        <div className="flex items-center pb-2 text-gray-500 font-medium">
+                        <div className={`flex items-center pb-2 font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>
                             {historyData.filteredCount} registros encontrados
                         </div>
                     </section>
 
                     {/* HISTORY GRIDS */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <HistoryCard title="Balancete Mensal" data={historyData.months} color="blue" />
-                        <HistoryCard title="Balancete Trimestral" data={historyData.quarters} color="purple" />
-                        <HistoryCard title="Balancete Semestral" data={historyData.semesters} color="emerald" />
-                        <HistoryCard title="Balancete Anual" data={historyData.years} color="amber" />
+                        <HistoryCard title="Balancete Mensal" data={historyData.months} color="blue" isDarkMode={isDarkMode} />
+                        <HistoryCard title="Balancete Trimestral" data={historyData.quarters} color="purple" isDarkMode={isDarkMode} />
+                        <HistoryCard title="Balancete Semestral" data={historyData.semesters} color="emerald" isDarkMode={isDarkMode} />
+                        <HistoryCard title="Balancete Anual" data={historyData.years} color="amber" isDarkMode={isDarkMode} />
                     </div>
                 </div>
             ) : (
@@ -817,67 +818,67 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                     {view === 'SHOWCASE' && (
                         <section className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8 animate-fadeIn">
                             {/* Biomassa Total */}
-                            <div className="bg-white p-5 rounded-2xl shadow-lg border-t-4 border-[#f26522] flex flex-col items-center text-center gap-2">
-                                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 mb-1">
+                            <div className={`p-5 rounded-2xl shadow-lg border-t-4 border-[#f26522] flex flex-col items-center text-center gap-2 transition-colors duration-500 ${isDarkMode ? 'bg-slate-800' : 'bg-white'}`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 ${isDarkMode ? 'bg-orange-900/30 text-orange-500' : 'bg-orange-100 text-orange-600'}`}>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                                     </svg>
                                 </div>
-                                <p className="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest">Biomassa Total</p>
-                                <h4 className="text-xl font-black text-gray-900">{formatNumber(grandTotals.biomass, ' kg')}</h4>
+                                <p className={`text-[0.65rem] font-bold uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Biomassa Total</p>
+                                <h4 className={`text-xl font-black ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatNumber(grandTotals.biomass, ' kg')}</h4>
                             </div>
 
                             {/* Valor Gerado */}
-                            <div className="bg-white p-5 rounded-2xl shadow-lg border-t-4 border-green-500 flex flex-col items-center text-center gap-2">
-                                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-1">
+                            <div className={`p-5 rounded-2xl shadow-lg border-t-4 border-green-500 flex flex-col items-center text-center gap-2 transition-colors duration-500 ${isDarkMode ? 'bg-slate-800' : 'bg-white'}`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 ${isDarkMode ? 'bg-green-900/30 text-green-500' : 'bg-green-100 text-green-600'}`}>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v1m0 5V5m0 16c-1.11 0-2.08-.402-2.599-1M12 21V11m0 10c-1.11 0-2.08-.402-2.599-1M12 21V11" />
                                     </svg>
                                 </div>
-                                <p className="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest">Valor Gerado</p>
-                                <h4 className="text-xl font-black text-green-600">{formatCurrency(grandTotals.value)}</h4>
+                                <p className={`text-[0.65rem] font-bold uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Valor Gerado</p>
+                                <h4 className={`text-xl font-black ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>{formatCurrency(grandTotals.value)}</h4>
                             </div>
 
                             {/* Preço Médio Global */}
-                            <div className="bg-white p-5 rounded-2xl shadow-lg border-t-4 border-blue-500 flex flex-col items-center text-center gap-2">
-                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-1">
+                            <div className={`p-5 rounded-2xl shadow-lg border-t-4 border-blue-500 flex flex-col items-center text-center gap-2 transition-colors duration-500 ${isDarkMode ? 'bg-slate-800' : 'bg-white'}`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 ${isDarkMode ? 'bg-blue-900/30 text-blue-500' : 'bg-blue-100 text-blue-600'}`}>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                     </svg>
                                 </div>
-                                <p className="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest">Preço Médio Global</p>
-                                <h4 className="text-xl font-black text-blue-600">{formatCurrency(grandTotals.value / (grandTotals.biomass || 1))}/kg</h4>
+                                <p className={`text-[0.65rem] font-bold uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Preço Médio Global</p>
+                                <h4 className={`text-xl font-black ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>{formatCurrency(grandTotals.value / (grandTotals.biomass || 1))}/kg</h4>
                             </div>
 
                             {/* Sobrevivência Média */}
-                            <div className="bg-white p-5 rounded-2xl shadow-lg border-t-4 border-indigo-500 flex flex-col items-center text-center gap-2">
-                                <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mb-1">
+                            <div className={`p-5 rounded-2xl shadow-lg border-t-4 border-indigo-500 flex flex-col items-center text-center gap-2 transition-colors duration-500 ${isDarkMode ? 'bg-slate-800' : 'bg-white'}`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 ${isDarkMode ? 'bg-indigo-900/30 text-indigo-500' : 'bg-indigo-100 text-indigo-600'}`}>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                     </svg>
                                 </div>
-                                <p className="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest">Sobrevivência Média</p>
-                                <h4 className="text-xl font-black text-indigo-600">{(grandTotals.sobrevSum / (grandTotals.count || 1)).toFixed(1)}%</h4>
+                                <p className={`text-[0.65rem] font-bold uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Sobrevivência Média</p>
+                                <h4 className={`text-xl font-black ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>{(grandTotals.sobrevSum / (grandTotals.count || 1)).toFixed(1)}%</h4>
                             </div>
 
                             {/* FCA Médio */}
-                            <div className="bg-white p-5 rounded-2xl shadow-lg border-t-4 border-amber-500 flex flex-col items-center text-center gap-2">
-                                <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 mb-1">
+                            <div className={`p-5 rounded-2xl shadow-lg border-t-4 border-amber-500 flex flex-col items-center text-center gap-2 transition-colors duration-500 ${isDarkMode ? 'bg-slate-800' : 'bg-white'}`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 ${isDarkMode ? 'bg-amber-900/30 text-amber-500' : 'bg-amber-100 text-amber-600'}`}>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                                     </svg>
                                 </div>
-                                <p className="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest">FCA Médio</p>
-                                <h4 className="text-xl font-black text-amber-600">{(grandTotals.fcaSum / (grandTotals.count || 1)).toFixed(2)}</h4>
+                                <p className={`text-[0.65rem] font-bold uppercase tracking-widest ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>FCA Médio</p>
+                                <h4 className={`text-xl font-black ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>{(grandTotals.fcaSum / (grandTotals.count || 1)).toFixed(2)}</h4>
                             </div>
                         </section>
                     )}
 
-                    <section className="bg-white rounded-2xl shadow-xl shadow-orange-100/50 overflow-hidden border border-orange-50">
+                    <section className={`rounded-2xl shadow-xl overflow-hidden border transition-all duration-500 ${isDarkMode ? 'bg-slate-800 border-slate-700 shadow-none' : 'bg-white shadow-orange-100/50 border-orange-50'}`}>
                         <div className="overflow-x-auto" ref={reportRef}>
                             <table className="w-full border-collapse">
                                 <thead>
-                                    <tr className="bg-[#f26522] text-white">
+                                    <tr className={`${isDarkMode ? 'bg-orange-600' : 'bg-[#f26522]'} text-white transition-colors duration-500`}>
                                         {view !== 'SHOWCASE' && <th className="p-2 text-center w-12" data-html2canvas-ignore></th>}
                                         <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Data</th>
                                         <th className="p-2 text-left font-bold uppercase text-[0.70rem] tracking-wider">Viveiro</th>
@@ -894,9 +895,11 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                                         {view !== 'SHOWCASE' && <th className="p-2 text-center font-bold uppercase text-[0.70rem] tracking-wider last:rounded-tr-2xl" data-html2canvas-ignore>Ações</th>}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-orange-50">
+                                <tbody className={`divide-y transition-colors duration-500 ${isDarkMode ? 'divide-slate-700' : 'divide-orange-50'}`}>
                                     {data.filter(row => view === 'SHOWCASE' ? row.visible : true).map((row) => (
-                                        <tr key={row.id} className={`transition-colors h-10 ${row.visible ? 'bg-white hover:bg-orange-50/30' : 'bg-gray-50/50 opacity-50'}`}>
+                                        <tr key={row.id} className={`transition-colors h-10 ${row.visible
+                                            ? (isDarkMode ? 'bg-slate-800 hover:bg-slate-700/50' : 'bg-white hover:bg-orange-50/30')
+                                            : (isDarkMode ? 'bg-slate-900/50 opacity-40' : 'bg-gray-50/50 opacity-50')}`}>
                                             {view !== 'SHOWCASE' && (
                                                 <td className="p-2 text-center" data-html2canvas-ignore>
                                                     <input
@@ -907,17 +910,17 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                                                     />
                                                 </td>
                                             )}
-                                            <td className="p-2 text-xs font-semibold text-gray-500">{row.data}</td>
-                                            <td className="p-2 text-xs font-bold text-gray-700">{row.viveiro}</td>
+                                            <td className={`p-2 text-xs font-semibold ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>{row.data}</td>
+                                            <td className={`p-2 text-xs font-bold ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>{row.viveiro}</td>
                                             <td className="p-2 text-xs font-extrabold text-[#f26522]">{row.cliente}</td>
-                                            <td className="p-2 text-xs font-black text-gray-900">{formatNumber(row.producao, ' kg')}</td>
-                                            <td className="p-2 text-xs text-gray-600 font-medium">{formatGrams(row.pesoMedio)}</td>
-                                            <td className="p-2 text-xs text-gray-600 font-medium">{formatCurrency(row.preco)}</td>
-                                            <td className="p-2 text-xs font-black text-green-600 bg-green-50/30">{formatCurrency(row.producao * row.preco)}</td>
-                                            <td className="p-2 text-xs text-gray-600">{row.sobrevivencia}</td>
-                                            <td className="p-2 text-xs text-gray-600">{row.fca}</td>
-                                            <td className="p-2 text-xs text-gray-600">{row.diasCultivo} d</td>
-                                            <td className="p-2 text-xs text-gray-600 font-semibold">{row.laboratorio}</td>
+                                            <td className={`p-2 text-xs font-black ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatNumber(row.producao, ' kg')}</td>
+                                            <td className={`p-2 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>{formatGrams(row.pesoMedio)}</td>
+                                            <td className={`p-2 text-xs font-medium ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>{formatCurrency(row.preco)}</td>
+                                            <td className={`p-2 text-xs font-black text-green-600 ${isDarkMode ? 'bg-green-900/10' : 'bg-green-50/30'}`}>{formatCurrency(row.producao * row.preco)}</td>
+                                            <td className={`p-2 text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>{row.sobrevivencia}</td>
+                                            <td className={`p-2 text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>{row.fca}</td>
+                                            <td className={`p-2 text-xs ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>{row.diasCultivo} d</td>
+                                            <td className={`p-2 text-xs font-semibold ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>{row.laboratorio}</td>
                                             <td className="p-2 text-[0.70rem] text-red-500 font-bold max-w-[100px] truncate">{row.notas}</td>
                                             {view !== 'SHOWCASE' && (
                                                 <td className="p-2 text-center" data-html2canvas-ignore>
@@ -938,13 +941,13 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                                         </tr>
                                     ))}
                                 </tbody>
-                                <tfoot className="bg-orange-50/50 font-black text-[#3a3a3a] border-t-2 border-[#f26522]">
+                                <tfoot className={`font-black border-t-2 border-[#f26522] transition-colors duration-500 ${isDarkMode ? 'bg-slate-900/40 text-slate-300' : 'bg-orange-50/50 text-[#3a3a3a]'}`}>
                                     <tr>
-                                        <td colSpan={4} className="p-3 text-right text-xs uppercase tracking-widest text-gray-500 bg-orange-100/50">Total Selecionado</td>
-                                        <td className="p-3 text-lg text-[#f26522] bg-orange-100/50">{formatNumber(grandTotals.biomass, ' kg')}</td>
-                                        <td colSpan={2} className="bg-orange-100/50"></td>
-                                        <td className="p-3 text-lg text-green-600 bg-orange-100/50">{formatCurrency(grandTotals.value)}</td>
-                                        <td colSpan={5} className="bg-orange-100/50"></td>
+                                        <td colSpan={view === 'SHOWCASE' ? 3 : 4} className={`p-3 text-right text-xs uppercase tracking-widest transition-colors duration-500 ${isDarkMode ? 'text-slate-500 bg-slate-900/60' : 'text-gray-500 bg-orange-100/50'}`}>Total Selecionado</td>
+                                        <td className={`p-3 text-lg text-[#f26522] transition-colors duration-500 ${isDarkMode ? 'bg-slate-900/60' : 'bg-orange-100/50'}`}>{formatNumber(grandTotals.biomass, ' kg')}</td>
+                                        <td colSpan={2} className={`transition-colors duration-500 ${isDarkMode ? 'bg-slate-900/60' : 'bg-orange-100/50'}`}></td>
+                                        <td className={`p-3 text-lg text-green-600 transition-colors duration-500 ${isDarkMode ? 'bg-slate-900/60' : 'bg-orange-100/50'}`}>{formatCurrency(grandTotals.value)}</td>
+                                        <td colSpan={5} className={`transition-colors duration-500 ${isDarkMode ? 'bg-slate-900/60' : 'bg-orange-100/50'}`}></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -954,7 +957,7 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                     <section>
                         <div className="flex items-center gap-4 mb-8">
                             <div className="h-8 w-2 bg-[#f26522] rounded-full"></div>
-                            <h3 className="text-2xl font-black text-gray-800 tracking-tight">Resumo Consolidado</h3>
+                            <h3 className={`text-2xl font-black tracking-tight transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Resumo Consolidado</h3>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {Object.entries(summaryByClient).map(([cliente, summaryData]: [string, any]) => {
@@ -963,29 +966,29 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                                 const mediaPreco = summaryData.value / summaryData.biomass;
 
                                 return (
-                                    <div key={cliente} className="group bg-white rounded-3xl p-8 shadow-xl shadow-orange-100/30 border border-orange-50 flex flex-col h-full transform transition-all hover:-translate-y-2 hover:shadow-orange-200/50">
+                                    <div key={cliente} className={`group rounded-3xl p-8 shadow-xl border flex flex-col h-full transform transition-all hover:-translate-y-2 transition-colors duration-500 ${isDarkMode ? 'bg-[#1E293B] border-slate-700 shadow-none hover:bg-[#243147]' : 'bg-white border-orange-50 shadow-orange-100/30 hover:shadow-orange-200/50'}`}>
                                         <div className="flex justify-between items-start mb-6">
-                                            <h4 className="text-2xl font-black text-[#3a3a3a] leading-tight">{cliente}</h4>
-                                            <div className="bg-orange-100 text-[#f26522] p-2 rounded-xl">
+                                            <h4 className={`text-2xl font-black leading-tight transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-[#3a3a3a]'}`}>{cliente}</h4>
+                                            <div className={`p-2 rounded-xl transition-colors duration-500 ${isDarkMode ? 'bg-orange-900/30 text-orange-500' : 'bg-orange-100 text-[#f26522]'}`}>
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                                                 </svg>
                                             </div>
                                         </div>
                                         <div className="space-y-4 flex-1">
-                                            <SummaryItem label="ID Faturamento" value={info.codigo} />
-                                            <SummaryItem label="Pagamento" value={info.prazo} />
-                                            <SummaryItem label="Biomassa" value={formatNumber(summaryData.biomass, ' kg')} />
-                                            <SummaryItem label="Média G" value={formatGrams(mediaGramatura)} />
-                                            <SummaryItem label="Preço Médio" value={formatCurrency(mediaPreco)} />
-                                            <div className="pt-6 mt-4 border-t-2 border-orange-50 flex flex-col gap-2">
-                                                <span className="text-xs font-black uppercase tracking-widest text-gray-400">Total a Faturar</span>
+                                            <SummaryItem label="ID Faturamento" value={info.codigo} isDarkMode={isDarkMode} />
+                                            <SummaryItem label="Pagamento" value={info.prazo} isDarkMode={isDarkMode} />
+                                            <SummaryItem label="Biomassa" value={formatNumber(summaryData.biomass, ' kg')} isDarkMode={isDarkMode} />
+                                            <SummaryItem label="Média G" value={formatGrams(mediaGramatura)} isDarkMode={isDarkMode} />
+                                            <SummaryItem label="Preço Médio" value={formatCurrency(mediaPreco)} isDarkMode={isDarkMode} />
+                                            <div className={`pt-6 mt-4 border-t-2 flex flex-col gap-2 transition-colors duration-500 ${isDarkMode ? 'border-slate-700' : 'border-orange-50'}`}>
+                                                <span className={`text-xs font-black uppercase tracking-widest transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Total a Faturar</span>
                                                 <span className="text-3xl font-black text-[#f26522] drop-shadow-sm">{formatCurrency(summaryData.value)}</span>
                                             </div>
                                         </div>
                                         <button
                                             onClick={() => generateEmail(cliente)}
-                                            className="mt-8 w-full py-4 bg-gray-900 hover:bg-[#f26522] text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-3 shadow-lg shadow-gray-200 group-hover:shadow-orange-200"
+                                            className={`mt-8 w-full py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 shadow-lg transition-colors duration-500 ${isDarkMode ? 'bg-slate-800 hover:bg-orange-600 text-slate-100 shadow-none' : 'bg-gray-900 hover:bg-[#f26522] text-white shadow-gray-200 group-hover:shadow-orange-200'}`}
                                         >
                                             <span className="text-lg">✨ Gerar Rascunho</span>
                                         </button>
@@ -999,61 +1002,61 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
 
             {/* EDIT MODAL */}
             {editingItem && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fadeIn">
-                        <div className="flex justify-between items-center p-4 border-b bg-gray-50">
-                            <h4 className="text-lg font-bold text-gray-800">Editar Lançamento</h4>
-                            <button onClick={() => setEditingItem(null)} className="text-gray-400 hover:text-red-500 font-bold text-xl">&times;</button>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className={`rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fadeIn border transition-colors duration-500 ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+                        <div className={`flex justify-between items-center p-4 border-b transition-colors duration-500 ${isDarkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-gray-50 border-gray-100'}`}>
+                            <h4 className={`text-lg font-bold transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Editar Lançamento</h4>
+                            <button onClick={() => setEditingItem(null)} className="text-gray-400 hover:text-red-500 font-bold text-xl transition-colors">&times;</button>
                         </div>
                         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto">
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Data</label>
-                                <input type="text" className="w-full p-2 border rounded" value={editingItem.data} onChange={e => handleEditChange('data', e.target.value)} />
+                                <label className={`block text-xs font-bold uppercase mb-1 transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-gray-500'}`}>Data</label>
+                                <input type="text" className={`w-full p-2 border rounded transition-colors duration-500 ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white focus:border-orange-500' : 'bg-white border-gray-300'}`} value={editingItem.data} onChange={e => handleEditChange('data', e.target.value)} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Cliente</label>
-                                <input type="text" className="w-full p-2 border rounded" value={editingItem.cliente} onChange={e => handleEditChange('cliente', e.target.value)} />
+                                <label className={`block text-xs font-bold uppercase mb-1 transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-gray-500'}`}>Cliente</label>
+                                <input type="text" className={`w-full p-2 border rounded transition-colors duration-500 ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white focus:border-orange-500' : 'bg-white border-gray-300'}`} value={editingItem.cliente} onChange={e => handleEditChange('cliente', e.target.value)} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Viveiro</label>
-                                <input type="text" className="w-full p-2 border rounded" value={editingItem.viveiro} onChange={e => handleEditChange('viveiro', e.target.value)} />
+                                <label className={`block text-xs font-bold uppercase mb-1 transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-gray-500'}`}>Viveiro</label>
+                                <input type="text" className={`w-full p-2 border rounded transition-colors duration-500 ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white focus:border-orange-500' : 'bg-white border-gray-300'}`} value={editingItem.viveiro} onChange={e => handleEditChange('viveiro', e.target.value)} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Produção (kg)</label>
-                                <input type="number" className="w-full p-2 border rounded" value={editingItem.producao} onChange={e => handleEditChange('producao', parseFloat(e.target.value))} />
+                                <label className={`block text-xs font-bold uppercase mb-1 transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-gray-500'}`}>Produção (kg)</label>
+                                <input type="number" className={`w-full p-2 border rounded transition-colors duration-500 ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white focus:border-orange-500' : 'bg-white border-gray-300'}`} value={editingItem.producao} onChange={e => handleEditChange('producao', parseFloat(e.target.value))} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Preço (R$)</label>
-                                <input type="number" className="w-full p-2 border rounded" value={editingItem.preco} onChange={e => handleEditChange('preco', parseFloat(e.target.value))} />
+                                <label className={`block text-xs font-bold uppercase mb-1 transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-gray-500'}`}>Preço (R$)</label>
+                                <input type="number" className={`w-full p-2 border rounded transition-colors duration-500 ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white focus:border-orange-500' : 'bg-white border-gray-300'}`} value={editingItem.preco} onChange={e => handleEditChange('preco', parseFloat(e.target.value))} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Peso Médio (g)</label>
-                                <input type="number" className="w-full p-2 border rounded" value={editingItem.pesoMedio} onChange={e => handleEditChange('pesoMedio', parseFloat(e.target.value))} />
+                                <label className={`block text-xs font-bold uppercase mb-1 transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-gray-500'}`}>Peso Médio (g)</label>
+                                <input type="number" className={`w-full p-2 border rounded transition-colors duration-500 ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white focus:border-orange-500' : 'bg-white border-gray-300'}`} value={editingItem.pesoMedio} onChange={e => handleEditChange('pesoMedio', parseFloat(e.target.value))} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Sobrevivência</label>
-                                <input type="text" className="w-full p-2 border rounded" value={editingItem.sobrevivencia} onChange={e => handleEditChange('sobrevivencia', e.target.value)} />
+                                <label className={`block text-xs font-bold uppercase mb-1 transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-gray-500'}`}>Sobrevivência</label>
+                                <input type="text" className={`w-full p-2 border rounded transition-colors duration-500 ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white focus:border-orange-500' : 'bg-white border-gray-300'}`} value={editingItem.sobrevivencia} onChange={e => handleEditChange('sobrevivencia', e.target.value)} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">FCA</label>
-                                <input type="text" className="w-full p-2 border rounded" value={editingItem.fca} onChange={e => handleEditChange('fca', e.target.value)} />
+                                <label className={`block text-xs font-bold uppercase mb-1 transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-gray-500'}`}>FCA</label>
+                                <input type="text" className={`w-full p-2 border rounded transition-colors duration-500 ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white focus:border-orange-500' : 'bg-white border-gray-300'}`} value={editingItem.fca} onChange={e => handleEditChange('fca', e.target.value)} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Dias Cultivo</label>
-                                <input type="number" className="w-full p-2 border rounded" value={editingItem.diasCultivo} onChange={e => handleEditChange('diasCultivo', parseFloat(e.target.value))} />
+                                <label className={`block text-xs font-bold uppercase mb-1 transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-gray-500'}`}>Dias Cultivo</label>
+                                <input type="number" className={`w-full p-2 border rounded transition-colors duration-500 ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white focus:border-orange-500' : 'bg-white border-gray-300'}`} value={editingItem.diasCultivo} onChange={e => handleEditChange('diasCultivo', parseFloat(e.target.value))} />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Laboratório</label>
-                                <input type="text" className="w-full p-2 border rounded" value={editingItem.laboratorio} onChange={e => handleEditChange('laboratorio', e.target.value)} />
+                                <label className={`block text-xs font-bold uppercase mb-1 transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-gray-500'}`}>Laboratório</label>
+                                <input type="text" className={`w-full p-2 border rounded transition-colors duration-500 ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white focus:border-orange-500' : 'bg-white border-gray-300'}`} value={editingItem.laboratorio} onChange={e => handleEditChange('laboratorio', e.target.value)} />
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Notas/Obs</label>
-                                <textarea className="w-full p-2 border rounded" value={editingItem.notas} onChange={e => handleEditChange('notas', e.target.value)} />
+                                <label className={`block text-xs font-bold uppercase mb-1 transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-gray-500'}`}>Notas/Obs</label>
+                                <textarea className={`w-full p-2 border rounded transition-colors duration-500 ${isDarkMode ? 'bg-slate-700 border-slate-600 text-white focus:border-orange-500' : 'bg-white border-gray-300'}`} value={editingItem.notas} onChange={e => handleEditChange('notas', e.target.value)} />
                             </div>
                         </div>
-                        <div className="p-4 bg-gray-50 border-t flex justify-end gap-2">
-                            <button onClick={() => setEditingItem(null)} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded">Cancelar</button>
-                            <button onClick={handleSaveEdit} className="px-4 py-2 bg-[#f26522] text-white font-bold rounded hover:bg-[#d95213]">Salvar Alterações</button>
+                        <div className={`p-4 border-t flex justify-end gap-2 transition-colors duration-500 ${isDarkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-gray-50 border-gray-100'}`}>
+                            <button onClick={() => setEditingItem(null)} className={`px-4 py-2 rounded transition-colors duration-500 ${isDarkMode ? 'text-slate-400 hover:bg-slate-700' : 'text-gray-600 hover:bg-gray-200'}`}>Cancelar</button>
+                            <button onClick={handleSaveEdit} className="px-4 py-2 bg-[#f26522] text-white font-bold rounded hover:bg-[#d95213] shadow-lg shadow-orange-500/20">Salvar Alterações</button>
                         </div>
                     </div>
                 </div>
@@ -1061,10 +1064,10 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
 
             {/* GEMINI MODAL */}
             {modalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setModalOpen(false)}>
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-                        <div className="flex justify-between items-center p-4 border-b">
-                            <h4 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setModalOpen(false)}>
+                    <div className={`rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fadeIn border transition-colors duration-500 ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`} onClick={e => e.stopPropagation()}>
+                        <div className={`flex justify-between items-center p-4 border-b transition-colors duration-500 ${isDarkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-white border-gray-100'}`}>
+                            <h4 className={`text-xl font-bold flex items-center gap-2 transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                                 <span>✨</span> Assistente de E-mail Gemini
                             </h4>
                             <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors">
@@ -1077,8 +1080,8 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                         <div className="p-6 max-h-[60vh] overflow-y-auto">
                             {modalLoading ? (
                                 <div className="flex flex-col items-center justify-center py-8">
-                                    <div className="w-10 h-10 border-4 border-gray-100 border-t-[#f26522] rounded-full animate-spin mb-4"></div>
-                                    <p className="text-gray-600 font-medium">Gerando rascunho com IA...</p>
+                                    <div className={`w-10 h-10 border-4 border-t-[#f26522] rounded-full animate-spin mb-4 ${isDarkMode ? 'border-slate-700' : 'border-gray-100'}`}></div>
+                                    <p className={`font-medium transition-colors duration-500 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>Gerando rascunho com IA...</p>
                                 </div>
                             ) : modalError ? (
                                 <div className="text-center py-8 text-red-600">
@@ -1087,18 +1090,18 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    <p className="text-gray-700 font-medium">A IA gerou o seguinte rascunho:</p>
-                                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-gray-700 whitespace-pre-wrap font-sans text-sm leading-relaxed">
+                                    <p className={`font-medium transition-colors duration-500 ${isDarkMode ? 'text-slate-300' : 'text-gray-700'}`}>A IA gerou o seguinte rascunho:</p>
+                                    <div className={`p-4 rounded-lg border whitespace-pre-wrap font-sans text-sm leading-relaxed transition-colors duration-500 ${isDarkMode ? 'bg-slate-900 border-slate-700 text-slate-300' : 'bg-gray-50 border-gray-200 text-gray-700'}`}>
                                         {generatedEmail}
                                     </div>
                                 </div>
                             )}
                         </div>
 
-                        <div className="p-4 bg-gray-50 border-t flex justify-end">
+                        <div className={`p-4 border-t flex justify-end transition-colors duration-500 ${isDarkMode ? 'bg-slate-900/50 border-slate-700' : 'bg-gray-50 border-gray-100'}`}>
                             <button
                                 onClick={() => setModalOpen(false)}
-                                className="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition-colors"
+                                className={`px-5 py-2 font-semibold rounded-lg transition-colors ${isDarkMode ? 'bg-slate-700 hover:bg-slate-600 text-slate-200' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
                             >
                                 Fechar
                             </button>
@@ -1108,16 +1111,16 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
             )}
 
             {/* --- FOOTER ACTIONS --- */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40 border-t border-gray-200 print:hidden flex justify-center gap-4 flex-wrap">
+            <div className={`fixed bottom-0 left-0 right-0 p-4 backdrop-blur shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-40 border-t transition-colors duration-500 print:hidden flex justify-center gap-4 flex-wrap ${isDarkMode ? 'bg-slate-800/90 border-slate-700 shadow-none' : 'bg-white/90 border-gray-200'}`}>
                 {view !== 'SHOWCASE' && (
                     <>
-                        <button onClick={clearAllData} className="flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-red-500 hover:text-white text-gray-700 rounded-lg shadow font-medium transition-all text-sm">
+                        <button onClick={clearAllData} className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow font-medium transition-all text-sm ${isDarkMode ? 'bg-slate-700 hover:bg-red-500 text-slate-200' : 'bg-gray-200 hover:bg-red-500 hover:text-white text-gray-700'}`}>
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                             Limpar Tudo
                         </button>
-                        <div className="w-px h-8 bg-gray-300 mx-2"></div>
+                        <div className={`w-px h-8 mx-2 transition-colors duration-500 ${isDarkMode ? 'bg-slate-700' : 'bg-gray-300'}`}></div>
                     </>
                 )}
                 {view !== 'SHOWCASE' && (
@@ -1139,7 +1142,7 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
 
                 {view !== 'SHOWCASE' && (
                     <>
-                        <div className="w-px h-8 bg-gray-300 mx-2"></div>
+                        <div className={`w-px h-8 mx-2 transition-colors duration-500 ${isDarkMode ? 'bg-slate-700' : 'bg-gray-300'}`}></div>
 
                         <button onClick={handleBackup} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow font-medium transition-all text-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
@@ -1153,7 +1156,7 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                             </label>
                         </div>
 
-                        <div className="w-px h-8 bg-gray-300 mx-2"></div>
+                        <div className={`w-px h-8 mx-2 transition-colors duration-500 ${isDarkMode ? 'bg-slate-700' : 'bg-gray-300'}`}></div>
 
                         <button onClick={handleManualSave} disabled={isSaving} className={`flex items-center gap-2 px-4 py-2 ${isSaving ? 'bg-purple-400' : 'bg-purple-600 hover:bg-purple-700'} text-white rounded-lg shadow font-medium transition-all text-sm`}>
                             {isSaving ? (
@@ -1174,20 +1177,20 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
     );
 };
 
-const SummaryItem = ({ label, value }: { label: string, value: string }) => (
-    <div className="flex justify-between items-center py-1 border-b border-gray-50 last:border-0">
-        <span className="text-sm text-gray-500 font-medium">{label}</span>
-        <span className="text-base text-gray-900 font-bold">{value}</span>
+const SummaryItem = ({ label, value, isDarkMode }: { label: string, value: string, isDarkMode?: boolean }) => (
+    <div className={`flex justify-between items-center py-1 border-b last:border-0 transition-colors duration-500 ${isDarkMode ? 'border-slate-800' : 'border-gray-50'}`}>
+        <span className={`text-sm font-medium transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-gray-500'}`}>{label}</span>
+        <span className={`text-base font-bold transition-colors duration-500 ${isDarkMode ? 'text-slate-300' : 'text-gray-900'}`}>{value}</span>
     </div>
 );
 
-const HistoryCard = ({ title, data, color }: { title: string, data: Record<string, { biomass: number, value: number }>, color: string }) => {
+const HistoryCard = ({ title, data, color, isDarkMode }: { title: string, data: Record<string, { biomass: number, value: number }>, color: string, isDarkMode: boolean }) => {
     // Basic color mapping
     const colorClasses: Record<string, { border: string, header: string, text: string }> = {
-        blue: { border: 'border-blue-500', header: 'bg-blue-600', text: 'text-blue-900' },
-        purple: { border: 'border-purple-500', header: 'bg-purple-600', text: 'text-purple-900' },
-        emerald: { border: 'border-emerald-500', header: 'bg-emerald-600', text: 'text-emerald-900' },
-        amber: { border: 'border-amber-500', header: 'bg-amber-600', text: 'text-amber-900' }
+        blue: { border: isDarkMode ? 'border-blue-700' : 'border-blue-500', header: 'bg-blue-600', text: isDarkMode ? 'text-blue-400' : 'text-blue-900' },
+        purple: { border: isDarkMode ? 'border-purple-700' : 'border-purple-500', header: 'bg-purple-600', text: isDarkMode ? 'text-purple-400' : 'text-purple-900' },
+        emerald: { border: isDarkMode ? 'border-emerald-700' : 'border-emerald-500', header: 'bg-emerald-600', text: isDarkMode ? 'text-emerald-400' : 'text-emerald-900' },
+        amber: { border: isDarkMode ? 'border-amber-700' : 'border-amber-500', header: 'bg-amber-600', text: isDarkMode ? 'text-amber-400' : 'text-amber-900' }
     };
 
     const c = colorClasses[color] || colorClasses.blue;
@@ -1197,24 +1200,24 @@ const HistoryCard = ({ title, data, color }: { title: string, data: Record<strin
     });
 
     return (
-        <div className={`bg-white rounded-lg shadow-sm border-l-4 ${c.border} overflow-hidden`}>
+        <div className={`rounded-lg shadow-sm border-l-4 overflow-hidden transition-colors duration-500 ${isDarkMode ? 'bg-[#1E293B] shadow-none' : 'bg-white'} ${c.border}`}>
             <div className={`p-4 ${c.header} text-white font-bold text-lg`}>
                 {title}
             </div>
             <table className="w-full">
                 <thead>
-                    <tr className="bg-gray-50 border-b">
-                        <th className="p-3 text-left text-xs font-bold text-gray-500 uppercase">Período</th>
-                        <th className="p-3 text-right text-xs font-bold text-gray-500 uppercase">Biomassa</th>
-                        <th className="p-3 text-right text-xs font-bold text-gray-500 uppercase">Faturamento</th>
+                    <tr className={`border-b transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-gray-50'}`}>
+                        <th className={`p-3 text-left text-xs font-bold uppercase ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Período</th>
+                        <th className={`p-3 text-right text-xs font-bold uppercase ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Biomassa</th>
+                        <th className={`p-3 text-right text-xs font-bold uppercase ${isDarkMode ? 'text-slate-400' : 'text-gray-500'}`}>Faturamento</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className={`divide-y transition-colors ${isDarkMode ? 'divide-slate-700' : 'divide-gray-100'}`}>
                     {entries.map(([key, val]) => (
-                        <tr key={key} className="hover:bg-gray-50">
+                        <tr key={key} className={`transition-colors ${isDarkMode ? 'hover:bg-slate-800/50' : 'hover:bg-gray-50'}`}>
                             <td className={`p-3 font-medium ${c.text}`}>{key}</td>
-                            <td className="p-3 text-right text-gray-600">{formatNumber(val.biomass, ' kg')}</td>
-                            <td className="p-3 text-right font-bold text-gray-800">
+                            <td className={`p-3 text-right transition-colors ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>{formatNumber(val.biomass, ' kg')}</td>
+                            <td className={`p-3 text-right font-bold transition-colors ${isDarkMode ? 'text-slate-100' : 'text-gray-800'}`}>
                                 {formatCurrency(val.value)}
                             </td>
                         </tr>

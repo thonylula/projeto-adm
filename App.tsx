@@ -67,6 +67,7 @@ export default function App() {
 
   const [companies, setCompanies] = useState<Company[]>([]);
   const [activeCompanyId, setActiveCompanyId] = useState<string | null>(localStorage.getItem('activeCompanyId'));
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('isDarkMode') === 'true');
 
   // Persistence Effects
   useEffect(() => {
@@ -96,6 +97,10 @@ export default function App() {
       localStorage.removeItem('activeCompanyId');
     }
   }, [activeCompanyId]);
+
+  useEffect(() => {
+    localStorage.setItem('isDarkMode', isDarkMode.toString());
+  }, [isDarkMode]);
 
   // Load initial state from Supabase on mount
   useEffect(() => {
@@ -345,9 +350,11 @@ export default function App() {
         onLogout={() => { window.location.href = window.location.origin + window.location.pathname; }}
         currentUser="Visitante"
         isPublic={true}
+        isDarkMode={isDarkMode}
+        setIsDarkMode={setIsDarkMode}
       >
-        {effectiveTab === 'showcase' && <DeliveryOrder initialView="SHOWCASE" isPublic={true} />}
-        {effectiveTab === 'biometrics' && <BiometricsManager isPublic={true} />}
+        {effectiveTab === 'showcase' && <DeliveryOrder initialView="SHOWCASE" isPublic={true} isDarkMode={isDarkMode} />}
+        {effectiveTab === 'biometrics' && <BiometricsManager isPublic={true} isDarkMode={isDarkMode} />}
         {effectiveTab === 'payroll' && activeCompany && (
           <PayrollCard
             activeCompany={activeCompany}
@@ -362,8 +369,8 @@ export default function App() {
             onSaveBulk={() => { }}
           />
         )}
-        {effectiveTab === 'mortalidade' && activeCompany && <MortalidadeConsumo activeCompany={activeCompany} activeYear={activeYear || new Date().getFullYear()} activeMonth={activeMonth || new Date().getMonth() + 1} isPublic={true} />}
-        {effectiveTab === 'campo' && activeCompany && <CampoViveiros activeCompany={activeCompany} isPublic={true} />}
+        {effectiveTab === 'mortalidade' && activeCompany && <MortalidadeConsumo activeCompany={activeCompany} activeYear={activeYear || new Date().getFullYear()} activeMonth={activeMonth || new Date().getMonth() + 1} isPublic={true} isDarkMode={isDarkMode} />}
+        {effectiveTab === 'campo' && activeCompany && <CampoViveiros activeCompany={activeCompany} isPublic={true} isDarkMode={isDarkMode} />}
 
         {/* Fallback if no company is selected but needed (Public view usually expects a default or selected company from context) */}
         {((effectiveTab === 'mortalidade' || effectiveTab === 'campo') && !activeCompany) && (
@@ -414,6 +421,8 @@ export default function App() {
         onTabChange={handleTabChange}
         onLogout={handleLogout}
         currentUser={currentUser}
+        isDarkMode={isDarkMode}
+        setIsDarkMode={setIsDarkMode}
       >
         {activeTab === 'payroll' && (
           <>
@@ -442,7 +451,7 @@ export default function App() {
         )}
 
         {activeTab === 'biometrics' && (
-          <BiometricsManager />
+          <BiometricsManager isDarkMode={isDarkMode} />
         )}
 
         {activeTab === 'fiscal' && (
@@ -454,7 +463,7 @@ export default function App() {
         )}
 
         {activeTab === 'delivery-order' && (
-          <DeliveryOrder />
+          <DeliveryOrder isDarkMode={isDarkMode} />
         )}
 
         {activeTab === 'pantry' && (
@@ -467,7 +476,7 @@ export default function App() {
 
         {/* Legacy/Direct support for Faturamento view inside Manager if needed */}
         {activeTab === 'showcase-faturamento' && (
-          <DeliveryOrder initialView="SHOWCASE" />
+          <DeliveryOrder initialView="SHOWCASE" isDarkMode={isDarkMode} />
         )}
 
         {activeTab === 'budget' && (
@@ -496,6 +505,7 @@ export default function App() {
                 activeCompany={activeCompany}
                 activeYear={activeYear || new Date().getFullYear()}
                 activeMonth={activeMonth || new Date().getMonth() + 1}
+                isDarkMode={isDarkMode}
               />
             ) : (
               <CompanySelection
@@ -541,7 +551,7 @@ export default function App() {
         {activeTab === 'campo' && (
           <>
             {activeCompany ? (
-              <CampoViveiros activeCompany={activeCompany} />
+              <CampoViveiros activeCompany={activeCompany} isDarkMode={isDarkMode} />
             ) : (
               <CompanySelection
                 companies={companies}
