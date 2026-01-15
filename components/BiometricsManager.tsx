@@ -1156,16 +1156,16 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                         <table className="w-full text-[10px] md:text-xs text-left min-w-[1000px] md:min-w-0">
                             <thead className="bg-[#F8FAFC] text-slate-500 uppercase font-black tracking-widest border-b border-gray-100">
                                 <tr>
-                                    <th className="px-5 py-4 min-w-[80px] sticky left-0 bg-[#F8FAFC] z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">VIV.</th>
+                                    <th className="px-5 py-4 min-w-[80px] sticky left-0 bg-[#F8FAFC] z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] text-center">VIV.</th>
                                     <th className="px-4 py-4 text-center">D. POV.</th>
                                     <th className="px-4 py-4 text-center">DIAS</th>
-                                    <th className="px-4 py-4 text-right">P.M (G)</th>
-                                    <th className="px-4 py-4 text-right">QUANT.</th>
-                                    <th className="px-4 py-4 text-right">PESO TOTAL (G)</th>
-                                    <th className="px-4 py-4 text-right">P.M ANT.</th>
-                                    <th className="px-4 py-4 text-right">INC. SEM.</th>
-                                    <th className="px-4 py-4 text-right">GPD</th>
-                                    <th className="px-6 py-4 text-left">STATUS ANALYSIS</th>
+                                    <th className="px-4 py-4 text-center">P.M (G)</th>
+                                    <th className="px-4 py-4 text-center">QUANT.</th>
+                                    <th className="px-4 py-4 text-center">PESO TOTAL (G)</th>
+                                    <th className="px-4 py-4 text-center">P.M ANT.</th>
+                                    <th className="px-4 py-4 text-center">INC. SEM.</th>
+                                    <th className="px-4 py-4 text-center">GPD</th>
+                                    <th className="px-6 py-4 text-center">STATUS ANALYSIS</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
@@ -1194,7 +1194,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
                                         <td className="px-4 py-4 text-center font-bold text-slate-400">{item.diasCultivo}</td>
 
-                                        <td className="px-4 py-4 text-right">
+                                        <td className="px-4 py-4 text-center">
                                             {isPublic ? (
                                                 <span className="font-bold text-slate-400">{item.pMedInputValue}</span>
                                             ) : (
@@ -1202,34 +1202,34 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                                     type="text"
                                                     value={item.pMedInputValue}
                                                     onChange={(e) => handleUpdateRow(item.viveiro, 'pMedStr', e.target.value)}
-                                                    className="w-16 text-right bg-transparent border-b border-transparent focus:border-slate-200 outline-none transition-all font-bold text-slate-400"
+                                                    className="w-16 text-center bg-transparent border-b border-transparent focus:border-slate-200 outline-none transition-all font-bold text-slate-400"
                                                 />
                                             )}
                                         </td>
 
                                         <td
                                             onClick={() => handleCopy(item.quatInputValue, 'Quantidade')}
-                                            className="px-4 py-4 text-right font-bold text-slate-400 cursor-copy hover:text-slate-600 transition-colors"
+                                            className="px-4 py-4 text-center font-bold text-slate-400 cursor-copy hover:text-slate-600 transition-colors"
                                         >
                                             {item.quatInputValue}
                                         </td>
 
                                         <td
                                             onClick={() => handleCopy(item.pesoTotal, 'Peso Total')}
-                                            className="px-4 py-4 text-right font-black text-slate-800 cursor-copy hover:text-slate-900 transition-colors"
+                                            className="px-4 py-4 text-center font-black text-slate-800 cursor-copy hover:text-slate-900 transition-colors"
                                         >
                                             {item.pesoTotal}
                                         </td>
 
-                                        <td className="px-4 py-4 text-right font-bold text-slate-300">
+                                        <td className="px-4 py-4 text-center font-bold text-slate-300">
                                             {item.pAntDisplay}
                                         </td>
 
-                                        <td className={`px-4 py-4 text-right font-black ${item.incSemanalStr.includes('+') ? 'text-emerald-500' : 'text-slate-400'}`}>
+                                        <td className={`px-4 py-4 text-center font-black ${item.incSemanalStr.includes('+') ? 'text-emerald-500' : 'text-slate-400'}`}>
                                             {item.incSemanalStr}
                                         </td>
 
-                                        <td className="px-4 py-4 text-right font-bold text-slate-400">
+                                        <td className="px-4 py-4 text-center font-bold text-slate-400">
                                             {item.gpdDisplay}
                                         </td>
 
