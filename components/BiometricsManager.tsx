@@ -1171,7 +1171,11 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                             <tbody className="divide-y divide-gray-50">
                                 {processedData.map((item, idx) => (
                                     <tr key={idx} className="hover:bg-slate-50/50 transition-colors border-b border-gray-50 last:border-0 group">
-                                        <td className="px-5 py-4 font-bold text-slate-800 sticky left-0 bg-white group-hover:bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">{item.viveiro}</td>
+                                        <td className="px-5 py-4 font-bold text-slate-800 sticky left-0 bg-white group-hover:bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] whitespace-nowrap">
+                                            <div className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg border border-emerald-100 bg-emerald-50/50 text-emerald-700 font-extrabold tracking-tight min-w-[80px]">
+                                                {item.viveiro}
+                                            </div>
+                                        </td>
 
                                         <td className="px-4 py-4 text-center group/date relative">
                                             {isPublic ? (
