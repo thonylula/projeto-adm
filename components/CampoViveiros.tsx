@@ -6,12 +6,12 @@ import { InsumosWidget } from './InsumosWidget';
 import { TransferManager } from './TransferManager';
 import { getOrchestrator } from '../services/agentService';
 
-interface CampoViveirosProps {
-    activeCompany?: any;
-    isPublic?: boolean;
+activeCompany ?: any;
+isPublic ?: boolean;
+isDarkMode ?: boolean;
 }
 
-export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isPublic = false }) => {
+export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isPublic = false, isDarkMode = false }) => {
     const [viveiros, setViveiros] = useState<Viveiro[]>([]);
     const [selectedViveiro, setSelectedViveiro] = useState<Viveiro | null>(null);
     const [editingName, setEditingName] = useState('');
@@ -482,18 +482,18 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
 
     if (!activeCompany) {
         return (
-            <div className="flex items-center justify-center h-screen">
-                <p className="text-slate-500">Selecione uma empresa primeiro.</p>
+            <div className={`flex items-center justify-center h-screen transition-colors duration-500 ${isDarkMode ? 'bg-[#0B0F1A]' : 'bg-white'}`}>
+                <p className={isDarkMode ? 'text-slate-400' : 'text-slate-500'}>Selecione uma empresa primeiro.</p>
             </div>
         );
     }
 
     return (
-        <div className="flex h-screen bg-slate-100">
+        <div className={`flex h-screen transition-colors duration-500 ${isDarkMode ? 'bg-[#0B0F1A]' : 'bg-slate-100'}`}>
             {/* Map Container */}
             <div className={`flex-1 relative ${isPublic || isLayoutLocked ? '' : 'cursor-crosshair'}`}>
                 <div
-                    className="w-full h-full flex items-center justify-center bg-slate-200 overflow-hidden relative"
+                    className={`w-full h-full flex items-center justify-center overflow-hidden relative transition-colors duration-500 ${isDarkMode ? 'bg-[#0F172A]' : 'bg-slate-200'}`}
                     onMouseMove={isPublic ? undefined : handleMouseMove}
                     onMouseUp={isPublic ? undefined : handleMouseUp}
                     onMouseLeave={handleMouseUp} // Cancel drag if leaving
@@ -520,8 +520,8 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                             <button
                                 onClick={() => setIsLayoutLocked(!isLayoutLocked)}
                                 className={`absolute top-4 right-4 z-[60] p-3 rounded-full shadow-lg transition-all border-2 ${isLayoutLocked
-                                    ? 'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200'
-                                    : 'bg-yellow-100 text-yellow-600 border-yellow-400 hover:bg-yellow-200 animate-pulse'
+                                    ? (isDarkMode ? 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700' : 'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200')
+                                    : (isDarkMode ? 'bg-yellow-900/40 text-yellow-500 border-yellow-700/50 hover:bg-yellow-900/60 animate-pulse' : 'bg-yellow-100 text-yellow-600 border-yellow-400 hover:bg-yellow-200 animate-pulse')
                                     }`}
                                 title={isLayoutLocked ? "Layout Bloqueado (Clique para editar)" : "Edição de Layout Habilitada"}
                             >
@@ -589,8 +589,8 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                         top: `${pos.lat}%`
                                     }}
                                 >
-                                    <div className={`rounded-sm flex items-center justify-center relative font-bold shadow-md whitespace-nowrap border border-black/30 select-none ${selectedViveiro?.id === v.id ? 'ring-2 ring-yellow-400' : ''
-                                        } ${statusColors[v.status || 'VAZIO']} ${statusTextColors[v.status || 'VAZIO']} ${isSmallFont
+                                    <div className={`rounded-sm flex items-center justify-center relative font-bold shadow-md whitespace-nowrap border select-none transition-all ${selectedViveiro?.id === v.id ? (isDarkMode ? 'ring-2 ring-yellow-500 shadow-yellow-500/20' : 'ring-2 ring-yellow-400') : ''
+                                        } ${statusColors[v.status || 'VAZIO']} ${statusTextColors[v.status || 'VAZIO']} ${isDarkMode ? 'border-white/10' : 'border-black/30'} ${isSmallFont
                                             ? 'text-[8px] px-0.5 py-[1px] min-w-[25px] h-4 leading-none'
                                             : 'text-[11px] px-2 py-1.5 min-w-[50px]'
                                         }`}>
@@ -616,7 +616,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
 
                     {/* Menu Popup */}
                     <div
-                        className="fixed z-[101] bg-white rounded shadow-[2px_2px_5px_rgba(0,0,0,0.3)] border border-gray-300 min-w-[140px] py-1 animate-in fade-in zoom-in-95 duration-100"
+                        className={`fixed z-[101] rounded shadow-2xl border min-w-[140px] py-1 animate-in fade-in zoom-in-95 duration-100 transition-colors ${isDarkMode ? 'bg-[#1E293B] border-slate-700' : 'bg-white border-gray-300'}`}
                         style={{
                             left: Math.min(activeContextMenu.x, window.innerWidth - 150), // Prevent overflowing right
                             top: Math.min(activeContextMenu.y, window.innerHeight - 250) // Prevent overflowing bottom
@@ -625,7 +625,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                         {/* Header/Title removed or made very subtle if needed, user example doesn't show a big header. 
                             Keeping a small one or removing based on 'molde'. Example has 'OC-001' at top.
                         */}
-                        <div className="px-2 py-1 bg-cyan-400 text-black font-bold text-[11px] mb-1">
+                        <div className={`px-2 py-1 font-bold text-[11px] mb-1 transition-colors ${isDarkMode ? 'bg-orange-600 text-white' : 'bg-cyan-400 text-black'}`}>
                             {viveiros.find(v => v.id === activeContextMenu.id)?.name || 'Opções'} ▼
                         </div>
 
@@ -648,14 +648,16 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                 {item.separator && idx > 0 && <hr className="my-1 border-gray-300" />}
                                 <button
                                     onClick={() => handleMenuAction(item.action)}
-                                    className="w-full text-left px-2 py-[2px] hover:bg-slate-100 text-[#0066cc] text-[11px] font-medium transition-colors underline decoration-transparent hover:decoration-[#0066cc]"
+                                    className={`w-full text-left px-2 py-[2px] text-[11px] font-medium transition-colors underline decoration-transparent transition-all ${isDarkMode
+                                        ? 'hover:bg-slate-700/50 text-slate-300 hover:text-white hover:decoration-slate-300'
+                                        : 'hover:bg-slate-100 text-[#0066cc] hover:decoration-[#0066cc]'}`}
                                 >
                                     {item.label}
                                 </button>
                             </React.Fragment>
                         ))}
-                        <hr className="my-1 border-gray-300" />
-                        <div className="px-2 py-[2px] text-black text-[11px] font-medium cursor-pointer hover:bg-slate-100 flex justify-between items-center">
+                        <hr className={`my-1 ${isDarkMode ? 'border-slate-700' : 'border-gray-300'}`} />
+                        <div className={`px-2 py-[2px] text-[11px] font-medium cursor-pointer flex justify-between items-center transition-colors ${isDarkMode ? 'text-slate-400 hover:bg-slate-700/50 hover:text-white' : 'text-black hover:bg-slate-100'}`}>
                             Outras Funções <span>▼</span>
                         </div>
                     </div>
@@ -664,10 +666,10 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
 
             {/* Sidebar - HIDDEN LIST per user request, only showing EDIT PANEL when selected */}
             {!isPublic && selectedViveiro && (
-                <div className="w-96 bg-white shadow-lg p-6 overflow-y-auto z-10 transition-all border-l border-slate-200 fixed right-0 top-0 h-full">
+                <div className={`w-96 shadow-lg p-6 overflow-y-auto z-10 transition-all fixed right-0 top-0 h-full border-l transition-colors duration-500 ${isDarkMode ? 'bg-[#1E293B] border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'}`}>
                     {/* Made fixed to act as a drawer, only appearing when selected */}
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-black text-slate-900">✏️ Editar</h2>
+                        <h2 className={`text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>✏️ Editar</h2>
                         <button onClick={() => setSelectedViveiro(null)} className="text-slate-400 hover:text-slate-600">✕</button>
                     </div>
 
@@ -704,17 +706,17 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                         </label>
 
                         <label className="block mb-4">
-                            <span className="text-sm text-slate-600">Status:</span>
+                            <span className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Status:</span>
                             <select
                                 value={editingStatus}
                                 onChange={e => setEditingStatus(e.target.value as ViveiroStatus)}
-                                className="w-full mt-1 px-3 py-2 border rounded-lg bg-white"
+                                className={`w-full mt-1 px-3 py-2 border rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200'}`}
                             >
-                                <option value="VAZIO">⚪ Vazio</option>
-                                <option value="PREPARACAO">🛠️ Em Preparação</option>
-                                <option value="PREPARADO">✅ Preparado</option>
-                                <option value="POVOADO">💎 Povoado</option>
-                                <option value="DESPESCA">🔵 Em Despesca</option>
+                                <option value="VAZIO" className={isDarkMode ? 'bg-slate-800' : ''}>⚪ Vazio</option>
+                                <option value="PREPARACAO" className={isDarkMode ? 'bg-slate-800' : ''}>🛠️ Em Preparação</option>
+                                <option value="PREPARADO" className={isDarkMode ? 'bg-slate-800' : ''}>✅ Preparado</option>
+                                <option value="POVOADO" className={isDarkMode ? 'bg-slate-800' : ''}>💎 Povoado</option>
+                                <option value="DESPESCA" className={isDarkMode ? 'bg-slate-800' : ''}>🔵 Em Despesca</option>
                             </select>
                         </label>
 
@@ -738,35 +740,37 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
 
             {/* --- NURSERY MANAGEMENT MODAL --- */}
             {showNurseryModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className={`rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] transition-colors duration-500 ${isDarkMode ? 'bg-[#1E293B]' : 'bg-white'}`}>
                         {/* Header */}
-                        <div className="bg-indigo-600 p-6 flex justify-between items-center text-white">
+                        <div className={`p-6 flex justify-between items-center text-white transition-colors duration-500 ${isDarkMode ? 'bg-orange-600' : 'bg-indigo-600'}`}>
                             <div>
                                 <h3 className="text-xl font-black flex items-center gap-2">
                                     🍼 Berçários (BE)
                                 </h3>
-                                <p className="text-indigo-100 text-sm">Gerenciamento Rápido</p>
+                                <p className={`text-sm ${isDarkMode ? 'text-orange-100' : 'text-indigo-100'}`}>Gerenciamento Rápido</p>
                             </div>
                             <button
                                 onClick={() => setShowNurseryModal(false)}
-                                className="w-8 h-8 flex items-center justify-center rounded-full bg-indigo-500 hover:bg-indigo-400 transition-colors"
+                                className={`w-8 h-8 flex items-center justify-center rounded-full transition-colors ${isDarkMode ? 'bg-orange-500 hover:bg-orange-400' : 'bg-indigo-500 hover:bg-indigo-400'}`}
                             >
                                 ✕
                             </button>
                         </div>
 
                         {/* Content */}
-                        <div className="p-6 overflow-y-auto flex-1 bg-slate-50">
+                        <div className={`p-6 overflow-y-auto flex-1 transition-colors duration-500 ${isDarkMode ? 'bg-[#0F172A]' : 'bg-slate-50'}`}>
 
                             {/* Stats Cards */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                                 {['VAZIO', 'PREPARADO', 'POVOADO', 'DESPESCA'].map(status => {
                                     const count = bePonds.filter(p => p.status === status).length;
                                     return (
-                                        <div key={status} className={`p-3 rounded-xl border ${count > 0 ? 'bg-white border-indigo-100 shadow-sm' : 'bg-slate-100 border-transparent opacity-60'}`}>
-                                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{status}</div>
-                                            <div className="text-2xl font-black text-slate-800">{count}</div>
+                                        <div key={status} className={`p-3 rounded-xl border transition-colors duration-500 ${count > 0
+                                            ? (isDarkMode ? 'bg-slate-800 border-slate-700 shadow-sm' : 'bg-white border-indigo-100 shadow-sm')
+                                            : (isDarkMode ? 'bg-slate-800/30 border-transparent opacity-40' : 'bg-slate-100 border-transparent opacity-60')}`}>
+                                            <div className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>{status}</div>
+                                            <div className={`text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>{count}</div>
                                         </div>
                                     )
                                 })}
@@ -779,9 +783,9 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                     const existing = bePonds.find(p => p.name === pondName);
 
                                     return (
-                                        <div key={pondName} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                                        <div key={pondName} className={`p-3 rounded-xl border shadow-sm flex items-center justify-between transition-colors duration-500 ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs ${existing ? statusColors[existing.status || 'VAZIO'] : 'bg-slate-100 text-slate-400'}`}>
+                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs transition-colors duration-500 ${existing ? statusColors[existing.status || 'VAZIO'] : (isDarkMode ? 'bg-slate-700 text-slate-500' : 'bg-slate-100 text-slate-400')}`}>
                                                     {existing ? (
                                                         existing.status === 'PREPARACAO' ? '🟢' :
                                                             (existing.status === 'PREPARADO' || existing.status === 'DESPESCA' ? '⚪' :
@@ -789,8 +793,8 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                                     ) : '+'}
                                                 </div>
                                                 <div>
-                                                    <div className="font-bold text-slate-800">{pondName}</div>
-                                                    <div className="text-xs text-slate-500">
+                                                    <div className={`font-bold transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>{pondName}</div>
+                                                    <div className={`text-xs transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-500'}`}>
                                                         {existing ? `${existing.area_m2} ha • ${existing.status}` : 'Não Criado'}
                                                     </div>
                                                 </div>

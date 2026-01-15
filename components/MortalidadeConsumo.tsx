@@ -11,9 +11,10 @@ interface MortalidadeConsumoProps {
     activeYear: number;
     activeMonth: number;
     isPublic?: boolean;
+    isDarkMode?: boolean;
 }
 
-export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCompany, activeYear, activeMonth, isPublic = false }) => {
+export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCompany, activeYear, activeMonth, isPublic = false, isDarkMode = false }) => {
     const [data, setData] = useState<MonthlyMortalityData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [month, setMonth] = useState(activeMonth);
@@ -593,7 +594,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
     const ActionBar = () => {
         return (
-            <div className="flex flex-wrap gap-2 mb-6 bg-white p-4 rounded-xl shadow-sm border border-slate-100 print:hidden">
+            <div className={`flex flex-wrap gap-2 mb-6 p-4 rounded-xl shadow-sm border transition-all duration-500 print:hidden ${isDarkMode ? 'bg-[#0F172A] border-slate-800' : 'bg-white border-slate-100'}`}>
                 {!isPublic && (
                     <button onClick={() => performExport('pdf')} className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase flex items-center gap-2 hover:bg-red-700 transition-all shadow-lg active:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
@@ -606,7 +607,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                 )}
                 {!isPublic && (
                     <>
-                        <div className="w-px h-8 bg-slate-200 mx-2" />
+                        <div className={`w-px h-8 mx-2 ${isDarkMode ? 'bg-slate-800' : 'bg-slate-200'}`} />
                         <input type="file" ref={fileInputRef} onChange={handleAIPreencher} accept="image/*" className="hidden" />
                         <button
                             onClick={() => fileInputRef.current?.click()}
@@ -660,14 +661,14 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                 <div className="w-px h-8 bg-slate-200 mx-2" />
 
                 {!isPublic && (
-                    <div className="flex bg-slate-100 p-1 rounded-lg">
+                    <div className={`flex p-1 rounded-lg ${isDarkMode ? 'bg-slate-800' : 'bg-slate-100'}`}>
                         {[0, 1, 2, 3, 4, 5].map(w => (
                             <button
                                 key={w}
                                 onClick={() => setSelectedWeek(w)}
                                 className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${selectedWeek === w
-                                    ? 'bg-white text-blue-600 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-700'
+                                    ? (isDarkMode ? 'bg-slate-700 text-orange-400 shadow-sm' : 'bg-white text-blue-600 shadow-sm')
+                                    : (isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')
                                     }`}
                             >
                                 {w === 0 ? 'MÊS' : `S${w}`}
@@ -680,34 +681,36 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                 <div className="relative">
                     <button
                         onClick={() => setShowLayoutSettings(!showLayoutSettings)}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-lg active:scale-95 flex items-center gap-2 ${showLayoutSettings ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-lg active:scale-95 flex items-center gap-2 ${showLayoutSettings
+                            ? (isDarkMode ? 'bg-orange-600 text-white' : 'bg-indigo-600 text-white')
+                            : (isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200')}`}
                     >
                         <span>⚙️</span> Ajustar Layout
                     </button>
 
                     {/* Visitor Zoom Controls */}
                     {isPublic && (
-                        <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
-                            <span className="text-[9px] font-black text-slate-400 uppercase px-2 tracking-wider">Zoom</span>
-                            <div className="flex items-center bg-slate-100 rounded-md">
-                                <button onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.1))} className="w-7 h-7 flex items-center justify-center text-slate-500 hover:bg-white hover:text-indigo-600 rounded-md transition-all font-bold text-lg active:scale-90">-</button>
-                                <span className="text-[10px] font-black text-slate-600 w-10 text-center">{(zoomLevel * 100).toFixed(0)}%</span>
-                                <button onClick={() => setZoomLevel(z => Math.min(1.5, z + 0.1))} className="w-7 h-7 flex items-center justify-center text-slate-500 hover:bg-white hover:text-indigo-600 rounded-md transition-all font-bold text-lg active:scale-90">+</button>
+                        <div className={`flex items-center gap-1 p-1 rounded-lg border shadow-sm transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                            <span className={`text-[9px] font-black uppercase px-2 tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Zoom</span>
+                            <div className={`flex items-center rounded-md ${isDarkMode ? 'bg-slate-900' : 'bg-slate-100'}`}>
+                                <button onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.1))} className={`w-7 h-7 flex items-center justify-center rounded-md transition-all font-bold text-lg active:scale-90 ${isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-orange-400' : 'text-slate-500 hover:bg-white hover:text-indigo-600'}`}>-</button>
+                                <span className={`text-[10px] font-black w-10 text-center ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>{(zoomLevel * 100).toFixed(0)}%</span>
+                                <button onClick={() => setZoomLevel(z => Math.min(1.5, z + 0.1))} className={`w-7 h-7 flex items-center justify-center rounded-md transition-all font-bold text-lg active:scale-90 ${isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-orange-400' : 'text-slate-500 hover:bg-white hover:text-indigo-600'}`}>+</button>
                             </div>
-                            <button onClick={() => setZoomLevel(1.0)} className="px-2 text-[9px] font-bold text-slate-400 hover:text-indigo-600 uppercase">Reset</button>
+                            <button onClick={() => setZoomLevel(1.0)} className={`px-2 text-[9px] font-bold uppercase transition-colors ${isDarkMode ? 'text-slate-500 hover:text-orange-400' : 'text-slate-400 hover:text-indigo-600'}`}>Reset</button>
                         </div>
                     )}
 
                     {showLayoutSettings && (
-                        <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 p-4 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
-                            <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
-                                <h3 className="font-black text-[10px] text-slate-900 uppercase">Ajustes de Tabela</h3>
+                        <div className={`absolute top-full mt-2 right-0 w-64 rounded-xl shadow-2xl border p-4 z-[100] animate-in fade-in slide-in-from-top-2 duration-200 transition-colors ${isDarkMode ? 'bg-[#1E293B] border-slate-700' : 'bg-white border-slate-200'}`}>
+                            <div className={`flex justify-between items-center mb-4 pb-2 border-b ${isDarkMode ? 'border-slate-700' : 'border-slate-100'}`}>
+                                <h3 className={`font-black text-[10px] uppercase ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>Ajustes de Tabela</h3>
                                 <button onClick={() => setShowLayoutSettings(false)} className="text-slate-400 hover:text-slate-600">✕</button>
                             </div>
                             {isPublic && (
-                                <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <p className="text-[8px] text-blue-700 font-bold uppercase tracking-wide">💡 Ajustes Locais</p>
-                                    <p className="text-[8px] text-blue-600 mt-1">Suas preferências ficam salvas apenas no seu navegador.</p>
+                                <div className={`mb-3 p-2 border rounded-lg ${isDarkMode ? 'bg-blue-900/20 border-blue-900/30' : 'bg-blue-50 border-blue-200'}`}>
+                                    <p className={`text-[8px] font-bold uppercase tracking-wide ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>💡 Ajustes Locais</p>
+                                    <p className={`text-[8px] mt-1 ${isDarkMode ? 'text-blue-500' : 'text-blue-600'}`}>Suas preferências ficam salvas apenas no seu navegador.</p>
                                 </div>
                             )}
 
@@ -721,7 +724,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                         type="range" min="20" max="100"
                                         value={tableConfig.dayColWidth}
                                         onChange={e => setTableConfig({ ...tableConfig, dayColWidth: parseInt(e.target.value) })}
-                                        className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                        className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-indigo-600 ${isDarkMode ? 'bg-slate-700' : 'bg-slate-100'}`}
                                     />
                                 </div>
 
@@ -734,7 +737,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                         type="range" min="40" max="120"
                                         value={tableConfig.headerColWidth}
                                         onChange={e => setTableConfig({ ...tableConfig, headerColWidth: parseInt(e.target.value) })}
-                                        className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                        className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-indigo-600 ${isDarkMode ? 'bg-slate-700' : 'bg-slate-100'}`}
                                     />
                                 </div>
 
@@ -747,7 +750,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                         type="range" min="8" max="14"
                                         value={tableConfig.fontSize}
                                         onChange={e => setTableConfig({ ...tableConfig, fontSize: parseInt(e.target.value) })}
-                                        className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                        className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-indigo-600 ${isDarkMode ? 'bg-slate-700' : 'bg-slate-100'}`}
                                     />
                                 </div>
 
@@ -760,7 +763,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                         type="range" min="1" max="80"
                                         value={tableConfig.lineHeight}
                                         onChange={e => setTableConfig({ ...tableConfig, lineHeight: parseInt(e.target.value) })}
-                                        className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                        className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-indigo-600 ${isDarkMode ? 'bg-slate-700' : 'bg-slate-100'}`}
                                     />
                                 </div>
 
@@ -773,13 +776,13 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                         type="range" min="-25" max="15"
                                         value={tableConfig.rowHeight}
                                         onChange={e => setTableConfig({ ...tableConfig, rowHeight: parseInt(e.target.value) })}
-                                        className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                        className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-indigo-600 ${isDarkMode ? 'bg-slate-700' : 'bg-slate-100'}`}
                                     />
                                 </div>
 
                                 <button
                                     onClick={() => setTableConfig({ dayColWidth: 55, headerColWidth: 65, fontSize: 10, rowHeight: 6, lineHeight: 30, veWidth: 56 })}
-                                    className="w-full py-2 bg-slate-50 text-slate-500 text-[9px] font-bold rounded-lg hover:bg-slate-100 transition-colors uppercase"
+                                    className={`w-full py-2 text-[9px] font-bold rounded-lg transition-colors uppercase ${isDarkMode ? 'bg-slate-700 text-slate-400 hover:bg-slate-600' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                                 >
                                     Resetar para Padrão
                                 </button>
@@ -800,7 +803,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                 setTimeout(() => setMessage(null), 3000);
                                             }
                                         }}
-                                        className="w-full py-2 bg-indigo-600 text-white text-[9px] font-bold rounded-lg hover:bg-indigo-700 transition-colors uppercase mt-2 shadow-sm"
+                                        className={`w-full py-2 text-white text-[9px] font-bold rounded-lg transition-colors uppercase mt-2 shadow-sm ${isDarkMode ? 'bg-orange-600 hover:bg-orange-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
                                     >
                                         ☁️ Sincronizar Layout (Global)
                                     </button>
@@ -831,26 +834,28 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             <ActionBar />
 
             {message && (
-                <div className={`p-4 rounded-xl text-sm font-bold ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'} animate-fade-in`}>
+                <div className={`p-4 rounded-xl text-sm font-bold transition-colors duration-500 ${message.type === 'success'
+                    ? (isDarkMode ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800/50' : 'bg-emerald-50 text-emerald-700')
+                    : (isDarkMode ? 'bg-red-900/30 text-red-400 border border-red-800/50' : 'bg-red-50 text-red-700')} animate-fade-in`}>
                     {message.text}
                 </div>
             )}
 
             <div
                 id="export-target"
-                className={`bg-white rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden transition-all ${isExporting ? 'p-10' : 'p-0 sm:p-4'}`}
+                className={`rounded-3xl shadow-sm border relative overflow-hidden transition-all duration-500 ${isDarkMode ? 'bg-[#0F172A] border-slate-800' : 'bg-white border-slate-100'} ${isExporting ? 'p-10' : 'p-0 sm:p-4'}`}
             >
-                <header className="flex justify-between items-center mb-6 pb-6 border-b border-slate-100 p-4">
+                <header className={`flex justify-between items-center mb-6 pb-6 border-b p-4 transition-colors duration-500 ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
                     <div className="flex items-center gap-8">
                         {companyLogo && !companyLogo.startsWith('blob:') && (
                             <img src={companyLogo} alt="Logo" className="h-16 w-auto object-contain" />
                         )}
                         <div className="text-left">
-                            <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Mortalidade e Consumo</h1>
-                            <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-1">
+                            <h1 className={`text-2xl font-black uppercase tracking-tight transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Mortalidade e Consumo</h1>
+                            <p className={`text-xs font-bold uppercase tracking-widest mt-1 transition-colors duration-500 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>
                                 {activeCompany?.name || 'Controle diário de ração e perdas'}
                             </p>
-                            <p className="text-[10px] text-slate-400 mt-1 font-bold">
+                            <p className={`text-[10px] mt-1 font-bold transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
                                 {new Date(year, month - 1).toLocaleString('pt-BR', { month: 'long' }).toUpperCase()} / {year}
                             </p>
                         </div>
@@ -867,7 +872,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 detail: { tab: 'mortalidade', year, month: newMonth }
                             }));
                         }}
-                        className="bg-slate-50 border-none rounded-lg px-3 py-1.5 text-xs font-bold text-slate-700 focus:ring-1 focus:ring-orange-500"
+                        className={`border-none rounded-lg px-3 py-1.5 text-xs font-bold focus:ring-1 focus:ring-orange-500 transition-colors duration-500 ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-50 text-slate-700'}`}
                     >
                         {Array.from({ length: 12 }, (_, i) => (
                             <option key={i + 1} value={i + 1}>
@@ -884,7 +889,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 detail: { tab: 'mortalidade', year: newYear, month }
                             }));
                         }}
-                        className="bg-slate-50 border-none rounded-lg px-3 py-1.5 text-xs font-bold text-slate-700 focus:ring-1 focus:ring-orange-500"
+                        className={`border-none rounded-lg px-3 py-1.5 text-xs font-bold focus:ring-1 focus:ring-orange-500 transition-colors duration-500 ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-50 text-slate-700'}`}
                     >
                         {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
@@ -896,8 +901,8 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                         <button
                             onClick={() => setActiveView('table')}
                             className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeView === 'table'
-                                ? 'bg-orange-600 text-white shadow-lg'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                ? (isDarkMode ? 'bg-orange-600 text-white shadow-lg' : 'bg-orange-600 text-white shadow-lg')
+                                : (isDarkMode ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200')
                                 }`}
                         >
                             📊 Tabela
@@ -906,8 +911,8 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             <button
                                 onClick={() => setActiveView('dashboard')}
                                 className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeView === 'dashboard'
-                                    ? 'bg-purple-600 text-white shadow-lg'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    ? (isDarkMode ? 'bg-purple-600 text-white shadow-lg' : 'bg-purple-600 text-white shadow-lg')
+                                    : (isDarkMode ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200')
                                     }`}
                             >
                                 📈 Dashboard
@@ -944,11 +949,11 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     }
                 `}</style>
 
-                        <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden m-4 mt-0">
+                        <div className={`rounded-xl shadow-sm border overflow-hidden m-4 mt-0 transition-colors duration-500 ${isDarkMode ? 'bg-[#1E293B] border-slate-700' : 'bg-white border-slate-100'}`}>
                             <div id="interactive-table-container">
                                 <div
                                     ref={topScrollRef}
-                                    className="overflow-x-auto border-b border-slate-100 print:hidden"
+                                    className={`overflow-x-auto border-b transition-colors duration-500 print:hidden ${isDarkMode ? 'border-slate-700' : 'border-slate-100'}`}
                                     onScroll={(e) => {
                                         if (scrollRef.current) scrollRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
                                     }}
@@ -973,25 +978,25 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                         fontSize: `${tableConfig.fontSize}px`
                                     }}>
                                         <thead>
-                                            <tr className="bg-slate-900" style={{ height: `${tableConfig.rowHeight * 6}px` }}>
-                                                <th className="p-2 text-white border border-slate-800 font-black uppercase tracking-wider sticky left-0 z-20 bg-slate-900 text-center" style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>VE</th>
-                                                <th className="p-2 text-white border border-slate-800 font-bold uppercase sticky z-20 bg-slate-900 w-[140px] text-center" style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>Data Povoa</th>
-                                                <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: '90px' }} rowSpan={2}>Área</th>
-                                                <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Pop.Ini</th>
-                                                <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Dens.</th>
-                                                <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Biom..</th>
-                                                <th className="p-2 text-white border border-slate-800 font-bold uppercase text-center" style={{ width: `80px` }} rowSpan={2}>Situação</th>
-                                                <th className="p-1 text-slate-400 bg-slate-900 border border-slate-800 font-black text-[0.8em] uppercase text-center" style={{ width: '50px', minWidth: '50px' }} rowSpan={2}>Tipo</th>
-                                                <th className="p-1 border border-slate-800 text-center text-slate-400 font-black uppercase tracking-widest text-[0.9em]" colSpan={daysArray.length}>Dias do Mês</th>
-                                                <th className="p-2 text-white border border-slate-800 font-black uppercase sticky right-0 z-20 bg-slate-900 w-20 text-center" rowSpan={2}>Total</th>
+                                            <tr className={isDarkMode ? 'bg-slate-900' : 'bg-slate-900'} style={{ height: `${tableConfig.rowHeight * 6}px` }}>
+                                                <th className={`p-2 text-white border font-black uppercase tracking-wider sticky left-0 z-20 text-center transition-colors duration-500 ${isDarkMode ? 'border-slate-700 bg-slate-900' : 'border-slate-800 bg-slate-900'}`} style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>VE</th>
+                                                <th className={`p-2 text-white border font-bold uppercase sticky z-20 w-[140px] text-center transition-colors duration-500 ${isDarkMode ? 'border-slate-700 bg-slate-900' : 'border-slate-800 bg-slate-900'}`} style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>Data Povoa</th>
+                                                <th className={`p-2 text-white border font-bold uppercase text-center transition-colors duration-500 ${isDarkMode ? 'border-slate-700' : 'border-slate-800'}`} style={{ width: '90px' }} rowSpan={2}>Área</th>
+                                                <th className={`p-2 text-white border font-bold uppercase text-center transition-colors duration-500 ${isDarkMode ? 'border-slate-700' : 'border-slate-800'}`} style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Pop.Ini</th>
+                                                <th className={`p-2 text-white border font-bold uppercase text-center transition-colors duration-500 ${isDarkMode ? 'border-slate-700' : 'border-slate-800'}`} style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Dens.</th>
+                                                <th className={`p-2 text-white border font-bold uppercase text-center transition-colors duration-500 ${isDarkMode ? 'border-slate-700' : 'border-slate-800'}`} style={{ width: `${tableConfig.headerColWidth}px` }} rowSpan={2}>Biom..</th>
+                                                <th className={`p-2 text-white border font-bold uppercase text-center transition-colors duration-500 ${isDarkMode ? 'border-slate-700' : 'border-slate-800'}`} style={{ width: `80px` }} rowSpan={2}>Situação</th>
+                                                <th className={`p-1 border font-black text-[0.8em] uppercase text-center transition-colors duration-500 ${isDarkMode ? 'text-slate-500 bg-slate-900 border-slate-700' : 'text-slate-400 bg-slate-900 border-slate-800'}`} style={{ width: '50px', minWidth: '50px' }} rowSpan={2}>Tipo</th>
+                                                <th className={`p-1 border text-center font-black uppercase tracking-widest text-[0.9em] transition-colors duration-500 ${isDarkMode ? 'border-slate-700 text-slate-500' : 'border-slate-800 text-slate-400'}`} colSpan={daysArray.length}>Dias do Mês</th>
+                                                <th className={`p-2 text-white border font-black uppercase sticky right-0 z-20 w-20 text-center transition-colors duration-500 ${isDarkMode ? 'border-slate-700 bg-slate-900' : 'border-slate-800 bg-slate-900'}`} rowSpan={2}>Total</th>
                                             </tr>
-                                            <tr className="bg-slate-800" style={{ height: `${tableConfig.rowHeight * 4}px` }}>
+                                            <tr className={isDarkMode ? 'bg-slate-800' : 'bg-slate-800'} style={{ height: `${tableConfig.rowHeight * 4}px` }}>
                                                 {daysArray.map(d => (
                                                     <th
                                                         key={d}
-                                                        className={`p-1 text-[0.9em] border border-slate-700 text-center ${isWeekend(d)
-                                                            ? 'text-red-500 font-black'
-                                                            : 'text-slate-300 font-bold'
+                                                        className={`p-1 text-[0.9em] border text-center transition-colors duration-500 ${isDarkMode ? 'border-slate-700' : 'border-slate-700'} ${isWeekend(d)
+                                                            ? (isDarkMode ? 'text-rose-500 font-black' : 'text-red-500 font-black')
+                                                            : (isDarkMode ? 'text-slate-500 font-bold' : 'text-slate-300 font-bold')
                                                             }`}
                                                         style={{ width: `${tableConfig.dayColWidth}px`, minWidth: `${tableConfig.dayColWidth}px` }}
                                                     >
@@ -1003,41 +1008,43 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                         <tbody>
                                             {(data?.records || []).map((record, index) => (
                                                 <React.Fragment key={record.id}>
-                                                    <tr className={`transition-all font-bold text-slate-700 group hover:bg-slate-50 ${record.status === 'preparacao' ? 'bg-[#dcedc8] hover:!bg-[#c5e1a5]' : ''}`} style={{ height: `${tableConfig.lineHeight}px` }}>
-                                                        <td className={`p-0 border border-slate-100 sticky left-0 z-10 ${record.status === 'preparacao' ? 'bg-[#dcedc8]' : 'bg-white'}`} style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>
-                                                            <div className={`relative h-full flex items-center justify-center font-black text-slate-900 border-r border-slate-200 ${record.status === 'preparacao' ? 'bg-transparent' : 'bg-slate-50'}`} style={{ minHeight: `${tableConfig.lineHeight * 2}px` }}>
+                                                    <tr className={`transition-all font-bold group transition-colors duration-500 ${isDarkMode
+                                                        ? (record.status === 'preparacao' ? 'bg-emerald-900/30' : 'hover:bg-slate-800/50 text-slate-300')
+                                                        : (record.status === 'preparacao' ? 'bg-[#dcedc8] hover:!bg-[#c5e1a5]' : 'hover:bg-slate-50 text-slate-700')}`} style={{ height: `${tableConfig.lineHeight}px` }}>
+                                                        <td className={`p-0 border sticky left-0 z-10 transition-colors duration-500 ${isDarkMode ? 'border-slate-700' : 'border-slate-100'} ${record.status === 'preparacao' ? (isDarkMode ? 'bg-emerald-900/40' : 'bg-[#dcedc8]') : (isDarkMode ? 'bg-[#1E293B]' : 'bg-white')}`} style={{ width: `${tableConfig.veWidth}px` }} rowSpan={2}>
+                                                            <div className={`relative h-full flex items-center justify-center font-black border-r transition-colors duration-500 ${isDarkMode ? 'border-slate-700' : 'border-slate-200'} ${record.status === 'preparacao' ? 'bg-transparent' : (isDarkMode ? 'bg-slate-800/50 text-white' : 'bg-slate-50 text-slate-900')}`} style={{ minHeight: `${tableConfig.lineHeight * 2}px` }}>
                                                                 <input
                                                                     type="text"
                                                                     value={record.ve}
                                                                     onChange={e => handleUpdateHeader(index, 've', e.target.value)}
-                                                                    className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-slate-900 outline-none text-[1.1em]"
+                                                                    className={`w-full text-center bg-transparent border-none focus:ring-0 font-black outline-none text-[1.1em] ${isDarkMode ? 'text-white' : 'text-slate-900'}`}
                                                                 />
                                                                 <button
                                                                     onClick={() => removeTank(index)}
-                                                                    className="absolute left-1 top-1/2 -translate-y-1/2 bg-red-50 text-red-400 p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white print:hidden shadow-sm z-30"
+                                                                    className={`absolute left-1 top-1/2 -translate-y-1/2 p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-sm z-30 print:hidden ${isDarkMode ? 'bg-rose-900/50 text-rose-400 hover:bg-rose-600 hover:text-white' : 'bg-red-50 text-red-400 hover:bg-red-500 hover:text-white'}`}
                                                                     data-html2canvas-ignore
                                                                 >
                                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-2.5 h-2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" /></svg>
                                                                 </button>
                                                             </div>
                                                         </td>
-                                                        <td className={`p-1 border border-slate-100 sticky z-10 w-[140px] ${record.status === 'preparacao' ? 'bg-[#dcedc8]' : 'bg-white'}`} style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>
-                                                            <input type="text" value={record.stockingDate} onChange={e => handleUpdateHeader(index, 'stockingDate', e.target.value)} onPaste={e => handlePaste(e, index, 1)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-600 outline-none text-[1em]" placeholder="00/00/0000" />
+                                                        <td className={`p-1 border sticky z-10 w-[140px] transition-colors duration-500 ${isDarkMode ? 'border-slate-700' : 'border-slate-100'} ${record.status === 'preparacao' ? (isDarkMode ? 'bg-emerald-900/40' : 'bg-[#dcedc8]') : (isDarkMode ? 'bg-[#1E293B]' : 'bg-white')}`} style={{ left: `${tableConfig.veWidth}px` }} rowSpan={2}>
+                                                            <input type="text" value={record.stockingDate} onChange={e => handleUpdateHeader(index, 'stockingDate', e.target.value)} onPaste={e => handlePaste(e, index, 1)} className={`w-full text-center bg-transparent border-none focus:ring-0 font-bold outline-none text-[1em] ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`} placeholder="00/00/0000" />
                                                         </td>
-                                                        <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
-                                                            <input type="number" value={record.area || ''} onChange={e => handleUpdateHeader(index, 'area', parseFloat(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 2)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-500 outline-none text-[1em]" />
+                                                        <td className={`border transition-colors duration-500 ${isDarkMode ? 'border-slate-700' : 'border-slate-100'}`} style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
+                                                            <input type="number" value={record.area || ''} onChange={e => handleUpdateHeader(index, 'area', parseFloat(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 2)} className={`w-full text-center bg-transparent border-none focus:ring-0 font-bold outline-none text-[1em] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
                                                         </td>
-                                                        <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
-                                                            <input type="number" value={record.initialPopulation || ''} onChange={e => handleUpdateHeader(index, 'initialPopulation', parseInt(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 3)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-500 outline-none text-[1em]" />
+                                                        <td className={`border transition-colors duration-500 ${isDarkMode ? 'border-slate-700' : 'border-slate-100'}`} style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
+                                                            <input type="number" value={record.initialPopulation || ''} onChange={e => handleUpdateHeader(index, 'initialPopulation', parseInt(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 3)} className={`w-full text-center bg-transparent border-none focus:ring-0 font-bold outline-none text-[1em] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
                                                         </td>
-                                                        <td className="border border-slate-100" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
-                                                            <input type="number" value={record.density || ''} onChange={e => handleUpdateHeader(index, 'density', parseFloat(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 4)} className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-500 outline-none text-[1em]" />
+                                                        <td className={`border transition-colors duration-500 ${isDarkMode ? 'border-slate-700' : 'border-slate-100'}`} style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
+                                                            <input type="number" value={record.density || ''} onChange={e => handleUpdateHeader(index, 'density', parseFloat(e.target.value) || 0)} onPaste={e => handlePaste(e, index, 4)} className={`w-full text-center bg-transparent border-none focus:ring-0 font-bold outline-none text-[1em] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`} />
                                                         </td>
-                                                        <td className="border border-slate-100 bg-indigo-50/10" style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
-                                                            <input type="text" value={record.biometry} onChange={e => handleUpdateHeader(index, 'biometry', e.target.value)} onPaste={e => handlePaste(e, index, 5)} className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-indigo-600 outline-none text-[1em]" placeholder="..." />
+                                                        <td className={`border transition-colors duration-500 ${isDarkMode ? 'border-slate-700 bg-indigo-900/20' : 'border-slate-100 bg-indigo-50/10'}`} style={{ padding: `${tableConfig.rowHeight}px 4px` }} rowSpan={2}>
+                                                            <input type="text" value={record.biometry} onChange={e => handleUpdateHeader(index, 'biometry', e.target.value)} onPaste={e => handlePaste(e, index, 5)} className={`w-full text-center bg-transparent border-none focus:ring-0 font-black outline-none text-[1em] ${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`} placeholder="..." />
                                                         </td>
-                                                        <td className="border border-slate-100 relative group/select" style={{ padding: 0, backgroundColor: record.status === 'preparacao' ? '#dcedc8' : 'white' }} rowSpan={2}>
-                                                            <div className={`absolute inset-0 flex items-center justify-center font-bold text-[0.8em] uppercase ${record.status === 'preparacao' ? 'text-green-800' : 'text-slate-500'}`}>
+                                                        <td className={`border relative group/select transition-colors duration-500 ${isDarkMode ? 'border-slate-700' : 'border-slate-100'}`} style={{ padding: 0, backgroundColor: record.status === 'preparacao' ? (isDarkMode ? 'transparent' : '#dcedc8') : (isDarkMode ? 'transparent' : 'white') }} rowSpan={2}>
+                                                            <div className={`absolute inset-0 flex items-center justify-center font-bold text-[0.8em] uppercase ${record.status === 'preparacao' ? (isDarkMode ? 'text-emerald-400' : 'text-green-800') : (isDarkMode ? 'text-slate-500' : 'text-slate-500')}`}>
                                                                 {record.status === 'preparacao' ? 'PREPARAÇÃO' : 'EM CURSO'}
                                                             </div>
                                                             <select
@@ -1049,17 +1056,17 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                                 <option value="preparacao">Preparação</option>
                                                             </select>
                                                         </td>
-                                                        <td className="border border-slate-100 bg-slate-50/50 font-black text-slate-400 text-center tracking-tighter italic border-r-2 border-r-slate-200 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px`, width: '50px', minWidth: '50px' }}>Ração</td>
+                                                        <td className={`border font-black tracking-tighter italic border-r-2 uppercase transition-all duration-500 ${isDarkMode ? 'border-slate-700 bg-slate-800/30 text-slate-500 border-r-slate-800' : 'border-slate-100 bg-slate-50/50 text-slate-400 border-r-slate-200'}`} style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px`, width: '50px', minWidth: '50px' }}>Ração</td>
                                                         {daysArray.map(d => {
                                                             const val = (record.dailyRecords || []).find(dr => dr.day === d)?.feed;
                                                             return (
-                                                                <td key={d} className="p-0 border border-slate-100 hover:bg-orange-50/30" style={{ minWidth: `${tableConfig.dayColWidth}px` }}>
+                                                                <td key={d} className={`p-0 border transition-colors duration-500 ${isDarkMode ? 'border-slate-700 hover:bg-orange-950/20' : 'border-slate-100 hover:bg-orange-50/30'}`} style={{ minWidth: `${tableConfig.dayColWidth}px` }}>
                                                                     <input
                                                                         type="number"
                                                                         value={val === 0 ? '' : val}
                                                                         onChange={e => handleUpdateDay(index, d, 'feed', e.target.value)}
                                                                         onPaste={e => handlePaste(e, index, 'feed', d)}
-                                                                        className="w-full text-center bg-transparent border-none focus:ring-0 font-bold text-slate-700 outline-none text-[1em]"
+                                                                        className={`w-full text-center bg-transparent border-none focus:ring-0 font-bold outline-none text-[1em] ${isDarkMode ? 'text-orange-400/80' : 'text-slate-700'}`}
                                                                         style={{
                                                                             padding: `${Math.max(0, tableConfig.rowHeight)}px 2px`,
                                                                             marginTop: `${Math.min(0, tableConfig.rowHeight)}px`,
@@ -1069,26 +1076,26 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                                                 </td>
                                                             );
                                                         })}
-                                                        <td className="p-1 border border-slate-100 sticky right-0 z-10 bg-orange-50 font-black text-orange-700 text-center shadow-[-4px_0_10px_rgba(0,0,0,0.02)] min-w-[75px]" rowSpan={2}>
+                                                        <td className={`p-1 border sticky right-0 z-10 text-center shadow-[-4px_0_10px_rgba(0,0,0,0.02)] min-w-[75px] transition-colors duration-500 ${isDarkMode ? 'border-slate-700 bg-slate-900' : 'border-slate-100 bg-orange-50'}`} rowSpan={2}>
                                                             <div className="flex flex-col gap-0.5 items-center justify-center italic">
-                                                                <span className="text-[11px]">{calculateRowTotal(record, 'feed')} kg</span>
-                                                                <div className="w-6 h-px bg-orange-200" />
-                                                                <span className="text-pink-600 text-[10px]">{calculateRowTotal(record, 'mortality')} un</span>
+                                                                <span className={`text-[11px] font-black ${isDarkMode ? 'text-orange-500' : 'text-orange-700'}`}>{calculateRowTotal(record, 'feed')} kg</span>
+                                                                <div className={`w-6 h-px ${isDarkMode ? 'bg-orange-900' : 'bg-orange-200'}`} />
+                                                                <span className={`text-[10px] font-black ${isDarkMode ? 'text-rose-500' : 'text-pink-600'}`}>{calculateRowTotal(record, 'mortality')} un</span>
                                                             </div>
                                                         </td>
                                                     </tr>
-                                                    <tr className={record.status === 'preparacao' ? 'bg-[#dcedc8]' : 'bg-pink-50/10'} style={{ height: `${tableConfig.lineHeight}px` }}>
-                                                        <td className="border border-slate-100 text-pink-400 text-center tracking-tighter italic border-r-2 border-r-pink-100 uppercase" style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px`, width: '50px', minWidth: '50px' }}>Mort.</td>
+                                                    <tr className={`transition-colors duration-500 ${isDarkMode ? (record.status === 'preparacao' ? 'bg-emerald-900/30' : 'bg-rose-950/10') : (record.status === 'preparacao' ? 'bg-[#dcedc8]' : 'bg-pink-50/10')}`} style={{ height: `${tableConfig.lineHeight}px` }}>
+                                                        <td className={`border text-center tracking-tighter italic border-r-2 uppercase transition-all duration-500 ${isDarkMode ? 'border-slate-700 text-rose-500/70 border-r-rose-900/30' : 'border-slate-100 text-pink-400 border-r-pink-100'}`} style={{ fontSize: '0.9em', padding: `${tableConfig.rowHeight}px 2px`, width: '50px', minWidth: '50px' }}>Mort.</td>
                                                         {daysArray.map(d => {
                                                             const val = (record.dailyRecords || []).find(dr => dr.day === d)?.mortality;
                                                             return (
-                                                                <td key={d} className="p-0 border border-slate-100 hover:bg-pink-50/50">
+                                                                <td key={d} className={`p-0 border transition-colors duration-500 ${isDarkMode ? 'border-slate-700 hover:bg-rose-950/30' : 'border-slate-100 hover:bg-pink-50/50'}`}>
                                                                     <input
                                                                         type="number"
                                                                         value={val === 0 ? '' : val}
                                                                         onChange={e => handleUpdateDay(index, d, 'mortality', e.target.value)}
                                                                         onPaste={e => handlePaste(e, index, 'mortality', d)}
-                                                                        className="w-full text-center bg-transparent border-none focus:ring-0 font-black text-pink-600 outline-none text-[1em]"
+                                                                        className={`w-full text-center bg-transparent border-none focus:ring-0 font-black outline-none text-[1em] ${isDarkMode ? 'text-rose-500/80' : 'text-pink-600'}`}
                                                                         style={{
                                                                             padding: `${Math.max(0, tableConfig.rowHeight)}px 2px`,
                                                                             marginTop: `${Math.min(0, tableConfig.rowHeight)}px`,
@@ -1128,24 +1135,24 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                             )}
                                         </tbody>
                                         <tfoot>
-                                            <tr className="bg-slate-900 shadow-[0_-10px_20px_rgba(0,0,0,0.1)] relative z-30">
-                                                <td colSpan={8} className="p-3 text-right border-r border-slate-800 sticky left-0 z-20 bg-slate-900" style={{ left: 0 }}>
+                                            <tr className={`shadow-[0_-10px_20px_rgba(0,0,0,0.1)] relative z-30 transition-colors duration-500 ${isDarkMode ? 'bg-slate-900' : 'bg-slate-900'}`}>
+                                                <td colSpan={8} className={`p-3 text-right border-r sticky left-0 z-20 transition-colors duration-500 ${isDarkMode ? 'border-slate-800 bg-slate-900' : 'border-slate-800 bg-slate-900'}`} style={{ left: 0 }}>
                                                     <span className="text-white font-black uppercase tracking-widest text-[1em]">Total do Dia</span>
                                                 </td>
                                                 {daysArray.map(d => (
-                                                    <td key={d} className="p-1 border-r border-slate-800">
+                                                    <td key={d} className={`p-1 border-r transition-colors duration-500 ${isDarkMode ? 'border-slate-800' : 'border-slate-800'}`}>
                                                         <div className="flex flex-col items-center justify-center gap-0">
-                                                            <span className="text-orange-400 font-black text-[10px] leading-tight">{calculateDayTotal('feed', d) || 0}</span>
-                                                            <span className="text-pink-400 font-bold text-[8px] leading-tight">{calculateDayTotal('mortality', d) || 0}</span>
+                                                            <span className={`font-black text-[10px] leading-tight transition-colors duration-500 ${isDarkMode ? 'text-orange-500' : 'text-orange-400'}`}>{calculateDayTotal('feed', d) || 0}</span>
+                                                            <span className={`font-bold text-[8px] leading-tight transition-colors duration-500 ${isDarkMode ? 'text-rose-500/80' : 'text-pink-400'}`}>{calculateDayTotal('mortality', d) || 0}</span>
                                                         </div>
                                                     </td>
                                                 ))}
-                                                <td className="p-3 bg-orange-600 text-center sticky right-0 z-20">
+                                                <td className={`p-3 text-center sticky right-0 z-20 transition-colors duration-500 ${isDarkMode ? 'bg-orange-700' : 'bg-orange-600'}`}>
                                                     <div className="flex flex-col items-center gap-0">
                                                         <span className="text-white font-black text-sm leading-none">
                                                             {data ? (data.records || []).reduce((sum, tank) => sum + calculateRowTotal(tank, 'feed'), 0).toLocaleString('pt-BR') : 0}
                                                         </span>
-                                                        <span className="text-orange-200 text-[8px] font-bold uppercase tracking-tighter">TOTAL KG</span>
+                                                        <span className={`text-[8px] font-bold uppercase tracking-tighter transition-colors duration-500 ${isDarkMode ? 'text-orange-200/70' : 'text-orange-200'}`}>TOTAL KG</span>
                                                     </div>
                                                 </td>
                                             </tr>

@@ -11,6 +11,8 @@ interface DashboardLayoutProps {
   onLogout: () => void;
   currentUser: string;
   isPublic?: boolean;
+  isDarkMode?: boolean;
+  setIsDarkMode?: (isDark: boolean) => void;
 }
 
 const NavItem: React.FC<{
@@ -234,7 +236,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   onTabChange,
   onLogout,
   currentUser,
-  isPublic = false
+  isPublic = false,
+  isDarkMode = false,
+  setIsDarkMode
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tabLocks, setTabLocks] = useState<Record<string, boolean>>({});
@@ -385,27 +389,40 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     : menuItems;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row print:bg-white print:block" data-active-tab={activeTab}>
+    <div className={`min-h-screen flex flex-col md:flex-row transition-colors duration-500 print:bg-white print:block ${isDarkMode ? 'bg-[#0B0F1A] text-slate-100' : 'bg-gray-50 text-slate-900'}`} data-active-tab={activeTab}>
       {/* Mobile Header */}
-      <div className="md:hidden bg-slate-900 text-white p-4 flex justify-between items-center print:hidden">
+      <div className={`md:hidden p-4 flex justify-between items-center print:hidden border-b transition-colors duration-500 ${isDarkMode ? 'bg-[#0B0F1A] border-slate-800 text-white' : 'bg-slate-900 text-white'}`}>
         <span className="font-bold text-lg truncate max-w-[200px]">
           {isPublic ? 'Modo Visualização' : `Adm: ${currentUser}`}
         </span>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setIsDarkMode?.(!isDarkMode)}
+            className={`p-2 rounded-xl transition-all ${isDarkMode ? 'bg-slate-800 text-yellow-400' : 'bg-slate-800 text-slate-300'}`}
+          >
+            {isDarkMode ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M16.071 16.071l.707.707M7.757 7.757l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" /></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+            )}
+          </button>
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Sidebar Navigation */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-slate-300 transform transition-transform duration-300 ease-in-out print:hidden
+        fixed inset-y-0 left-0 z-50 w-64 text-slate-300 transform transition-transform duration-300 ease-in-out print:hidden border-r transition-colors duration-500
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
         md:relative md:translate-x-0 flex flex-col
+        ${isDarkMode ? 'bg-[#0F172A] border-slate-800' : 'bg-slate-900 border-slate-800'}
       `}>
         {/* Sidebar Header - Carapitanga Style */}
-        <div className="p-6">
+        <div className="p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-orange-500 shadow-lg shadow-orange-500/30 flex items-center justify-center text-white flex-shrink-0">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
@@ -419,6 +436,19 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Gestão Inteligente</p>
             </div>
           </div>
+
+          {/* Theme Toggle - Desktop Sidebar */}
+          <button
+            onClick={() => setIsDarkMode?.(!isDarkMode)}
+            className={`hidden md:flex p-2 rounded-xl transition-all active:scale-95 ${isDarkMode ? 'bg-slate-800 text-yellow-400 hover:bg-slate-700' : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-800'}`}
+            title={isDarkMode ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
+          >
+            {isDarkMode ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M16.071 16.071l.707.707M7.757 7.757l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" /></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+            )}
+          </button>
         </div>
 
         {/* Navigation Items */}
@@ -481,9 +511,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-auto h-[calc(100vh-60px)] md:h-screen w-full relative print:h-auto print:overflow-visible">
-        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 print:hidden opacity-50 md:opacity-100">
-          <div className="absolute top-[5%] right-[5%] w-[40%] h-[40%] rounded-full bg-orange-100/50 blur-3xl" />
-          <div className="absolute bottom-[5%] left-[10%] w-[30%] h-[30%] rounded-full bg-blue-50/50 blur-3xl" />
+        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 print:hidden opacity-50 md:opacity-100 transition-opacity duration-500">
+          <div className={`absolute top-[5%] right-[5%] w-[40%] h-[40%] rounded-full blur-3xl transition-colors duration-1000 ${isDarkMode ? 'bg-blue-900/20' : 'bg-orange-100/50'}`} />
+          <div className={`absolute bottom-[5%] left-[10%] w-[30%] h-[30%] rounded-full blur-3xl transition-colors duration-1000 ${isDarkMode ? 'bg-indigo-900/10' : 'bg-blue-50/50'}`} />
         </div>
 
         <div id="active-view" className="relative z-10 p-4 sm:p-8 lg:p-10 max-w-7xl mx-auto print:p-0 print:max-w-none">

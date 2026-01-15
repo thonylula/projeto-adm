@@ -42,7 +42,7 @@ const NEWS_HEADLINES_SOURCE = [
 
 type ViewStep = 'UPLOAD' | 'PROCESSING' | 'DASHBOARD';
 
-export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: string; isModal?: boolean }> = ({ isPublic = false, initialFilter = '', isModal = false }) => {
+export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: string; isModal?: boolean; isDarkMode?: boolean }> = ({ isPublic = false, initialFilter = '', isModal = false, isDarkMode = false }) => {
     const [step, setStep] = useState<ViewStep>(isPublic ? 'DASHBOARD' : (isModal ? 'DASHBOARD' : 'UPLOAD')); // Modal assumes we want to see data if available
     const [logo, setLogo] = useState<string | null>(DEFAULT_LOGO);
     const [toast, setToast] = useState<{ msg: string; visible: boolean }>({ msg: '', visible: false });
@@ -51,7 +51,6 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     const [currentData, setCurrentData] = useState<any[]>(defaultRawData);
     const [biometricsHistory, setBiometricsHistory] = useState<any[]>([]);
     const [showAIUpload, setShowAIUpload] = useState(false);
-    const [isDarkMode, setIsDarkMode] = useState(false);
     const [needsSave, setNeedsSave] = useState(false);
     const [biometryDate, setBiometryDate] = useState(new Date().toISOString().split('T')[0]);
     const [loadedRecordId, setLoadedRecordId] = useState<string | null>(null);
