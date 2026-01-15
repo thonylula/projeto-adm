@@ -6,9 +6,10 @@ import { InsumosWidget } from './InsumosWidget';
 import { TransferManager } from './TransferManager';
 import { getOrchestrator } from '../services/agentService';
 
-activeCompany ?: any;
-isPublic ?: boolean;
-isDarkMode ?: boolean;
+interface CampoViveirosProps {
+    activeCompany?: any;
+    isPublic?: boolean;
+    isDarkMode?: boolean;
 }
 
 export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isPublic = false, isDarkMode = false }) => {
