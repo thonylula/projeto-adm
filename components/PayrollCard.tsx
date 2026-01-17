@@ -762,6 +762,34 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       return { proportionalSalary: 0, hourlyRate: 0, hazardPayValue: 0, effectiveNightHours: 0, nightShiftValue: 0, dsrNightShiftValue: 0, overtimeValue: 0, overtime1Value: 0, overtime2Value: 0, holidayValue: 0, dsrOvertimeValue: 0, sundayBonusValue: 0, visitsTotalValue: 0, grossSalary: 0, loanDiscountValue: 0 };
     }
 
+    // 0. Cálculos de Variáveis Mensais (Mesma lógica do performCalculation)
+    const nightShiftPercentageDecimal = safeNum(input.nightShiftPercentage) / 100;
+    const NIGHT_HOUR_REDUCTION_FACTOR = input.applyNightShiftReduction ? 1.14285714 : 1;
+    const divisor = input.customDivisor > 0 ? input.customDivisor : 220;
+    const hourlyRate = baseSalary / divisor;
+
+    const nightValue = (input.nightHours * NIGHT_HOUR_REDUCTION_FACTOR) * (hourlyRate * nightShiftPercentageDecimal);
+
+    const overtimeMultiplier1 = 1 + (safeNum(input.overtimePercentage) / 100);
+    const overtimeValue1 = (hourlyRate * overtimeMultiplier1) * safeNum(input.overtimeHours);
+
+    const overtimeMultiplier2 = 1 + (safeNum(input.overtimePercentage2) / 100);
+    const overtimeValue2 = (hourlyRate * overtimeMultiplier2) * safeNum(input.overtimeHours2);
+
+    const totalOvertimeValue = overtimeValue1 + overtimeValue2;
+
+    // DSR Factor
+    const businessDays = safeNum(input.businessDays) || 25;
+    const nonBusinessDays = safeNum(input.nonBusinessDays) || 5;
+    const dsrFactor = nonBusinessDays / businessDays;
+
+    const dsrNightValue = nightValue * dsrFactor;
+    const dsrOvertimeValue = totalOvertimeValue * dsrFactor;
+
+    const hazardPayValue = input.hasHazardPay ? (baseSalary / 30 * termination.getDate()) * 0.30 : 0;
+    const visitsTotalValue = safeNum(input.visitsAmount) * safeNum(input.visitUnitValue);
+    const productionBonus = safeNum(input.productionBonus);
+
     // 1. Saldo de Salário
     const daysInMonth = termination.getDate();
     const salaryBalance = (baseSalary / 30) * daysInMonth;
@@ -803,32 +831,38 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       fgtsFine = safeNum(input.fgtsBalance) * 0.20;
     }
 
-    // Soma Total
-    let grossSalary = salaryBalance + thirteenthProp + vacationProp + vacationOneThird + noticePeriodValue + fgtsFine;
+    // Soma Total (Incluindo variáveis mensais que ocorreram até a rescisão)
+    let grossSalary = salaryBalance + thirteenthProp + vacationProp + vacationOneThird + noticePeriodValue + fgtsFine +
+      nightValue + dsrNightValue + totalOvertimeValue + dsrOvertimeValue + hazardPayValue +
+      visitsTotalValue + productionBonus + safeNum(input.familyAllowance) + safeNum(input.costAllowance);
 
-    // Pedido de demissão ou Justa causa removem algumas verbas
+    // Pedido de demissão ou Justa causa removem algumas verbas de aviso e multa, mas mantêm o saldo e variáveis trabalhadas
     if (input.terminationReason === 'RESIGNATION') {
-      grossSalary = salaryBalance + thirteenthProp + vacationProp + vacationOneThird;
+      grossSalary = salaryBalance + thirteenthProp + vacationProp + vacationOneThird +
+        nightValue + dsrNightValue + totalOvertimeValue + dsrOvertimeValue + hazardPayValue +
+        visitsTotalValue + productionBonus + safeNum(input.familyAllowance) + safeNum(input.costAllowance);
     } else if (input.terminationReason === 'DISMISSAL_CAUSE') {
-      grossSalary = salaryBalance;
+      grossSalary = salaryBalance +
+        nightValue + dsrNightValue + totalOvertimeValue + dsrOvertimeValue + hazardPayValue +
+        visitsTotalValue + productionBonus + safeNum(input.familyAllowance) + safeNum(input.costAllowance);
     }
 
     return {
-      proportionalSalary: baseSalary,
-      hourlyRate: baseSalary / 220,
-      hazardPayValue: 0,
-      effectiveNightHours: 0,
-      nightShiftValue: 0,
-      dsrNightShiftValue: 0,
-      overtimeValue: 0,
-      overtime1Value: 0,
-      overtime2Value: 0,
+      proportionalSalary: salaryBalance,
+      hourlyRate,
+      hazardPayValue,
+      effectiveNightHours: input.nightHours * NIGHT_HOUR_REDUCTION_FACTOR,
+      nightShiftValue: nightValue,
+      dsrNightShiftValue: dsrNightValue,
+      overtimeValue: totalOvertimeValue,
+      overtime1Value: overtimeValue1,
+      overtime2Value: overtimeValue2,
       holidayValue: 0,
-      dsrOvertimeValue: 0,
+      dsrOvertimeValue: dsrOvertimeValue,
       sundayBonusValue: 0,
-      visitsTotalValue: 0,
+      visitsTotalValue,
       grossSalary,
-      loanDiscountValue: 0,
+      loanDiscountValue: safeNum(input.loanDiscountValue),
       terminationSalaryBalance: salaryBalance,
       terminationThirteenthProp: thirteenthProp,
       terminationVacationProp: vacationProp,
