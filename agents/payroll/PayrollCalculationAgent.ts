@@ -41,9 +41,9 @@ SEMPRE retorne valores calculados com precisão de centavos.`,
         this.validateInput(data, ['employeeName', 'baseSalary', 'calculationMode']);
 
         try {
-            // For now, delegate to existing calculation logic
-            // In future, could use LLM for complex edge cases
-            const result = this.performCalculations(data);
+            const result = data.calculationMode === 'TERMINATION'
+                ? this.calculateTermination(data)
+                : this.performCalculations(data);
 
             this.log('Calculation complete');
             return result;
@@ -146,6 +146,83 @@ SEMPRE retorne valores calculados com precisão de centavos.`,
                 workingDays: 30 - absences,
                 calculation: input.calculationMode
             }
+        };
+    }
+
+    private calculateTermination(input: PayrollInput): PayrollResult {
+        const safeNum = (v: any): number => {
+            if (v === undefined || v === null || v === '') return 0;
+            const num = typeof v === 'number' ? v : parseFloat(String(v));
+            return isNaN(num) ? 0 : num;
+        };
+
+        const baseSalary = safeNum(input.baseSalary);
+        const admission = input.admissionDate ? new Date(input.admissionDate + 'T00:00:00') : null;
+        const termination = input.terminationDate ? new Date(input.terminationDate + 'T00:00:00') : null;
+
+        if (!admission || !termination || termination < admission) {
+            return this.performCalculations(input); // Fallback
+        }
+
+        // Variable Earnings (HE, Night, etc.)
+        const monthlyResult = this.performCalculations({
+            ...input,
+            calculationMode: 'MONTHLY'
+        });
+
+        // 1. Saldo de Salário
+        const daysInMonth = termination.getDate();
+        const salaryBalance = (baseSalary / 30) * daysInMonth;
+
+        // 2. 13º Proporcional
+        const monthOfTermination = termination.getMonth() + 1;
+        let tenthAvos = 0;
+        if (termination.getFullYear() > admission.getFullYear()) {
+            tenthAvos = monthOfTermination - (termination.getDate() >= 15 ? 0 : 1);
+        } else {
+            tenthAvos = (monthOfTermination - (admission.getMonth() + 1)) + (termination.getDate() >= 15 ? 1 : 0);
+        }
+        tenthAvos = Math.max(0, Math.min(12, tenthAvos));
+        const tenthProp = (baseSalary / 12) * tenthAvos;
+
+        // 3. Férias Proporcionais
+        const diffTime = termination.getTime() - admission.getTime();
+        const diffMonths = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 30.44));
+        const vacationAvos = diffMonths % 12;
+        const vacationProp = (baseSalary / 12) * vacationAvos;
+        const vacationOneThird = vacationProp / 3;
+
+        // 4. Aviso Prévio Indenizado (Simplified)
+        let noticePeriod = 0;
+        if (input.noticePeriodType === 'INDEMNIFIED' && input.terminationReason === 'DISMISSAL_NO_CAUSE') {
+            noticePeriod = baseSalary;
+        }
+
+        // 5. Multa FGTS (Simplified)
+        let fgtsFine = 0;
+        if (input.terminationReason === 'DISMISSAL_NO_CAUSE') {
+            fgtsFine = safeNum(input.fgtsBalance) * 0.40;
+        }
+
+        // Sum Everything
+        let grossSalary = salaryBalance + tenthProp + vacationProp + vacationOneThird + noticePeriod + fgtsFine +
+            monthlyResult.nightValue + monthlyResult.overtimeValue + (input.productionBonus || 0);
+
+        if (input.terminationReason === 'RESIGNATION') {
+            grossSalary = salaryBalance + tenthProp + vacationProp + vacationOneThird +
+                monthlyResult.nightValue + monthlyResult.overtimeValue + (input.productionBonus || 0);
+        }
+
+        return {
+            ...monthlyResult,
+            proportionalSalary: salaryBalance,
+            grossSalary,
+            terminationSalaryBalance: salaryBalance,
+            terminationThirteenthProp: tenthProp,
+            terminationVacationProp: vacationProp,
+            terminationVacationOneThird: vacationOneThird,
+            terminationNoticePeriod: noticePeriod,
+            terminationFgtsFine: fgtsFine
         };
     }
 }
