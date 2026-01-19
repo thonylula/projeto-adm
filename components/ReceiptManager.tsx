@@ -212,20 +212,22 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
         setIsExporting(true);
         try {
             const canvas = await html2canvas(receiptRef.current, {
-                scale: 3, // Higher scale for better PDF quality
+                scale: 2.2, // Slightly lower scale, still high quality for print
                 useCORS: true,
                 backgroundColor: '#ffffff'
             });
-            const imgData = canvas.toDataURL('image/png');
+            // Changed from PNG to JPEG with compression
+            const imgData = canvas.toDataURL('image/jpeg', 0.85);
 
             // A4 dimensions in mm: 210 x 297
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'mm',
-                format: 'a4'
+                format: 'a4',
+                compress: true // Enable compression
             });
 
-            pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+            pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
             pdf.save(`recibo_${showReceipt?.input.payeeName.replace(/\s+/g, '_').toLowerCase()}.pdf`);
         } catch (e) {
             console.error("Erro exportando PDF:", e);
