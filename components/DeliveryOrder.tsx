@@ -334,8 +334,17 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
 
     // --- Calculation for Totals (Footer & KPIs) ---
     const grandTotals = activeData.reduce((acc, curr) => {
-        const sobrevValue = parseFloat(curr.sobrevivencia.replace('%', '').replace(',', '.')) || 0;
-        const fcaValue = parseFloat(curr.fca.replace(',', '.')) || 0;
+        const parseVal = (v: any) => {
+            if (v === null || v === undefined) return 0;
+            if (typeof v === 'number') return v;
+            if (typeof v === 'string') {
+                return parseFloat(v.replace('%', '').replace(',', '.')) || 0;
+            }
+            return 0;
+        };
+
+        const sobrevValue = parseVal(curr.sobrevivencia);
+        const fcaValue = parseVal(curr.fca);
 
         return {
             biomass: acc.biomass + curr.producao,
