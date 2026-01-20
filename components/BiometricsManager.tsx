@@ -967,15 +967,6 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
 
 
-    {/* Hidden AI File Input */ }
-    <input
-        type="file"
-        ref={aiFileInputRef}
-        className="hidden"
-        accept="image/*,application/pdf"
-        onChange={(e) => handleFileSelect(e, true)}
-        data-html2canvas-ignore="true"
-    />
 
     {/* --- DASHBOARD VIEW --- */ }
     const renderDashboard = () => (
@@ -1542,6 +1533,16 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     </div>
                 </div>
             )}
+
+            {/* Hidden AI File Input for 'startNewBiometryFromIA' functionality */}
+            <input
+                type="file"
+                ref={aiFileInputRef}
+                className="hidden"
+                accept="image/*,application/pdf"
+                onChange={(e) => handleFileSelect(e, true)}
+                data-html2canvas-ignore="true"
+            />
 
             {/* Toast Notification */}
             {toast.visible && (
