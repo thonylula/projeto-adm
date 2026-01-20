@@ -209,6 +209,32 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
         return () => clearInterval(interval);
     }, [step, newsList]);
 
+    // --- HELPER: BUSCAR DADOS DO VIVEIRO NO HISTÓRICO ---
+    const getPondDataFromHistory = (pondName: string) => {
+        if (!biometricsHistory || biometricsHistory.length === 0) return { dataPovoamento: null, quat: null };
+
+        // Normalização do nome para busca
+        const normalizedSearch = pondName.toUpperCase().trim().replace(/\s+/g, '');
+
+        // Percorrer histórico do mais recente para o mais antigo
+        for (const record of biometricsHistory) {
+            if (record.data && Array.isArray(record.data)) {
+                const found = record.data.find((item: any) => {
+                    const normalizedItemName = (item.viveiro || '').toUpperCase().trim().replace(/\s+/g, '');
+                    return normalizedItemName === normalizedSearch;
+                });
+
+                if (found && (found.dataPovoamento || found.quat)) {
+                    return {
+                        dataPovoamento: found.dataPovoamento || null,
+                        quat: found.quat || null
+                    };
+                }
+            }
+        }
+        return { dataPovoamento: null, quat: null };
+    };
+
     // --- LÓGICA DE UPLOAD / INPUT ---
     const handleFileDrop = (e: React.DragEvent) => {
         e.preventDefault();
@@ -235,11 +261,17 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
             const result = extraction.data;
 
             if (Array.isArray(result)) {
-                const normalized = result.map(item => ({
-                    ...item,
-                    viveiro: item.viveiro?.toUpperCase().trim().replace('OS-005', 'OC-005').replace('OS 005', 'OC-005') || item.viveiro,
-                    dataPovoamento: item.dataPovoamento || null
-                }));
+                const normalized = result.map(item => {
+                    const viveiro = item.viveiro?.toUpperCase().trim().replace('OS-005', 'OC-005').replace('OS 005', 'OC-005') || item.viveiro;
+                    const historyData = getPondDataFromHistory(viveiro);
+
+                    return {
+                        ...item,
+                        viveiro,
+                        dataPovoamento: item.dataPovoamento || historyData.dataPovoamento || null,
+                        quat: item.quat || historyData.quat || null
+                    };
+                });
 
                 setCurrentData(sortData(normalized));
                 setStep('DASHBOARD');
@@ -269,11 +301,17 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
                 if (Array.isArray(result)) {
                     // Normalização de Nomes e Datas
-                    const normalized = result.map(item => ({
-                        ...item,
-                        viveiro: item.viveiro?.toUpperCase().trim().replace('OS-005', 'OC-005').replace('OS 005', 'OC-005') || item.viveiro,
-                        dataPovoamento: item.dataPovoamento || null
-                    }));
+                    const normalized = result.map(item => {
+                        const viveiro = item.viveiro?.toUpperCase().trim().replace('OS-005', 'OC-005').replace('OS 005', 'OC-005') || item.viveiro;
+                        const historyData = getPondDataFromHistory(viveiro);
+
+                        return {
+                            ...item,
+                            viveiro,
+                            dataPovoamento: item.dataPovoamento || historyData.dataPovoamento || null,
+                            quat: item.quat || historyData.quat || null
+                        };
+                    });
 
                     setCurrentData(sortData(normalized));
                     setTimeout(() => {
@@ -1256,13 +1294,17 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                             )}
                                         </td>
 
-                                        <td
-                                            onClick={() => handleCopy(item.quatInputValue, 'Quantidade')}
-                                            className={`px-4 py-4 text-center font-bold cursor-copy transition-colors duration-500 ${isDarkMode
-                                                ? 'text-slate-400 hover:text-slate-200'
-                                                : 'text-slate-400 hover:text-slate-600'}`}
-                                        >
-                                            {item.quatInputValue}
+                                        <td className="px-4 py-4 text-center">
+                                            {isPublic ? (
+                                                <span className={`font-bold transition-colors duration-500 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{item.quatInputValue}</span>
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    value={item.quatInputValue}
+                                                    onChange={(e) => handleUpdateRow(item.viveiro, 'quat', e.target.value)}
+                                                    className={`w-16 text-center bg-transparent border-b border-transparent focus:border-slate-200 outline-none transition-all font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}
+                                                />
+                                            )}
                                         </td>
 
                                         <td
