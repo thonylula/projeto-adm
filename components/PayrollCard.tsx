@@ -190,6 +190,8 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const [receiptItem, setReceiptItem] = useState<PayrollHistoryItem | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showShareSelection, setShowShareSelection] = useState(false);
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
 
 
   // Lista de funcionários cadastrados para importação
@@ -1142,6 +1144,17 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
       return;
     }
 
+    setSelectedEmployeeIds(history.map(h => h.id));
+    setShowShareSelection(true);
+  };
+
+  const handleConfirmShare = async () => {
+    if (selectedEmployeeIds.length === 0) {
+      alert("⚠️ Selecione pelo menos um recibo para compartilhar.");
+      return;
+    }
+
+    setShowShareSelection(false);
     setIsGeneratingPDF(true);
     try {
       const pdf = await generateBulkPDF();
@@ -2113,6 +2126,82 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
         )
       }
 
+      {/* --- SELECTION MODAL FOR BULK SHARE --- */}
+      {showShareSelection && (
+        <div className="fixed inset-0 z-[110] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-slate-200 animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Compartilhar Recibos</h3>
+                <p className="text-xs text-slate-500 font-medium tracking-tight">Selecione os funcionários</p>
+              </div>
+              <button
+                onClick={() => setShowShareSelection(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <div className="p-2 max-h-[60vh] overflow-y-auto">
+              <div className="px-4 py-2 flex items-center justify-between border-b border-slate-50 mb-2">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Funcionário</span>
+                <button
+                  onClick={() => {
+                    if (selectedEmployeeIds.length === history.length) setSelectedEmployeeIds([]);
+                    else setSelectedEmployeeIds(history.map(h => h.id));
+                  }}
+                  className="text-[10px] font-bold text-indigo-600 hover:underline"
+                >
+                  {selectedEmployeeIds.length === history.length ? 'DESMARCAR TODOS' : 'MARCAR TODOS'}
+                </button>
+              </div>
+              <div className="space-y-1">
+                {history.map(item => (
+                  <label key={item.id} className="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer group">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${selectedEmployeeIds.includes(item.id) ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
+                        {item.input.employeeName.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className={`text-sm font-bold ${selectedEmployeeIds.includes(item.id) ? 'text-slate-900' : 'text-slate-500'}`}>{item.input.employeeName}</p>
+                        <p className="text-[10px] text-slate-400 font-medium">Ref: {item.input.referenceMonth}/{item.input.referenceYear}</p>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 rounded-lg border-2 border-slate-200 text-indigo-600 focus:ring-indigo-500 cursor-pointer accent-indigo-600"
+                      checked={selectedEmployeeIds.includes(item.id)}
+                      onChange={() => {
+                        setSelectedEmployeeIds(prev =>
+                          prev.includes(item.id) ? prev.filter(id => id !== item.id) : [...prev, item.id]
+                        );
+                      }}
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
+              <button
+                onClick={() => setShowShareSelection(false)}
+                className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold text-sm hover:bg-gray-50 transition-all active:scale-95"
+              >
+                CANCELAR
+              </button>
+              <button
+                onClick={handleConfirmShare}
+                className="flex-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black text-sm shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                GERAR PDF ({selectedEmployeeIds.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* --- FOOTER ACTIONS (Floating Menu) - Hidden in Public Mode */}
       {!isPublic && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-white/90 backdrop-blur shadow-2xl px-6 py-3 rounded-2xl border border-slate-200 z-50 print:hidden transition-all hover:bg-white">
@@ -2380,7 +2469,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
 
       {/* --- HIDDEN BULK RECEIPTS CONTAINER (Para extração de PDF) --- */}
       <div id="bulk-receipts-container" style={{ position: 'fixed', left: '-10000px', top: '0', opacity: 0, pointerEvents: 'none', zIndex: -100 }}>
-        {history.map((item, idx) => (
+        {history.filter(item => selectedEmployeeIds.includes(item.id)).map((item, idx) => (
           <div key={`bulk-${idx}`} className="bulk-receipt-page bg-white w-[210mm] h-[297mm] p-[15mm] space-y-8 flex flex-col justify-between">
             {/* Copy of individual receipt logic (1st via) */}
             <div className="bg-white border-[1px] border-slate-300 p-8 rounded-sm relative">
