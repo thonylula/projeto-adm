@@ -18,6 +18,7 @@ const INITIAL_INPUT: ReceiptInput = {
     date: new Date().toISOString().split('T')[0],
     serviceDate: new Date().toISOString().split('T')[0],
     serviceEndDate: '',
+    serviceDates: [],
     description: '',
     paymentMethod: 'PIX',
     pixKey: '',
@@ -33,6 +34,7 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
     const [showReceipt, setShowReceipt] = useState<ReceiptHistoryItem | null>(null);
     const [isExporting, setIsExporting] = useState(false);
     const [receiptLogo, setReceiptLogo] = useState<string | null>(null);
+    const [dateSelectionMode, setDateSelectionMode] = useState<'PERIOD' | 'MULTIPLE'>('PERIOD');
 
     const { processFile, isProcessing: isAiProcessing } = useGeminiParser();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -270,9 +272,20 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
     };
 
     const handleCopyText = (item: ReceiptHistoryItem) => {
-        const period = item.input.serviceEndDate
-            ? `${formatDateSafe(item.input.serviceDate)} À ${formatDateSafe(item.input.serviceEndDate)}`
-            : formatDateSafe(item.input.serviceDate);
+        let period = '';
+        if (item.input.serviceDates && item.input.serviceDates.length > 0) {
+            const sortedDates = [...item.input.serviceDates].sort();
+            if (sortedDates.length === 1) {
+                period = formatDateSafe(sortedDates[0]);
+            } else {
+                const lastDate = sortedDates.pop();
+                period = sortedDates.map(d => formatDateSafe(d)).join(', ') + ' e ' + formatDateSafe(lastDate!);
+            }
+        } else {
+            period = item.input.serviceEndDate
+                ? `${formatDateSafe(item.input.serviceDate)} À ${formatDateSafe(item.input.serviceEndDate)}`
+                : formatDateSafe(item.input.serviceDate);
+        }
 
         const text = `📄 RECIBO DE PAGAMENTO
 ----------------------------
@@ -494,7 +507,7 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4">
                                     <div>
                                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Data Emissão</label>
                                         <input
@@ -504,35 +517,105 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                                             className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-400 cursor-not-allowed font-medium"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Data Serviço (Início)</label>
-                                        <input
-                                            type="date"
-                                            value={form.serviceDate}
-                                            onChange={e => setForm({ ...form, serviceDate: e.target.value })}
-                                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all cursor-pointer"
-                                        />
+                                </div>
+
+                                <div className="space-y-4 pt-2">
+                                    <div className="flex gap-2 p-1 bg-slate-100 rounded-xl">
+                                        <button
+                                            type="button"
+                                            onClick={() => setDateSelectionMode('PERIOD')}
+                                            className={`flex-1 py-1.5 text-[10px] font-black rounded-lg transition-all ${dateSelectionMode === 'PERIOD' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                        >
+                                            PERÍODO
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setDateSelectionMode('MULTIPLE')}
+                                            className={`flex-1 py-1.5 text-[10px] font-black rounded-lg transition-all ${dateSelectionMode === 'MULTIPLE' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                                        >
+                                            DIAS ESPECÍFICOS
+                                        </button>
                                     </div>
-                                    <div>
-                                        <div className="flex justify-between items-center mb-1">
-                                            <label className="block text-xs font-bold text-slate-500 uppercase">Fim Período (Opcional)</label>
-                                            {form.serviceEndDate && (
+
+                                    {dateSelectionMode === 'PERIOD' ? (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Início</label>
+                                                <input
+                                                    type="date"
+                                                    value={form.serviceDate}
+                                                    onChange={e => setForm({ ...form, serviceDate: e.target.value })}
+                                                    className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all cursor-pointer"
+                                                />
+                                            </div>
+                                            <div>
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <label className="block text-xs font-bold text-slate-500 uppercase">Fim (Opcional)</label>
+                                                    {form.serviceEndDate && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setForm({ ...form, serviceEndDate: '' })}
+                                                            className="text-[9px] text-red-500 font-bold hover:underline"
+                                                        >
+                                                            LIMPAR
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <input
+                                                    type="date"
+                                                    value={form.serviceEndDate || ''}
+                                                    onChange={e => setForm({ ...form, serviceEndDate: e.target.value })}
+                                                    className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all cursor-pointer"
+                                                />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="date"
+                                                    id="add-date-input"
+                                                    className="flex-1 px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all cursor-pointer"
+                                                />
                                                 <button
                                                     type="button"
-                                                    onClick={() => setForm({ ...form, serviceEndDate: '' })}
-                                                    className="text-[9px] text-red-500 font-bold hover:underline"
+                                                    onClick={() => {
+                                                        const input = document.getElementById('add-date-input') as HTMLInputElement;
+                                                        if (input.value && !form.serviceDates?.includes(input.value)) {
+                                                            setForm({
+                                                                ...form,
+                                                                serviceDates: [...(form.serviceDates || []), input.value]
+                                                            });
+                                                            input.value = '';
+                                                        }
+                                                    }}
+                                                    className="px-4 py-2 bg-orange-100 text-orange-600 rounded-xl font-bold hover:bg-orange-200 transition-all"
                                                 >
-                                                    LIMPAR
+                                                    ADD
                                                 </button>
-                                            )}
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {form.serviceDates?.sort().map(d => (
+                                                    <span key={d} className="flex items-center gap-2 px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-bold border border-slate-200">
+                                                        {formatDateSafe(d)}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setForm({
+                                                                ...form,
+                                                                serviceDates: form.serviceDates?.filter(date => date !== d)
+                                                            })}
+                                                            className="text-red-500 hover:text-red-700"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                        </button>
+                                                    </span>
+                                                ))}
+                                                {(!form.serviceDates || form.serviceDates.length === 0) && (
+                                                    <p className="text-[10px] text-slate-400 italic">Nenhuma data selecionada</p>
+                                                )}
+                                            </div>
                                         </div>
-                                        <input
-                                            type="date"
-                                            value={form.serviceEndDate || ''}
-                                            onChange={e => setForm({ ...form, serviceEndDate: e.target.value })}
-                                            className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 transition-all cursor-pointer"
-                                        />
-                                    </div>
+                                    )}
                                 </div>
                                 <div className="grid grid-cols-1">
                                     <div>
@@ -818,11 +901,32 @@ const ReceiptTemplate: React.FC<{
                     Recebi de <strong className="font-black uppercase text-slate-900">{company.name}</strong>, a importância de
                     <strong className="font-bold border-b border-slate-300"> {item.result.valueInWords.toUpperCase()}</strong>,
                     referente a <strong className="font-bold uppercase">{item.input.description}</strong>,
-                    serviço realizado {item.input.serviceEndDate ? 'no período de' : 'em'} <strong className="font-bold underline">
-                        {item.input.serviceEndDate
-                            ? `${formatDateSafe(item.input.serviceDate)} À ${formatDateSafe(item.input.serviceEndDate)}`
-                            : formatDateSafe(item.input.serviceDate)}
-                    </strong>.
+                    serviço realizado {(() => {
+                        if (item.input.serviceDates && item.input.serviceDates.length > 0) {
+                            const sortedDates = [...item.input.serviceDates].sort();
+                            let formatted = '';
+                            if (sortedDates.length === 1) {
+                                formatted = formatDateSafe(sortedDates[0]);
+                            } else {
+                                const lastDate = sortedDates.pop();
+                                formatted = sortedDates.map(d => formatDateSafe(d)).join(', ') + ' e ' + formatDateSafe(lastDate!);
+                            }
+                            return (
+                                <>
+                                    nos dias <strong className="font-bold underline">{formatted}</strong>
+                                </>
+                            );
+                        }
+                        return (
+                            <>
+                                {item.input.serviceEndDate ? 'no período de' : 'em'} <strong className="font-bold underline">
+                                    {item.input.serviceEndDate
+                                        ? `${formatDateSafe(item.input.serviceDate)} À ${formatDateSafe(item.input.serviceEndDate)}`
+                                        : formatDateSafe(item.input.serviceDate)}
+                                </strong>
+                            </>
+                        );
+                    })()}.
                 </p>
 
                 <p>
