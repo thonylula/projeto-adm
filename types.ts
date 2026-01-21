@@ -303,6 +303,7 @@ export interface ReceiptInput {
   date: string; // Data de Emissão
   serviceDate: string; // Data da Prestação do Serviço
   serviceEndDate?: string; // Data Final da Prestação do Serviço (Opcional)
+  serviceDates?: string[]; // Datas Específicas da Prestação do Serviço
   description: string;
   paymentMethod: string;
   pixKey?: string;
