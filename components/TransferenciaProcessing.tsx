@@ -457,30 +457,32 @@ export const TransferenciaProcessing: React.FC = () => {
             </div>
 
             <div id="printable-report" ref={reportRef} className="hidden printable-report p-10 bg-white font-sans text-gray-800">
-                <header className="mb-10 pb-8 border-b border-gray-100 flex justify-between items-center">
-                    <div className="flex items-center gap-8">
-                        {companyLogo && <img src={companyLogo} alt="Logo" className="h-20 w-auto object-contain" />}
-                        <div className="border-l-4 border-orange-500 pl-8">
-                            <h1 className="text-3xl font-black text-gray-900 tracking-tighter">{companyName}</h1>
-                            <div className="mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest space-y-0.5">
-                                {managerName && <p>Gerente Responsável: <span className="text-gray-600">{managerName}</span></p>}
-                                {generatedBy && <p>Relatório Gerado por: <span className="text-gray-600">{generatedBy}</span></p>}
+                <header className="mb-12 pb-10 border-b border-gray-100 flex justify-between items-center">
+                    <div className="flex items-center">
+                        {companyLogo && <img src={companyLogo} alt="Logo" className="h-16 w-auto object-contain" />}
+                        <div className="mx-10 w-1 h-14 bg-orange-500 rounded-full" />
+                        <div>
+                            <h1 className="text-4xl font-black text-gray-900 tracking-tighter leading-none mb-3">{companyName}</h1>
+                            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest space-y-1">
+                                {managerName && <p>Gerente Responsável: <span className="text-gray-600 font-black">{managerName}</span></p>}
+                                {generatedBy && <p>Relatório Gerado por: <span className="text-gray-600 font-black">{generatedBy}</span></p>}
                             </div>
                         </div>
                     </div>
                     <div className="text-right">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Data de Emissão</p>
-                        <p className="text-lg font-black text-gray-800">{new Date().toLocaleDateString('pt-BR')}</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-1">Data de Emissão</p>
+                        <p className="text-xl font-black text-gray-800 leading-none">{new Date().toLocaleDateString('pt-BR')}</p>
                     </div>
                 </header>
 
-                <section className="space-y-14">
+                <section className="space-y-16">
                     {Object.keys(nurserySurvivalData).length > 0 && (
                         <div>
-                            <div className="mb-8">
-                                <h2 className="inline-block text-xl font-black text-gray-900 uppercase tracking-tighter border-b-[6px] border-orange-500 pb-1">Resumo do Berçário</h2>
+                            <div className="mb-10">
+                                <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter mb-2">Resumo do Berçário</h2>
+                                <div className="h-2 w-48 bg-orange-500 rounded-sm" />
                             </div>
-                            <div className="grid grid-cols-2 gap-8">
+                            <div className="grid grid-cols-2 gap-10">
                                 {Object.entries(nurserySurvivalData).map(([name, data]) => (
                                     <NurserySurvivalCard key={`print-${name}`} nurseryName={name} data={data} />
                                 ))}
@@ -488,15 +490,16 @@ export const TransferenciaProcessing: React.FC = () => {
                         </div>
                     )}
                     <div>
-                        <div className="mb-8">
-                            <h2 className="inline-block text-xl font-black text-gray-900 uppercase tracking-tighter border-b-[6px] border-orange-500 pb-1">Detalhes</h2>
+                        <div className="mb-10">
+                            <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter mb-2">Detalhes</h2>
+                            <div className="h-2 w-24 bg-orange-500 rounded-sm" />
                         </div>
                         <ResultsTable data={processedData} />
                     </div>
                 </section>
 
-                <footer className="mt-20 pt-8 border-t border-gray-50 flex justify-center items-center">
-                    <p className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.3em]">Documento Oficial de Monitoramento Técnico</p>
+                <footer className="mt-24 pt-10 border-t border-gray-50">
+                    <p className="text-center text-[10px] font-bold text-gray-300 uppercase tracking-[0.4em]">Documento Oficial de Monitoramento Técnico</p>
                 </footer>
             </div>
         </>
