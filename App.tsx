@@ -18,6 +18,7 @@ import { Comparator } from './components/Comparator';
 import { ShowcaseManager } from './components/ShowcaseManager';
 import { PlansPrices } from './components/PlansPrices';
 import { ReceiptManager } from './components/ReceiptManager';
+import { TransferenciaProcessing } from './components/TransferenciaProcessing';
 import { Company, PayrollHistoryItem } from './types';
 import { SupabaseService } from './services/supabaseService';
 import { isSupabaseConfigured } from './supabaseClient';
@@ -569,6 +570,10 @@ export default function App() {
 
         {activeTab === 'plans' && (
           <PlansPrices />
+        )}
+
+        {activeTab === 'transferencias' && (
+          <TransferenciaProcessing />
         )}
       </DashboardLayout>
     );

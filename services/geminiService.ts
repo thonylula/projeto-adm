@@ -1,4 +1,4 @@
-import type { InvoiceData } from '../types';
+import type { InvoiceData, ExtractedData } from '../types';
 
 /**
  * Extracts invoice data using the Gemini AI proxy.
@@ -199,6 +199,77 @@ export async function generateText(
         return text;
     } catch (error) {
         console.error('Erro ao gerar texto:', error);
+        throw error;
+    }
+}
+
+/**
+ * Processes aquaculture transfer data from text or file.
+ */
+export async function processAquacultureData(input: string | File): Promise<ExtractedData[]> {
+    let promptText = "";
+    let base64 = "";
+    let mimeType = "";
+
+    if (typeof input === 'string') {
+        promptText = input;
+    } else {
+        // Handle file conversion to base64
+        base64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve((reader.result as string).split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(input);
+        });
+        mimeType = input.type;
+    }
+
+    const prompt = `
+    Aga como um especialista em aquicultura. Analise o seguinte texto ou imagem contendo registros de transferência de camarão:
+    "${promptText}"
+
+    Extraia uma lista de objetos JSON para cada transferência encontrada, com os seguintes campos:
+    - local: Nome do berçário/viveiro de origem (ex: BE-01, OC-P07).
+    - estocagem: Quantidade total de PLs/camarões transferidos (número inteiro).
+    - plPorGrama: PLs por grama ou peso unitário inverso (se houver, senão use 0).
+    - densidade: Densidade mencionada (ex: "1.2 cam/m²"), se houver.
+    - viveiroDestino: Nome do viveiro de destino (ex: OC-10, P05).
+    - isParcial: true se for mencionado "Parcial", false se for "Total" ou não mencionado.
+    - horario: Horário da transferência, se houver.
+    - data: Data da transferência, se houver (DD/MM/AAAA).
+    - pesoTotal: Peso total transferido em KG, se houver.
+
+    Responda APENAS com o array JSON. Exemplo:
+    [
+      { "local": "BE-01", "estocagem": 150000, "plPorGrama": 450, "densidade": "1.2", "viveiroDestino": "OC-10", "isParcial": false }
+    ]
+  `;
+
+    try {
+        const contents: any[] = [{
+            role: 'user',
+            parts: [
+                { text: prompt },
+                ...(base64 ? [{ inlineData: { data: base64, mimeType } }] : [])
+            ]
+        }];
+
+        const response = await fetch('/api/generative', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents })
+        });
+
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) throw new Error(payload.error || 'Erro na API Gemini');
+
+        const text = payload.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error('A IA não retornou resultados.');
+
+        const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(jsonStr);
+    } catch (error) {
+        console.error('Erro ao processar dados de aquicultura:', error);
         throw error;
     }
 }
