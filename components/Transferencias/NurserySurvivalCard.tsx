@@ -13,25 +13,25 @@ export const NurserySurvivalCard: React.FC<NurserySurvivalCardProps> = ({ nurser
     return (
         <div className={`p-4 rounded-xl border-t-4 bg-white shadow-sm transition-all border-orange-400`}>
             <div className="flex justify-between items-center mb-4">
-                <h4 className="text-sm font-black text-gray-800 uppercase tracking-tighter">
+                <h4 className="text-sm font-bold text-gray-700">
                     {nurseryName}
                 </h4>
                 <div className="text-right">
-                    <span className={`text-xl font-black ${isHealthy ? 'text-green-600' : isCritical ? 'text-red-600' : 'text-orange-600'}`}>
+                    <span className={`text-xl font-bold ${isHealthy ? 'text-green-600' : isCritical ? 'text-red-600' : 'text-orange-600'}`}>
                         {data.survivalRate.toFixed(1)}%
                     </span>
-                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Sobrevivência</p>
+                    <p className="text-[10px] text-gray-400">Sobrevivência</p>
                 </div>
             </div>
 
             <div className="flex justify-between items-end">
                 <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Est. Inicial</p>
-                    <p className="text-lg font-black text-gray-800">{(data.initialStocking || 0).toLocaleString('pt-BR')}</p>
+                    <p className="text-xs font-medium text-gray-500 mb-1">Est. Inicial</p>
+                    <p className="text-lg font-bold text-gray-800">{(data.initialStocking || 0).toLocaleString('pt-BR')}</p>
                 </div>
                 <div className="text-right">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Est. Final</p>
-                    <p className="text-lg font-black text-gray-800">{(data.totalTransferred || 0).toLocaleString('pt-BR')}</p>
+                    <p className="text-xs font-medium text-gray-500 mb-1">Est. Final</p>
+                    <p className="text-lg font-bold text-gray-800">{(data.totalTransferred || 0).toLocaleString('pt-BR')}</p>
                 </div>
             </div>
 
