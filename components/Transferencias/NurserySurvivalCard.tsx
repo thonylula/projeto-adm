@@ -27,11 +27,11 @@ export const NurserySurvivalCard: React.FC<NurserySurvivalCardProps> = ({ nurser
             <div className="flex justify-between items-end">
                 <div>
                     <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Est. Inicial</p>
-                    <p className="text-lg font-black text-gray-800">{data.initialStocking.toLocaleString('pt-BR')}</p>
+                    <p className="text-lg font-black text-gray-800">{(data.initialStocking || 0).toLocaleString('pt-BR')}</p>
                 </div>
                 <div className="text-right">
                     <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Est. Final</p>
-                    <p className="text-lg font-black text-gray-800">{data.totalTransferred.toLocaleString('pt-BR')}</p>
+                    <p className="text-lg font-black text-gray-800">{(data.totalTransferred || 0).toLocaleString('pt-BR')}</p>
                 </div>
             </div>
 

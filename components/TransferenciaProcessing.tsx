@@ -26,29 +26,32 @@ const getNurseryGroupName = (nurseryName: string): string => {
 };
 
 const calculateProcessedItem = (data: ExtractedData): ProcessedData => {
-    const plPorGrama = data.plPorGrama > 0 ? data.plPorGrama : 1;
+    const plPorGrama = (data.plPorGrama && data.plPorGrama > 0) ? data.plPorGrama : 1;
+    const estocagem = data.estocagem || 0;
     const pesoMedioCalculado = 1 / plPorGrama;
-    const pesoTotalCalculado = data.pesoTotal !== undefined
+    const pesoTotalCalculado = (data.pesoTotal !== undefined && data.pesoTotal !== null)
         ? data.pesoTotal
-        : (pesoMedioCalculado * data.estocagem) / 1000;
+        : (pesoMedioCalculado * estocagem) / 1000;
 
-    const viveiroDestinoCleaned = data.viveiroDestino.replace(/\s+/g, '').toUpperCase();
+    const viveiroDestinoCleaned = (data.viveiroDestino || '').replace(/\s+/g, '').toUpperCase();
     let viveiroDestinoArea = VIVEIROS_DATA[viveiroDestinoCleaned];
 
-    if (viveiroDestinoArea === undefined && !viveiroDestinoCleaned.startsWith('OC-')) {
+    if (viveiroDestinoArea === undefined && !viveiroDestinoCleaned.startsWith('OC-') && viveiroDestinoCleaned !== '') {
         const prefixedKey = `OC-${viveiroDestinoCleaned}`;
         viveiroDestinoArea = VIVEIROS_DATA[prefixedKey];
     }
 
     let densidadeFinal = data.densidade;
-    if ((!densidadeFinal || !parseFloat(densidadeFinal)) && viveiroDestinoArea && viveiroDestinoArea > 0 && data.estocagem > 0) {
-        const densidadeCalculada = data.estocagem / (viveiroDestinoArea * 10000);
+    if ((!densidadeFinal || !parseFloat(densidadeFinal)) && viveiroDestinoArea && viveiroDestinoArea > 0 && estocagem > 0) {
+        const densidadeCalculada = estocagem / (viveiroDestinoArea * 10000);
         densidadeFinal = `${densidadeCalculada.toFixed(2)} cam/m²`;
     }
 
     return {
         ...data,
-        densidade: densidadeFinal,
+        estocagem,
+        plPorGrama,
+        densidade: densidadeFinal || '',
         pesoMedioCalculado,
         pesoTotalCalculado,
         viveiroDestinoArea,

@@ -40,10 +40,10 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
                         <tr key={index} className="bg-white hover:bg-orange-50/30 transition-colors">
                             <td className="px-4 py-3 whitespace-nowrap">{item.data || '-'}</td>
                             <td className="px-4 py-3 font-bold text-gray-900">{item.local}</td>
-                            <td className="px-4 py-3 text-right">{item.estocagem.toLocaleString('pt-BR')}</td>
+                            <td className="px-4 py-3 text-right">{(item.estocagem || 0).toLocaleString('pt-BR')}</td>
                             <td className="px-4 py-3 text-right">{item.plPorGrama}</td>
-                            <td className="px-4 py-3 text-right">{item.pesoMedioCalculado.toFixed(4)}g</td>
-                            <td className="px-4 py-3 text-right font-medium text-gray-900">{(item.pesoTotalCalculado).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</td>
+                            <td className="px-4 py-3 text-right">{(item.pesoMedioCalculado || 0).toFixed(4)}g</td>
+                            <td className="px-4 py-3 text-right font-medium text-gray-900">{(item.pesoTotalCalculado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</td>
                             <td className="px-4 py-3 text-right">{item.densidade || '-'}</td>
                             <td className="px-4 py-3 font-medium text-gray-900">{item.viveiroDestino}</td>
                             <td className="px-4 py-3 text-center">
