@@ -84,6 +84,7 @@ export const TransferenciaProcessing: React.FC = () => {
     const [history, setHistory] = useState<HistoryEntry[]>([]);
     const [viewingHistoryId, setViewingHistoryId] = useState<string | null>(null);
     const [missingAreas, setMissingAreas] = useState<string[]>([]);
+    const [currentStep, setCurrentStep] = useState<1 | 2>(1);
 
     useEffect(() => {
         const loadInitialConfig = async () => {
@@ -281,7 +282,7 @@ export const TransferenciaProcessing: React.FC = () => {
     const handleClear = () => {
         setInputText(''); setInputFile(null); setProcessedData([]); setError(null);
         setInitialStockings({}); setNurseryStockingQueue([]); setNurserySurvivalData({});
-        setEditingIndex(null); setViewingHistoryId(null);
+        setEditingIndex(null); setViewingHistoryId(null); setCurrentStep(1);
     };
 
     const handleRefresh = useCallback(async () => {
@@ -333,126 +334,175 @@ export const TransferenciaProcessing: React.FC = () => {
 
             <div className="non-printable min-h-screen font-sans">
                 <div className="max-w-7xl mx-auto">
-                    <header className="text-center mb-8">
-                        <h1 className="text-4xl sm:text-5xl font-bold text-gray-800 tracking-tight">Relatório de Transferência</h1>
+                    <header className="text-center mb-12">
+                        <div className="flex flex-col items-center gap-4">
+                            <h1 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tighter">Relatório de Transferência</h1>
+                            <div className="flex items-center gap-4 mt-2">
+                                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-black ${currentStep === 1 ? 'bg-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-green-100 text-green-600'}`}>
+                                    {currentStep === 1 ? '1' : '✓'}
+                                </div>
+                                <div className={`h-1 w-12 rounded-full ${currentStep === 2 ? 'bg-green-100' : 'bg-gray-100'}`} />
+                                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-black ${currentStep === 2 ? 'bg-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-gray-100 text-gray-400'}`}>
+                                    2
+                                </div>
+                            </div>
+                            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
+                                {currentStep === 1 ? 'Parte 1 - Seleção de Dados' : 'Parte 2 - Resultado'}
+                            </p>
+                        </div>
                     </header>
 
-                    <main className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div className="bg-white p-6 rounded-2xl shadow-lg border border-orange-200">
-                            <InputArea
-                                inputText={inputText} setInputText={setInputText}
-                                inputFile={inputFile} setInputFile={setInputFile}
-                                isLoading={isLoading} onProcess={handleProcess}
-                                onClear={handleClear} onRefresh={handleRefresh}
-                                inputMode={inputMode} setInputMode={setInputMode}
-                            />
-                        </div>
-
-                        <div className="bg-white p-6 rounded-2xl shadow-lg border border-orange-200 lg:col-span-1 min-h-[400px] flex flex-col">
-                            <div className="flex justify-between items-center mb-4 text-slate-800">
-                                <h2 className="text-2xl font-semibold">Resultados Processados</h2>
-                                {processedData.length > 0 && (
-                                    <div className="flex items-center gap-2">
-                                        <div className="relative">
+                    <main className="max-w-5xl mx-auto">
+                        {currentStep === 1 ? (
+                            <div className="bg-white p-8 rounded-3xl shadow-xl shadow-gray-100 border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="mb-8 flex items-center justify-between">
+                                    <div>
+                                        <h2 className="text-2xl font-black text-gray-900">Entrada de Informações</h2>
+                                        <p className="text-gray-400 text-sm mt-1 font-medium">Cole o texto do log ou faça upload da imagem do biometria/transferência</p>
+                                    </div>
+                                    <div className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                                        Inteligência Artificial
+                                    </div>
+                                </div>
+                                <InputArea
+                                    inputText={inputText} setInputText={setInputText}
+                                    inputFile={inputFile} setInputFile={setInputFile}
+                                    isLoading={isLoading} onProcess={handleProcess}
+                                    onClear={handleClear} onRefresh={handleRefresh}
+                                    inputMode={inputMode} setInputMode={setInputMode}
+                                />
+                            </div>
+                        ) : (
+                            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                <div className="bg-white p-8 rounded-3xl shadow-xl shadow-gray-100 border border-gray-100 flex flex-col">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 text-slate-800">
+                                        <div>
+                                            <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Resultados Processados</h2>
+                                            <p className="text-gray-400 text-sm mt-1 font-medium italic">Dados extraídos e calculados com precisão</p>
+                                        </div>
+                                        <div className="flex items-center gap-3">
                                             <button
-                                                onClick={() => setIsDownloadDropdownOpen(prev => !prev)}
-                                                disabled={isGeneratingReport}
-                                                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-orange-600 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:bg-orange-300"
+                                                onClick={() => setCurrentStep(1)}
+                                                className="px-6 py-2.5 text-sm font-black text-gray-600 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all border border-gray-100 flex items-center gap-2"
                                             >
-                                                <DownloadIcon className="w-4 h-4" />
-                                                {isGeneratingReport ? 'Gerando...' : 'Download Relatório'}
-                                                <svg className={`w-4 h-4 transition-transform ${isDownloadDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                <span>←</span> Voltar
                                             </button>
-                                            {isDownloadDropdownOpen && (
-                                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                                                    <ul className="py-1">
-                                                        <li>
-                                                            <a
-                                                                href="#"
+                                            {processedData.length > 0 && (
+                                                <div className="relative">
+                                                    <button
+                                                        onClick={() => setIsDownloadDropdownOpen(prev => !prev)}
+                                                        disabled={isGeneratingReport}
+                                                        className="flex items-center gap-3 px-6 py-2.5 text-sm font-black text-white bg-orange-600 rounded-xl hover:bg-orange-700 focus:outline-none shadow-lg shadow-orange-200 transition-all disabled:bg-orange-300"
+                                                    >
+                                                        <DownloadIcon className="w-4 h-4" />
+                                                        {isGeneratingReport ? 'Gerando...' : 'Exportar Relatório'}
+                                                        <svg className={`w-4 h-4 transition-transform ${isDownloadDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                    </button>
+                                                    {isDownloadDropdownOpen && (
+                                                        <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl z-20 border border-gray-50 overflow-hidden py-2 animate-in fade-in zoom-in duration-200">
+                                                            <button
                                                                 onClick={(e) => { e.preventDefault(); handleDownloadRequest('pdf'); }}
-                                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50"
+                                                                className="w-full text-left px-5 py-3 text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center gap-3"
                                                             >
-                                                                Baixar como PDF
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <a
-                                                                href="#"
+                                                                <span className="text-lg">📄</span> Baixar como PDF
+                                                            </button>
+                                                            <button
                                                                 onClick={(e) => { e.preventDefault(); handleDownloadRequest('png'); }}
-                                                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50"
+                                                                className="w-full text-left px-5 py-3 text-sm font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center gap-3"
                                                             >
-                                                                Baixar como PNG
-                                                            </a>
-                                                        </li>
-                                                    </ul>
+                                                                <span className="text-lg">🖼️</span> Baixar como PNG
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
                                     </div>
-                                )}
-                            </div>
 
-                            {missingAreas.length > 0 && (
-                                <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-xs font-bold animate-pulse">
-                                    ⚠️ Áreas não encontradas para: {missingAreas.join(', ')}.
-                                    A densidade não pôde ser calculada. Forneça os valores para correção.
-                                </div>
-                            )}
+                                    {missingAreas.length > 0 && (
+                                        <div className="mb-8 p-4 bg-red-50/50 border-l-4 border-red-500 text-red-700 text-xs font-black rounded-r-xl">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-lg">⚠️</span>
+                                                <span className="uppercase tracking-widest">Atenção: Áreas não encontradas</span>
+                                            </div>
+                                            <p className="font-bold opacity-80">Não foi possível calcular a densidade para: {missingAreas.join(', ')}. Por favor, corrija os nomes dos viveiros na tabela de detalhes.</p>
+                                        </div>
+                                    )}
 
-                            {isLoading ? (
-                                <Spinner />
-                            ) : processedData.length > 0 ? (
-                                <div className="flex flex-col gap-6">
-                                    {Object.keys(nurserySurvivalData).length > 0 && (
-                                        <div>
-                                            <h3 className="text-lg font-bold text-gray-800 mb-4 border-l-4 border-orange-500 pl-3">Resumo do Berçário</h3>
-                                            <div className="space-y-3">
-                                                {Object.entries(nurserySurvivalData).map(([name, data]) => (
-                                                    <NurserySurvivalCard key={name} nurseryName={name} data={data} />
-                                                ))}
+                                    {isLoading ? (
+                                        <div className="py-20 flex flex-col items-center justify-center gap-4">
+                                            <Spinner />
+                                            <p className="text-orange-600 font-black animate-pulse uppercase tracking-[0.2em] text-[10px]">Reanalisando Dados...</p>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col gap-10">
+                                            {Object.keys(nurserySurvivalData).length > 0 && (
+                                                <div>
+                                                    <div className="flex items-center gap-4 mb-6">
+                                                        <h3 className="text-lg font-black text-gray-900 uppercase tracking-tighter">Resumo do Berçário</h3>
+                                                        <div className="h-0.5 flex-grow bg-gray-50 rounded-full" />
+                                                    </div>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                        {Object.entries(nurserySurvivalData).map(([name, data]) => (
+                                                            <div key={name} className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 hover:border-orange-200 transition-all cursor-default">
+                                                                <NurserySurvivalCard nurseryName={name} data={data} />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <div>
+                                                <div className="flex items-center gap-4 mb-6">
+                                                    <h3 className="text-lg font-black text-gray-900 uppercase tracking-tighter">Resumos de Transferência</h3>
+                                                    <div className="h-0.5 flex-grow bg-gray-50 rounded-full" />
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                                    {processedData.map((item, index) => (
+                                                        <SummaryCard key={index} data={item} />
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <div className="flex items-center gap-4 mb-6">
+                                                    <h3 className="text-lg font-black text-gray-900 uppercase tracking-tighter">Relatório Detalhado</h3>
+                                                    <div className="h-0.5 flex-grow bg-gray-50 rounded-full" />
+                                                </div>
+                                                <ResultsTable
+                                                    data={processedData}
+                                                    editingIndex={editingIndex}
+                                                    onEditStart={setEditingIndex}
+                                                    onEditSave={handleUpdateItem}
+                                                    onEditCancel={() => setEditingIndex(null)}
+                                                    onRemove={handleRemoveItem}
+                                                />
                                             </div>
                                         </div>
                                     )}
-                                    <div>
-                                        <h3 className="text-xl font-bold text-gray-800 mb-3 border-l-4 border-orange-500 pl-3">Resumos de Transferência</h3>
-                                        <div className="max-h-48 overflow-y-auto space-y-3 pr-2">
-                                            {processedData.map((item, index) => (
-                                                <SummaryCard key={index} data={item} />
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-gray-800 mb-3 border-l-4 border-orange-500 pl-3">Detalhes</h3>
-                                        <ResultsTable
-                                            data={processedData}
-                                            editingIndex={editingIndex}
-                                            onEditStart={setEditingIndex}
-                                            onEditSave={handleUpdateItem}
-                                            onEditCancel={() => setEditingIndex(null)}
-                                            onRemove={handleRemoveItem}
-                                        />
-                                    </div>
                                 </div>
-                            ) : (
-                                <div className="flex-grow flex items-center justify-center text-center text-gray-500">
-                                    <p>Os resultados aparecerão aqui.</p>
-                                </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </main>
-                    <HistoryLog
-                        history={history}
-                        onView={(id) => {
-                            const entry = history.find(e => e.id === id);
-                            if (entry) {
-                                setProcessedData(entry.data);
-                                setViewingHistoryId(id);
-                            }
-                        }}
-                        onDelete={(id) => setHistory(prev => prev.filter(e => e.id !== id))}
-                        onClearAll={() => setHistory([])}
-                        currentViewId={viewingHistoryId}
-                    />
+
+                    {currentStep === 1 && history.length > 0 && (
+                        <div className="max-w-5xl mx-auto mt-12 animate-in fade-in duration-500 delay-150">
+                            <HistoryLog
+                                history={history}
+                                onView={(id) => {
+                                    const entry = history.find(e => e.id === id);
+                                    if (entry) {
+                                        setProcessedData(entry.data);
+                                        setViewingHistoryId(id);
+                                        setCurrentStep(2);
+                                    }
+                                }}
+                                onDelete={(id) => setHistory(prev => prev.filter(e => e.id !== id))}
+                                onClearAll={() => setHistory([])}
+                                currentViewId={viewingHistoryId}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
 
