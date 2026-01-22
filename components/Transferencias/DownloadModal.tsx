@@ -20,6 +20,17 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
 }) => {
     const [details, setDetails] = useState<DownloadDetails>(initialDetails);
 
+    const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                setDetails(prev => ({ ...prev, companyLogo: reader.result as string }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -45,13 +56,21 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
                     </div>
 
                     <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">URL da Logo (Opcional)</label>
-                        <input
-                            type="text"
-                            value={details.companyLogo || ''}
-                            onChange={(e) => setDetails({ ...details, companyLogo: e.target.value })}
-                            className="w-full p-3 border border-gray-200 rounded-xl font-bold"
-                        />
+                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Logo da Empresa</label>
+                        <div className="flex gap-4 items-center">
+                            {details.companyLogo && (
+                                <img src={details.companyLogo} alt="Logo" className="h-12 w-12 object-contain border rounded p-1" />
+                            )}
+                            <div className="flex-1 relative border-2 border-dashed border-gray-200 rounded-xl p-3 text-center bg-gray-50 hover:bg-gray-100 cursor-pointer">
+                                <input
+                                    type="file"
+                                    onChange={handleLogoUpload}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    accept="image/*"
+                                />
+                                <p className="text-[10px] text-gray-500 font-bold uppercase">Upload Nova Logo</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

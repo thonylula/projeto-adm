@@ -12,6 +12,7 @@ import { DownloadModal } from './Transferencias/DownloadModal';
 import { DownloadIcon } from './Transferencias/icons';
 import { HtmlViewModal } from './Transferencias/HtmlViewModal';
 import { HistoryLog } from './Transferencias/HistoryLog';
+import { SupabaseService } from '../services/supabaseService';
 
 declare const html2canvas: any;
 declare const jspdf: any;
@@ -81,6 +82,12 @@ export const TransferenciaProcessing: React.FC = () => {
     const [viewingHistoryId, setViewingHistoryId] = useState<string | null>(null);
 
     useEffect(() => {
+        const loadInitialConfig = async () => {
+            const savedLogo = await SupabaseService.getConfig('app_logo');
+            if (savedLogo) setCompanyLogo(savedLogo);
+        };
+        loadInitialConfig();
+
         try {
             const savedHistory = localStorage.getItem('aquacultureHistory');
             if (savedHistory) setHistory(JSON.parse(savedHistory));
@@ -292,8 +299,12 @@ export const TransferenciaProcessing: React.FC = () => {
             <DownloadModal
                 isOpen={isDownloadModalOpen}
                 onClose={() => setIsDownloadModalOpen(false)}
-                onSubmit={(details) => {
-                    setCompanyName(details.companyName); setCompanyLogo(details.companyLogo);
+                onSubmit={async (details) => {
+                    setCompanyName(details.companyName);
+                    if (details.companyLogo !== companyLogo) {
+                        setCompanyLogo(details.companyLogo);
+                        await SupabaseService.saveConfig('app_logo', details.companyLogo);
+                    }
                     setManagerName(details.managerName); setGeneratedBy(details.generatedBy);
                     setIsDownloadModalOpen(false);
                     setTimeout(() => {
