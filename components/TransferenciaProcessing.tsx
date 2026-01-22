@@ -417,10 +417,7 @@ export const TransferenciaProcessing: React.FC = () => {
                                         </div>
                                     )}
                                     <div>
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter">Cards de Transferência</h3>
-                                            <div className="h-px flex-grow bg-slate-100" />
-                                        </div>
+                                        <h3 className="text-xl font-semibold text-gray-800 mb-3">Resumos de Transferência</h3>
                                         <div className="max-h-48 overflow-y-auto space-y-3 pr-2">
                                             {processedData.map((item, index) => (
                                                 <SummaryCard key={index} data={item} />
@@ -428,10 +425,7 @@ export const TransferenciaProcessing: React.FC = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter">Detalhes Técnicos</h3>
-                                            <div className="h-px flex-grow bg-slate-100" />
-                                        </div>
+                                        <h3 className="text-xl font-semibold text-gray-800 mb-3">Detalhes</h3>
                                         <ResultsTable
                                             data={processedData}
                                             editingIndex={editingIndex}
