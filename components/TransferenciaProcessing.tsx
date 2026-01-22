@@ -457,27 +457,29 @@ export const TransferenciaProcessing: React.FC = () => {
             </div>
 
             <div id="printable-report" ref={reportRef} className="hidden printable-report p-10 bg-white font-sans text-gray-800">
-                <header className="mb-10 pb-8 border-b-2 border-orange-500 flex justify-between items-center">
-                    <div className="flex items-center gap-6">
+                <header className="mb-10 pb-8 border-b border-gray-100 flex justify-between items-center">
+                    <div className="flex items-center gap-8">
                         {companyLogo && <img src={companyLogo} alt="Logo" className="h-20 w-auto object-contain" />}
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">{companyName}</h1>
-                            <div className="mt-2 text-sm text-gray-500 space-y-1">
-                                {managerName && <p>Gerente Responsável: <span className="font-semibold text-gray-700">{managerName}</span></p>}
-                                {generatedBy && <p>Relatório Gerado por: <span className="font-semibold text-gray-700">{generatedBy}</span></p>}
+                        <div className="border-l-4 border-orange-500 pl-8">
+                            <h1 className="text-3xl font-black text-gray-900 tracking-tighter">{companyName}</h1>
+                            <div className="mt-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest space-y-0.5">
+                                {managerName && <p>Gerente Responsável: <span className="text-gray-600">{managerName}</span></p>}
+                                {generatedBy && <p>Relatório Gerado por: <span className="text-gray-600">{generatedBy}</span></p>}
                             </div>
                         </div>
                     </div>
                     <div className="text-right">
-                        <p className="text-sm font-medium text-gray-500">Data de Emissão</p>
-                        <p className="text-lg font-bold text-gray-800">{new Date().toLocaleDateString('pt-BR')}</p>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Data de Emissão</p>
+                        <p className="text-lg font-black text-gray-800">{new Date().toLocaleDateString('pt-BR')}</p>
                     </div>
                 </header>
 
                 <section className="space-y-14">
                     {Object.keys(nurserySurvivalData).length > 0 && (
                         <div>
-                            <h2 className="text-xl font-bold text-gray-900 mb-6 border-l-4 border-orange-500 pl-3">Resumo do Berçário</h2>
+                            <div className="mb-8">
+                                <h2 className="inline-block text-xl font-black text-gray-900 uppercase tracking-tighter border-b-[6px] border-orange-500 pb-1">Resumo do Berçário</h2>
+                            </div>
                             <div className="grid grid-cols-2 gap-8">
                                 {Object.entries(nurserySurvivalData).map(([name, data]) => (
                                     <NurserySurvivalCard key={`print-${name}`} nurseryName={name} data={data} />
@@ -486,14 +488,15 @@ export const TransferenciaProcessing: React.FC = () => {
                         </div>
                     )}
                     <div>
-                        <h2 className="text-xl font-bold text-gray-900 mb-6 border-l-4 border-orange-500 pl-3">Relatório Detalhado</h2>
+                        <div className="mb-8">
+                            <h2 className="inline-block text-xl font-black text-gray-900 uppercase tracking-tighter border-b-[6px] border-orange-500 pb-1">Detalhes</h2>
+                        </div>
                         <ResultsTable data={processedData} />
                     </div>
                 </section>
 
-                <footer className="mt-16 pt-8 border-t border-gray-100 flex justify-between items-center text-gray-400 text-xs">
-                    <p>Documento de Monitoramento Técnico</p>
-                    <p>Página 01 / 01</p>
+                <footer className="mt-20 pt-8 border-t border-gray-50 flex justify-center items-center">
+                    <p className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.3em]">Documento Oficial de Monitoramento Técnico</p>
                 </footer>
             </div>
         </>

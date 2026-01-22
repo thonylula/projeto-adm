@@ -11,40 +11,40 @@ export const NurserySurvivalCard: React.FC<NurserySurvivalCardProps> = ({ nurser
     const isCritical = data.survivalRate < 60;
 
     return (
-        <div className={`p-4 rounded-xl border-t-4 bg-white shadow-sm transition-all border-orange-400`}>
-            <div className="flex justify-between items-center mb-4">
-                <h4 className="text-sm font-bold text-gray-700">
+        <div className="p-4 bg-white transition-all">
+            <div className="flex justify-between items-start mb-6">
+                <h4 className="text-sm font-black text-gray-900 uppercase tracking-tighter">
                     {nurseryName}
                 </h4>
-                <div className="text-right">
-                    <span className={`text-xl font-bold ${isHealthy ? 'text-green-600' : isCritical ? 'text-red-600' : 'text-orange-600'}`}>
+                <div className="text-right leading-none">
+                    <span className="text-2xl font-black text-orange-500">
                         {data.survivalRate.toFixed(1)}%
                     </span>
-                    <p className="text-[10px] text-gray-400">Sobrevivência</p>
+                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-1">Sobrevivência</p>
                 </div>
             </div>
 
-            <div className="flex justify-between items-end">
+            <div className="flex justify-between items-end mb-4">
                 <div>
-                    <p className="text-xs font-medium text-gray-500 mb-1">Est. Inicial</p>
-                    <p className="text-lg font-bold text-gray-800">{(data.initialStocking || 0).toLocaleString('pt-BR')}</p>
+                    <p className="text-[10px] font-bold text-gray-300 uppercase tracking-wider mb-2">Est. Inicial</p>
+                    <p className="text-xl font-black text-gray-900">{(data.initialStocking || 0).toLocaleString('pt-BR')}</p>
                 </div>
                 <div className="text-right">
-                    <p className="text-xs font-medium text-gray-500 mb-1">Est. Final</p>
-                    <p className="text-lg font-bold text-gray-800">{(data.totalTransferred || 0).toLocaleString('pt-BR')}</p>
+                    <p className="text-[10px] font-bold text-gray-300 uppercase tracking-wider mb-2">Est. Final</p>
+                    <p className="text-xl font-black text-gray-900">{(data.totalTransferred || 0).toLocaleString('pt-BR')}</p>
                 </div>
             </div>
 
-            <div className="mt-4 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="mt-2 h-3 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                    className={`h-full rounded-full transition-all duration-1000 ${isHealthy ? 'bg-green-500' : isCritical ? 'bg-red-500' : 'bg-orange-500'}`}
+                    className="h-full bg-orange-500 rounded-full transition-all duration-1000"
                     style={{ width: `${Math.min(data.survivalRate, 100)}%` }}
                 />
             </div>
 
             {data.isParcial && (
-                <p className="mt-2 text-[8px] font-bold text-orange-500 uppercase flex items-center gap-1">
-                    ⚠️ Sobrevivência Parcial (Transferências em curso)
+                <p className="mt-3 text-[8px] font-bold text-orange-500 uppercase flex items-center gap-1">
+                    ⚠️ Sobrevivência Parcial
                 </p>
             )}
         </div>
