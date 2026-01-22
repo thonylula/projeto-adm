@@ -11,7 +11,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ data }) => {
             <div className="flex justify-between items-start mb-2">
                 <div>
                     <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">{data.local} → {data.viveiroDestino}</h4>
-                    <p className="text-xl font-bold text-gray-800">{data.estocagem.toLocaleString()} PLs</p>
+                    <p className="text-xl font-bold text-gray-800">{(data.estocagem || 0).toLocaleString('pt-BR')} PLs</p>
                 </div>
                 <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${data.isParcial ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>
                     {data.isParcial ? 'Parcial' : 'Total'}
