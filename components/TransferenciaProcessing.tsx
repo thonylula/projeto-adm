@@ -80,6 +80,7 @@ export const TransferenciaProcessing: React.FC = () => {
     const [isHtmlPreviewFlow, setIsHtmlPreviewFlow] = useState(false);
     const [history, setHistory] = useState<HistoryEntry[]>([]);
     const [viewingHistoryId, setViewingHistoryId] = useState<string | null>(null);
+    const [missingAreas, setMissingAreas] = useState<string[]>([]);
 
     useEffect(() => {
         const loadInitialConfig = async () => {
@@ -140,6 +141,11 @@ export const TransferenciaProcessing: React.FC = () => {
         if (nurseriesToAsk.length > 0) {
             setNurseryStockingQueue(prev => [...new Set([...prev, ...nurseriesToAsk])]);
         }
+
+        const missing = processedData
+            .filter(item => !item.viveiroDestinoArea)
+            .map(item => item.viveiroDestino);
+        setMissingAreas([...new Set(missing)]);
     }, [processedData, initialStockings, nurseryStockingQueue, viewingHistoryId]);
 
     const generatePdf = async () => {
@@ -382,6 +388,13 @@ export const TransferenciaProcessing: React.FC = () => {
                                     </div>
                                 )}
                             </div>
+
+                            {missingAreas.length > 0 && (
+                                <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-xs font-bold animate-pulse">
+                                    ⚠️ Áreas não encontradas para: {missingAreas.join(', ')}.
+                                    A densidade não pôde ser calculada. Forneça os valores para correção.
+                                </div>
+                            )}
 
                             {isLoading ? (
                                 <Spinner />
