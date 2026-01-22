@@ -405,7 +405,10 @@ export const TransferenciaProcessing: React.FC = () => {
                                 <div className="flex flex-col gap-6">
                                     {Object.keys(nurserySurvivalData).length > 0 && (
                                         <div>
-                                            <h3 className="text-xl font-semibold text-gray-800 mb-3">Resumo do Berçário</h3>
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter">Resumo do Berçário</h3>
+                                                <div className="h-px flex-grow bg-slate-100" />
+                                            </div>
                                             <div className="space-y-3">
                                                 {Object.entries(nurserySurvivalData).map(([name, data]) => (
                                                     <NurserySurvivalCard key={name} nurseryName={name} data={data} />
@@ -414,7 +417,10 @@ export const TransferenciaProcessing: React.FC = () => {
                                         </div>
                                     )}
                                     <div>
-                                        <h3 className="text-xl font-semibold text-gray-800 mb-3">Resumos de Transferência</h3>
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter">Cards de Transferência</h3>
+                                            <div className="h-px flex-grow bg-slate-100" />
+                                        </div>
                                         <div className="max-h-48 overflow-y-auto space-y-3 pr-2">
                                             {processedData.map((item, index) => (
                                                 <SummaryCard key={index} data={item} />
@@ -422,7 +428,10 @@ export const TransferenciaProcessing: React.FC = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-semibold text-gray-800 mb-3">Detalhes</h3>
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <h3 className="text-lg font-black text-slate-800 uppercase tracking-tighter">Detalhes Técnicos</h3>
+                                            <div className="h-px flex-grow bg-slate-100" />
+                                        </div>
                                         <ResultsTable
                                             data={processedData}
                                             editingIndex={editingIndex}
@@ -456,25 +465,35 @@ export const TransferenciaProcessing: React.FC = () => {
                 </div>
             </div>
 
-            <div id="printable-report" ref={reportRef} className="hidden printable-report p-8 bg-white font-sans text-slate-800">
-                <header className="mb-8 pb-6 border-b-2 border-slate-100">
-                    <div className="flex justify-start items-center gap-8">
-                        {companyLogo && <img src={companyLogo} alt="Logo" className="h-20 w-auto object-contain" />}
-                        <div className="border-l-4 border-orange-500 pl-8">
-                            <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase">{companyName}</h1>
-                            <div className="mt-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest space-y-1">
-                                {managerName && <p>Gerente Responsável: <span className="text-gray-700">{managerName}</span></p>}
-                                {generatedBy && <p>Relatório Gerado por: <span className="text-gray-700">{generatedBy}</span></p>}
+            <div id="printable-report" ref={reportRef} className="hidden printable-report p-10 bg-white font-sans text-slate-800">
+                <header className="mb-10 pb-8 border-b border-slate-100 relative">
+                    <div className="flex justify-between items-end">
+                        <div className="flex items-center gap-10">
+                            {companyLogo && <img src={companyLogo} alt="Logo" className="h-24 w-auto object-contain" />}
+                            <div className="border-l-2 border-slate-100 pl-10">
+                                <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none">{companyName}</h1>
+                                <p className="mt-2 text-[10px] font-black text-orange-500 uppercase tracking-[0.3em]">Gestão Aquacultural de Alta Performance</p>
+                                <div className="mt-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest space-y-1">
+                                    {managerName && <p>Responsável: <span className="text-slate-600 underline decoration-slate-200 underline-offset-4">{managerName}</span></p>}
+                                    {generatedBy && <p>Emissor: <span className="text-slate-600">{generatedBy}</span></p>}
+                                </div>
                             </div>
+                        </div>
+                        <div className="text-right pb-1">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Data de Emissão</p>
+                            <p className="text-xl font-black text-slate-800">{new Date().toLocaleDateString('pt-BR')}</p>
                         </div>
                     </div>
                 </header>
 
-                <section className="space-y-12">
+                <section className="space-y-14">
                     {Object.keys(nurserySurvivalData).length > 0 && (
                         <div>
-                            <h2 className="text-2xl font-black text-gray-800 mb-6 border-b-4 border-orange-400 pb-2 inline-block uppercase tracking-tighter">Resumo do Berçário</h2>
-                            <div className="grid grid-cols-2 gap-6">
+                            <div className="flex items-center gap-4 mb-8">
+                                <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Resumo do Berçário</h2>
+                                <div className="h-0.5 flex-1 bg-slate-50" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-8">
                                 {Object.entries(nurserySurvivalData).map(([name, data]) => (
                                     <NurserySurvivalCard key={`print-${name}`} nurseryName={name} data={data} />
                                 ))}
@@ -482,13 +501,17 @@ export const TransferenciaProcessing: React.FC = () => {
                         </div>
                     )}
                     <div>
-                        <h2 className="text-2xl font-black text-gray-800 mb-6 border-b-4 border-orange-400 pb-2 inline-block uppercase tracking-tighter">Detalhes</h2>
+                        <div className="flex items-center gap-4 mb-8">
+                            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Relatório Detalhado</h2>
+                            <div className="h-0.5 flex-1 bg-slate-50" />
+                        </div>
                         <ResultsTable data={processedData} />
                     </div>
                 </section>
 
-                <footer className="mt-20 pt-8 border-t border-gray-100 text-center">
-                    <p className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.2em]">Documento Oficial de Monitoramento Técnico</p>
+                <footer className="mt-24 pt-10 border-t border-slate-50 flex justify-between items-center opacity-40">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Documento Oficial de Monitoramento Técnico</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">Página 01 / 01</p>
                 </footer>
             </div>
         </>
