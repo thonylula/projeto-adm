@@ -322,3 +322,37 @@ export interface ReceiptHistoryItem {
   input: ReceiptInput;
   result: ReceiptResult;
 }
+
+// --- AQUACULTURE TRANSFER DATA ---
+
+export interface ExtractedData {
+  local: string;
+  estocagem: number;
+  plPorGrama: number;
+  densidade: string;
+  viveiroDestino: string;
+  isParcial: boolean;
+  horario?: string;
+  data?: string;
+  pesoTotal?: number;
+}
+
+export interface ProcessedData extends ExtractedData {
+  pesoMedioCalculado: number;
+  pesoTotalCalculado: number;
+  viveiroDestinoArea?: number;
+}
+
+export interface NurserySurvivalData {
+  initialStocking: number;
+  totalTransferred: number;
+  survivalRate: number;
+  isParcial: boolean;
+}
+
+export interface HistoryEntry {
+  id: string;
+  timestamp: string;
+  data: ProcessedData[];
+  initialStockings?: Record<string, number>;
+}
