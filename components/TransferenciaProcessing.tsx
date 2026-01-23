@@ -132,12 +132,23 @@ export const TransferenciaProcessing: React.FC = () => {
                 const month = parseInt(parts[1]);
                 if (isNaN(day) || isNaN(month)) return 0;
 
-                const year = new Date().getFullYear();
-                // Create a comparable number YYYYMMDD
-                // Since we don't have the year in the string, we use the current year as base
-                // If the month is ahead of current month by more than 6 months, it might be from last year
-                // but let's stick to current year for now as requested for "retroative launches" 
-                // typically meaning recent months.
+                const now = new Date();
+                const currentYear = now.getFullYear();
+
+                // Base assumption: current year
+                let year = currentYear;
+
+                // Check if the interpreted date (DD/MM/currentYear) is significantly in the future.
+                // If today is January and the log says November, it's almost certainly from last year.
+                // We use a 15-day buffer to avoid issues with slight future dates or timezones.
+                const interpretedDate = new Date(currentYear, month - 1, day);
+                const bufferDate = new Date(now);
+                bufferDate.setDate(now.getDate() + 15);
+
+                if (interpretedDate > bufferDate) {
+                    year -= 1;
+                }
+
                 return (year * 10000) + (month * 100) + day;
             };
 
