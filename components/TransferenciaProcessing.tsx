@@ -663,7 +663,7 @@ export const TransferenciaProcessing: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {missingAreas.length > 0 && (
+                                    {!isPublic && missingAreas.length > 0 && (
                                         <div className="mb-8 p-4 bg-red-50/50 border-l-4 border-red-500 text-red-700 text-xs font-black rounded-r-xl">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className="text-lg">⚠️</span>
