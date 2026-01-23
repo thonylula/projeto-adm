@@ -360,10 +360,30 @@ export const TransferenciaProcessing: React.FC = () => {
                             <p className="text-gray-500 font-medium mt-2">Identificamos novos registros. Como deseja classificá-los?</p>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-4">
+                        <div className="grid grid-cols-1 gap-6">
+                            {/* Toggle Parcial/Total */}
+                            <div className="flex bg-gray-100 p-1 rounded-2xl">
+                                <button
+                                    onClick={() => setProcessedData(prev => prev.map(item => ({ ...item, isParcial: true })))}
+                                    className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${processedData.some(item => item.isParcial) ? 'bg-white text-amber-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                >
+                                    🌓 Parcial
+                                </button>
+                                <button
+                                    onClick={() => setProcessedData(prev => prev.map(item => ({ ...item, isParcial: false })))}
+                                    className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${processedData.every(item => !item.isParcial) ? 'bg-white text-green-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                >
+                                    🌕 Total
+                                </button>
+                            </div>
+
                             <button
                                 onClick={() => {
-                                    const classified = currentProcessingItems.map(item => ({ ...item, tipo: 'TRANSFERENCIA' }));
+                                    const classified = currentProcessingItems.map(item => ({
+                                        ...item,
+                                        tipo: 'TRANSFERENCIA',
+                                        isParcial: processedData.some(p => p.isParcial) // Mantém a escolha feita no toggle
+                                    }));
                                     setProcessedData(prev => {
                                         const base = prev.slice(0, prev.length - currentProcessingItems.length);
                                         return [...base, ...classified];
@@ -378,13 +398,12 @@ export const TransferenciaProcessing: React.FC = () => {
                                     <span className="font-black text-gray-900 group-hover:text-green-700">Transferência Normal</span>
                                     <span className="text-2xl">🔄</span>
                                 </div>
-                                <p className="text-xs text-gray-400 font-bold group-hover:text-green-600">Movimentação interna entre viveiros da empresa.</p>
+                                <p className="text-xs text-gray-400 font-bold group-hover:text-green-600">Movimentação interna entre viveiros.</p>
                             </button>
 
                             <button
                                 onClick={() => {
                                     setProcessedData(prev => prev.map(item => ({ ...item, tipo: 'VENDA' })));
-                                    // Manter o modal aberto ou mudar para seleção de cliente
                                 }}
                                 className="group p-5 border-2 border-gray-100 rounded-2xl hover:border-orange-500 hover:bg-orange-50 transition-all text-left"
                             >
@@ -392,7 +411,7 @@ export const TransferenciaProcessing: React.FC = () => {
                                     <span className="font-black text-gray-900 group-hover:text-orange-700">Venda de Pós-larva</span>
                                     <span className="text-2xl">💰</span>
                                 </div>
-                                <p className="text-xs text-gray-400 font-bold group-hover:text-orange-600">Venda externa para clientes terceiros.</p>
+                                <p className="text-xs text-gray-400 font-bold group-hover:text-orange-600">Venda externa para clientes.</p>
                             </button>
                         </div>
 
@@ -445,7 +464,8 @@ export const TransferenciaProcessing: React.FC = () => {
                                             ...item,
                                             tipo: 'VENDA',
                                             clienteId: selectedClient!,
-                                            clienteNome: client?.name || ''
+                                            clienteNome: client?.name || '',
+                                            isParcial: processedData.some(p => p.isParcial)
                                         }));
 
                                         setProcessedData(prev => {
