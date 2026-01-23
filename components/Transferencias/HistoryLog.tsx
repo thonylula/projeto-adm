@@ -8,10 +8,11 @@ interface HistoryLogProps {
     onClearAll: () => void;
     currentViewId: string | null;
     isPublic?: boolean;
+    generalSurvival?: number;
 }
 
 export const HistoryLog: React.FC<HistoryLogProps> = ({
-    history, onView, onDelete, onClearAll, currentViewId, isPublic = false
+    history, onView, onDelete, onClearAll, currentViewId, isPublic = false, generalSurvival = 0
 }) => {
     const formatEntryLabel = (entry: HistoryEntry) => {
         if (!entry.data || entry.data.length === 0) return { title: entry.timestamp, subtitle: '', isSale: false };
@@ -37,21 +38,34 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({
 
     return (
         <div className="mt-12 bg-white rounded-3xl shadow-xl shadow-gray-100 border border-gray-100 overflow-hidden">
-            <div className="p-8 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
-                <div>
+            <div className="p-8 border-b border-gray-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-gray-50/30">
+                <div className="flex-grow">
                     <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
                         <span className="text-3xl">📜</span> Histórico de Movimentações
                     </h2>
                     <p className="text-gray-400 text-sm font-medium mt-1 uppercase tracking-widest">Relatórios e Processamentos Anteriores</p>
                 </div>
-                {!isPublic && (
-                    <button
-                        onClick={() => { if (window.confirm("Limpar todo o histórico?")) onClearAll(); }}
-                        className="px-4 py-2 text-[10px] font-black text-red-500 hover:bg-red-50 rounded-xl transition-all uppercase tracking-widest border border-red-100"
-                    >
-                        Limpar Tudo
-                    </button>
-                )}
+
+                <div className="flex items-center gap-8 pr-4">
+                    <div className="flex flex-col items-center md:items-end">
+                        <p className="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em] mb-1">Sobr. Média Geral</p>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-4xl font-black text-orange-600 tracking-tighter">
+                                {generalSurvival.toFixed(1)}
+                            </span>
+                            <span className="text-xl font-black text-orange-400">%</span>
+                        </div>
+                    </div>
+
+                    {!isPublic && (
+                        <button
+                            onClick={() => { if (window.confirm("Limpar todo o histórico?")) onClearAll(); }}
+                            className="px-4 py-2 text-[10px] font-black text-red-500 hover:bg-red-50 rounded-xl transition-all uppercase tracking-widest border border-red-100"
+                        >
+                            Limpar Tudo
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="divide-y divide-gray-50 max-h-[500px] overflow-y-auto custom-scrollbar">
