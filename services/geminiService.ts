@@ -238,10 +238,11 @@ export async function processAquacultureData(input: string | File): Promise<Extr
     - horario: Horário da transferência, se houver.
     - data: Data da transferência, se houver (DD/MM/AAAA).
     - pesoTotal: Peso total transferido em KG, se houver.
+    - dataPovoamento: Data do povoamento mencionada, se houver (DD/MM/AAAA).
 
     Responda APENAS com o array JSON. Exemplo:
     [
-      { "local": "BE-01", "estocagem": 150000, "plPorGrama": 450, "densidade": "1.2", "viveiroDestino": "OC-10", "isParcial": false }
+      { "local": "BE-01", "estocagem": 150000, "plPorGrama": 450, "densidade": "1.2", "viveiroDestino": "OC-10", "isParcial": false, "dataPovoamento": "01/01/2026" }
     ]
   `;
 

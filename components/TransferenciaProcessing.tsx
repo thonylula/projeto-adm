@@ -55,6 +55,8 @@ const calculateProcessedItem = (data: ExtractedData): ProcessedData => {
         pesoMedioCalculado,
         pesoTotalCalculado,
         viveiroDestinoArea,
+        tipo: data.tipo || 'TRANSFERENCIA',
+        dataPovoamento: data.dataPovoamento || ''
     };
 };
 
@@ -85,6 +87,10 @@ export const TransferenciaProcessing: React.FC = () => {
     const [viewingHistoryId, setViewingHistoryId] = useState<string | null>(null);
     const [missingAreas, setMissingAreas] = useState<string[]>([]);
     const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+    const [isTypeSelectionOpen, setIsTypeSelectionOpen] = useState(false);
+    const [clients, setClients] = useState<any[]>([]);
+    const [selectedClient, setSelectedClient] = useState<string | null>(null);
+    const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
 
     useEffect(() => {
         const loadInitialConfig = async () => {
@@ -92,6 +98,12 @@ export const TransferenciaProcessing: React.FC = () => {
             if (savedLogo) setCompanyLogo(savedLogo);
         };
         loadInitialConfig();
+
+        const loadClients = async () => {
+            const data = await SupabaseService.getClients();
+            setClients(data || []);
+        };
+        loadClients();
 
         try {
             const savedHistory = localStorage.getItem('aquacultureHistory');
@@ -248,7 +260,15 @@ export const TransferenciaProcessing: React.FC = () => {
                 return;
             }
             const newData = extractedDataArray.map(calculateProcessedItem);
-            setProcessedData((prevData) => [...prevData, ...newData]);
+            setProcessedData((prevData) => {
+                const updated = [...prevData, ...newData];
+                // Se acabamos de processar dados e prevData estava vazio (primeiro processamento desta leva)
+                // Ou se quisermos perguntar para cada leva processada:
+                return updated;
+            });
+
+            // Pergunta o tipo para a nova leva de dados
+            setIsTypeSelectionOpen(true);
 
             // Save to history
             const newEntry: HistoryEntry = {
@@ -331,6 +351,111 @@ export const TransferenciaProcessing: React.FC = () => {
                 initialDetails={{ companyName, companyLogo, managerName, generatedBy }}
             />
             <HtmlViewModal isOpen={isHtmlViewModalOpen} onClose={() => setIsHtmlViewModalOpen(false)} htmlContent={htmlContent} />
+
+            {/* Modal de Seleção de Tipo (Transferência vs Venda) */}
+            {isTypeSelectionOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in duration-300">
+                        <div className="text-center mb-8">
+                            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🚀</div>
+                            <h3 className="text-2xl font-black text-gray-900 tracking-tight">O que foi processado?</h3>
+                            <p className="text-gray-500 font-medium mt-2">Identificamos novos registros. Como deseja classificá-los?</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4">
+                            <button
+                                onClick={() => {
+                                    setProcessedData(prev => prev.map(item => ({ ...item, tipo: 'TRANSFERENCIA' })));
+                                    setIsTypeSelectionOpen(false);
+                                    setCurrentStep(2);
+                                }}
+                                className="group p-5 border-2 border-gray-100 rounded-2xl hover:border-green-500 hover:bg-green-50 transition-all text-left"
+                            >
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="font-black text-gray-900 group-hover:text-green-700">Transferência Normal</span>
+                                    <span className="text-2xl">🔄</span>
+                                </div>
+                                <p className="text-xs text-gray-400 font-bold group-hover:text-green-600">Movimentação interna entre viveiros da empresa.</p>
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    setProcessedData(prev => prev.map(item => ({ ...item, tipo: 'VENDA' })));
+                                    // Manter o modal aberto ou mudar para seleção de cliente
+                                }}
+                                className="group p-5 border-2 border-gray-100 rounded-2xl hover:border-orange-500 hover:bg-orange-50 transition-all text-left"
+                            >
+                                <div className="flex items-center justify-between mb-1">
+                                    <span className="font-black text-gray-900 group-hover:text-orange-700">Venda de Pós-larva</span>
+                                    <span className="text-2xl">💰</span>
+                                </div>
+                                <p className="text-xs text-gray-400 font-bold group-hover:text-orange-600">Venda externa para clientes terceiros.</p>
+                            </button>
+                        </div>
+
+                        {processedData.some(item => item.tipo === 'VENDA') && (
+                            <div className="mt-8 pt-8 border-t border-gray-100 space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Selecione o Cliente</label>
+                                    <div className="flex gap-2">
+                                        <select
+                                            className="flex-1 p-3 border border-gray-200 rounded-xl bg-gray-50 font-bold text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+                                            value={selectedClient || ''}
+                                            onChange={(e) => {
+                                                const clientId = e.target.value;
+                                                const client = clients.find(c => c.id === clientId);
+                                                setSelectedClient(clientId);
+                                                setProcessedData(prev => prev.map((item) => ({
+                                                    ...item,
+                                                    clienteId: clientId,
+                                                    clienteNome: client?.name || ''
+                                                })));
+                                            }}
+                                        >
+                                            <option value="">Selecione um cliente...</option>
+                                            {clients.map(c => (
+                                                <option key={c.id} value={c.id}>{c.name}</option>
+                                            ))}
+                                        </select>
+                                        <button
+                                            onClick={() => {
+                                                // Abre aba de cadastros com bridge
+                                                if (window.confirm("Deseja ir para a aba de Cadastros para registrar um novo cliente?")) {
+                                                    const navEvent = new CustomEvent('app-navigation', {
+                                                        detail: { tab: 'registrations' }
+                                                    });
+                                                    window.dispatchEvent(navEvent);
+                                                }
+                                            }}
+                                            className="p-3 bg-white border-2 border-orange-200 text-orange-600 rounded-xl hover:bg-orange-50 transition-all font-black text-xs uppercase"
+                                            title="Cadastrar Novo Cliente"
+                                        >
+                                            ➕ Novo
+                                        </button>
+                                    </div>
+                                </div>
+                                <button
+                                    disabled={!selectedClient}
+                                    onClick={() => {
+                                        setIsTypeSelectionOpen(false);
+                                        setCurrentStep(2);
+                                    }}
+                                    className="w-full bg-orange-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-orange-200 hover:bg-orange-700 disabled:bg-gray-200 disabled:shadow-none transition-all active:scale-95"
+                                >
+                                    Confirmar Venda
+                                </button>
+                            </div>
+                        )}
+
+                        <button
+                            onClick={() => setIsTypeSelectionOpen(false)}
+                            className="mt-4 w-full py-2 text-gray-400 font-bold text-xs uppercase hover:text-gray-600 transition-colors"
+                        >
+                            Fechar sem classificar
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <div className="non-printable min-h-screen font-sans">
                 <div className="max-w-7xl mx-auto">

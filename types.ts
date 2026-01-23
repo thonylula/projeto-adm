@@ -335,6 +335,10 @@ export interface ExtractedData {
   horario?: string;
   data?: string;
   pesoTotal?: number;
+  tipo?: 'TRANSFERENCIA' | 'VENDA';
+  dataPovoamento?: string;
+  clienteId?: string;
+  clienteNome?: string;
 }
 
 export interface ProcessedData extends ExtractedData {
