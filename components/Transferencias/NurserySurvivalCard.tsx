@@ -37,8 +37,9 @@ export const NurserySurvivalCard: React.FC<NurserySurvivalCardProps> = ({
                         <input
                             type="number"
                             defaultValue={data.initialStocking || 0}
+                            key={data.initialStocking} // Force re-render if external state changes
                             onBlur={(e) => onEditInitialStocking(Number(e.target.value))}
-                            className="text-2xl font-black text-gray-900 leading-none bg-transparent border-b-2 border-orange-100 hover:border-orange-500 focus:border-orange-600 outline-none w-32 text-center transition-all"
+                            className="text-2xl font-black text-gray-900 leading-none bg-orange-50/50 border-b-2 border-orange-500 focus:bg-orange-100 outline-none w-32 text-center transition-all rounded-t-lg"
                         />
                     ) : (
                         <p className="text-2xl font-black text-gray-900 leading-none">{(data.initialStocking || 0).toLocaleString('pt-BR')}</p>
