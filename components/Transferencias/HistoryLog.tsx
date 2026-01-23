@@ -17,11 +17,13 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({
 
         const first = entry.data[0];
         const datePart = first.data ? first.data.split('/').slice(0, 2).join('/') : '--/--';
-        const typePart = first.tipo === 'VENDA' ? 'Vend' : 'Transf';
-        const originPart = first.local.replace(/\s+/g, '_');
-        const destinationPart = first.tipo === 'VENDA'
-            ? (first.clienteNome || 'Cliente').replace(/\s+/g, '_')
-            : (first.viveiroDestino || 'Destino').replace(/\s+/g, '_');
+        const isSale = first.tipo === 'VENDA';
+        const typePart = isSale ? 'Vend' : 'Transf';
+        const originPart = first.local.substring(0, 15).replace(/\s+/g, '_');
+
+        // Priority for destination: clientNome (if sale), then viveiroDestino, then '?'
+        const rawDestination = isSale ? (first.clienteNome || first.viveiroDestino) : first.viveiroDestino;
+        const destinationPart = (rawDestination || '?').substring(0, 15).replace(/\s+/g, '_');
 
         return `${typePart}_${datePart}_${originPart}/${destinationPart}`;
     };
