@@ -655,7 +655,7 @@ export const TransferenciaProcessing: React.FC = () => {
                         <div>
                             <div className="mb-10">
                                 <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter mb-2">Resumo do Berçário</h2>
-                                <div className="h-2 w-48 bg-orange-500 rounded-sm" />
+                                <div className="h-1 w-64 bg-orange-500 rounded-sm" />
                             </div>
                             <div className="grid grid-cols-2 gap-10">
                                 {Object.entries(nurserySurvivalData).map(([name, data]) => (
@@ -667,7 +667,7 @@ export const TransferenciaProcessing: React.FC = () => {
                     <div>
                         <div className="mb-10">
                             <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter mb-2">Detalhes</h2>
-                            <div className="h-2 w-24 bg-orange-500 rounded-sm" />
+                            <div className="h-1 w-32 bg-orange-500 rounded-sm" />
                         </div>
                         <ResultsTable data={processedData} />
                     </div>

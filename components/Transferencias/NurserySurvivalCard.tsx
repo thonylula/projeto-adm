@@ -16,22 +16,22 @@ export const NurserySurvivalCard: React.FC<NurserySurvivalCardProps> = ({ nurser
                 <h4 className="text-lg font-black text-gray-900 uppercase tracking-tighter">
                     {nurseryName}
                 </h4>
-                <div className="text-right leading-none">
-                    <span className="text-3xl font-black text-orange-500">
+                <div className="flex flex-col items-center leading-none">
+                    <span className="text-4xl font-black text-orange-500">
                         {data.survivalRate.toFixed(1)}%
                     </span>
-                    <p className="text-[7px] font-bold text-gray-400 uppercase tracking-widest mt-1">Sobrevivência</p>
+                    <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest mt-2">Sobrevivência</p>
                 </div>
             </div>
 
-            <div className="flex justify-between items-end mb-5">
-                <div>
-                    <p className="text-[9px] font-bold text-gray-300 uppercase tracking-widest mb-2">Est. Inicial</p>
+            <div className="flex justify-between items-end mb-6">
+                <div className="flex flex-col items-center">
                     <p className="text-2xl font-black text-gray-900 leading-none">{(data.initialStocking || 0).toLocaleString('pt-BR')}</p>
+                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-3">Est. Inicial</p>
                 </div>
-                <div className="text-right">
-                    <p className="text-[9px] font-bold text-gray-300 uppercase tracking-widest mb-2">Est. Final</p>
+                <div className="flex flex-col items-center">
                     <p className="text-2xl font-black text-gray-900 leading-none">{(data.totalTransferred || 0).toLocaleString('pt-BR')}</p>
+                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-3">Est. Final</p>
                 </div>
             </div>
 
