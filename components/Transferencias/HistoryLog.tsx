@@ -59,9 +59,9 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({
                         <div className="flex gap-2">
                             <button
                                 onClick={() => onView(entry.id)}
-                                className="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg text-xs font-bold hover:bg-gray-50 transition-all shadow-sm"
+                                className="px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-lg text-xs font-bold hover:bg-gray-50 transition-all shadow-sm flex items-center gap-2"
                             >
-                                💾 Ver Dados
+                                ✏️ Ver / Editar
                             </button>
                             <button
                                 onClick={() => onDelete(entry.id)}

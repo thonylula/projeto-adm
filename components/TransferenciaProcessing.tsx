@@ -288,13 +288,34 @@ export const TransferenciaProcessing: React.FC = () => {
             const newProcessed = [...prev];
             const mergedExtracted: ExtractedData = { ...newProcessed[index], ...updatedData };
             newProcessed[index] = calculateProcessedItem(mergedExtracted);
+
+            // Sync with history if viewing a history entry
+            if (viewingHistoryId) {
+                setHistory(historyPrev => historyPrev.map(entry =>
+                    entry.id === viewingHistoryId ? { ...entry, data: newProcessed } : entry
+                ));
+            }
+
             return newProcessed;
         });
         setEditingIndex(null);
     };
 
     const handleRemoveItem = (index: number) => {
-        if (window.confirm("Remover?")) setProcessedData(prev => prev.filter((_, i) => i !== index));
+        if (window.confirm("Remover?")) {
+            setProcessedData(prev => {
+                const newProcessed = prev.filter((_, i) => i !== index);
+
+                // Sync with history if viewing a history entry
+                if (viewingHistoryId) {
+                    setHistory(historyPrev => historyPrev.map(entry =>
+                        entry.id === viewingHistoryId ? { ...entry, data: newProcessed } : entry
+                    ));
+                }
+
+                return newProcessed;
+            });
+        }
     };
 
     const handleClear = () => {
