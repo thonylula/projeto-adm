@@ -726,7 +726,7 @@ export const TransferenciaProcessing: React.FC = () => {
                                                         <SummaryCard
                                                             key={index}
                                                             data={item}
-                                                            onEdit={() => {
+                                                            onEdit={isPublic ? undefined : () => {
                                                                 setEditingIndex(index);
                                                                 // Scrolly to table
                                                                 document.getElementById('detailed-report-table')?.scrollIntoView({ behavior: 'smooth' });
@@ -744,10 +744,10 @@ export const TransferenciaProcessing: React.FC = () => {
                                                 <ResultsTable
                                                     data={processedData}
                                                     editingIndex={editingIndex}
-                                                    onEditStart={setEditingIndex}
+                                                    onEditStart={isPublic ? undefined : setEditingIndex}
                                                     onEditSave={handleUpdateItem}
                                                     onEditCancel={() => setEditingIndex(null)}
-                                                    onRemove={handleRemoveItem}
+                                                    onRemove={isPublic ? undefined : handleRemoveItem}
                                                     clients={clients}
                                                 />
                                             </div>
