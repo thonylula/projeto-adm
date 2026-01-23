@@ -92,6 +92,7 @@ export const TransferenciaProcessing: React.FC = () => {
     const [clients, setClients] = useState<any[]>([]);
     const [selectedClient, setSelectedClient] = useState<string | null>(null);
     const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
+    const isPublic = new URLSearchParams(window.location.search).get('showcase') === 'true';
 
     useEffect(() => {
         const loadInitialConfig = async () => {
@@ -516,60 +517,74 @@ export const TransferenciaProcessing: React.FC = () => {
                 </div>
             )}
 
-            <div className="non-printable min-h-screen font-sans">
+            <div className={`non-printable min-h-screen font-sans ${isPublic ? 'bg-transparent' : ''}`}>
                 <div className="max-w-7xl mx-auto">
-                    <header className="text-center mb-12">
-                        <div className="flex flex-col items-center gap-4">
-                            <h1 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tighter">Relatório de Transferência</h1>
-                            <div className="flex items-center gap-4 mt-2">
-                                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-black ${currentStep === 1 ? 'bg-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-green-100 text-green-600'}`}>
-                                    {currentStep === 1 ? '1' : '✓'}
+                    {!isPublic && (
+                        <header className="text-center mb-12">
+                            <div className="flex flex-col items-center gap-4">
+                                <h1 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tighter">Relatório de Transferência</h1>
+                                <div className="flex items-center gap-4 mt-2">
+                                    <div className={`flex items-center justify-center w-10 h-10 rounded-full font-black ${currentStep === 1 ? 'bg-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-green-100 text-green-600'}`}>
+                                        {currentStep === 1 ? '1' : '✓'}
+                                    </div>
+                                    <div className={`h-1 w-12 rounded-full ${currentStep === 2 ? 'bg-green-100' : 'bg-gray-100'}`} />
+                                    <div className={`flex items-center justify-center w-10 h-10 rounded-full font-black ${currentStep === 2 ? 'bg-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-gray-100 text-gray-400'}`}>
+                                        2
+                                    </div>
                                 </div>
-                                <div className={`h-1 w-12 rounded-full ${currentStep === 2 ? 'bg-green-100' : 'bg-gray-100'}`} />
-                                <div className={`flex items-center justify-center w-10 h-10 rounded-full font-black ${currentStep === 2 ? 'bg-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-gray-100 text-gray-400'}`}>
-                                    2
-                                </div>
+                                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
+                                    {currentStep === 1 ? 'Parte 1 - Seleção de Dados' : 'Parte 2 - Resultado'}
+                                </p>
                             </div>
-                            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">
-                                {currentStep === 1 ? 'Parte 1 - Seleção de Dados' : 'Parte 2 - Resultado'}
-                            </p>
-                        </div>
-                    </header>
+                        </header>
+                    )}
 
                     <main className="max-w-5xl mx-auto">
                         {currentStep === 1 ? (
-                            <div className="bg-white p-8 rounded-3xl shadow-xl shadow-gray-100 border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <div className="mb-8 flex items-center justify-between">
-                                    <div>
-                                        <h2 className="text-2xl font-black text-gray-900">Entrada de Informações</h2>
-                                        <p className="text-gray-400 text-sm mt-1 font-medium">Cole o texto do log ou faça upload da imagem do biometria/transferência</p>
+                            <>
+                                {!isPublic && (
+                                    <div className="bg-white p-8 rounded-3xl shadow-xl shadow-gray-100 border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                        <div className="mb-8 flex items-center justify-between">
+                                            <div>
+                                                <h2 className="text-2xl font-black text-gray-900">Entrada de Informações</h2>
+                                                <p className="text-gray-400 text-sm mt-1 font-medium">Cole o texto do log ou faça upload da imagem do biometria/transferência</p>
+                                            </div>
+                                            <div className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                                                Inteligência Artificial
+                                            </div>
+                                        </div>
+                                        <InputArea
+                                            inputText={inputText} setInputText={setInputText}
+                                            inputFile={inputFile} setInputFile={setInputFile}
+                                            isLoading={isLoading} onProcess={handleProcess}
+                                            onClear={handleClear} onRefresh={handleRefresh}
+                                            inputMode={inputMode} setInputMode={setInputMode}
+                                        />
                                     </div>
-                                    <div className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-[10px] font-black uppercase tracking-widest">
-                                        Inteligência Artificial
-                                    </div>
-                                </div>
-                                <InputArea
-                                    inputText={inputText} setInputText={setInputText}
-                                    inputFile={inputFile} setInputFile={setInputFile}
-                                    isLoading={isLoading} onProcess={handleProcess}
-                                    onClear={handleClear} onRefresh={handleRefresh}
-                                    inputMode={inputMode} setInputMode={setInputMode}
-                                />
-                            </div>
+                                )}
+                            </>
                         ) : (
                             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 <div className="bg-white p-8 rounded-3xl shadow-xl shadow-gray-100 border border-gray-100 flex flex-col">
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 text-slate-800">
                                         <div>
-                                            <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Resultados Processados</h2>
-                                            <p className="text-gray-400 text-sm mt-1 font-medium italic">Dados extraídos e calculados com precisão</p>
+                                            <h2 className="text-3xl font-black text-gray-900 tracking-tighter">
+                                                {isPublic ? 'Detalhes da Movimentação' : 'Resultados Processados'}
+                                            </h2>
+                                            <p className="text-gray-400 text-sm mt-1 font-medium italic">
+                                                {isPublic ? 'Relatório consolidado e verificado' : 'Dados extraídos e calculados com precisão'}
+                                            </p>
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <button
-                                                onClick={() => setCurrentStep(1)}
+                                                onClick={() => {
+                                                    setCurrentStep(1);
+                                                    setViewingHistoryId(null);
+                                                    setProcessedData([]);
+                                                }}
                                                 className="px-6 py-2.5 text-sm font-black text-gray-600 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all border border-gray-100 flex items-center gap-2"
                                             >
-                                                <span>←</span> Voltar
+                                                <span>←</span> {isPublic ? 'Voltar ao Histórico' : 'Voltar'}
                                             </button>
                                             {processedData.length > 0 && (
                                                 <div className="relative">
