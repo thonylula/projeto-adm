@@ -668,6 +668,7 @@ export const TransferenciaProcessing: React.FC = () => {
                                                     onEditSave={handleUpdateItem}
                                                     onEditCancel={() => setEditingIndex(null)}
                                                     onRemove={handleRemoveItem}
+                                                    clients={clients}
                                                 />
                                             </div>
                                         </div>
