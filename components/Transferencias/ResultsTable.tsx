@@ -52,7 +52,14 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
                                         <td className="px-5 py-5"><input type="number" defaultValue={item.plPorGrama} onBlur={(e) => onEditSave?.(index, { plPorGrama: Number(e.target.value) })} className="w-full p-2 border rounded text-right" /></td>
                                         <td className="px-5 py-5 text-right font-medium text-gray-400">{(item.pesoMedioCalculado || 0).toFixed(4)}g</td>
                                         <td className="px-5 py-5 text-right font-bold text-gray-700">{(item.pesoTotalCalculado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</td>
-                                        <td className="px-5 py-5 text-right font-medium text-gray-400">{item.densidade || '-'}</td>
+                                        <td className="px-5 py-5">
+                                            <input
+                                                type="text"
+                                                defaultValue={item.densidade}
+                                                onBlur={(e) => onEditSave?.(index, { densidade: e.target.value })}
+                                                className="w-full p-2 border rounded text-right text-gray-700"
+                                            />
+                                        </td>
                                         <td className="px-5 py-5">
                                             {item.tipo === 'VENDA' ? (
                                                 <select
