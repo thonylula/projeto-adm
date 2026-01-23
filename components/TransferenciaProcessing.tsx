@@ -119,6 +119,40 @@ export const TransferenciaProcessing: React.FC = () => {
         } catch (error) { }
     }, [history]);
 
+    const sortedHistory = useMemo(() => {
+        return [...history].sort((a, b) => {
+            const firstA = a.data[0];
+            const firstB = b.data[0];
+
+            const parseDate = (d?: string) => {
+                if (!d || typeof d !== 'string') return 0;
+                const parts = d.split('/');
+                if (parts.length < 2) return 0;
+                const day = parseInt(parts[0]);
+                const month = parseInt(parts[1]);
+                if (isNaN(day) || isNaN(month)) return 0;
+
+                const year = new Date().getFullYear();
+                // Create a comparable number YYYYMMDD
+                // Since we don't have the year in the string, we use the current year as base
+                // If the month is ahead of current month by more than 6 months, it might be from last year
+                // but let's stick to current year for now as requested for "retroative launches" 
+                // typically meaning recent months.
+                return (year * 10000) + (month * 100) + day;
+            };
+
+            const valA = parseDate(firstA?.data);
+            const valB = parseDate(firstB?.data);
+
+            if (valA !== valB) {
+                return valB - valA;
+            }
+
+            // Fallback for same day: use entry ID (timestamp)
+            return (b.id as any) - (a.id as any);
+        });
+    }, [history]);
+
     useEffect(() => {
         if (processedData.length === 0) {
             setNurserySurvivalData({});
@@ -697,7 +731,7 @@ export const TransferenciaProcessing: React.FC = () => {
                         <div className="max-w-5xl mx-auto mt-12 animate-in fade-in duration-500 delay-150">
                             <HistoryLog
                                 isPublic={new URLSearchParams(window.location.search).get('showcase') === 'true'}
-                                history={history}
+                                history={sortedHistory}
                                 onView={(id) => {
                                     const entry = history.find(e => e.id === id);
                                     if (entry) {
