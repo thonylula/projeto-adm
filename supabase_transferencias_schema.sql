@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS transferencias (
     quantidade NUMERIC DEFAULT 0,
     peso_medio NUMERIC DEFAULT 0,
     observacao TEXT,
+    tipo TEXT DEFAULT 'TRANSFERENCIA', -- TRANSFERENCIA or VENDA
+    data_povoamento DATE,
+    cliente_id UUID REFERENCES clients(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
