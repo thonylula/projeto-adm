@@ -681,6 +681,7 @@ export const TransferenciaProcessing: React.FC = () => {
                     {currentStep === 1 && history.length > 0 && (
                         <div className="max-w-5xl mx-auto mt-12 animate-in fade-in duration-500 delay-150">
                             <HistoryLog
+                                isPublic={new URLSearchParams(window.location.search).get('showcase') === 'true'}
                                 history={history}
                                 onView={(id) => {
                                     const entry = history.find(e => e.id === id);
