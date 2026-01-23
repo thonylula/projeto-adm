@@ -8,6 +8,7 @@ interface ResultsTableProps {
     onEditSave?: (index: number, updatedData: Partial<ExtractedData>) => void;
     onEditCancel?: () => void;
     onRemove?: (index: number) => void;
+    clients?: any[];
 }
 
 export const ResultsTable: React.FC<ResultsTableProps> = ({
@@ -16,7 +17,8 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
     onEditStart,
     onEditSave,
     onEditCancel,
-    onRemove
+    onRemove,
+    clients = []
 }) => {
     return (
         <div className="overflow-hidden border-t-2 border-gray-100">
@@ -51,14 +53,46 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
                                         <td className="px-5 py-5 text-right font-medium text-gray-400">{(item.pesoMedioCalculado || 0).toFixed(4)}g</td>
                                         <td className="px-5 py-5 text-right font-bold text-gray-700">{(item.pesoTotalCalculado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</td>
                                         <td className="px-5 py-5 text-right font-medium text-gray-400">{item.densidade || '-'}</td>
-                                        <td className="px-5 py-5"><input type="text" defaultValue={item.viveiroDestino} onBlur={(e) => onEditSave?.(index, { viveiroDestino: e.target.value })} className="w-full p-2 border rounded font-black text-gray-900 text-[13px]" /></td>
+                                        <td className="px-5 py-5">
+                                            {item.tipo === 'VENDA' ? (
+                                                <select
+                                                    value={item.clienteId || ''}
+                                                    onChange={(e) => {
+                                                        const client = clients.find(c => c.id === e.target.value);
+                                                        onEditSave?.(index, {
+                                                            clienteId: e.target.value,
+                                                            clienteNome: client?.name || '',
+                                                            viveiroDestino: client?.name || ''
+                                                        });
+                                                    }}
+                                                    className="w-full p-2 border rounded font-black text-gray-900 text-[13px] bg-white shadow-sm"
+                                                >
+                                                    <option value="">Selecione...</option>
+                                                    {clients.map(c => (
+                                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <input type="text" defaultValue={item.viveiroDestino} onBlur={(e) => onEditSave?.(index, { viveiroDestino: e.target.value })} className="w-full p-2 border rounded font-black text-gray-900 text-[13px]" />
+                                            )}
+                                        </td>
                                         <td className="px-5 py-5 text-center">
-                                            <button
-                                                onClick={() => onEditSave?.(index, { isParcial: !item.isParcial })}
-                                                className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${item.isParcial ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}`}
-                                            >
-                                                {item.isParcial ? 'Parcial' : 'Total'}
-                                            </button>
+                                            <div className="flex flex-col gap-1">
+                                                <select
+                                                    value={item.tipo || 'TRANSFERENCIA'}
+                                                    onChange={(e) => onEditSave?.(index, { tipo: e.target.value as 'TRANSFERENCIA' | 'VENDA' })}
+                                                    className="text-[9px] font-black uppercase p-1 border rounded"
+                                                >
+                                                    <option value="TRANSFERENCIA">Transf</option>
+                                                    <option value="VENDA">Venda</option>
+                                                </select>
+                                                <button
+                                                    onClick={() => onEditSave?.(index, { isParcial: !item.isParcial })}
+                                                    className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${item.isParcial ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}`}
+                                                >
+                                                    {item.isParcial ? 'Parcial' : 'Total'}
+                                                </button>
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3 text-center flex justify-center gap-2">
                                             <button onClick={() => onEditCancel?.()} className="p-2 bg-green-500 text-white rounded shadow-sm hover:bg-green-600 transition-all font-black" title="Concluir">
