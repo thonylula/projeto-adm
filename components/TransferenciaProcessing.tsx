@@ -88,6 +88,7 @@ export const TransferenciaProcessing: React.FC = () => {
     const [missingAreas, setMissingAreas] = useState<string[]>([]);
     const [currentStep, setCurrentStep] = useState<1 | 2>(1);
     const [isTypeSelectionOpen, setIsTypeSelectionOpen] = useState(false);
+    const [currentProcessingItems, setCurrentProcessingItems] = useState<ProcessedData[]>([]);
     const [clients, setClients] = useState<any[]>([]);
     const [selectedClient, setSelectedClient] = useState<string | null>(null);
     const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
@@ -260,23 +261,11 @@ export const TransferenciaProcessing: React.FC = () => {
                 return;
             }
             const newData = extractedDataArray.map(calculateProcessedItem);
-            setProcessedData((prevData) => {
-                const updated = [...prevData, ...newData];
-                // Se acabamos de processar dados e prevData estava vazio (primeiro processamento desta leva)
-                // Ou se quisermos perguntar para cada leva processada:
-                return updated;
-            });
+            setCurrentProcessingItems(newData);
+            setProcessedData((prevData) => [...prevData, ...newData]);
 
             // Pergunta o tipo para a nova leva de dados
             setIsTypeSelectionOpen(true);
-
-            // Save to history
-            const newEntry: HistoryEntry = {
-                id: Date.now().toString(),
-                timestamp: new Date().toLocaleString(),
-                data: newData
-            };
-            setHistory(prev => [newEntry, ...prev]);
 
         } catch (e: any) {
             setError(e.message);
@@ -284,6 +273,15 @@ export const TransferenciaProcessing: React.FC = () => {
             setIsLoading(false);
         }
     }, [inputText, inputFile, inputMode, viewingHistoryId]);
+
+    const saveToHistory = (finalItems: ProcessedData[]) => {
+        const newEntry: HistoryEntry = {
+            id: Date.now().toString(),
+            timestamp: new Date().toLocaleString(),
+            data: finalItems
+        };
+        setHistory(prev => [newEntry, ...prev]);
+    };
 
     const handleUpdateItem = (index: number, updatedData: Partial<ExtractedData>) => {
         setProcessedData(prev => {
@@ -365,7 +363,12 @@ export const TransferenciaProcessing: React.FC = () => {
                         <div className="grid grid-cols-1 gap-4">
                             <button
                                 onClick={() => {
-                                    setProcessedData(prev => prev.map(item => ({ ...item, tipo: 'TRANSFERENCIA' })));
+                                    const classified = currentProcessingItems.map(item => ({ ...item, tipo: 'TRANSFERENCIA' }));
+                                    setProcessedData(prev => {
+                                        const base = prev.slice(0, prev.length - currentProcessingItems.length);
+                                        return [...base, ...classified];
+                                    });
+                                    saveToHistory(classified);
                                     setIsTypeSelectionOpen(false);
                                     setCurrentStep(2);
                                 }}
@@ -437,8 +440,23 @@ export const TransferenciaProcessing: React.FC = () => {
                                 <button
                                     disabled={!selectedClient}
                                     onClick={() => {
+                                        const client = clients.find(c => c.id === selectedClient);
+                                        const classified = currentProcessingItems.map(item => ({
+                                            ...item,
+                                            tipo: 'VENDA',
+                                            clienteId: selectedClient!,
+                                            clienteNome: client?.name || ''
+                                        }));
+
+                                        setProcessedData(prev => {
+                                            const base = prev.slice(0, prev.length - currentProcessingItems.length);
+                                            return [...base, ...classified];
+                                        });
+                                        saveToHistory(classified);
+
                                         setIsTypeSelectionOpen(false);
                                         setCurrentStep(2);
+                                        setSelectedClient(null);
                                     }}
                                     className="w-full bg-orange-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-orange-200 hover:bg-orange-700 disabled:bg-gray-200 disabled:shadow-none transition-all active:scale-95"
                                 >
