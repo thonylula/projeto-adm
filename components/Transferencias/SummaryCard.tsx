@@ -3,17 +3,27 @@ import type { ProcessedData } from '../../types';
 
 interface SummaryCardProps {
     data: ProcessedData;
+    onEdit?: () => void;
 }
 
-export const SummaryCard: React.FC<SummaryCardProps> = ({ data }) => {
+export const SummaryCard: React.FC<SummaryCardProps> = ({ data, onEdit }) => {
     return (
-        <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-2">
+        <div className="group relative p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all">
+            {onEdit && (
+                <button
+                    onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                    className="absolute top-2 right-2 p-2 bg-orange-50 text-orange-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-orange-100 z-10"
+                    title="Editar lançamento"
+                >
+                    ✏️
+                </button>
+            )}
+            <div className="flex justify-between items-start mb-2 pr-8">
                 <div>
-                    <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest">{data.local} → {data.viveiroDestino}</h4>
+                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-tight">{data.local} → {data.viveiroDestino}</h4>
                     <p className="text-xl font-bold text-gray-800">{(data.estocagem || 0).toLocaleString('pt-BR')} PLs</p>
                 </div>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${data.isParcial ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>
+                <span className={`shrink-0 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter ${data.isParcial ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}`}>
                     {data.isParcial ? 'Parcial' : 'Total'}
                 </span>
             </div>

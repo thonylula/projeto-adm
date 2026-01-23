@@ -643,12 +643,20 @@ export const TransferenciaProcessing: React.FC = () => {
                                                 </div>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                                                     {processedData.map((item, index) => (
-                                                        <SummaryCard key={index} data={item} />
+                                                        <SummaryCard
+                                                            key={index}
+                                                            data={item}
+                                                            onEdit={() => {
+                                                                setEditingIndex(index);
+                                                                // Scrolly to table
+                                                                document.getElementById('detailed-report-table')?.scrollIntoView({ behavior: 'smooth' });
+                                                            }}
+                                                        />
                                                     ))}
                                                 </div>
                                             </div>
 
-                                            <div>
+                                            <div id="detailed-report-table">
                                                 <div className="flex items-center gap-4 mb-6">
                                                     <h3 className="text-lg font-black text-gray-900 uppercase tracking-tighter">Relatório Detalhado</h3>
                                                     <div className="h-0.5 flex-grow bg-gray-50 rounded-full" />
