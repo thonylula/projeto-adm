@@ -24,6 +24,7 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
                 <thead className="text-[11px] font-black text-gray-400 uppercase tracking-widest bg-gray-50">
                     <tr>
                         <th className="px-5 py-5">Origem</th>
+                        <th className="px-5 py-5">Data</th>
                         <th className="px-5 py-5">Povoamento</th>
                         <th className="px-5 py-5 text-right">Estocagem</th>
                         <th className="px-5 py-5 text-right">PL/g</th>
@@ -39,6 +40,7 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
                     {data.map((item, index) => (
                         <tr key={index} className="bg-white hover:bg-orange-50/10 transition-colors">
                             <td className="px-5 py-5 font-black text-gray-900 text-[13px]">{item.local}</td>
+                            <td className="px-5 py-5 font-medium text-gray-400">{item.data || '-'}</td>
                             <td className="px-5 py-5 font-medium text-gray-400">{item.dataPovoamento || '-'}</td>
                             <td className="px-5 py-5 text-right font-medium text-gray-400">{(item.estocagem || 0).toLocaleString('pt-BR')}</td>
                             <td className="px-5 py-5 text-right font-medium text-gray-400">{item.plPorGrama}</td>
