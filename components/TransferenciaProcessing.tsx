@@ -117,15 +117,19 @@ export const TransferenciaProcessing: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        try {
-            localStorage.setItem('aquacultureHistory', JSON.stringify(history));
-        } catch (error) { }
+        if (history.length > 0) {
+            try {
+                localStorage.setItem('aquacultureHistory', JSON.stringify(history));
+            } catch (error) { }
+        }
     }, [history]);
 
     useEffect(() => {
-        try {
-            localStorage.setItem('aquacultureInitialStockings', JSON.stringify(initialStockings));
-        } catch (error) { }
+        if (Object.keys(initialStockings).length > 0) {
+            try {
+                localStorage.setItem('aquacultureInitialStockings', JSON.stringify(initialStockings));
+            } catch (error) { }
+        }
     }, [initialStockings]);
 
     const sortedHistory = useMemo(() => {
@@ -190,7 +194,7 @@ export const TransferenciaProcessing: React.FC = () => {
         const nurseriesToAsk: string[] = [];
 
         Object.entries(nurseryGroups).forEach(([groupName, dataEntries]) => {
-            if (initialStockings[groupName]) {
+            if (initialStockings[groupName] !== undefined) {
                 const initialStocking = initialStockings[groupName];
                 const totalTransferred = dataEntries.reduce((sum, entry) => sum + entry.estocagem, 0);
                 const survivalRate = initialStocking > 0 ? (totalTransferred / initialStocking) * 100 : 0;
