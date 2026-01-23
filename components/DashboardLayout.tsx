@@ -224,6 +224,15 @@ const NavItem: React.FC<{
           >
             📊 Faturamento
           </button>
+          <button
+            onClick={() => {
+              onTabChange('transferencias');
+              setIsMobileMenuOpen(false);
+            }}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeTab === 'transferencias' ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+          >
+            🔄 Transferências
+          </button>
         </div>
       )}
     </div>

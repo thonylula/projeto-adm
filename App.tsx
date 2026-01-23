@@ -372,6 +372,7 @@ export default function App() {
         )}
         {effectiveTab === 'mortalidade' && activeCompany && <MortalidadeConsumo activeCompany={activeCompany} activeYear={activeYear || new Date().getFullYear()} activeMonth={activeMonth || new Date().getMonth() + 1} isPublic={true} isDarkMode={isDarkMode} />}
         {effectiveTab === 'campo' && activeCompany && <CampoViveiros activeCompany={activeCompany} isPublic={true} isDarkMode={isDarkMode} />}
+        {effectiveTab === 'transferencias' && <TransferenciaProcessing />}
 
         {/* Fallback if no company is selected but needed (Public view usually expects a default or selected company from context) */}
         {((effectiveTab === 'mortalidade' || effectiveTab === 'campo') && !activeCompany) && (
