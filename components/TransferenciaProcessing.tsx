@@ -177,6 +177,27 @@ export const TransferenciaProcessing: React.FC = () => {
         });
     }, [history]);
 
+    const generalSurvival = useMemo(() => {
+        if (history.length === 0) return 0;
+
+        let totalFinal = 0;
+        let totalInitial = 0;
+        const processedPonds = new Set<string>();
+
+        history.forEach(entry => {
+            entry.data.forEach(item => {
+                totalFinal += (item.estocagem || 0);
+                const pondName = getNurseryGroupName(item.local);
+                if (!processedPonds.has(pondName)) {
+                    totalInitial += (initialStockings[pondName] || 0);
+                    processedPonds.add(pondName);
+                }
+            });
+        });
+
+        return totalInitial > 0 ? (totalFinal / totalInitial) * 100 : 0;
+    }, [history, initialStockings]);
+
     useEffect(() => {
         if (processedData.length === 0) {
             setNurserySurvivalData({});
@@ -763,6 +784,7 @@ export const TransferenciaProcessing: React.FC = () => {
                             <HistoryLog
                                 isPublic={new URLSearchParams(window.location.search).get('showcase') === 'true'}
                                 history={sortedHistory}
+                                generalSurvival={generalSurvival}
                                 onView={(id) => {
                                     const entry = history.find(e => e.id === id);
                                     if (entry) {
