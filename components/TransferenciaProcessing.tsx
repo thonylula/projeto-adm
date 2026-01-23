@@ -194,19 +194,19 @@ export const TransferenciaProcessing: React.FC = () => {
         const nurseriesToAsk: string[] = [];
 
         Object.entries(nurseryGroups).forEach(([groupName, dataEntries]) => {
-            if (initialStockings[groupName] !== undefined) {
-                const initialStocking = initialStockings[groupName];
-                const totalTransferred = dataEntries.reduce((sum, entry) => sum + entry.estocagem, 0);
-                const survivalRate = initialStocking > 0 ? (totalTransferred / initialStocking) * 100 : 0;
-                const hasAnyParcial = dataEntries.some(e => e.isParcial);
+            const initialStocking = initialStockings[groupName] || 0;
+            const totalTransferred = dataEntries.reduce((sum, entry) => sum + entry.estocagem, 0);
+            const survivalRate = initialStocking > 0 ? (totalTransferred / initialStocking) * 100 : 0;
+            const hasAnyParcial = dataEntries.some(e => e.isParcial);
 
-                survivalResults[groupName] = {
-                    initialStocking: initialStocking,
-                    totalTransferred: totalTransferred,
-                    survivalRate: survivalRate,
-                    isParcial: hasAnyParcial
-                };
-            } else {
+            survivalResults[groupName] = {
+                initialStocking: initialStocking,
+                totalTransferred: totalTransferred,
+                survivalRate: survivalRate,
+                isParcial: hasAnyParcial
+            };
+
+            if (initialStockings[groupName] === undefined) {
                 if (!nurseryStockingQueue.includes(groupName) && !viewingHistoryId) {
                     nurseriesToAsk.push(groupName);
                 }
