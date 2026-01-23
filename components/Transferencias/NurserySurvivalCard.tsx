@@ -4,9 +4,16 @@ import type { NurserySurvivalData } from '../../types';
 interface NurserySurvivalCardProps {
     nurseryName: string;
     data: NurserySurvivalData;
+    onEditInitialStocking?: (value: number) => void;
+    isPublic?: boolean;
 }
 
-export const NurserySurvivalCard: React.FC<NurserySurvivalCardProps> = ({ nurseryName, data }) => {
+export const NurserySurvivalCard: React.FC<NurserySurvivalCardProps> = ({
+    nurseryName,
+    data,
+    onEditInitialStocking,
+    isPublic = false
+}) => {
     const isHealthy = data.survivalRate >= 80;
     const isCritical = data.survivalRate < 60;
 
@@ -26,7 +33,16 @@ export const NurserySurvivalCard: React.FC<NurserySurvivalCardProps> = ({ nurser
 
             <div className="flex justify-between items-end mb-6">
                 <div className="flex flex-col items-center">
-                    <p className="text-2xl font-black text-gray-900 leading-none">{(data.initialStocking || 0).toLocaleString('pt-BR')}</p>
+                    {!isPublic && onEditInitialStocking ? (
+                        <input
+                            type="number"
+                            defaultValue={data.initialStocking || 0}
+                            onBlur={(e) => onEditInitialStocking(Number(e.target.value))}
+                            className="text-2xl font-black text-gray-900 leading-none bg-transparent border-b-2 border-orange-100 hover:border-orange-500 focus:border-orange-600 outline-none w-32 text-center transition-all"
+                        />
+                    ) : (
+                        <p className="text-2xl font-black text-gray-900 leading-none">{(data.initialStocking || 0).toLocaleString('pt-BR')}</p>
+                    )}
                     <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-3">Est. Inicial</p>
                 </div>
                 <div className="flex flex-col items-center">

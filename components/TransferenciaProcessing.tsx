@@ -110,6 +110,9 @@ export const TransferenciaProcessing: React.FC = () => {
         try {
             const savedHistory = localStorage.getItem('aquacultureHistory');
             if (savedHistory) setHistory(JSON.parse(savedHistory));
+
+            const savedStockings = localStorage.getItem('aquacultureInitialStockings');
+            if (savedStockings) setInitialStockings(JSON.parse(savedStockings));
         } catch (error) { }
     }, []);
 
@@ -118,6 +121,12 @@ export const TransferenciaProcessing: React.FC = () => {
             localStorage.setItem('aquacultureHistory', JSON.stringify(history));
         } catch (error) { }
     }, [history]);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem('aquacultureInitialStockings', JSON.stringify(initialStockings));
+        } catch (error) { }
+    }, [initialStockings]);
 
     const sortedHistory = useMemo(() => {
         return [...history].sort((a, b) => {
@@ -689,7 +698,14 @@ export const TransferenciaProcessing: React.FC = () => {
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                         {Object.entries(nurserySurvivalData).map(([name, data]) => (
                                                             <div key={name} className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 hover:border-orange-200 transition-all cursor-default">
-                                                                <NurserySurvivalCard nurseryName={name} data={data} />
+                                                                <NurserySurvivalCard
+                                                                    nurseryName={name}
+                                                                    data={data}
+                                                                    isPublic={isPublic}
+                                                                    onEditInitialStocking={(val) => {
+                                                                        setInitialStockings(prev => ({ ...prev, [name]: val }));
+                                                                    }}
+                                                                />
                                                             </div>
                                                         ))}
                                                     </div>
