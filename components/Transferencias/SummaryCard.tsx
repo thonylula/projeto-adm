@@ -27,7 +27,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ data, onEdit }) => {
                     {data.isParcial ? 'Parcial' : 'Total'}
                 </span>
             </div>
-            <div className="grid grid-cols-3 gap-2 text-[10px] text-gray-500 font-bold uppercase">
+            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-2 text-[10px] text-gray-500 font-bold uppercase">
                 <div className="bg-gray-50 p-2 rounded-lg">
                     <p className="opacity-60 mb-0.5">Peso Médio</p>
                     <p className="text-gray-900">{data.pesoMedioCalculado.toFixed(4)}g</p>
