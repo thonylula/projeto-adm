@@ -407,9 +407,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     : menuItems;
 
   return (
-    <div className={`min-h-screen flex flex-col md:flex-row transition-colors duration-500 print:bg-white print:block ${isDarkMode ? 'bg-[#0B0F1A] text-slate-100' : 'bg-gray-50 text-slate-900'}`} data-active-tab={activeTab}>
+    <div className={`min-h-screen flex flex-col lg:flex-row transition-colors duration-500 print:bg-white print:block ${isDarkMode ? 'bg-[#0B0F1A] text-slate-100' : 'bg-gray-50 text-slate-900'}`} data-active-tab={activeTab}>
       {/* Mobile Header */}
-      <div className={`md:hidden p-4 flex justify-between items-center print:hidden border-b transition-colors duration-500 ${isDarkMode ? 'bg-[#0B0F1A] border-slate-800 text-white' : 'bg-slate-900 text-white'}`}>
+      <div className={`lg:hidden p-4 flex justify-between items-center print:hidden border-b transition-colors duration-500 ${isDarkMode ? 'bg-[#0B0F1A] border-slate-800 text-white' : 'bg-slate-900 text-white'}`}>
         <span className="font-bold text-lg truncate max-w-[200px]">
           {isPublic ? 'Modo Visualização' : `Adm: ${currentUser}`}
         </span>
@@ -436,7 +436,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <aside className={`
         fixed inset-y-0 left-0 z-50 w-64 text-slate-300 transform transition-transform duration-300 ease-in-out print:hidden border-r transition-colors duration-500
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-        md:relative md:translate-x-0 flex flex-col
+        lg:relative lg:translate-x-0 flex flex-col
         ${isDarkMode ? 'bg-[#0F172A] border-slate-800' : 'bg-slate-900 border-slate-800'}
       `}>
         {/* Sidebar Header - Carapitanga Style */}
@@ -458,7 +458,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           {/* Theme Toggle - Desktop Sidebar */}
           <button
             onClick={() => setIsDarkMode?.(!isDarkMode)}
-            className={`hidden md:flex p-2 rounded-xl transition-all active:scale-95 ${isDarkMode ? 'bg-slate-800 text-yellow-400 hover:bg-slate-700' : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-800'}`}
+            className={`hidden lg:flex p-2 rounded-xl transition-all active:scale-95 ${isDarkMode ? 'bg-slate-800 text-yellow-400 hover:bg-slate-700' : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-800'}`}
             title={isDarkMode ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
           >
             {isDarkMode ? (
@@ -528,8 +528,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 overflow-auto h-[calc(100vh-60px)] md:h-screen w-full relative print:h-auto print:overflow-visible">
-        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 print:hidden opacity-50 md:opacity-100 transition-opacity duration-500">
+      <main className="flex-1 overflow-x-hidden overflow-y-auto h-[calc(100vh-60px)] lg:h-screen relative print:h-auto print:overflow-visible min-w-0">
+        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 print:hidden opacity-50 lg:opacity-100 transition-opacity duration-500">
           <div className={`absolute top-[5%] right-[5%] w-[40%] h-[40%] rounded-full blur-3xl transition-colors duration-1000 ${isDarkMode ? 'bg-blue-900/20' : 'bg-orange-100/50'}`} />
           <div className={`absolute bottom-[5%] left-[10%] w-[30%] h-[30%] rounded-full blur-3xl transition-colors duration-1000 ${isDarkMode ? 'bg-indigo-900/10' : 'bg-blue-50/50'}`} />
         </div>
@@ -541,7 +541,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden print:hidden"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden print:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}

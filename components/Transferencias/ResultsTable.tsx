@@ -21,7 +21,7 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
     clients = []
 }) => {
     return (
-        <div className="overflow-hidden border-t-2 border-gray-100">
+        <div className="overflow-x-auto border-t-2 border-gray-100 custom-scrollbar">
             <table className="w-full text-xs text-left text-gray-500 border-collapse">
                 <thead className="text-[11px] font-black text-gray-400 uppercase tracking-widest bg-gray-50">
                     <tr>
