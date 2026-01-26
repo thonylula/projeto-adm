@@ -42,7 +42,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder="Cole aqui o log de transferência ou o texto extraído..."
-                    className="w-full h-48 p-4 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#C5A059] focus:border-transparent resize-none font-mono text-sm bg-slate-50/30"
+                    className="w-full h-48 p-4 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#F97316] focus:border-transparent resize-none font-mono text-sm bg-slate-50/30"
                 />
             ) : (
                 <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer relative">
@@ -66,7 +66,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
                 <button
                     onClick={onProcess}
                     disabled={isLoading || (inputMode === 'text' ? !inputText : !inputFile)}
-                    className="flex-1 bg-[#C5A059] text-white py-3.5 rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-[#B59049] disabled:bg-slate-200 transition-all shadow-xl shadow-[#C5A059]/10 active:scale-95"
+                    className="flex-1 bg-[#F97316] text-white py-3.5 rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-[#EA580C] disabled:bg-slate-200 transition-all shadow-xl shadow-[#F97316]/10 active:scale-95"
                 >
                     {isLoading ? 'Processando...' : '🚀 Processar Dados'}
                 </button>

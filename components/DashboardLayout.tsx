@@ -56,38 +56,42 @@ const NavItem: React.FC<{
           }
         }}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group ${isActive
-          ? 'bg-[#C5A059] text-white shadow-xl shadow-[#C5A059]/20 active:scale-[0.98]'
+          ? 'bg-[#F97316] text-white shadow-xl shadow-[#F97316]/20 active:scale-[0.98]'
           : 'hover:bg-white/5 hover:text-white'
           }`}
       >
-        <span className={`${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
+        <div className={`w-5 flex items-center justify-center ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
           {item.icon}
-        </span>
-        <span className="font-medium text-sm uppercase text-left leading-tight">
+        </div>
+        <span className="flex-1 font-bold text-xs uppercase text-left leading-tight tracking-wider">
           {item.id === 'showcase' && isPublic ? 'Faturamento' : item.label}
         </span>
 
-        {/* Lock Toggle - Hidden for visitors */}
+        {/* Lock Toggle - Fixed Alignment */}
         {!isPublic && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleLock(item.id);
-            }}
-            className={`ml-auto p-1.5 rounded-lg transition-all ${isLocked ? 'bg-red-500/20 text-red-400' : 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
-              }`}
-            title={isLocked ? "Área Bloqueada para a IA" : "Área Liberada para a IA"}
-          >
-            {isLocked ? (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                <path d="M18 1.5c2.9 0 5.25 2.35 5.25 5.25v3.75a.75.75 0 01-1.5 0V6.75a3.75 3.75 0 10-7.5 0v3a3 3 0 013 3v6.75a3 3 0 01-3 3H3.75a3 3 0 01-3-3v-6.75a3 3 0 013-3h9v-3c0-2.9 2.35-5.25 5.25-5.25z" />
-              </svg>
-            )}
-          </button>
+          <div className="w-8 flex justify-center">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleLock(item.id);
+              }}
+              className={`p-1.5 rounded-lg transition-all ${isLocked
+                ? 'bg-red-500/20 text-red-500 ring-1 ring-red-500/30 shadow-lg shadow-red-500/10'
+                : 'bg-[#F97316]/10 text-[#F97316] hover:bg-[#F97316]/20 ring-1 ring-[#F97316]/20'
+                }`}
+              title={isLocked ? "Área Bloqueada para a IA" : "Área Liberada para a IA"}
+            >
+              {isLocked ? (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                  <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                  <path d="M18 1.5c2.9 0 5.25 2.35 5.25 5.25v3.75a.75.75 0 01-1.5 0V6.75a3.75 3.75 0 10-7.5 0v3a3 3 0 013 3v6.75a3 3 0 01-3 3H3.75a3 3 0 01-3-3v-6.75a3 3 0 013-3h9v-3c0-2.9 2.35-5.25 5.25-5.25z" />
+                </svg>
+              )}
+            </button>
+          </div>
         )}
 
         {(isPayroll || isPantry || isShowcase) && (
@@ -124,15 +128,15 @@ const NavItem: React.FC<{
               <div key={year} className="space-y-1">
                 <button
                   onClick={() => setExpandedYear(expandedYear === year ? null : year)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-colors ${isYearExpanded ? 'text-[#C5A059]' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-black transition-colors ${isYearExpanded ? 'text-[#F97316]' : 'text-slate-400 hover:text-white hover:bg-white/5'
                     }`}
                 >
-                  <span>{year}</span>
+                  <span className="tracking-widest">{year}</span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
-                    strokeWidth={1.5}
+                    strokeWidth={2}
                     stroke="currentColor"
                     className={`w-3 h-3 transition-transform ${isYearExpanded ? 'rotate-180' : ''}`}
                   >
@@ -155,14 +159,14 @@ const NavItem: React.FC<{
                         let buttonClasses = "px-1 py-2 rounded text-[10px] font-medium transition-colors text-center";
 
                         if (isCurrentMonth) {
-                          // Current month: gold with background
-                          buttonClasses += " bg-[#C5A059] text-white font-black shadow-lg";
+                          // Current month: orange with background
+                          buttonClasses += " bg-[#F97316] text-white font-black shadow-lg shadow-[#F97316]/20";
                         } else if (isPreviousMonth) {
                           // Previous month: lighter tone
-                          buttonClasses += " bg-[#C5A059]/10 text-[#C5A059] font-bold border border-[#C5A059]/20";
+                          buttonClasses += " bg-[#F97316]/10 text-[#F97316] font-black border border-[#F97316]/20";
                         } else {
                           // Other months: default style
-                          buttonClasses += " text-slate-500 hover:bg-[#C5A059]/20 hover:text-[#E2D1A8]";
+                          buttonClasses += " text-slate-500 hover:bg-[#F97316]/10 hover:text-[#F97316]";
                         }
 
                         return (
@@ -220,7 +224,7 @@ const NavItem: React.FC<{
               onTabChange('showcase-faturamento');
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-colors ${activeTab === 'showcase-faturamento' ? 'text-[#C5A059]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-colors ${activeTab === 'showcase-faturamento' ? 'text-[#F97316]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
           >
             📊 Faturamento
           </button>
@@ -229,7 +233,7 @@ const NavItem: React.FC<{
               onTabChange('transferencias');
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-colors ${activeTab === 'transferencias' ? 'text-[#C5A059]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-colors ${activeTab === 'transferencias' ? 'text-[#F97316]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
           >
             🔄 Transferências
           </button>
@@ -439,19 +443,18 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         lg:relative lg:translate-x-0 flex flex-col
         ${isDarkMode ? 'bg-[#0F172A] border-slate-800' : 'bg-slate-900 border-slate-800'}
       `}>
-        {/* Sidebar Header - Carapitanga Style */}
-        <div className="p-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#C5A059] shadow-lg shadow-[#C5A059]/30 flex items-center justify-center text-white flex-shrink-0">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
+        <div className="p-6 flex flex-col gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#F97316] shadow-2xl shadow-[#F97316]/40 flex items-center justify-center text-white flex-shrink-0 animate-pulse-subtle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-7 h-7">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
               </svg>
             </div>
             <div className="overflow-hidden">
-              <h1 className="text-white font-black text-base leading-none tracking-tight uppercase">
+              <h1 className="text-white font-black text-xl leading-none tracking-tighter uppercase italic">
                 Carapitanga
               </h1>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Gestão Inteligente</p>
+              <p className="text-[10px] font-black text-[#F97316] uppercase tracking-[0.2em] mt-1.5 opacity-80">Gestão Inteligente</p>
             </div>
           </div>
 
@@ -518,7 +521,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                     window.location.reload();
                   }
                 }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#C5A059]/10 hover:bg-[#C5A059]/20 text-[#C5A059] rounded-xl text-xs transition-colors border border-[#C5A059]/20"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#F97316]/10 hover:bg-[#F97316]/20 text-[#F97316] rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-[#F97316]/20 shadow-lg shadow-[#F97316]/5"
               >
                 Sincronizar Cloud (Migrar)
               </button>

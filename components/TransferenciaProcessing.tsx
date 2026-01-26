@@ -496,13 +496,13 @@ export const TransferenciaProcessing: React.FC = () => {
                             <div className="flex bg-slate-100 p-1 rounded-3xl">
                                 <button
                                     onClick={() => setProcessedData(prev => prev.map(item => ({ ...item, isParcial: true })))}
-                                    className={`flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${processedData.some(item => item.isParcial) ? 'bg-white text-[#C5A059] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                    className={`flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${processedData.some(item => item.isParcial) ? 'bg-white text-[#F97316] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                                 >
                                     🌓 Parcial
                                 </button>
                                 <button
                                     onClick={() => setProcessedData(prev => prev.map(item => ({ ...item, isParcial: false })))}
-                                    className={`flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${processedData.every(item => !item.isParcial) ? 'bg-white text-[#065F46] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                    className={`flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${processedData.every(item => !item.isParcial) ? 'bg-white text-[#10B981] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                                 >
                                     🌕 Total
                                 </button>
@@ -526,10 +526,10 @@ export const TransferenciaProcessing: React.FC = () => {
                                 className="group p-5 border-2 border-gray-100 rounded-2xl hover:border-green-500 hover:bg-green-50 transition-all text-left"
                             >
                                 <div className="flex items-center justify-between mb-1">
-                                    <span className="font-black text-gray-900 group-hover:text-green-700">Transferência Normal</span>
+                                    <span className="font-black text-gray-900 group-hover:text-[#F97316]">Transferência Normal</span>
                                     <span className="text-2xl">🔄</span>
                                 </div>
-                                <p className="text-xs text-gray-400 font-bold group-hover:text-green-600">Movimentação interna entre viveiros.</p>
+                                <p className="text-xs text-slate-400 font-bold group-hover:text-[#F97316]/60">Movimentação interna entre viveiros.</p>
                             </button>
 
                             <button
@@ -539,10 +539,10 @@ export const TransferenciaProcessing: React.FC = () => {
                                 className="group p-5 border-2 border-slate-100 rounded-2xl hover:border-[#C5A059] hover:bg-[#C5A059]/5 transition-all text-left"
                             >
                                 <div className="flex items-center justify-between mb-1">
-                                    <span className="font-black text-gray-900 group-hover:text-[#C5A059]">Venda de Pós-larva</span>
+                                    <span className="font-black text-gray-900 group-hover:text-[#F97316]">Venda de Pós-larva</span>
                                     <span className="text-2xl">💰</span>
                                 </div>
-                                <p className="text-xs text-gray-400 font-bold group-hover:text-[#C5A059]/60">Venda externa para clientes.</p>
+                                <p className="text-xs text-slate-400 font-bold group-hover:text-[#F97316]/60">Venda externa para clientes.</p>
                             </button>
                         </div>
 
@@ -609,7 +609,7 @@ export const TransferenciaProcessing: React.FC = () => {
                                         setCurrentStep(2);
                                         setSelectedClient(null);
                                     }}
-                                    className="w-full bg-[#C5A059] text-white py-4 rounded-3xl font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-[#C5A059]/20 hover:bg-[#B59049] disabled:bg-slate-200 disabled:shadow-none transition-all active:scale-95"
+                                    className="w-full bg-[#F97316] text-white py-4 rounded-3xl font-black uppercase tracking-[0.2em] text-xs shadow-2xl shadow-[#F97316]/20 hover:bg-[#EA580C] disabled:bg-slate-200 disabled:shadow-none transition-all active:scale-95"
                                 >
                                     Confirmar Venda
                                 </button>
@@ -633,11 +633,11 @@ export const TransferenciaProcessing: React.FC = () => {
                             <div className="flex flex-col items-center gap-4">
                                 <h1 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tighter">Relatório de Transferência</h1>
                                 <div className="flex items-center gap-4 mt-2">
-                                    <div className={`flex items-center justify-center w-10 h-10 rounded-full font-black ${currentStep === 1 ? 'bg-[#C5A059] text-white shadow-xl shadow-[#C5A059]/20' : 'bg-[#065F46]/10 text-[#065F46]'}`}>
+                                    <div className={`flex items-center justify-center w-10 h-10 rounded-full font-black ${currentStep === 1 ? 'bg-[#F97316] text-white shadow-xl shadow-[#F97316]/20' : 'bg-[#10B981]/10 text-[#10B981]'}`}>
                                         {currentStep === 1 ? '1' : '✓'}
                                     </div>
-                                    <div className={`h-1 w-12 rounded-full ${currentStep === 2 ? 'bg-[#065F46]/10' : 'bg-slate-100'}`} />
-                                    <div className={`flex items-center justify-center w-10 h-10 rounded-full font-black ${currentStep === 2 ? 'bg-[#C5A059] text-white shadow-xl shadow-[#C5A059]/20' : 'bg-slate-100 text-slate-400'}`}>
+                                    <div className={`h-1 w-12 rounded-full ${currentStep === 2 ? 'bg-[#10B981]/10' : 'bg-slate-100'}`} />
+                                    <div className={`flex items-center justify-center w-10 h-10 rounded-full font-black ${currentStep === 2 ? 'bg-[#F97316] text-white shadow-xl shadow-[#F97316]/20' : 'bg-slate-100 text-slate-400'}`}>
                                         2
                                     </div>
                                 </div>
@@ -658,7 +658,7 @@ export const TransferenciaProcessing: React.FC = () => {
                                                 <h2 className="text-2xl font-black text-gray-900">Entrada de Informações</h2>
                                                 <p className="text-gray-400 text-sm mt-1 font-medium">Cole o texto do log ou faça upload da imagem do biometria/transferência</p>
                                             </div>
-                                            <div className="px-4 py-1.5 bg-[#C5A059]/10 text-[#C5A059] rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
+                                            <div className="px-4 py-1.5 bg-[#F97316]/10 text-[#F97316] rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
                                                 Inteligência Artificial
                                             </div>
                                         </div>
@@ -700,7 +700,7 @@ export const TransferenciaProcessing: React.FC = () => {
                                                     <button
                                                         onClick={() => setIsDownloadDropdownOpen(prev => !prev)}
                                                         disabled={isGeneratingReport}
-                                                        className="flex items-center gap-3 px-6 py-2.5 text-sm font-black text-white bg-[#C5A059] rounded-xl hover:bg-[#B59049] focus:outline-none shadow-xl shadow-[#C5A059]/20 transition-all disabled:bg-slate-300"
+                                                        className="flex items-center gap-3 px-6 py-2.5 text-sm font-black text-white bg-[#F97316] rounded-xl hover:bg-[#EA580C] focus:outline-none shadow-xl shadow-[#F97316]/20 transition-all disabled:bg-slate-300"
                                                     >
                                                         <DownloadIcon className="w-4 h-4" />
                                                         {isGeneratingReport ? 'Gerando...' : 'Exportar Relatório'}
@@ -710,13 +710,13 @@ export const TransferenciaProcessing: React.FC = () => {
                                                         <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-2xl z-20 border border-gray-50 overflow-hidden py-2 animate-in fade-in zoom-in duration-200">
                                                             <button
                                                                 onClick={(e) => { e.preventDefault(); handleDownloadRequest('pdf'); }}
-                                                                className="w-full text-left px-5 py-3 text-sm font-bold text-slate-700 hover:bg-[#C5A059]/5 hover:text-[#C5A059] transition-colors flex items-center gap-3"
+                                                                className="w-full text-left px-5 py-3 text-sm font-bold text-slate-700 hover:bg-[#F97316]/5 hover:text-[#F97316] transition-colors flex items-center gap-3"
                                                             >
                                                                 <span className="text-lg">📄</span> Baixar como PDF
                                                             </button>
                                                             <button
                                                                 onClick={(e) => { e.preventDefault(); handleDownloadRequest('png'); }}
-                                                                className="w-full text-left px-5 py-3 text-sm font-bold text-slate-700 hover:bg-[#C5A059]/5 hover:text-[#C5A059] transition-colors flex items-center gap-3"
+                                                                className="w-full text-left px-5 py-3 text-sm font-bold text-slate-700 hover:bg-[#F97316]/5 hover:text-[#F97316] transition-colors flex items-center gap-3"
                                                             >
                                                                 <span className="text-lg">🖼️</span> Baixar como PNG
                                                             </button>
@@ -752,7 +752,7 @@ export const TransferenciaProcessing: React.FC = () => {
                                                     </div>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                         {Object.entries(nurserySurvivalData).map(([name, data]) => (
-                                                            <div key={name} className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 hover:border-[#C5A059]/20 transition-all cursor-default">
+                                                            <div key={name} className="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 hover:border-[#F97316]/20 transition-all cursor-default">
                                                                 <NurserySurvivalCard
                                                                     nurseryName={name}
                                                                     data={data}

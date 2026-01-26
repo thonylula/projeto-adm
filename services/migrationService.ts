@@ -79,6 +79,20 @@ export const MigrationService = {
                 }
             }
 
+            // 9. Migrate Aquaculture History
+            const storedAquaHistory = localStorage.getItem('aquacultureHistory');
+            if (storedAquaHistory) {
+                const aquaHistory = JSON.parse(storedAquaHistory);
+                await SupabaseService.saveAquacultureHistory(aquaHistory);
+            }
+
+            // 10. Migrate Aquaculture Initial Stockings
+            const storedAquaStockings = localStorage.getItem('aquacultureInitialStockings');
+            if (storedAquaStockings) {
+                const aquaStockings = JSON.parse(storedAquaStockings);
+                await SupabaseService.saveAquacultureInitialStockings(aquaStockings);
+            }
+
             return { success: true, message: "Migração concluída com sucesso!" };
         } catch (error) {
             console.error("Migration error:", error);

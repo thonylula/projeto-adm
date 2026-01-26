@@ -18,7 +18,7 @@ export const InitialStockingModal: React.FC<InitialStockingModalProps> = ({
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
                 <div className="bg-[#020617] p-8 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#C5A059]/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#F97316]/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
                     <h3 className="text-xl font-black uppercase tracking-[0.1em] relative z-10">Estocagem Inicial</h3>
                     <p className="text-sm text-slate-400 relative z-10">Informe a quantidade povoada no {nurseryName}</p>
                 </div>
@@ -32,7 +32,7 @@ export const InitialStockingModal: React.FC<InitialStockingModalProps> = ({
                             value={stocking}
                             onChange={(e) => setStocking(e.target.value)}
                             placeholder="Ex: 500.000"
-                            className="w-full text-4xl font-black text-slate-900 border-b-2 border-slate-100 focus:border-[#C5A059] transition-colors p-4 outline-none text-center bg-slate-50/30 rounded-t-3xl"
+                            className="w-full text-4xl font-black text-slate-900 border-b-2 border-slate-100 focus:border-[#F97316] transition-colors p-4 outline-none text-center bg-slate-50/30 rounded-t-3xl"
                         />
                     </div>
 
@@ -51,7 +51,7 @@ export const InitialStockingModal: React.FC<InitialStockingModalProps> = ({
                                 }
                             }}
                             disabled={!stocking}
-                            className="flex-[2] py-4 bg-[#C5A059] text-white font-black rounded-2xl shadow-2xl shadow-[#C5A059]/20 hover:bg-[#B59049] disabled:bg-slate-200 transition-all active:scale-95 text-xs uppercase tracking-[0.2em]"
+                            className="flex-[2] py-4 bg-[#F97316] text-white font-black rounded-2xl shadow-2xl shadow-[#F97316]/20 hover:bg-[#EA580C] disabled:bg-slate-200 transition-all active:scale-95 text-xs uppercase tracking-[0.2em]"
                         >
                             Confirmar
                         </button>

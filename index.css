@@ -4,25 +4,28 @@
 
 /* CSS Reset and Variables - Premium Palette */
 :root {
-  --primary: #020617;
-  /* Deep Slate/Black */
-  --accent: #C5A059;
-  /* Champagne Gold */
-  --accent-light: #E2D1A8;
-  /* Light Gold */
-  --success: #065F46;
-  /* Deep Emerald */
-  --warning: #B45309;
-  /* Deep Amber */
-  --danger: #7F1D1D;
-  /* Deep Red */
-  --ai: #4338CA;
-  /* Deep Indigo */
+  --primary: #0F172A;
+  /* Slate 900 - Professional Dark */
+  --accent: #F97316;
+  /* Vibrant Orange (Tailwind 500) */
+  --accent-dark: #EA580C;
+  /* Darker Orange (Tailwind 600) */
+  --accent-light: #FFedd5;
+  /* Lightest Orange (Tailwind 100) */
+  --success: #10B981;
+  /* Emerald 500 */
+  --warning: #F59E0B;
+  /* Amber 500 */
+  --danger: #EF4444;
+  /* Red 500 */
+  --ai: #6366F1;
+  /* Indigo 500 */
   --bg-main: #F8FAFC;
   /* Slate 50 - Soft Background */
-  --radius-xl: 32px;
-  --radius-lg: 20px;
-  --radius-md: 12px;
+  --radius-xl: 24px;
+  /* Refined rounding for professional feel */
+  --radius-lg: 16px;
+  --radius-md: 8px;
 }
 
 body {
