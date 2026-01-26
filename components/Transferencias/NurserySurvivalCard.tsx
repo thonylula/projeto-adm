@@ -47,8 +47,19 @@ export const NurserySurvivalCard: React.FC<NurserySurvivalCardProps> = ({
                     <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-3">Est. Inicial</p>
                 </div>
                 <div className="flex flex-col items-center">
-                    <p className="text-2xl font-black text-gray-900 leading-none">{(data.totalTransferred || 0).toLocaleString('pt-BR')}</p>
-                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-3">Est. Final</p>
+                    <p className="text-2xl font-black text-gray-900 leading-none">{((data.totalTransferred || 0) + (data.totalSold || 0)).toLocaleString('pt-BR')}</p>
+                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-3">Saída Total</p>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-green-50/50 p-3 rounded-xl border border-green-100/50">
+                    <p className="text-[8px] font-black text-green-600 uppercase tracking-widest mb-1">🔄 Transferências</p>
+                    <p className="text-lg font-black text-green-700">{(data.totalTransferred || 0).toLocaleString('pt-BR')}</p>
+                </div>
+                <div className="bg-[#F97316]/5 p-3 rounded-xl border border-[#F97316]/10">
+                    <p className="text-[8px] font-black text-[#F97316] uppercase tracking-widest mb-1">💰 Vendas</p>
+                    <p className="text-lg font-black text-[#F97316]">{(data.totalSold || 0).toLocaleString('pt-BR')}</p>
                 </div>
             </div>
 

@@ -246,13 +246,21 @@ export const TransferenciaProcessing: React.FC = () => {
 
         Object.entries(nurseryGroups).forEach(([groupName, dataEntries]) => {
             const initialStocking = initialStockings[groupName] || 0;
-            const totalTransferred = dataEntries.reduce((sum, entry) => sum + entry.estocagem, 0);
-            const survivalRate = initialStocking > 0 ? (totalTransferred / initialStocking) * 100 : 0;
+            const totalTransferred = dataEntries
+                .filter(e => e.tipo === 'TRANSFERENCIA')
+                .reduce((sum, entry) => sum + entry.estocagem, 0);
+            const totalSold = dataEntries
+                .filter(e => e.tipo === 'VENDA')
+                .reduce((sum, entry) => sum + entry.estocagem, 0);
+
+            const totalOut = totalTransferred + totalSold;
+            const survivalRate = initialStocking > 0 ? (totalOut / initialStocking) * 100 : 0;
             const hasAnyParcial = dataEntries.some(e => e.isParcial);
 
             survivalResults[groupName] = {
                 initialStocking: initialStocking,
                 totalTransferred: totalTransferred,
+                totalSold: totalSold,
                 survivalRate: survivalRate,
                 isParcial: hasAnyParcial
             };
@@ -817,11 +825,20 @@ export const TransferenciaProcessing: React.FC = () => {
                                     history={sortedHistory}
                                     generalSurvival={generalSurvival}
                                     onView={(id) => {
-                                        const entry = history.find(e => e.id === id);
-                                        if (entry) {
-                                            setProcessedData(entry.data);
-                                            setViewingHistoryId(id);
+                                        if (id.startsWith('CONSOLIDATED:')) {
+                                            const ids = id.split(':')[1].split(',');
+                                            const entries = history.filter(e => ids.includes(e.id));
+                                            const mergedData = entries.flatMap(e => e.data);
+                                            setProcessedData(mergedData);
+                                            setViewingHistoryId('CONSOLIDATED'); // Special marker
                                             setCurrentStep(2);
+                                        } else {
+                                            const entry = history.find(e => e.id === id);
+                                            if (entry) {
+                                                setProcessedData(entry.data);
+                                                setViewingHistoryId(id);
+                                                setCurrentStep(2);
+                                            }
                                         }
                                     }}
                                     onDelete={(id) => setHistory(prev => prev.filter(e => e.id !== id))}
