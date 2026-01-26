@@ -938,14 +938,22 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     }
                     #export-target .overflow-x-auto {
                         scrollbar-width: thin;
-                        scrollbar-color: #cbd5e1 transparent;
+                        scrollbar-color: #f26522 transparent;
                     }
                     #export-target .overflow-x-auto::-webkit-scrollbar {
-                        height: 6px;
+                        height: 12px;
+                    }
+                    #export-target .overflow-x-auto::-webkit-scrollbar-track {
+                        background: transparent;
                     }
                     #export-target .overflow-x-auto::-webkit-scrollbar-thumb {
-                        background-color: #cbd5e1;
-                        border-radius: 10px;
+                        background-color: #f26522;
+                        border-radius: 2px;
+                        border: 3px solid transparent;
+                        background-clip: content-box;
+                    }
+                    #export-target .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+                        background-color: #d95213;
                     }
                 `}</style>
 
@@ -953,13 +961,13 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             <div id="interactive-table-container" className="min-w-max">
                                 <div
                                     ref={topScrollRef}
-                                    className={`overflow-x-auto transition-colors duration-500 print:hidden scrollbar-thin ${isDarkMode ? 'bg-slate-800/50 scrollbar-thumb-orange-500/50' : 'bg-slate-100 scrollbar-thumb-orange-200'}`}
+                                    className={`overflow-x-auto transition-colors duration-500 print:hidden scrollbar-thin ${isDarkMode ? 'bg-slate-900 border-b border-slate-700' : 'bg-slate-50 border-b border-slate-200'}`}
                                     onScroll={(e) => {
                                         if (scrollRef.current) scrollRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
                                     }}
                                     data-html2canvas-ignore
                                 >
-                                    <div style={{ width: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '12px' }} />
+                                    <div style={{ width: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '14px' }} />
                                 </div>
                                 <div
                                     ref={scrollRef}
