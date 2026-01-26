@@ -953,13 +953,13 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             <div id="interactive-table-container" className="min-w-max">
                                 <div
                                     ref={topScrollRef}
-                                    className={`overflow-x-auto border-b transition-colors duration-500 print:hidden ${isDarkMode ? 'border-slate-700' : 'border-slate-100'}`}
+                                    className={`overflow-x-auto transition-colors duration-500 print:hidden scrollbar-thin ${isDarkMode ? 'bg-slate-800/50 scrollbar-thumb-orange-500/50' : 'bg-slate-100 scrollbar-thumb-orange-200'}`}
                                     onScroll={(e) => {
                                         if (scrollRef.current) scrollRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
                                     }}
                                     data-html2canvas-ignore
                                 >
-                                    <div style={{ width: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '1px' }} />
+                                    <div style={{ width: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '12px' }} />
                                 </div>
                                 <div
                                     ref={scrollRef}
