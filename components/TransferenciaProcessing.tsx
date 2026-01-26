@@ -436,6 +436,34 @@ export const TransferenciaProcessing: React.FC = () => {
         }
     };
 
+    const handleConsolidateSave = (ids: string[]) => {
+        const entriesToMerge = history.filter(e => ids.includes(e.id));
+        if (entriesToMerge.length === 0) return;
+
+        const mergedData = entriesToMerge.flatMap(e => e.data);
+        const newEntry: HistoryEntry = {
+            id: Date.now().toString(),
+            timestamp: `[CONSOLIDADO] ${new Date().toLocaleString()}`,
+            data: mergedData
+        };
+
+        const shouldDeleteOriginals = window.confirm("Deseja remover os registros individuais originais para manter o histórico limpo?");
+
+        setHistory(prev => {
+            let nextHistory = [newEntry, ...prev];
+            if (shouldDeleteOriginals) {
+                nextHistory = nextHistory.filter(e => !ids.includes(e.id));
+            }
+            return nextHistory;
+        });
+
+        // If currently viewing one of the old ones or a consolidated preview, clear it
+        if (viewingHistoryId && (ids.includes(viewingHistoryId) || viewingHistoryId === 'CONSOLIDATED')) {
+            setViewingHistoryId(newEntry.id);
+            setProcessedData(mergedData);
+        }
+    };
+
     const handleClear = () => {
         setInputText(''); setInputFile(null); setProcessedData([]); setError(null);
         setInitialStockings({}); setNurseryStockingQueue([]); setNurserySurvivalData({});
@@ -843,6 +871,7 @@ export const TransferenciaProcessing: React.FC = () => {
                                     }}
                                     onDelete={(id) => setHistory(prev => prev.filter(e => e.id !== id))}
                                     onClearAll={() => setHistory([])}
+                                    onConsolidateSave={handleConsolidateSave}
                                     currentViewId={viewingHistoryId}
                                 />
                             ) : isPublic && (
