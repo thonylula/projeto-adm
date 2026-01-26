@@ -48,12 +48,12 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({
 
                 <div className="flex items-center gap-8 pr-4">
                     <div className="flex flex-col items-center md:items-end">
-                        <p className="text-[10px] font-black text-[#C5A059] uppercase tracking-[0.2em] mb-1">Sobr. Média Geral</p>
+                        <p className="text-[10px] font-black text-[#F97316] uppercase tracking-[0.2em] mb-1">Sobr. Média Geral</p>
                         <div className="flex items-baseline gap-1">
-                            <span className="text-4xl font-black text-[#C5A059] tracking-tighter">
+                            <span className="text-4xl font-black text-[#F97316] tracking-tighter">
                                 {generalSurvival.toFixed(1)}
                             </span>
-                            <span className="text-xl font-black text-[#C5A059]/40">%</span>
+                            <span className="text-xl font-black text-[#F97316]/40">%</span>
                         </div>
                     </div>
 
@@ -77,16 +77,16 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({
                     return (
                         <div
                             key={entry.id}
-                            className={`p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50 transition-all ${currentViewId === entry.id ? 'bg-slate-50 border-l-4 border-[#C5A059]' : ''}`}
+                            className={`p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50 transition-all ${currentViewId === entry.id ? 'bg-[#F97316]/5 border-l-4 border-[#F97316]' : ''}`}
                         >
                             <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm ${label.isSale ? 'bg-[#C5A059]/10 text-[#C5A059]' : 'bg-green-100 text-green-600'}`}>
+                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm ${label.isSale ? 'bg-[#F97316]/10 text-[#F97316]' : 'bg-green-100 text-green-600'}`}>
                                     {label.isSale ? '💰' : '🔄'}
                                 </div>
                                 <div>
                                     <p className="font-black text-gray-900 text-lg leading-tight">{label.title}</p>
                                     <div className="flex items-center gap-2 mt-1">
-                                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${label.isSale ? 'bg-[#C5A059]/10 text-[#C5A059]' : 'bg-green-100 text-green-600'}`}>
+                                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${label.isSale ? 'bg-[#F97316]/10 text-[#F97316]' : 'bg-green-100 text-green-600'}`}>
                                             {label.subtitle}
                                         </span>
                                         <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
@@ -107,7 +107,7 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({
                                 <div className="flex gap-2 ml-auto sm:ml-0">
                                     <button
                                         onClick={() => onView(entry.id)}
-                                        className="px-5 py-2.5 bg-white border-2 border-slate-100 text-slate-700 rounded-xl text-xs font-black hover:border-[#C5A059]/20 hover:text-[#C5A059] transition-all shadow-sm flex items-center gap-2 uppercase tracking-[0.1em]"
+                                        className="px-5 py-2.5 bg-white border-2 border-slate-100 text-slate-700 rounded-xl text-xs font-black hover:border-[#F97316]/20 hover:text-[#F97316] transition-all shadow-sm flex items-center gap-2 uppercase tracking-[0.1em]"
                                     >
                                         {isPublic ? '📊 Ver Detalhes' : '✏️ Ver / Editar'}
                                     </button>

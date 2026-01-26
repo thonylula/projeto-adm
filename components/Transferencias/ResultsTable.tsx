@@ -35,14 +35,14 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
                         <th className="px-5 py-5 text-right">Densidade</th>
                         <th className="px-5 py-5">Destino</th>
                         <th className="px-5 py-5 text-center">Tipo</th>
-                        {(onEditStart || onRemove) && <th className="px-5 py-5 text-center text-[#C5A059]">Ações</th>}
+                        {(onEditStart || onRemove) && <th className="px-5 py-5 text-center text-[#F97316]">Ações</th>}
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                     {data.map((item, index) => {
                         const isEditing = editingIndex === index;
                         return (
-                            <tr key={index} className={`transition-colors ${isEditing ? 'bg-[#C5A059]/5' : 'bg-white hover:bg-slate-50'}`}>
+                            <tr key={index} className={`transition-colors ${isEditing ? 'bg-[#F97316]/5' : 'bg-white hover:bg-slate-50'}`}>
                                 {isEditing ? (
                                     <>
                                         <td className="px-5 py-5"><input type="text" defaultValue={item.local} onBlur={(e) => onEditSave?.(index, { local: e.target.value })} className="w-full p-2 border rounded font-black text-gray-900 text-[13px]" /></td>
@@ -120,13 +120,13 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
                                         <td className="px-5 py-5 font-black text-gray-900 text-[13px]">
                                             {item.viveiroDestino}
                                             {item.tipo === 'VENDA' && item.clienteNome && (
-                                                <div className="text-[10px] text-[#C5A059] uppercase font-black">Cliente: {item.clienteNome}</div>
+                                                <div className="text-[10px] text-[#F97316] uppercase font-black">Cliente: {item.clienteNome}</div>
                                             )}
                                         </td>
                                         <td className="px-5 py-5 text-center">
                                             <span className={`inline-flex items-center justify-center px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest 
                                                 ${item.tipo === 'VENDA'
-                                                    ? 'bg-[#C5A059]/10 text-[#C5A059]'
+                                                    ? 'bg-[#F97316]/10 text-[#F97316]'
                                                     : item.isParcial ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}`}>
                                                 {item.tipo === 'VENDA' ? 'Venda' : ''} {item.isParcial ? 'Parcial' : 'Total'}
                                             </span>
@@ -134,7 +134,7 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
                                         {(onEditStart || onRemove) && (
                                             <td className="px-4 py-3 text-center flex justify-center gap-2">
                                                 {onEditStart && (
-                                                    <button onClick={() => onEditStart(index)} className="p-2 hover:bg-[#C5A059]/10 rounded-xl text-slate-400 hover:text-[#C5A059] transition-colors" title="Editar">
+                                                    <button onClick={() => onEditStart(index)} className="p-2 hover:bg-[#F97316]/10 rounded-xl text-slate-400 hover:text-[#F97316] transition-colors" title="Editar">
                                                         ✏️
                                                     </button>
                                                 )}

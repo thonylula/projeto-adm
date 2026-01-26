@@ -54,13 +54,13 @@ export const NurserySurvivalCard: React.FC<NurserySurvivalCardProps> = ({
 
             <div className="relative h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-50">
                 <div
-                    className="h-full bg-[#065F46] transition-all duration-1000 rounded-full"
+                    className="h-full bg-[#10B981] transition-all duration-1000 rounded-full"
                     style={{ width: `${Math.min(data.survivalRate, 100)}%` }}
                 />
             </div>
 
             {data.isParcial && (
-                <p className="mt-4 text-[9px] font-black text-[#C5A059] uppercase tracking-[0.2em] flex items-center gap-1.5 px-3 py-1 bg-[#C5A059]/10 rounded-full w-fit">
+                <p className="mt-4 text-[9px] font-black text-[#F97316] uppercase tracking-[0.2em] flex items-center gap-1.5 px-3 py-1 bg-[#F97316]/10 rounded-full w-fit">
                     ⚠️ Transf. em curso
                 </p>
             )}

@@ -12,7 +12,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ data, onEdit }) => {
             {onEdit && (
                 <button
                     onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                    className="absolute top-2 right-2 p-2 bg-[#C5A059]/10 text-[#C5A059] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#C5A059]/20 z-10"
+                    className="absolute top-2 right-2 p-2 bg-[#F97316]/10 text-[#F97316] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#F97316]/20 z-10"
                     title="Editar lançamento"
                 >
                     ✏️
@@ -43,7 +43,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ data, onEdit }) => {
             </div>
             {data.tipo === 'VENDA' && data.clienteNome && (
                 <div className="mt-3 pt-3 border-t border-slate-50">
-                    <p className="text-[10px] font-black text-[#C5A059] uppercase tracking-[0.15em]">Cliente: {data.clienteNome}</p>
+                    <p className="text-[10px] font-black text-[#F97316] uppercase tracking-[0.15em]">Cliente: {data.clienteNome}</p>
                 </div>
             )}
         </div>
