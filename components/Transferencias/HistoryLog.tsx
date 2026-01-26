@@ -14,6 +14,8 @@ interface HistoryLogProps {
 export const HistoryLog: React.FC<HistoryLogProps> = ({
     history, onView, onDelete, onClearAll, currentViewId, isPublic = false, generalSurvival = 0
 }) => {
+    const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+
     const formatEntryLabel = (entry: HistoryEntry) => {
         if (!entry.data || entry.data.length === 0) return { title: entry.timestamp, subtitle: '', isSale: false };
 
@@ -34,6 +36,16 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({
         };
     };
 
+    const handleToggleSelect = (id: string) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
+
+    const handleProcessSelected = () => {
+        if (selectedIds.length === 0) return;
+        // Trigger a virtual ID or special handling to signal consolidation of multiple entries
+        onView(`CONSOLIDATED:${selectedIds.join(',')}`);
+    };
+
     if (history.length === 0) return null;
 
     return (
@@ -46,25 +58,36 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({
                     <p className="text-gray-400 text-sm font-medium mt-1 uppercase tracking-widest">Relatórios e Processamentos Anteriores</p>
                 </div>
 
-                <div className="flex items-center gap-8 pr-4">
-                    <div className="flex flex-col items-center md:items-end">
-                        <p className="text-[10px] font-black text-[#F97316] uppercase tracking-[0.2em] mb-1">Sobr. Média Geral</p>
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-4xl font-black text-[#F97316] tracking-tighter">
-                                {generalSurvival.toFixed(1)}
-                            </span>
-                            <span className="text-xl font-black text-[#F97316]/40">%</span>
-                        </div>
-                    </div>
-
-                    {!isPublic && (
+                <div className="flex items-center gap-6">
+                    {selectedIds.length > 0 && (
                         <button
-                            onClick={() => { if (window.confirm("Limpar todo o histórico?")) onClearAll(); }}
-                            className="px-4 py-2 text-[10px] font-black text-red-500 hover:bg-red-50 rounded-xl transition-all uppercase tracking-widest border border-red-100"
+                            onClick={handleProcessSelected}
+                            className="px-6 py-3 bg-[#F97316] text-white text-[10px] font-black rounded-2xl hover:bg-[#EA580C] transition-all uppercase tracking-widest shadow-lg shadow-[#F97316]/20 flex items-center gap-2 animate-in zoom-in"
                         >
-                            Limpar Tudo
+                            <span>🚀</span> Jointer ({selectedIds.length})
                         </button>
                     )}
+
+                    <div className="flex items-center gap-8 pr-4">
+                        <div className="flex flex-col items-center md:items-end">
+                            <p className="text-[10px] font-black text-[#F97316] uppercase tracking-[0.2em] mb-1">Sobr. Média Geral</p>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-4xl font-black text-[#F97316] tracking-tighter">
+                                    {generalSurvival.toFixed(1)}
+                                </span>
+                                <span className="text-xl font-black text-[#F97316]/40">%</span>
+                            </div>
+                        </div>
+
+                        {!isPublic && (
+                            <button
+                                onClick={() => { if (window.confirm("Limpar todo o histórico?")) onClearAll(); }}
+                                className="px-4 py-2 text-[10px] font-black text-red-500 hover:bg-red-50 rounded-xl transition-all uppercase tracking-widest border border-red-100"
+                            >
+                                Limpar Tudo
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -73,13 +96,22 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({
                     const label = formatEntryLabel(entry);
                     const totalPLs = entry.data.reduce((acc, curr) => acc + (curr.estocagem || 0), 0);
                     const totalKg = entry.data.reduce((acc, curr) => acc + (curr.pesoTotalCalculado || 0), 0);
+                    const isSelected = selectedIds.includes(entry.id);
 
                     return (
                         <div
                             key={entry.id}
-                            className={`p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50 transition-all ${currentViewId === entry.id ? 'bg-[#F97316]/5 border-l-4 border-[#F97316]' : ''}`}
+                            className={`p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50 transition-all ${currentViewId === entry.id || isSelected ? 'bg-[#F97316]/5 border-l-4 border-[#F97316]' : ''}`}
                         >
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-4 flex-1">
+                                {!isPublic && (
+                                    <div
+                                        onClick={() => handleToggleSelect(entry.id)}
+                                        className={`w-6 h-6 rounded-md border-2 cursor-pointer transition-all flex items-center justify-center ${isSelected ? 'bg-[#F97316] border-[#F97316]' : 'border-slate-200 bg-white hover:border-[#F97316]/50'}`}
+                                    >
+                                        {isSelected && <span className="text-white text-[10px]">✔</span>}
+                                    </div>
+                                )}
                                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm ${label.isSale ? 'bg-[#F97316]/10 text-[#F97316]' : 'bg-green-100 text-green-600'}`}>
                                     {label.isSale ? '💰' : '🔄'}
                                 </div>

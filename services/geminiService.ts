@@ -233,12 +233,15 @@ export async function processAquacultureData(input: string | File): Promise<Extr
     - estocagem: Quantidade total de PLs/camarões transferidos (número inteiro).
     - plPorGrama: PLs por grama ou peso unitário inverso (se houver, senão use 0).
     - densidade: Densidade mencionada (ex: "1.2 cam/m²"), se houver.
-    - viveiroDestino: Nome do viveiro de destino (ex: OC-10, P05).
+    - viveiroDestino: Nome do viveiro de destino (ex: OC-10, P05, ou nome do cliente).
     - isParcial: true se for mencionado "Parcial", false se for "Total" ou não mencionado.
     - horario: Horário da transferência, se houver.
     - data: Data da transferência, se houver (DD/MM/AAAA).
     - pesoTotal: Peso total transferido em KG, se houver.
     - dataPovoamento: Data do povoamento mencionada, se houver (DD/MM/AAAA).
+    - tipo: "VENDA" se houver menção a "Venda", "Vendido", valores em "R$", "Cliente" ou empresa externa. "TRANSFERENCIA" caso contrário.
+
+    IMPORTANTE: Se o destino não for um viveiro da fazenda (ex: OC-P08, OC-10) mas sim uma empresa ou nome de pessoa, classifique como "VENDA".
 
     Responda APENAS com o array JSON. Exemplo:
     [

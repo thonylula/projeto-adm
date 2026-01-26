@@ -350,6 +350,7 @@ export interface ProcessedData extends ExtractedData {
 export interface NurserySurvivalData {
   initialStocking: number;
   totalTransferred: number;
+  totalSold: number;
   survivalRate: number;
   isParcial: boolean;
 }
