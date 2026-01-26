@@ -63,7 +63,7 @@ const NavItem: React.FC<{
         <div className={`w-5 flex items-center justify-center ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
           {item.icon}
         </div>
-        <span className="flex-1 font-bold text-xs uppercase text-left leading-tight tracking-wider">
+        <span className={`flex-1 font-bold text-xs uppercase text-left leading-tight tracking-wider ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}>
           {item.id === 'showcase' && isPublic ? 'Faturamento' : item.label}
         </span>
 
@@ -128,7 +128,7 @@ const NavItem: React.FC<{
               <div key={year} className="space-y-1">
                 <button
                   onClick={() => setExpandedYear(expandedYear === year ? null : year)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-black transition-colors ${isYearExpanded ? 'text-[#F97316]' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-black transition-colors ${isYearExpanded ? 'text-[#F97316]' : 'text-slate-300 hover:text-white hover:bg-white/5'
                     }`}
                 >
                   <span className="tracking-widest">{year}</span>
@@ -166,7 +166,7 @@ const NavItem: React.FC<{
                           buttonClasses += " bg-[#F97316]/10 text-[#F97316] font-black border border-[#F97316]/20";
                         } else {
                           // Other months: default style
-                          buttonClasses += " text-slate-500 hover:bg-[#F97316]/10 hover:text-[#F97316]";
+                          buttonClasses += " text-slate-400 hover:bg-[#F97316]/10 hover:text-[#F97316]";
                         }
 
                         return (
@@ -437,18 +437,17 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       </div>
 
       {/* Sidebar Navigation */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-in-out print:hidden flex flex-col
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-in-out print:hidden flex flex-col
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:relative lg:translate-x-0 bg-[var(--primary)] border-r border-[var(--corporate-teal)]/20 shadow-2xl
+        lg:relative lg:translate-x-0 bg-[#022c22] border-r border-white/5 shadow-2xl text-slate-300
       `}>
-        <div className="p-6 flex flex-col gap-6">
-          <div className="flex justify-center items-center w-full mb-2">
-            <div className="bg-white rounded-3xl p-4 shadow-2xl shadow-[#F97316]/10 w-full flex justify-center items-center border border-slate-100/10">
+        <div className="p-6 flex flex-col gap-8">
+          <div className="flex justify-center items-center w-full">
+            <div className="bg-white py-3 px-6 rounded-2xl shadow-xl shadow-black/20 w-full flex justify-center items-center">
               <img
                 src="./logo-carapitanga.jpg"
                 alt="Carapitanga Logo"
-                className="max-h-16 w-auto object-contain mix-blend-multiply"
+                className="h-12 w-auto object-contain"
               />
             </div>
           </div>
