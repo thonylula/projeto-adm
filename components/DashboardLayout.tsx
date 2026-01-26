@@ -55,9 +55,9 @@ const NavItem: React.FC<{
             setIsMobileMenuOpen(false);
           }
         }}
-        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-          ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/20 active:scale-[0.98]'
-          : 'hover:bg-slate-800/50 hover:text-white'
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-300 group ${isActive
+          ? 'bg-[#C5A059] text-white shadow-xl shadow-[#C5A059]/20 active:scale-[0.98]'
+          : 'hover:bg-white/5 hover:text-white'
           }`}
       >
         <span className={`${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
@@ -124,7 +124,7 @@ const NavItem: React.FC<{
               <div key={year} className="space-y-1">
                 <button
                   onClick={() => setExpandedYear(expandedYear === year ? null : year)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold transition-colors ${isYearExpanded ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-colors ${isYearExpanded ? 'text-[#C5A059]' : 'text-slate-400 hover:text-white hover:bg-white/5'
                     }`}
                 >
                   <span>{year}</span>
@@ -155,14 +155,14 @@ const NavItem: React.FC<{
                         let buttonClasses = "px-1 py-2 rounded text-[10px] font-medium transition-colors text-center";
 
                         if (isCurrentMonth) {
-                          // Current month: bright orange with background
-                          buttonClasses += " bg-orange-600 text-white font-bold shadow-lg";
+                          // Current month: gold with background
+                          buttonClasses += " bg-[#C5A059] text-white font-black shadow-lg";
                         } else if (isPreviousMonth) {
-                          // Previous month: lighter orange tone
-                          buttonClasses += " bg-orange-500/30 text-orange-300 font-bold border border-orange-500/50";
+                          // Previous month: lighter tone
+                          buttonClasses += " bg-[#C5A059]/10 text-[#C5A059] font-bold border border-[#C5A059]/20";
                         } else {
                           // Other months: default style
-                          buttonClasses += " text-slate-500 hover:bg-orange-600/20 hover:text-orange-400";
+                          buttonClasses += " text-slate-500 hover:bg-[#C5A059]/20 hover:text-[#E2D1A8]";
                         }
 
                         return (
@@ -195,7 +195,7 @@ const NavItem: React.FC<{
               onTabChange('pantry');
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeTab === 'pantry' ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-colors ${activeTab === 'pantry' ? 'text-[#C5A059]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
           >
             📦 Processamento
           </button>
@@ -204,7 +204,7 @@ const NavItem: React.FC<{
               onTabChange('budget');
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeTab === 'budget' ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-colors ${activeTab === 'budget' ? 'text-[#C5A059]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
           >
             💰 Orçamento
           </button>
@@ -220,7 +220,7 @@ const NavItem: React.FC<{
               onTabChange('showcase-faturamento');
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeTab === 'showcase-faturamento' ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-colors ${activeTab === 'showcase-faturamento' ? 'text-[#C5A059]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
           >
             📊 Faturamento
           </button>
@@ -229,7 +229,7 @@ const NavItem: React.FC<{
               onTabChange('transferencias');
               setIsMobileMenuOpen(false);
             }}
-            className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-colors ${activeTab === 'transferencias' ? 'text-orange-500' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+            className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-colors ${activeTab === 'transferencias' ? 'text-[#C5A059]' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
           >
             🔄 Transferências
           </button>
@@ -442,7 +442,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         {/* Sidebar Header - Carapitanga Style */}
         <div className="p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-orange-500 shadow-lg shadow-orange-500/30 flex items-center justify-center text-white flex-shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-[#C5A059] shadow-lg shadow-[#C5A059]/30 flex items-center justify-center text-white flex-shrink-0">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
               </svg>
@@ -518,7 +518,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                     window.location.reload();
                   }
                 }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-orange-600/10 hover:bg-orange-600/20 text-orange-500 rounded-lg text-xs transition-colors border border-orange-600/20"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#C5A059]/10 hover:bg-[#C5A059]/20 text-[#C5A059] rounded-xl text-xs transition-colors border border-[#C5A059]/20"
               >
                 Sincronizar Cloud (Migrar)
               </button>
@@ -530,7 +530,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Main Content Area */}
       <main className="flex-1 overflow-x-hidden overflow-y-auto h-[calc(100vh-60px)] lg:h-screen relative print:h-auto print:overflow-visible min-w-0">
         <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 print:hidden opacity-50 lg:opacity-100 transition-opacity duration-500">
-          <div className={`absolute top-[5%] right-[5%] w-[40%] h-[40%] rounded-full blur-3xl transition-colors duration-1000 ${isDarkMode ? 'bg-blue-900/20' : 'bg-orange-100/50'}`} />
+          <div className={`absolute top-[5%] right-[5%] w-[40%] h-[40%] rounded-full blur-3xl transition-colors duration-1000 ${isDarkMode ? 'bg-blue-900/20' : 'bg-[#C5A059]/10'}`} />
           <div className={`absolute bottom-[5%] left-[10%] w-[30%] h-[30%] rounded-full blur-3xl transition-colors duration-1000 ${isDarkMode ? 'bg-indigo-900/10' : 'bg-blue-50/50'}`} />
         </div>
 
