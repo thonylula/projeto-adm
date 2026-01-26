@@ -36,7 +36,7 @@ export const DownloadModal: React.FC<DownloadModalProps> = ({
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-slate-800">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="bg-[#020617] p-8 text-white flex justify-between items-center relative overflow-hidden">
+                <div className="bg-[var(--primary)] p-8 text-white flex justify-between items-center relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-40 h-40 bg-[#F97316]/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
                     <div className="relative z-10">
                         <h3 className="text-xl font-black uppercase tracking-[0.1em]">Detalhes do Relatório</h3>

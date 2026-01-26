@@ -17,7 +17,7 @@ export const InitialStockingModal: React.FC<InitialStockingModalProps> = ({
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="bg-[#020617] p-8 text-white relative overflow-hidden">
+                <div className="bg-[var(--primary)] p-8 text-white relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#F97316]/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
                     <h3 className="text-xl font-black uppercase tracking-[0.1em] relative z-10">Estocagem Inicial</h3>
                     <p className="text-sm text-slate-400 relative z-10">Informe a quantidade povoada no {nurseryName}</p>

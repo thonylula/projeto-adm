@@ -438,23 +438,18 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
       {/* Sidebar Navigation */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 text-slate-300 transform transition-transform duration-300 ease-in-out print:hidden border-r transition-colors duration-500
+        fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-in-out print:hidden flex flex-col
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:relative lg:translate-x-0 flex flex-col
-        ${isDarkMode ? 'bg-[#0F172A] border-slate-800' : 'bg-slate-900 border-slate-800'}
+        lg:relative lg:translate-x-0 bg-[var(--primary)] border-r border-[var(--corporate-teal)]/20 shadow-2xl
       `}>
         <div className="p-6 flex flex-col gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#F97316] shadow-2xl shadow-[#F97316]/40 flex items-center justify-center text-white flex-shrink-0 animate-pulse-subtle">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-7 h-7">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-              </svg>
-            </div>
-            <div className="overflow-hidden">
-              <h1 className="text-white font-black text-xl leading-none tracking-tighter uppercase italic">
-                Carapitanga
-              </h1>
-              <p className="text-[10px] font-black text-[#F97316] uppercase tracking-[0.2em] mt-1.5 opacity-80">Gestão Inteligente</p>
+          <div className="flex justify-center items-center w-full mb-2">
+            <div className="bg-white rounded-3xl p-4 shadow-2xl shadow-[#F97316]/10 w-full flex justify-center items-center border border-slate-100/10">
+              <img
+                src="./logo-carapitanga.jpg"
+                alt="Carapitanga Logo"
+                className="max-h-16 w-auto object-contain mix-blend-multiply"
+              />
             </div>
           </div>
 
