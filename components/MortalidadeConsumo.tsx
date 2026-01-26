@@ -938,7 +938,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     }
                     #export-target .overflow-x-auto {
                         scrollbar-width: thin;
-                        scrollbar-color: #f26522 transparent;
+                        scrollbar-color: #64748b transparent;
                     }
                     #export-target .overflow-x-auto::-webkit-scrollbar {
                         height: 12px;
@@ -947,27 +947,52 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                         background: transparent;
                     }
                     #export-target .overflow-x-auto::-webkit-scrollbar-thumb {
-                        background-color: #f26522;
+                        background-color: #64748b;
                         border-radius: 2px;
                         border: 3px solid transparent;
                         background-clip: content-box;
                     }
                     #export-target .overflow-x-auto::-webkit-scrollbar-thumb:hover {
-                        background-color: #d95213;
+                        background-color: #475569;
                     }
                 `}</style>
 
                         <div className={`rounded-xl shadow-sm border overflow-x-auto m-4 mt-0 transition-colors duration-500 ${isDarkMode ? 'bg-[#1E293B] border-slate-700' : 'bg-white border-slate-100'}`}>
                             <div id="interactive-table-container" className="min-w-max">
-                                <div
-                                    ref={topScrollRef}
-                                    className={`overflow-x-auto transition-colors duration-500 print:hidden scrollbar-thin ${isDarkMode ? 'bg-slate-900 border-b border-slate-700' : 'bg-slate-50 border-b border-slate-200'}`}
-                                    onScroll={(e) => {
-                                        if (scrollRef.current) scrollRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
-                                    }}
-                                    data-html2canvas-ignore
-                                >
-                                    <div style={{ width: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '14px' }} />
+                                <div className="flex items-center gap-1 px-4 mb-1 print:hidden" data-html2canvas-ignore>
+                                    <button
+                                        onClick={() => {
+                                            if (scrollRef.current) scrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+                                        }}
+                                        className={`p-1 flex items-center justify-center transition-colors border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'}`}
+                                        title="Rolar para Esquerda"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3 h-3">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                                        </svg>
+                                    </button>
+
+                                    <div
+                                        ref={topScrollRef}
+                                        className={`flex-1 overflow-x-auto transition-colors duration-500 scrollbar-thin ${isDarkMode ? 'bg-slate-900 border-x border-slate-700' : 'bg-slate-100 border-x border-slate-200'}`}
+                                        onScroll={(e) => {
+                                            if (scrollRef.current) scrollRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
+                                        }}
+                                    >
+                                        <div style={{ width: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '14px' }} />
+                                    </div>
+
+                                    <button
+                                        onClick={() => {
+                                            if (scrollRef.current) scrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+                                        }}
+                                        className={`p-1 flex items-center justify-center transition-colors border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'}`}
+                                        title="Rolar para Direita"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3 h-3">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                    </button>
                                 </div>
                                 <div
                                     ref={scrollRef}
