@@ -9,6 +9,7 @@ interface HistoryLogProps {
     currentViewId: string | null;
     isPublic?: boolean;
     generalSurvival?: number;
+    onConsolidateSave?: (ids: string[]) => void;
 }
 
 export const HistoryLog: React.FC<HistoryLogProps> = ({
@@ -60,12 +61,25 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({
 
                 <div className="flex items-center gap-6">
                     {selectedIds.length > 0 && (
-                        <button
-                            onClick={handleProcessSelected}
-                            className="px-6 py-3 bg-[#F97316] text-white text-[10px] font-black rounded-2xl hover:bg-[#EA580C] transition-all uppercase tracking-widest shadow-lg shadow-[#F97316]/20 flex items-center gap-2 animate-in zoom-in"
-                        >
-                            <span>🚀</span> Jointer ({selectedIds.length})
-                        </button>
+                        <div className="flex items-center gap-2 animate-in zoom-in">
+                            <button
+                                onClick={handleProcessSelected}
+                                className="px-6 py-3 bg-white border-2 border-[#F97316] text-[#F97316] text-[10px] font-black rounded-2xl hover:bg-[#F97316]/5 transition-all uppercase tracking-widest shadow-lg shadow-[#F97316]/10 flex items-center gap-2"
+                            >
+                                <span>🚀</span> Jointer ({selectedIds.length})
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (window.confirm(`Deseja mesclar permanentemente estes ${selectedIds.length} registros em um único relatório?`)) {
+                                        onConsolidateSave?.(selectedIds);
+                                        setSelectedIds([]);
+                                    }
+                                }}
+                                className="px-6 py-3 bg-[#F97316] text-white text-[10px] font-black rounded-2xl hover:bg-[#EA580C] transition-all uppercase tracking-widest shadow-lg shadow-[#F97316]/20 flex items-center gap-2"
+                            >
+                                <span>📦</span> Fixar Permanente
+                            </button>
+                        </div>
                     )}
 
                     <div className="flex items-center gap-8 pr-4">
