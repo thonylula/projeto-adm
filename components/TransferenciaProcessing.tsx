@@ -98,6 +98,40 @@ export const TransferenciaProcessing: React.FC = () => {
         const loadInitialConfig = async () => {
             const savedLogo = await SupabaseService.getConfig('app_logo');
             if (savedLogo) setCompanyLogo(savedLogo);
+
+            // Load History from Supabase
+            const dbHistory = await SupabaseService.getAquacultureHistory();
+            if (dbHistory && dbHistory.length > 0) {
+                setHistory(dbHistory);
+            } else {
+                // Fallback to localStorage if Supabase is empty
+                try {
+                    const savedHistory = localStorage.getItem('aquacultureHistory');
+                    if (savedHistory) {
+                        const parsed = JSON.parse(savedHistory);
+                        setHistory(parsed);
+                        // Optional: Migrate to Supabase
+                        SupabaseService.saveAquacultureHistory(parsed);
+                    }
+                } catch (error) { }
+            }
+
+            // Load Initial Stockings from Supabase
+            const dbStockings = await SupabaseService.getAquacultureInitialStockings();
+            if (dbStockings && Object.keys(dbStockings).length > 0) {
+                setInitialStockings(dbStockings);
+            } else {
+                // Fallback to localStorage
+                try {
+                    const savedStockings = localStorage.getItem('aquacultureInitialStockings');
+                    if (savedStockings) {
+                        const parsed = JSON.parse(savedStockings);
+                        setInitialStockings(parsed);
+                        // Optional: Migrate to Supabase
+                        SupabaseService.saveAquacultureInitialStockings(parsed);
+                    }
+                } catch (error) { }
+            }
         };
         loadInitialConfig();
 
@@ -106,20 +140,14 @@ export const TransferenciaProcessing: React.FC = () => {
             setClients(data || []);
         };
         loadClients();
-
-        try {
-            const savedHistory = localStorage.getItem('aquacultureHistory');
-            if (savedHistory) setHistory(JSON.parse(savedHistory));
-
-            const savedStockings = localStorage.getItem('aquacultureInitialStockings');
-            if (savedStockings) setInitialStockings(JSON.parse(savedStockings));
-        } catch (error) { }
     }, []);
 
     useEffect(() => {
         if (history.length > 0) {
             try {
                 localStorage.setItem('aquacultureHistory', JSON.stringify(history));
+                // Also save to Supabase
+                SupabaseService.saveAquacultureHistory(history);
             } catch (error) { }
         }
     }, [history]);
@@ -128,6 +156,8 @@ export const TransferenciaProcessing: React.FC = () => {
         if (Object.keys(initialStockings).length > 0) {
             try {
                 localStorage.setItem('aquacultureInitialStockings', JSON.stringify(initialStockings));
+                // Also save to Supabase
+                SupabaseService.saveAquacultureInitialStockings(initialStockings);
             } catch (error) { }
         }
     }, [initialStockings]);
@@ -779,24 +809,36 @@ export const TransferenciaProcessing: React.FC = () => {
                         )}
                     </main>
 
-                    {currentStep === 1 && history.length > 0 && (
+                    {currentStep === 1 && (
                         <div className="max-w-5xl mx-auto mt-12 animate-in fade-in duration-500 delay-150">
-                            <HistoryLog
-                                isPublic={new URLSearchParams(window.location.search).get('showcase') === 'true'}
-                                history={sortedHistory}
-                                generalSurvival={generalSurvival}
-                                onView={(id) => {
-                                    const entry = history.find(e => e.id === id);
-                                    if (entry) {
-                                        setProcessedData(entry.data);
-                                        setViewingHistoryId(id);
-                                        setCurrentStep(2);
-                                    }
-                                }}
-                                onDelete={(id) => setHistory(prev => prev.filter(e => e.id !== id))}
-                                onClearAll={() => setHistory([])}
-                                currentViewId={viewingHistoryId}
-                            />
+                            {history.length > 0 ? (
+                                <HistoryLog
+                                    isPublic={new URLSearchParams(window.location.search).get('showcase') === 'true'}
+                                    history={sortedHistory}
+                                    generalSurvival={generalSurvival}
+                                    onView={(id) => {
+                                        const entry = history.find(e => e.id === id);
+                                        if (entry) {
+                                            setProcessedData(entry.data);
+                                            setViewingHistoryId(id);
+                                            setCurrentStep(2);
+                                        }
+                                    }}
+                                    onDelete={(id) => setHistory(prev => prev.filter(e => e.id !== id))}
+                                    onClearAll={() => setHistory([])}
+                                    currentViewId={viewingHistoryId}
+                                />
+                            ) : isPublic && (
+                                <div className="bg-white p-12 rounded-3xl shadow-xl shadow-gray-100 border border-gray-100 text-center">
+                                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                                        <span className="text-4xl text-gray-300">📊</span>
+                                    </div>
+                                    <h2 className="text-2xl font-black text-gray-900 mb-2">Nenhum relatório encontrado</h2>
+                                    <p className="text-gray-500 font-medium max-w-sm mx-auto">
+                                        Não foram encontrados processamentos de transferências ou vendas no banco de dados.
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

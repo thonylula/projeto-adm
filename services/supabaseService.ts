@@ -797,5 +797,24 @@ export const SupabaseService = {
             console.error('[Supabase] Exception in deleteReceiptItem:', e);
             return false;
         }
+    },
+
+    // --- AQUACULTURE HISTORY ---
+    async getAquacultureHistory(): Promise<any[]> {
+        return this.getConfig('aquaculture_history') || [];
+    },
+
+    async saveAquacultureHistory(history: any[]): Promise<boolean> {
+        const { success } = await this.saveConfig('aquaculture_history', history);
+        return success;
+    },
+
+    async getAquacultureInitialStockings(): Promise<Record<string, number>> {
+        return this.getConfig('aquaculture_initial_stockings') || {};
+    },
+
+    async saveAquacultureInitialStockings(stockings: Record<string, number>): Promise<boolean> {
+        const { success } = await this.saveConfig('aquaculture_initial_stockings', stockings);
+        return success;
     }
 };
