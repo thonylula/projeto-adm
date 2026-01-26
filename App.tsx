@@ -180,16 +180,10 @@ export default function App() {
         const efetivadosCompany = sorted[0]; // Empresa com menos funcionários (4)
         const diaristasCompany = sorted[1]; // Empresa com mais funcionários (11)
 
-        // Mesclar funcionários com identificação de tipo
+        // Mesclar funcionários
         const mergedEmployees = [
-          ...(efetivadosCompany.employees || []).map(emp => ({
-            ...emp,
-            input: { ...emp.input, employeeName: `${emp.input.employeeName} [Efetivado]` }
-          })),
-          ...(diaristasCompany.employees || []).map(emp => ({
-            ...emp,
-            input: { ...emp.input, employeeName: `${emp.input.employeeName} [Diarista]` }
-          }))
+          ...(efetivadosCompany.employees || []),
+          ...(diaristasCompany.employees || [])
         ];
 
         // Retornar empresa mesclada

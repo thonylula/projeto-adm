@@ -949,8 +949,8 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     }
                 `}</style>
 
-                        <div className={`rounded-xl shadow-sm border overflow-hidden m-4 mt-0 transition-colors duration-500 ${isDarkMode ? 'bg-[#1E293B] border-slate-700' : 'bg-white border-slate-100'}`}>
-                            <div id="interactive-table-container">
+                        <div className={`rounded-xl shadow-sm border overflow-x-auto m-4 mt-0 transition-colors duration-500 ${isDarkMode ? 'bg-[#1E293B] border-slate-700' : 'bg-white border-slate-100'}`}>
+                            <div id="interactive-table-container" className="min-w-max">
                                 <div
                                     ref={topScrollRef}
                                     className={`overflow-x-auto border-b transition-colors duration-500 print:hidden ${isDarkMode ? 'border-slate-700' : 'border-slate-100'}`}

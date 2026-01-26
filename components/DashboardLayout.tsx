@@ -45,8 +45,16 @@ const NavItem: React.FC<{
     <div className="space-y-1">
       <button
         onClick={() => {
-          if (isPayroll || isPantry || isShowcase) {
+          if (isPantry || isShowcase) {
             setIsExpanded(!isExpanded);
+          }
+
+          if (isPayroll) {
+            const now = new Date();
+            window.dispatchEvent(new CustomEvent('app-navigation', {
+              detail: { tab: 'payroll', year: now.getFullYear(), month: now.getMonth() + 1 }
+            }));
+            setIsMobileMenuOpen(false);
           }
 
           // For Showcase, the parent is also a view (the manager/hub)
