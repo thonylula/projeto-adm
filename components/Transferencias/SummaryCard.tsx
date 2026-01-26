@@ -8,11 +8,11 @@ interface SummaryCardProps {
 
 export const SummaryCard: React.FC<SummaryCardProps> = ({ data, onEdit }) => {
     return (
-        <div className="group relative p-4 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all">
+        <div className="group relative p-6 bg-white border border-slate-100 rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
             {onEdit && (
                 <button
                     onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                    className="absolute top-2 right-2 p-2 bg-orange-50 text-orange-600 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-orange-100 z-10"
+                    className="absolute top-2 right-2 p-2 bg-[#C5A059]/10 text-[#C5A059] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#C5A059]/20 z-10"
                     title="Editar lançamento"
                 >
                     ✏️
@@ -42,8 +42,8 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ data, onEdit }) => {
                 </div>
             </div>
             {data.tipo === 'VENDA' && data.clienteNome && (
-                <div className="mt-3 pt-3 border-t border-gray-50">
-                    <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Cliente: {data.clienteNome}</p>
+                <div className="mt-3 pt-3 border-t border-slate-50">
+                    <p className="text-[10px] font-black text-[#C5A059] uppercase tracking-[0.15em]">Cliente: {data.clienteNome}</p>
                 </div>
             )}
         </div>

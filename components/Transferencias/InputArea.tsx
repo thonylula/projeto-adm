@@ -25,13 +25,13 @@ export const InputArea: React.FC<InputAreaProps> = ({
             <div className="flex gap-4 border-b border-gray-100 pb-2">
                 <button
                     onClick={() => setInputMode('text')}
-                    className={`pb-2 px-4 text-sm font-bold uppercase tracking-wider transition-all ${inputMode === 'text' ? 'text-orange-600 border-b-2 border-orange-600' : 'text-gray-400 hover:text-gray-600'}`}
+                    className={`pb-2 px-4 text-sm font-black uppercase tracking-[0.2em] transition-all ${inputMode === 'text' ? 'text-[#C5A059] border-b-2 border-[#C5A059]' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                     Texto / Log
                 </button>
                 <button
                     onClick={() => setInputMode('file')}
-                    className={`pb-2 px-4 text-sm font-bold uppercase tracking-wider transition-all ${inputMode === 'file' ? 'text-orange-600 border-b-2 border-orange-600' : 'text-gray-400 hover:text-gray-600'}`}
+                    className={`pb-2 px-4 text-sm font-black uppercase tracking-[0.2em] transition-all ${inputMode === 'file' ? 'text-[#C5A059] border-b-2 border-[#C5A059]' : 'text-slate-400 hover:text-slate-600'}`}
                 >
                     Arquivo / Imagem
                 </button>
@@ -42,7 +42,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder="Cole aqui o log de transferência ou o texto extraído..."
-                    className="w-full h-48 p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none font-mono text-sm"
+                    className="w-full h-48 p-4 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#C5A059] focus:border-transparent resize-none font-mono text-sm bg-slate-50/30"
                 />
             ) : (
                 <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer relative">
@@ -66,7 +66,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
                 <button
                     onClick={onProcess}
                     disabled={isLoading || (inputMode === 'text' ? !inputText : !inputFile)}
-                    className="flex-1 bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 disabled:bg-gray-300 transition-all shadow-lg active:scale-95"
+                    className="flex-1 bg-[#C5A059] text-white py-3.5 rounded-2xl font-black uppercase tracking-[0.2em] text-xs hover:bg-[#B59049] disabled:bg-slate-200 transition-all shadow-xl shadow-[#C5A059]/10 active:scale-95"
                 >
                     {isLoading ? 'Processando...' : '🚀 Processar Dados'}
                 </button>
