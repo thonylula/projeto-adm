@@ -4,14 +4,16 @@
 
 /* CSS Reset and Variables - Premium Palette */
 :root {
-  --primary: #0F172A;
-  /* Slate 900 - Professional Dark */
+  --primary: #022c22;
+  /* Deep Teal (Brand Match) */
+  --corporate-teal: #0d9488;
+  /* Lighter Teal for details */
   --accent: #F97316;
-  /* Vibrant Orange (Tailwind 500) */
+  /* Vibrant Orange (Brand Match) */
   --accent-dark: #EA580C;
-  /* Darker Orange (Tailwind 600) */
+  /* Darker Orange */
   --accent-light: #FFedd5;
-  /* Lightest Orange (Tailwind 100) */
+  /* Lightest Orange */
   --success: #10B981;
   /* Emerald 500 */
   --warning: #F59E0B;
@@ -20,10 +22,9 @@
   /* Red 500 */
   --ai: #6366F1;
   /* Indigo 500 */
-  --bg-main: #F8FAFC;
-  /* Slate 50 - Soft Background */
+  --bg-main: #F0FDF4;
+  /* Mint-Tinted White - Subtle Harmony */
   --radius-xl: 24px;
-  /* Refined rounding for professional feel */
   --radius-lg: 16px;
   --radius-md: 8px;
 }
