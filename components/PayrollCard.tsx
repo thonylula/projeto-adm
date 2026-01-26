@@ -1973,7 +1973,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
               </div>
             </div>
 
-            <div className="overflow-x-auto print:overflow-visible">
+            <div className="overflow-x-auto print:overflow-visible scrollbar-thin scrollbar-thumb-slate-200">
               <table className="w-full text-xs text-left border-collapse">
                 <thead className="bg-slate-100 text-slate-600 font-semibold uppercase tracking-wider border-b border-gray-200 print:bg-slate-200 print:text-black">
                   <tr>

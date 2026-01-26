@@ -883,8 +883,8 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                         </section>
                     )}
 
-                    <section className={`rounded-2xl shadow-xl overflow-hidden border transition-all duration-500 ${isDarkMode ? 'bg-slate-800 border-slate-700 shadow-none' : 'bg-white shadow-orange-100/50 border-orange-50'}`}>
-                        <div className="overflow-x-auto" ref={reportRef}>
+                    <section className={`rounded-2xl shadow-xl border transition-all duration-500 overflow-hidden ${isDarkMode ? 'bg-slate-800 border-slate-700 shadow-none' : 'bg-white shadow-orange-100/50 border-orange-50'}`}>
+                        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-orange-200" ref={reportRef}>
                             <table className="w-full border-collapse">
                                 <thead>
                                     <tr className={`${isDarkMode ? 'bg-orange-600' : 'bg-[#f26522]'} text-white transition-colors duration-500`}>
