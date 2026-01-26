@@ -13,7 +13,7 @@ interface HistoryLogProps {
 }
 
 export const HistoryLog: React.FC<HistoryLogProps> = ({
-    history, onView, onDelete, onClearAll, currentViewId, isPublic = false, generalSurvival = 0
+    history, onView, onDelete, onClearAll, currentViewId, isPublic = false, generalSurvival = 0, onConsolidateSave
 }) => {
     const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
