@@ -868,7 +868,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     }
 
     return (
-        <div className="space-y-6" id="mortality-view">
+        <div className="space-y-6 max-w-screen overflow-x-hidden" id="mortality-view">
             <ActionBar />
 
             {message && (
