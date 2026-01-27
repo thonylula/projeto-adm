@@ -868,7 +868,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     }
 
     return (
-        <div className="flex flex-col space-y-6 w-full max-w-full overflow-x-hidden min-w-0" id="mortality-export-container">
+        <div className="flex flex-col space-y-6 w-full max-w-full overflow-x-hidden min-w-0" id="mortality-view">
             <ActionBar />
 
             {message && (
@@ -880,7 +880,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
             )}
 
             <div
-                id="export-target"
+                id="mortality-export-container"
                 className={`rounded-3xl shadow-sm border relative overflow-hidden transition-all duration-500 ${isDarkMode ? 'bg-[#0F172A] border-slate-800' : 'bg-white border-slate-100'} ${isExporting ? 'p-10' : 'p-0 sm:p-4'}`}
             >
                 <header className={`flex justify-between items-center mb-6 pb-6 border-b p-4 transition-colors duration-500 ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
