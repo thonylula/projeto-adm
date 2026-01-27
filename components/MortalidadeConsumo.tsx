@@ -869,7 +869,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
     return (
         <div className="flex flex-col space-y-6 w-full max-w-full overflow-x-hidden min-w-0" id="mortality-view">
-            <ActionBar />
+            {!isPublic && <ActionBar />}
 
             {message && (
                 <div className={`p-4 rounded-xl text-sm font-bold transition-colors duration-500 ${message.type === 'success'
@@ -898,6 +898,30 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             </p>
                         </div>
                     </div>
+                    {isPublic && (
+                        <div className="relative group">
+                            <button className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-md active:scale-95">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M12 12.75l-3-3m0 0l3-3m-3 3h7.5" />
+                                </svg>
+                                Baixar
+                            </button>
+                            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 overflow-hidden transform opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 z-50">
+                                <button
+                                    onClick={() => handleDownloadPNG()}
+                                    className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2"
+                                >
+                                    <span className="text-blue-500">PNG</span> Baixar como Imagem
+                                </button>
+                                <button
+                                    onClick={() => handleDownloadPDF()}
+                                    className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 border-t border-slate-100 dark:border-slate-700"
+                                >
+                                    <span className="text-red-500">PDF</span> Baixar como PDF
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </header>
 
                 <div className="flex gap-2 mb-4 px-4 print:hidden" data-html2canvas-ignore>
@@ -910,7 +934,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 detail: { tab: 'mortalidade', year, month: newMonth }
                             }));
                         }}
-                        className={`border-none rounded-lg px-3 py-1.5 text-xs font-bold focus:ring-1 focus:ring-orange-500 transition-colors duration-500 ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-50 text-slate-700'}`}
+                        className={`border-none rounded-lg px-3 py-1.5 text-xs font-bold focus:ring-1 focus:ring-orange-500 transition-colors duration-500 ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-50 text-slate-700'} ${isPublic ? 'hidden' : ''}`}
                     >
                         {Array.from({ length: 12 }, (_, i) => (
                             <option key={i + 1} value={i + 1}>
@@ -927,7 +951,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 detail: { tab: 'mortalidade', year: newYear, month }
                             }));
                         }}
-                        className={`border-none rounded-lg px-3 py-1.5 text-xs font-bold focus:ring-1 focus:ring-orange-500 transition-colors duration-500 ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-50 text-slate-700'}`}
+                        className={`border-none rounded-lg px-3 py-1.5 text-xs font-bold focus:ring-1 focus:ring-orange-500 transition-colors duration-500 ${isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-50 text-slate-700'} ${isPublic ? 'hidden' : ''}`}
                     >
                         {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
