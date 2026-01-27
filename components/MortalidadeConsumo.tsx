@@ -965,10 +965,10 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 <button
                                     onClick={() => {
                                         const amount = -300;
-                                        if (scrollRef.current && topScrollRef.current) {
+                                        if (scrollRef.current) {
                                             const newPos = scrollRef.current.scrollLeft + amount;
                                             scrollRef.current.scrollTo({ left: newPos, behavior: 'smooth' });
-                                            topScrollRef.current.scrollTo({ left: newPos, behavior: 'smooth' });
+                                            // Let the onScroll handler sync the top bar automatically
                                         }
                                     }}
                                     className={`p-1.5 flex items-center justify-center transition-colors border rounded shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
@@ -983,17 +983,17 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     ref={topScrollRef}
                                     className={`flex-1 overflow-x-auto transition-colors duration-500 scrollbar-thin rounded-sm ${isDarkMode ? 'bg-slate-900/50 border border-slate-700/50' : 'bg-slate-100 border border-slate-200'}`}
                                     onScroll={(e) => {
-                                        if (isScrolling.current === 'bottom') return;
-                                        isScrolling.current = 'top';
-
                                         if (scrollRef.current) {
-                                            scrollRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
+                                            const topScroll = e.currentTarget.scrollLeft;
+                                            const tableScroll = scrollRef.current.scrollLeft;
+                                            // Only update if difference is significant (prevents loops)
+                                            if (Math.abs(topScroll - tableScroll) > 2) {
+                                                scrollRef.current.scrollLeft = topScroll;
+                                            }
                                         }
-
-                                        if (syncTimeout.current) clearTimeout(syncTimeout.current);
-                                        syncTimeout.current = setTimeout(() => isScrolling.current = null, 100);
                                     }}
                                 >
+                                    {/* Ensure this width MATCHES the table min-width exactly */}
                                     <div style={{ width: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '1px' }} className="py-2" />
                                 </div>
 
@@ -1001,10 +1001,9 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     onClick={() => {
                                         const amount = 300;
                                         if (scrollRef.current && topScrollRef.current) {
-                                            // Scroll both explicitly to avoid sync lag/locks
                                             const newPos = scrollRef.current.scrollLeft + amount;
                                             scrollRef.current.scrollTo({ left: newPos, behavior: 'smooth' });
-                                            topScrollRef.current.scrollTo({ left: newPos, behavior: 'smooth' });
+                                            // Let the onScroll handler sync the top bar automatically
                                         }
                                     }}
                                     className={`p-1.5 flex items-center justify-center transition-colors border rounded shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
@@ -1021,15 +1020,14 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     ref={scrollRef}
                                     className="overflow-x-auto"
                                     onScroll={(e) => {
-                                        if (isScrolling.current === 'top') return;
-                                        isScrolling.current = 'bottom';
-
                                         if (topScrollRef.current) {
-                                            topScrollRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
+                                            const tableScroll = e.currentTarget.scrollLeft;
+                                            const topScroll = topScrollRef.current.scrollLeft;
+                                            // Only update if difference is significant (prevents loops)
+                                            if (Math.abs(tableScroll - topScroll) > 2) {
+                                                topScrollRef.current.scrollLeft = tableScroll;
+                                            }
                                         }
-
-                                        if (syncTimeout.current) clearTimeout(syncTimeout.current);
-                                        syncTimeout.current = setTimeout(() => isScrolling.current = null, 100);
                                     }}
                                     style={{
                                         transform: isPublic ? `scale(${zoomLevel})` : 'none',
