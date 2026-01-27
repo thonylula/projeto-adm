@@ -94,30 +94,40 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     }, [activeMonth, activeYear]);
 
     const [tableScrollWidth, setTableScrollWidth] = useState(0);
+
+    // ROBUST: Measure table width for perfect sync using ResizeObserver on the SCROLLABLE container
     useLayoutEffect(() => {
-        const updateWidth = () => {
+        const measure = () => {
             if (scrollRef.current) {
+                // We want the SCROLL WIDTH (total content), not client width
+                // We add a tiny buffer (2px) to ensure browser rounding doesn't hide it
                 setTableScrollWidth(scrollRef.current.scrollWidth);
             }
         };
 
-        // Initial measurement
-        updateWidth();
+        // Initial
+        measure();
 
-        // Update on resize
-        window.addEventListener('resize', updateWidth);
+        // Observer
+        const resizeObserver = new ResizeObserver(() => {
+            measure();
+        });
 
-        // Update when data/month changes (content change)
-        const observer = new MutationObserver(updateWidth);
         if (scrollRef.current) {
-            observer.observe(scrollRef.current, { childList: true, subtree: true, attributes: true });
+            resizeObserver.observe(scrollRef.current);
+            // Also observe the table itself if possible, but scrollRef wrapper is the key
+            if (scrollRef.current.firstElementChild) {
+                resizeObserver.observe(scrollRef.current.firstElementChild);
+            }
         }
 
+        window.addEventListener('resize', measure);
+
         return () => {
-            window.removeEventListener('resize', updateWidth);
-            observer.disconnect();
+            resizeObserver.disconnect();
+            window.removeEventListener('resize', measure);
         };
-    }, [data, month, year, selectedWeek, activeCompany, tableConfig]); // Depend on content changes
+    }, [data, month, year, selectedWeek, tableConfig, activeView]); // Re-run when view/data changes
 
     const daysInMonth = new Date(year, month, 0).getDate();
 
@@ -966,80 +976,93 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     }
                     #export-target .overflow-x-auto {
                         scrollbar-width: thin;
-                        scrollbar-color: #64748b transparent;
+                        scrollbar-color: #475569 transparent; /* Slate-600 */
                     }
+                    /* Tactical Scrollbar Style */
                     #export-target .overflow-x-auto::-webkit-scrollbar {
-                        height: 12px;
+                        height: 14px; /* Taller, easy target */
+                        background: transparent;
                     }
                     #export-target .overflow-x-auto::-webkit-scrollbar-track {
-                        background: transparent;
+                        background: rgba(0,0,0,0.05); /* Slight contrast for track */
                     }
                     #export-target .overflow-x-auto::-webkit-scrollbar-thumb {
                         background-color: #64748b;
-                        border-radius: 2px;
-                        border: 3px solid transparent;
+                        border-radius: 0px; /* SHARP geomety */
+                        border: 3px solid transparent; /* Padding effect */
                         background-clip: content-box;
                     }
                     #export-target .overflow-x-auto::-webkit-scrollbar-thumb:hover {
-                        background-color: #475569;
+                        background-color: #334155; /* Darker interaction */
+                        border-width: 2px; /* Expands slightly */
+                    }
+                    /* Dark Mode Adjustments injected via classes */
+                    .dark #export-target .overflow-x-auto::-webkit-scrollbar-track {
+                        background: rgba(255,255,255,0.05);
+                    }
+                    .dark #export-target .overflow-x-auto::-webkit-scrollbar-thumb {
+                        background-color: #94a3b8;
+                    }
+                    .dark #export-target .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+                        background-color: #cbd5e1;
                     }
                 `}</style>
 
-                        <div className={`rounded-xl shadow-sm border m-4 mt-0 transition-colors duration-500 ${isDarkMode ? 'bg-[#1E293B] border-slate-700' : 'bg-white border-slate-100'}`}>
-                            {/* CUSTOM SCROLLBAR CONTROL (Fixed Width relative to container) */}
-                            <div className="flex items-center gap-1 px-4 mb-2 mt-2 pt-2 border-b border-transparent print:hidden" data-html2canvas-ignore>
+                        <div className={`rounded-xl shadow-sm border m-4 mt-0 max-w-full overflow-hidden transition-colors duration-500 ${isDarkMode ? 'bg-[#1E293B] border-slate-700' : 'bg-white border-slate-100'}`}>
+                            {/* INDUSTRIAL INTEGRITY SCROLLBAR CONTROL */}
+                            <div className="flex items-center gap-0 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 print:hidden" data-html2canvas-ignore>
+                                {/* Left Button - Sharp & Tactical */}
                                 <button
                                     onClick={() => {
                                         const amount = -300;
                                         if (scrollRef.current) {
-                                            const newPos = scrollRef.current.scrollLeft + amount;
-                                            scrollRef.current.scrollTo({ left: newPos, behavior: 'smooth' });
-                                            // Let the onScroll handler sync the top bar automatically
+                                            scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
                                         }
                                     }}
-                                    className={`p-1.5 flex items-center justify-center transition-colors border rounded shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
-                                    title="Rolar para Esquerda"
+                                    className={`h-[18px] w-8 flex items-center justify-center transition-all active:bg-slate-300 dark:active:bg-slate-600 ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 border-r border-slate-700' : 'bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-100 border-r border-slate-200'}`}
+                                    title="Scroll Left"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                        <path fillRule="evenodd" d="M7.72 12.53a.75.75 0 010-1.06l7.5-7.5a.75.75 0 111.06 1.06L9.31 12l6.97 6.97a.75.75 0 11-1.06 1.06l-7.5-7.5z" clipRule="evenodd" />
                                     </svg>
                                 </button>
 
+                                {/* Track - The "Zone" */}
                                 <div
                                     ref={topScrollRef}
-                                    className={`flex-1 overflow-x-auto transition-colors duration-500 scrollbar-thin rounded-sm ${isDarkMode ? 'bg-slate-900/50 border border-slate-700/50' : 'bg-slate-100 border border-slate-200'}`}
-                                    style={{ height: '14px', minHeight: '14px' }} // Force height for visibility
+                                    className="flex-1 overflow-x-auto scrollbar-hide relative group"
+                                    style={{ height: '18px' }} // Fixed height
                                     onScroll={(e) => {
+                                        // Brute Force Sync: Master -> Follower
                                         if (scrollRef.current) {
-                                            const topScroll = e.currentTarget.scrollLeft;
-                                            const tableScroll = scrollRef.current.scrollLeft;
-                                            if (Math.abs(topScroll - tableScroll) > 5) { // Increased threshold slightly
-                                                scrollRef.current.scrollLeft = topScroll;
+                                            const source = e.currentTarget.scrollLeft;
+                                            const target = scrollRef.current.scrollLeft;
+                                            if (Math.abs(source - target) > 10) {
+                                                scrollRef.current.scrollLeft = source;
                                             }
                                         }
                                     }}
                                 >
-                                    {/* USE MAX of measured vs calculated to guarantee scrollbar appears */}
-                                    <div style={{
-                                        width: `${Math.max(tableScrollWidth, (tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth))}px`,
-                                        height: '1px'
-                                    }} className="w-full" />
+                                    {/* The Thumb Spacer - Exact Match */}
+                                    <div style={{ width: `${Math.max(tableScrollWidth, 1000)}px`, height: '1px' }} />
+
+                                    {/* Visual Track Overlay (Optional Polish) */}
+                                    <div className={`absolute inset-x-0 bottom-0 h-[2px] ${isDarkMode ? 'bg-slate-700' : 'bg-slate-200'}`} />
                                 </div>
 
+                                {/* Right Button - Sharp & Tactical */}
                                 <button
                                     onClick={() => {
                                         const amount = 300;
-                                        if (scrollRef.current && topScrollRef.current) {
-                                            const newPos = scrollRef.current.scrollLeft + amount;
-                                            scrollRef.current.scrollTo({ left: newPos, behavior: 'smooth' });
-                                            // Let the onScroll handler sync the top bar automatically
+                                        if (scrollRef.current) {
+                                            scrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
                                         }
                                     }}
-                                    className={`p-1.5 flex items-center justify-center transition-colors border rounded shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
-                                    title="Rolar para Direita"
+                                    className={`h-[18px] w-8 flex items-center justify-center transition-all active:bg-slate-300 dark:active:bg-slate-600 ${isDarkMode ? 'bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 border-l border-slate-700' : 'bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-100 border-l border-slate-200'}`}
+                                    title="Scroll Right"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                        <path fillRule="evenodd" d="M16.28 11.47a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 01-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 011.06-1.06l7.5 7.5z" clipRule="evenodd" />
                                     </svg>
                                 </button>
                             </div>
