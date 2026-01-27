@@ -135,6 +135,7 @@ body {
   .sticky-column-overlay {
     position: relative;
   }
+
   .sticky-column-overlay::after {
     content: '';
     position: absolute;
@@ -142,7 +143,8 @@ body {
     right: -10px;
     bottom: 0;
     width: 20px;
-    background: inherit;
+    background: var(--sticky-overlay-bg);
+    /* Dynamic color via CSS variable */
     z-index: 1;
     pointer-events: none;
   }
