@@ -868,7 +868,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     }
 
     return (
-        <div className="flex flex-col space-y-6 w-full max-w-full overflow-x-hidden min-w-0" id="mortality-view">
+        <div className="flex flex-col space-y-6 w-full max-w-full overflow-x-hidden min-w-0" id="mortality-export-container">
             <ActionBar />
 
             {message && (
@@ -1067,8 +1067,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 </button>
                             </div>
 
-                            <div id="interactive-table-container" className="w-full overflow-hidden min-w-0 border-4 border-red-600 relative">
-                                <div className="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 z-50">DEBUG: LAYOUT FIX APPLIED</div>
+                            <div id="interactive-table-container" className="w-full overflow-hidden min-w-0 relative">
                                 <div
                                     ref={scrollRef}
                                     className="w-full overflow-x-auto min-w-0 scroll-behavior-smooth"
