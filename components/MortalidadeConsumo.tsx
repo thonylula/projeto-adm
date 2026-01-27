@@ -1067,27 +1067,27 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 </button>
                             </div>
 
-                            <div id="interactive-table-container">
+                            <div id="interactive-table-container" className="w-full overflow-hidden min-w-0">
                                 <div
                                     ref={scrollRef}
-                                    className="overflow-x-auto"
+                                    className="w-full overflow-x-auto min-w-0 scroll-behavior-smooth"
+                                    style={{
+                                        WebkitOverflowScrolling: 'touch',
+                                        transform: isPublic ? `scale(${zoomLevel})` : 'none',
+                                        transformOrigin: 'top left',
+                                        width: isPublic ? `${(1 / zoomLevel) * 100}%` : 'auto'
+                                    }}
                                     onScroll={(e) => {
                                         if (topScrollRef.current) {
                                             const tableScroll = e.currentTarget.scrollLeft;
                                             const topScroll = topScrollRef.current.scrollLeft;
-                                            // Only update if difference is significant (prevents loops)
                                             if (Math.abs(tableScroll - topScroll) > 2) {
                                                 topScrollRef.current.scrollLeft = tableScroll;
                                             }
                                         }
                                     }}
-                                    style={{
-                                        transform: isPublic ? `scale(${zoomLevel})` : 'none',
-                                        transformOrigin: 'top left',
-                                        width: isPublic ? `${(1 / zoomLevel) * 100}%` : 'auto'
-                                    }}
                                 >
-                                    <table className="w-full border-collapse" style={{
+                                    <table className="min-w-max w-full border-collapse" style={{
                                         minWidth: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`,
                                         fontSize: `${tableConfig.fontSize}px`
                                     }}>
@@ -1278,6 +1278,6 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     </>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
