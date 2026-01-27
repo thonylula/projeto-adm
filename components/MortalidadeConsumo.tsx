@@ -1008,19 +1008,22 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 <div
                                     ref={topScrollRef}
                                     className={`flex-1 overflow-x-auto transition-colors duration-500 scrollbar-thin rounded-sm ${isDarkMode ? 'bg-slate-900/50 border border-slate-700/50' : 'bg-slate-100 border border-slate-200'}`}
+                                    style={{ height: '14px', minHeight: '14px' }} // Force height for visibility
                                     onScroll={(e) => {
                                         if (scrollRef.current) {
                                             const topScroll = e.currentTarget.scrollLeft;
                                             const tableScroll = scrollRef.current.scrollLeft;
-                                            // Only update if difference is significant (prevents loops)
-                                            if (Math.abs(topScroll - tableScroll) > 2) {
+                                            if (Math.abs(topScroll - tableScroll) > 5) { // Increased threshold slightly
                                                 scrollRef.current.scrollLeft = topScroll;
                                             }
                                         }
                                     }}
                                 >
-                                    {/* Ensure this width MATCHES the table min-width exactly via measurement */}
-                                    <div style={{ width: `${tableScrollWidth}px`, height: '1px' }} className="py-2" />
+                                    {/* USE MAX of measured vs calculated to guarantee scrollbar appears */}
+                                    <div style={{
+                                        width: `${Math.max(tableScrollWidth, (tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth))}px`,
+                                        height: '1px'
+                                    }} className="w-full" />
                                 </div>
 
                                 <button
