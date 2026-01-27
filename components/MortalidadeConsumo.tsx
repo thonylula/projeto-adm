@@ -1010,7 +1010,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
                         <div className={`rounded-xl shadow-sm border m-4 mt-0 max-w-full overflow-hidden transition-colors duration-500 ${isDarkMode ? 'bg-[#1E293B] border-slate-700' : 'bg-white border-slate-100'}`}>
                             {/* INDUSTRIAL INTEGRITY SCROLLBAR CONTROL */}
-                            <div className="flex items-center gap-0 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 print:hidden" data-html2canvas-ignore>
+                            <div className="w-full flex items-center gap-0 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 print:hidden" data-html2canvas-ignore>
                                 {/* Left Button - Sharp & Tactical */}
                                 <button
                                     onClick={() => {
@@ -1030,7 +1030,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 {/* Track - The "Zone" */}
                                 <div
                                     ref={topScrollRef}
-                                    className="flex-1 overflow-x-auto scrollbar-hide relative group"
+                                    className="flex-1 min-w-0 overflow-x-auto scrollbar-hide relative group"
                                     style={{ height: '18px' }} // Fixed height
                                     onScroll={(e) => {
                                         // Brute Force Sync: Master -> Follower
