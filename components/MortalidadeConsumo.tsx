@@ -632,7 +632,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
     const ActionBar = () => {
         return (
-            <div className={`flex flex-wrap gap-2 mb-6 p-4 rounded-xl shadow-sm border transition-all duration-500 print:hidden max-w-full overflow-x-hidden ${isDarkMode ? 'bg-[#0F172A] border-slate-800' : 'bg-white border-slate-100'}`}>
+            <div className={`flex flex-wrap gap-2 mb-6 p-4 rounded-xl shadow-sm border transition-all duration-500 print:hidden w-full max-w-full overflow-x-hidden min-w-0 ${isDarkMode ? 'bg-[#0F172A] border-slate-800' : 'bg-white border-slate-100'}`}>
                 {!isPublic && (
                     <button onClick={() => performExport('pdf')} className="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase flex items-center gap-2 hover:bg-red-700 transition-all shadow-lg active:scale-95">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
@@ -868,7 +868,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
     }
 
     return (
-        <div className="space-y-6 max-w-screen overflow-x-hidden" id="mortality-view">
+        <div className="flex flex-col space-y-6 w-full max-w-full overflow-x-hidden min-w-0" id="mortality-view">
             <ActionBar />
 
             {message && (

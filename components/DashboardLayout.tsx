@@ -539,7 +539,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           <div className={`absolute bottom-[5%] left-[10%] w-[30%] h-[30%] rounded-full blur-3xl transition-colors duration-1000 ${isDarkMode ? 'bg-indigo-900/10' : 'bg-blue-50/50'}`} />
         </div>
 
-        <div id="active-view" className="relative z-10 p-4 sm:p-8 lg:p-10 max-w-7xl mx-auto print:p-0 print:max-w-none">
+        <div id="active-view" className="relative z-10 p-4 sm:p-8 lg:p-10 w-full max-w-7xl mx-auto overflow-hidden min-w-0 print:p-0 print:max-w-none">
           {children}
         </div>
       </main>
