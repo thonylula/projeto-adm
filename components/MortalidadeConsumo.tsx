@@ -957,43 +957,45 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     }
                 `}</style>
 
-                        <div className={`rounded-xl shadow-sm border overflow-x-auto m-4 mt-0 transition-colors duration-500 ${isDarkMode ? 'bg-[#1E293B] border-slate-700' : 'bg-white border-slate-100'}`}>
-                            <div id="interactive-table-container" className="min-w-max">
-                                <div className="flex items-center gap-1 px-4 mb-1 print:hidden" data-html2canvas-ignore>
-                                    <button
-                                        onClick={() => {
-                                            if (scrollRef.current) scrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
-                                        }}
-                                        className={`p-1 flex items-center justify-center transition-colors border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'}`}
-                                        title="Rolar para Esquerda"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3 h-3">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                                        </svg>
-                                    </button>
+                        <div className={`rounded-xl shadow-sm border m-4 mt-0 transition-colors duration-500 ${isDarkMode ? 'bg-[#1E293B] border-slate-700' : 'bg-white border-slate-100'}`}>
+                            {/* CUSTOM SCROLLBAR CONTROL (Fixed Width relative to container) */}
+                            <div className="flex items-center gap-1 px-4 mb-2 mt-2 pt-2 border-b border-transparent print:hidden" data-html2canvas-ignore>
+                                <button
+                                    onClick={() => {
+                                        if (scrollRef.current) scrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+                                    }}
+                                    className={`p-1.5 flex items-center justify-center transition-colors border rounded shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
+                                    title="Rolar para Esquerda"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                                    </svg>
+                                </button>
 
-                                    <div
-                                        ref={topScrollRef}
-                                        className={`flex-1 overflow-x-auto transition-colors duration-500 scrollbar-thin ${isDarkMode ? 'bg-slate-900 border-x border-slate-700' : 'bg-slate-100 border-x border-slate-200'}`}
-                                        onScroll={(e) => {
-                                            if (scrollRef.current) scrollRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
-                                        }}
-                                    >
-                                        <div style={{ width: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '14px' }} />
-                                    </div>
-
-                                    <button
-                                        onClick={() => {
-                                            if (scrollRef.current) scrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
-                                        }}
-                                        className={`p-1 flex items-center justify-center transition-colors border ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900'}`}
-                                        title="Rolar para Direita"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-3 h-3">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                                        </svg>
-                                    </button>
+                                <div
+                                    ref={topScrollRef}
+                                    className={`flex-1 overflow-x-auto transition-colors duration-500 scrollbar-thin rounded-sm ${isDarkMode ? 'bg-slate-900/50 border border-slate-700/50' : 'bg-slate-100 border border-slate-200'}`}
+                                    onScroll={(e) => {
+                                        if (scrollRef.current) scrollRef.current.scrollLeft = (e.currentTarget as HTMLDivElement).scrollLeft;
+                                    }}
+                                >
+                                    <div style={{ width: `${(tableConfig.veWidth + 140 + 90 + (tableConfig.headerColWidth * 3) + 80 + 50 + 75) + (daysArray.length * tableConfig.dayColWidth)}px`, height: '1px' }} className="py-2" />
                                 </div>
+
+                                <button
+                                    onClick={() => {
+                                        if (scrollRef.current) scrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+                                    }}
+                                    className={`p-1.5 flex items-center justify-center transition-colors border rounded shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
+                                    title="Rolar para Direita"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div id="interactive-table-container">
                                 <div
                                     ref={scrollRef}
                                     className="overflow-x-auto"
