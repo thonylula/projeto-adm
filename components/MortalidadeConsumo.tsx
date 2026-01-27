@@ -238,9 +238,9 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                 const container = document.getElementById('export-container');
                 if (container) container.style.overflow = 'visible'; // Remove scroll temporariamente
 
-                if (type === 'pdf') await exportToPdf('export-target', suffix);
-                if (type === 'png') await exportToPngPuppeteer('export-target', suffix);
-                if (type === 'html') exportToHtml('export-target', suffix);
+                if (type === 'pdf') await exportToPdf('mortality-export-container', suffix);
+                if (type === 'png') await exportToPngPuppeteer('mortality-export-container', suffix);
+                if (type === 'html') exportToHtml('mortality-export-container', suffix);
 
                 if (container) container.style.overflow = ''; // Restaura scroll
             } catch (error) {
@@ -258,7 +258,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         setTimeout(async () => {
             try {
                 const suffix = `mortalidade_${month}_${year}`;
-                const result = await shareAsImage('export-target', suffix);
+                const result = await shareAsImage('mortality-export-container', suffix);
 
                 if (result?.success) {
                     if (result.method === 'clipboard') {
@@ -974,36 +974,36 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     input[type=number] {
                         -moz-appearance: textfield;
                     }
-                    #export-target .overflow-x-auto {
+                    #mortality-export-container .overflow-x-auto {
                         scrollbar-width: thin;
                         scrollbar-color: #475569 transparent; /* Slate-600 */
                     }
                     /* Tactical Scrollbar Style */
-                    #export-target .overflow-x-auto::-webkit-scrollbar {
+                    #mortality-export-container .overflow-x-auto::-webkit-scrollbar {
                         height: 14px; /* Taller, easy target */
                         background: transparent;
                     }
-                    #export-target .overflow-x-auto::-webkit-scrollbar-track {
+                    #mortality-export-container .overflow-x-auto::-webkit-scrollbar-track {
                         background: rgba(0,0,0,0.05); /* Slight contrast for track */
                     }
-                    #export-target .overflow-x-auto::-webkit-scrollbar-thumb {
+                    #mortality-export-container .overflow-x-auto::-webkit-scrollbar-thumb {
                         background-color: #64748b;
                         border-radius: 0px; /* SHARP geomety */
                         border: 3px solid transparent; /* Padding effect */
                         background-clip: content-box;
                     }
-                    #export-target .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+                    #mortality-export-container .overflow-x-auto::-webkit-scrollbar-thumb:hover {
                         background-color: #334155; /* Darker interaction */
                         border-width: 2px; /* Expands slightly */
                     }
                     /* Dark Mode Adjustments injected via classes */
-                    .dark #export-target .overflow-x-auto::-webkit-scrollbar-track {
+                    .dark #mortality-export-container .overflow-x-auto::-webkit-scrollbar-track {
                         background: rgba(255,255,255,0.05);
                     }
-                    .dark #export-target .overflow-x-auto::-webkit-scrollbar-thumb {
+                    .dark #mortality-export-container .overflow-x-auto::-webkit-scrollbar-thumb {
                         background-color: #94a3b8;
                     }
-                    .dark #export-target .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+                    .dark #mortality-export-container .overflow-x-auto::-webkit-scrollbar-thumb:hover {
                         background-color: #cbd5e1;
                     }
                 `}</style>
