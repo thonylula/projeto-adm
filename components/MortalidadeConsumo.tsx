@@ -463,10 +463,8 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
         setIsExporting(true);
         try {
-            // Use local html2canvas export similar to shareAsImage but download instead
-            // OR use the existing exportToPngPuppeteer if valid
-            // Given constraints, a simple client-side download via shareAsImage logic is best
-            await shareAsImage('mortality-export-container', `Mortalidade_${month}_${year}`);
+            // Use exportToPng for direct client-side download
+            await exportToPng('mortality-export-container', `Mortalidade_${month}_${year}`);
             setMessage({ text: 'Imagem gerada com sucesso!', type: 'success' });
         } catch (error) {
             console.error(error);
@@ -937,7 +935,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                     </div>
                     {isPublic && (
                         <div className="relative group">
-                            <button className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-md active:scale-95">
+                            <button className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-md active:scale-95">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M12 12.75l-3-3m0 0l3-3m-3 3h7.5" />
                                 </svg>
@@ -954,7 +952,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                     onClick={() => handleDownloadPDF()}
                                     className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-2 border-t border-slate-100 dark:border-slate-700"
                                 >
-                                    <span className="text-red-500">PDF</span> Baixar como PDF
+                                    <span className="text-orange-500">PDF</span> Baixar como PDF
                                 </button>
                             </div>
                         </div>
