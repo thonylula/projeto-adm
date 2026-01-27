@@ -1,5 +1,5 @@
 // [AI-LOCK: OPEN]
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Company, MonthlyMortalityData, MortalityTankRecord, MortalityDailyRecord } from '../types';
 import { getOrchestrator } from '../services/agentService';
 import { exportToPdf, exportToPngPuppeteer, exportToHtml, shareAsImage } from '../utils/exportUtils';
