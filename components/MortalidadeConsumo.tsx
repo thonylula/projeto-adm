@@ -964,9 +964,11 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                             <div className="flex items-center gap-1 px-4 mb-2 mt-2 pt-2 border-b border-transparent print:hidden" data-html2canvas-ignore>
                                 <button
                                     onClick={() => {
-                                        if (scrollRef.current) {
-                                            const currentScroll = scrollRef.current.scrollLeft;
-                                            scrollRef.current.scrollTo({ left: currentScroll - 300, behavior: 'smooth' });
+                                        const amount = -300;
+                                        if (scrollRef.current && topScrollRef.current) {
+                                            const newPos = scrollRef.current.scrollLeft + amount;
+                                            scrollRef.current.scrollTo({ left: newPos, behavior: 'smooth' });
+                                            topScrollRef.current.scrollTo({ left: newPos, behavior: 'smooth' });
                                         }
                                     }}
                                     className={`p-1.5 flex items-center justify-center transition-colors border rounded shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
@@ -997,9 +999,12 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
                                 <button
                                     onClick={() => {
-                                        if (scrollRef.current) {
-                                            const currentScroll = scrollRef.current.scrollLeft;
-                                            scrollRef.current.scrollTo({ left: currentScroll + 300, behavior: 'smooth' });
+                                        const amount = 300;
+                                        if (scrollRef.current && topScrollRef.current) {
+                                            // Scroll both explicitly to avoid sync lag/locks
+                                            const newPos = scrollRef.current.scrollLeft + amount;
+                                            scrollRef.current.scrollTo({ left: newPos, behavior: 'smooth' });
+                                            topScrollRef.current.scrollTo({ left: newPos, behavior: 'smooth' });
                                         }
                                     }}
                                     className={`p-1.5 flex items-center justify-center transition-colors border rounded shadow-sm ${isDarkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}
