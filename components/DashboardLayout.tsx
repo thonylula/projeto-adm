@@ -39,12 +39,19 @@ const NavItem: React.FC<{
     { id: 10, label: 'OUT' }, { id: 11, label: 'NOV' }, { id: 12, label: 'DEZ' }
   ];
 
-  const isActive = activeTab === item.id || (isPantry && activeTab === 'budget');
+  const isActive = activeTab === item.id || (isPantry && activeTab === 'budget') || (isShowcase && activeTab === 'showcase-faturamento');
 
   return (
     <div className="space-y-1">
       <button
         onClick={() => {
+          if (isShowcase && isPublic) {
+            window.dispatchEvent(new CustomEvent('app-navigation', { detail: { tab: 'showcase' } }));
+            onTabChange('showcase-faturamento');
+            setIsMobileMenuOpen(false);
+            return;
+          }
+
           if (isPantry || isShowcase) {
             setIsExpanded(!isExpanded);
           }
@@ -102,7 +109,7 @@ const NavItem: React.FC<{
           </div>
         )}
 
-        {(isPayroll || isPantry || isShowcase) && (
+        {(isPayroll || isPantry || (isShowcase && !isPublic)) && (
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
