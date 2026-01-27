@@ -457,6 +457,43 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
         }
     };
 
+    const handleDownloadPNG = async () => {
+        const element = document.getElementById('mortality-export-container');
+        if (!element) return;
+
+        setIsExporting(true);
+        try {
+            // Use local html2canvas export similar to shareAsImage but download instead
+            // OR use the existing exportToPngPuppeteer if valid
+            // Given constraints, a simple client-side download via shareAsImage logic is best
+            await shareAsImage('mortality-export-container', `Mortalidade_${month}_${year}`);
+            setMessage({ text: 'Imagem gerada com sucesso!', type: 'success' });
+        } catch (error) {
+            console.error(error);
+            setMessage({ text: 'Erro ao gerar imagem.', type: 'error' });
+        } finally {
+            setIsExporting(false);
+            setTimeout(() => setMessage(null), 3000);
+        }
+    };
+
+    const handleDownloadPDF = async () => {
+        const element = document.getElementById('mortality-export-container');
+        if (!element) return;
+
+        setIsExporting(true);
+        try {
+            await exportToPdf('mortality-export-container', `Mortalidade_${month}_${year}`, 'landscape');
+            setMessage({ text: 'PDF gerado com sucesso!', type: 'success' });
+        } catch (error) {
+            console.error(error);
+            setMessage({ text: 'Erro ao gerar PDF.', type: 'error' });
+        } finally {
+            setIsExporting(false);
+            setTimeout(() => setMessage(null), 3000);
+        }
+    };
+
     const handleAIAnalysis = async () => {
         if (!data || !data.records || data.records.length === 0) return;
         setIsAnalyzing(true);
