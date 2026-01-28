@@ -305,7 +305,7 @@ export abstract class BaseAgent {
         }
 
         if (lastIndex === -1) {
-            this.log(`Incomplete JSON Response Detected. BraceCount: ${braceCount}, BracketCount: ${bracketCount}. Length: ${content.length}. Tail: ${content.substring(content.length - 20)}`, 'error');
+            this.log(`Incomplete JSON Response Detected. BraceCount: ${braceCount}, BracketCount: ${bracketCount}. Length: ${content.length}. Tail: ${content.substring(content.length - 50)}`, 'error');
 
             // Auto-repair attempt for arrays: if it's an array and truncated, try to close it
             if (startIndex === firstBracket && bracketCount > 0) {
@@ -320,6 +320,33 @@ export abstract class BaseAgent {
                     }
                 } catch (repairError) {
                     this.log(`Auto-repair failed: ${repairError}`, 'error');
+                }
+            }
+
+            // Auto-repair attempt for objects (e.g., budget with items array)
+            if (startIndex === firstBrace && braceCount > 0) {
+                try {
+                    this.log(`Attempting to repair truncated JSON object...`, 'warn');
+                    let repaired = content.substring(startIndex);
+
+                    // Find the last complete array item "}," or "}"
+                    const lastGoodItem = Math.max(repaired.lastIndexOf('},'), repaired.lastIndexOf('}'));
+                    if (lastGoodItem !== -1) {
+                        repaired = repaired.substring(0, lastGoodItem + 1);
+
+                        // Close any open arrays and the main object
+                        const openBrackets = (repaired.match(/\[/g) || []).length - (repaired.match(/\]/g) || []).length;
+                        const openBraces = (repaired.match(/\{/g) || []).length - (repaired.match(/\}/g) || []).length;
+
+                        repaired += ']'.repeat(Math.max(0, openBrackets));
+                        repaired += '}'.repeat(Math.max(0, openBraces));
+
+                        const result = JSON.parse(repaired);
+                        this.log(`Auto-repair successful! Recovered ${result.items?.length || 0} items.`, 'info');
+                        return result;
+                    }
+                } catch (repairError) {
+                    this.log(`Auto-repair for object failed: ${repairError}`, 'error');
                 }
             }
 
