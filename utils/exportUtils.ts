@@ -5,11 +5,11 @@ import html2pdf from 'html2pdf.js';
 /**
  * Exports an element to PDF directly using html2pdf.
  */
-export const exportToPdf = async (elementId: string, fileName: string) => {
+export const exportToPdf = async (elementId: string, fileName: string, customOptions: any = {}) => {
     const element = document.getElementById(elementId);
     if (!element) return;
 
-    const opt = {
+    const defaultOpt = {
         margin: [2, 2] as [number, number],
         filename: `${fileName}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
@@ -19,7 +19,7 @@ export const exportToPdf = async (elementId: string, fileName: string) => {
             allowTaint: true,
             letterRendering: true,
             logging: false,
-            onclone: (clonedDoc) => {
+            onclone: (clonedDoc: any) => {
                 const hiddenElements = clonedDoc.querySelectorAll('.print\\:hidden, .hidden-in-export');
                 hiddenElements.forEach((hiddenEl: any) => {
                     hiddenEl.style.display = 'none';
@@ -30,8 +30,9 @@ export const exportToPdf = async (elementId: string, fileName: string) => {
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' as const },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] as const }
-        // Vercel build fix verification
     };
+
+    const opt = { ...defaultOpt, ...customOptions, pagebreak: customOptions.pagebreak || defaultOpt.pagebreak };
 
     try {
         await html2pdf().set(opt).from(element).save();
