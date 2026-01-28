@@ -13,6 +13,7 @@ export const BudgetPage: FC<BudgetPageProps> = ({ activeCompany }) => {
     const [budgetItems, setBudgetItems] = useState<InvoiceItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [basketCount, setBasketCount] = useState(13);
 
     const handleFilesReady = useCallback((selectedFiles: File[]) => {
         setFiles(selectedFiles);
@@ -101,7 +102,7 @@ export const BudgetPage: FC<BudgetPageProps> = ({ activeCompany }) => {
     };
 
     const totalSum = budgetItems.reduce((sum, item) => sum + item.total, 0);
-    const total13Baskets = totalSum * 13;
+    const totalBaskets = totalSum * basketCount;
     const currentDate = new Date().toLocaleDateString('pt-BR');
 
     const PHLogo = () => (
@@ -191,7 +192,7 @@ export const BudgetPage: FC<BudgetPageProps> = ({ activeCompany }) => {
             ) : (
                 <div id="budget-view" className="bg-white p-2" style={{ border: '6px solid #f97316' }}>
                     <div className="p-4 border-b-2 mb-4 text-center relative" style={{ borderColor: '#f97316' }}>
-                        <div className="absolute left-2 top-1/2 -translate-y-1/2 opacity-20">
+                        <div className="absolute left-2 top-1/2 -translate-y-1/2">
                             {activeCompany?.logoUrl && <img src={activeCompany.logoUrl} alt="logo" className="h-12" />}
                         </div>
                         <h1 className="text-xl font-black uppercase text-slate-800 leading-tight">
@@ -310,9 +311,22 @@ export const BudgetPage: FC<BudgetPageProps> = ({ activeCompany }) => {
                                     <td className="print:hidden" data-html2canvas-ignore="true"></td>
                                 </tr>
                                 <tr className="bg-orange-50 border-t-2" style={{ borderColor: '#f97316' }}>
-                                    <td colSpan={4} className="p-3 text-right text-[11px] font-black uppercase text-orange-800 border-r-2" style={{ borderColor: '#f97316' }}>VALOR 13 CESTAS:</td>
+                                    <td colSpan={4} className="p-3 text-right text-[11px] font-black uppercase text-orange-800 border-r-2" style={{ borderColor: '#f97316' }}>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <span>VALOR</span>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={basketCount}
+                                                onChange={(e) => setBasketCount(Math.max(1, parseInt(e.target.value) || 1))}
+                                                className="w-12 px-1 py-0.5 border border-orange-300 rounded text-center text-[11px] font-black text-orange-700 bg-white"
+                                                data-html2canvas-ignore="true"
+                                            />
+                                            <span>CESTAS:</span>
+                                        </div>
+                                    </td>
                                     <td colSpan={3} className="p-3 text-base font-black text-orange-600 border-r-2" style={{ borderColor: '#f97316' }}>
-                                        {total13Baskets.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                        {totalBaskets.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                     </td>
                                     <td className="print:hidden" data-html2canvas-ignore="true"></td>
                                 </tr>
