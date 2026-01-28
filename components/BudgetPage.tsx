@@ -50,13 +50,8 @@ export const BudgetPage: FC<BudgetPageProps> = ({ activeCompany }) => {
                     mimeType: fc.mimeType
                 });
 
-                // Map issuer info to each item for the table
-                const itemsWithIssuer = data.items.map((item: any) => ({
-                    ...item,
-                    issuerName: data.issuerName,
-                    issuerAddress: data.issuerAddress
-                }));
-                allItems.push(...itemsWithIssuer);
+                // Items now have issuerName and issuerAddress directly
+                allItems.push(...data.items);
             }
             setBudgetItems(prev => [...prev, ...allItems]);
             setFiles([]); // Clear files after processing
@@ -195,7 +190,7 @@ export const BudgetPage: FC<BudgetPageProps> = ({ activeCompany }) => {
                         <div className="absolute left-2 top-1/2 -translate-y-1/2">
                             {activeCompany?.logoUrl && <img src={activeCompany.logoUrl} alt="logo" className="h-12" />}
                         </div>
-                        <h1 className="text-xl font-black uppercase text-slate-800 leading-tight">
+                        <h1 className="text-sm font-black uppercase text-slate-800 leading-tight">
                             LISTA DE PRODUTOS PARA CESTAS BÁSICAS - {activeCompany?.name || 'OCEAN'}
                         </h1>
                         <p className="text-sm font-black text-slate-600 mt-1 uppercase">
