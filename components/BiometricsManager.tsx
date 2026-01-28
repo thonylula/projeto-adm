@@ -832,7 +832,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
             };
         });
 
-        return processed.filter(item => item.hasBiometrics);
+        return processed;
     }, [currentData, filterText, biometryDate]);
 
 
