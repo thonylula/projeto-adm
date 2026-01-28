@@ -1465,7 +1465,19 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                         </td>
 
                                         <td className={`px-4 py-4 text-center font-bold transition-colors duration-500 ${isDarkMode ? 'text-slate-600' : 'text-slate-300'}`}>
-                                            {item.pAntDisplay}
+                                            {isPublic ? (
+                                                <span className={`font-bold transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{item.pAntDisplay}</span>
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    value={item.pAntDisplay}
+                                                    placeholder="-"
+                                                    onChange={(e) => handleUpdateRow(item.viveiro, 'pAntStr', e.target.value)}
+                                                    className={`w-16 text-center bg-transparent border-b outline-none transition-all font-bold ${isDarkMode
+                                                        ? 'text-slate-500 border-slate-700 focus:border-orange-500 focus:text-slate-300'
+                                                        : 'text-slate-500 border-gray-200 focus:border-orange-500 focus:text-slate-700'}`}
+                                                />
+                                            )}
                                         </td>
 
                                         <td className={`px-4 py-4 text-center font-black transition-colors duration-500 ${item.incSemanalStr.includes('+') ? 'text-emerald-500' : (isDarkMode ? 'text-slate-600' : 'text-slate-400')}`}>
