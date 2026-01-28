@@ -2,7 +2,7 @@ import React, { useState, useCallback, FC } from 'react';
 import { getOrchestrator } from '../services/agentService';
 import { InvoiceData, InvoiceItem, Company } from '../types';
 import { ImageUploader } from './ImageUploader';
-import { exportToPdf } from '../utils/exportUtils';
+import { exportToPdf, exportToPng } from '../utils/exportUtils';
 
 interface BudgetPageProps {
     activeCompany?: Company | null;
@@ -142,10 +142,16 @@ export const BudgetPage: FC<BudgetPageProps> = ({ activeCompany }) => {
                                     <span>+</span> Item
                                 </button>
                                 <button
-                                    onClick={() => exportToPdf('budget-view', `orcamento_${new Date().getTime()}`)}
+                                    onClick={() => exportToPdf('budget-view', `orcamento_${new Date().getTime()}`, { pagebreak: { mode: 'css' } })}
                                     className="bg-red-600 text-white px-4 py-2 rounded-sm text-xs font-black uppercase shadow-md hover:bg-red-700 transition-all"
                                 >
                                     Baixar PDF
+                                </button>
+                                <button
+                                    onClick={() => exportToPng('budget-view', `orcamento_${new Date().getTime()}`)}
+                                    className="bg-orange-500 text-white px-4 py-2 rounded-sm text-xs font-black uppercase shadow-md hover:bg-orange-600 transition-all"
+                                >
+                                    Baixar PNG
                                 </button>
                                 <button
                                     onClick={() => setBudgetItems([])}
