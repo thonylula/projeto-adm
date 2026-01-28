@@ -1343,15 +1343,17 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                             />
                         </div>
 
-                        <button
-                            onClick={() => setShowAddTankModal(true)}
-                            className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                            </svg>
-                            <span className="hidden leading-none sm:inline">Adicionar</span>
-                        </button>
+                        {!isPublic && (
+                            <button
+                                onClick={() => setShowAddTankModal(true)}
+                                className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                                </svg>
+                                <span className="hidden leading-none sm:inline">Adicionar</span>
+                            </button>
+                        )}
                     </div>
 
                     <div className={`rounded-2xl border overflow-x-auto mb-8 scrollbar-thin scrollbar-thumb-gray-200 transition-colors duration-500 ${isDarkMode ? 'border-slate-800 bg-slate-900/50' : 'border-gray-100 bg-white'}`}>
