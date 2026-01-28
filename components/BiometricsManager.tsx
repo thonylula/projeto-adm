@@ -501,10 +501,18 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
             for (const item of biometricsHistory) {
                 const ok = await SupabaseService.deleteBiometry(item.id);
                 if (ok) count++;
+                setBiometricsHistory([]);
+                setLoadedRecordId(null);
+                showToast(`✅ ${count} registros removidos do histórico.`);
             }
-            setBiometricsHistory([]);
-            setLoadedRecordId(null);
-            showToast(`✅ ${count} registros removidos do histórico.`);
+        }
+    };
+
+    const handleDeleteRow = (viveiro: string) => {
+        if (window.confirm(`Tem certeza que deseja remover o viveiro ${viveiro}?`)) {
+            setCurrentData(prev => prev.filter(item => item.viveiro !== viveiro));
+            showToast(`🗑️ Viveiro ${viveiro} removido.`);
+            setNeedsSave(true);
         }
     };
 
@@ -1374,10 +1382,23 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                         <td className={`px-5 py-4 font-bold sticky left-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] whitespace-nowrap transition-colors duration-500 ${isDarkMode
                                             ? 'text-slate-100 bg-[#0B0F1A] group-hover:bg-slate-800/40'
                                             : 'text-slate-800 bg-white group-hover:bg-slate-50'}`}>
-                                            <div className={`inline-flex items-center justify-center px-3 py-1.5 rounded-lg border font-extrabold tracking-tight min-w-[80px] transition-colors duration-500 ${isDarkMode
-                                                ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
-                                                : 'border-emerald-100 bg-emerald-50/50 text-emerald-700'}`}>
-                                                {item.viveiro}
+                                            <div className="flex items-center gap-2">
+                                                <div className={`inline-flex items-center justify-center px-3 py-1.5 rounded-lg border font-extrabold tracking-tight min-w-[80px] transition-colors duration-500 ${isDarkMode
+                                                    ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                                                    : 'border-emerald-100 bg-emerald-50/50 text-emerald-700'}`}>
+                                                    {item.viveiro}
+                                                </div>
+                                                {!isPublic && (
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteRow(item.viveiro); }}
+                                                        className="text-gray-300 hover:text-red-500 bg-gray-50 hover:bg-red-50 rounded-full p-1.5 transition-all opacity-0 group-hover:opacity-100"
+                                                        title="Excluir viveiro"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                        </svg>
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
 
