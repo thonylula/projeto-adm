@@ -1315,6 +1315,37 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
                 {/* Tabela Principal */}
                 <main className={`px-4 md:px-6 pb-6 transition-colors duration-500 ${isDarkMode ? 'bg-[#0B0F1A]' : 'bg-white'}`}>
+
+                    {/* BARRA DE FILTRO E ADICIONAR (RESTAURADO) */}
+                    <div className="flex justify-between items-center mb-4 gap-4">
+                        <div className="relative w-full max-w-md">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Filtrar viveiro..."
+                                value={filterText}
+                                onChange={(e) => setFilterText(e.target.value)}
+                                className={`pl-10 pr-4 py-2.5 rounded-xl border w-full transition-all text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500/20 ${isDarkMode
+                                    ? 'bg-slate-900 border-slate-700 text-slate-200 placeholder-slate-500 focus:border-orange-500/50'
+                                    : 'bg-white border-gray-200 text-slate-700 placeholder-gray-400 focus:border-orange-500'}`}
+                            />
+                        </div>
+
+                        <button
+                            onClick={() => setShowAddTankModal(true)}
+                            className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                            </svg>
+                            <span className="hidden leading-none sm:inline">Adicionar</span>
+                        </button>
+                    </div>
+
                     <div className={`rounded-2xl border overflow-x-auto mb-8 scrollbar-thin scrollbar-thumb-gray-200 transition-colors duration-500 ${isDarkMode ? 'border-slate-800 bg-slate-900/50' : 'border-gray-100 bg-white'}`}>
                         <table className="w-full text-[10px] md:text-xs text-left min-w-[1000px] md:min-w-0">
                             <thead className={`uppercase font-black tracking-widest border-b transition-colors duration-500 ${isDarkMode
