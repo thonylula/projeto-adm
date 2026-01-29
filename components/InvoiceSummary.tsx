@@ -13,97 +13,278 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ data, companyNam
     const formatCurrency = (val: number) =>
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
+    const orange = '#f97316';
+    const darkBlue = '#1e293b';
+    const lightGray = '#f8fafc';
+    const mediumGray = '#f1f5f9';
+
     return (
         <div
-            className="bg-white rounded-sm overflow-hidden font-sans text-[#444] print:shadow-none"
             style={{
-                border: '6px solid #f97316',
-                margin: '2px',
-                WebkitPrintColorAdjust: 'exact'
-            }}
+                backgroundColor: '#ffffff',
+                border: `4px solid ${orange}`,
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                color: '#444',
+                WebkitPrintColorAdjust: 'exact',
+                printColorAdjust: 'exact'
+            } as React.CSSProperties}
         >
-            {/* Top Bar with Header Meta */}
-            <div className="p-1 px-2 border-b-2 flex justify-between items-center" style={{ borderColor: '#f97316', borderBottom: '2px solid #f97316' }}>
-                <div className="space-y-1">
-                    <h1 className="text-2xl font-black uppercase text-slate-900 leading-none">{companyName || data.recipientName}</h1>
-                    <p className="text-sm text-slate-700 font-extrabold leading-tight">CNPJ: {data.recipientCnpj || '---'}</p>
+            {/* Header - Dark Blue Background like APP */}
+            <div style={{
+                backgroundColor: darkBlue,
+                padding: '16px 20px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start'
+            }}>
+                <div>
+                    <h1 style={{
+                        fontSize: '22px',
+                        fontWeight: 900,
+                        textTransform: 'uppercase',
+                        color: '#ffffff',
+                        margin: 0,
+                        lineHeight: 1.2,
+                        letterSpacing: '-0.5px'
+                    }}>
+                        {companyName || data.recipientName}
+                    </h1>
+                    <p style={{
+                        fontSize: '13px',
+                        color: '#94a3b8',
+                        fontWeight: 700,
+                        margin: '4px 0 0 0'
+                    }}>
+                        CNPJ: {data.recipientCnpj || '---'}
+                    </p>
                 </div>
-                <div className="text-right">
-                    <p className="text-base font-black text-slate-900 leading-tight">Data: {data.issueDate || '---'}</p>
+                <div style={{ textAlign: 'right' }}>
+                    <p style={{
+                        fontSize: '14px',
+                        fontWeight: 800,
+                        color: orange,
+                        margin: 0
+                    }}>
+                        Data: {data.issueDate || '---'}
+                    </p>
                 </div>
             </div>
 
-            {/* Meta Info Grid - Using Flex for better PDF compatibility */}
-            <div
-                className="flex flex-wrap p-2 text-xs border-b-2"
-                style={{ borderColor: '#f97316', borderBottom: '2px solid #f97316' }}
-            >
+            {/* Meta Info Grid - White background */}
+            <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                padding: '12px 16px',
+                backgroundColor: '#ffffff',
+                borderBottom: '1px solid #e2e8f0'
+            }}>
                 {[
-                    { label: 'Emitente', value: data.issuerName || '---' },
-                    { label: 'Destinatário', value: data.recipientName || '---' },
-                    { label: 'Número da Nota', value: data.invoiceNumber || '---' },
-                    { label: 'Série', value: data.series || '1' },
-                    { label: 'Emissão', value: data.issueDate || '---' },
-                    { label: 'Valor Total', value: formatCurrency(data.totalValue), isPrice: true }
+                    { label: 'Emitente', value: data.issuerName || '---', width: '33%' },
+                    { label: 'Destinatário', value: data.recipientName || '---', width: '33%' },
+                    { label: 'Número da Nota', value: data.invoiceNumber || '---', width: '15%' },
+                    { label: 'Série', value: data.series || '1', width: '5%' },
+                    { label: 'Emissão', value: data.issueDate || '---', width: '14%' },
+                    { label: 'Valor Total', value: formatCurrency(data.totalValue), isPrice: true, width: '100%' }
                 ].map((info, i) => (
-                    <div key={i} style={{ width: '33.33%', padding: '1px 2px', marginBottom: '4px' }}>
-                        <p className="text-[#999] font-black mb-0 uppercase tracking-tighter text-[7px] leading-tight">{info.label}</p>
-                        <p className={`font-black uppercase text-slate-800 leading-tight ${info.isPrice ? 'text-sm text-green-600' : 'text-[9px]'}`}>{info.value}</p>
+                    <div key={i} style={{
+                        width: info.width,
+                        padding: '4px 8px',
+                        marginBottom: '4px'
+                    }}>
+                        <p style={{
+                            fontSize: '9px',
+                            color: '#64748b',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            margin: 0,
+                            letterSpacing: '0.5px'
+                        }}>
+                            {info.label}
+                        </p>
+                        <p style={{
+                            fontSize: info.isPrice ? '18px' : '11px',
+                            fontWeight: 900,
+                            textTransform: 'uppercase',
+                            color: info.isPrice ? '#16a34a' : darkBlue,
+                            margin: '2px 0 0 0'
+                        }}>
+                            {info.value}
+                        </p>
                     </div>
                 ))}
             </div>
 
-            {/* Items Section */}
-            <div className="p-1 px-2">
-                <div className="flex justify-between items-end mb-0.5">
-                    <h2 className="text-[11px] font-black text-slate-800 uppercase tracking-tight">
-                        Itens da Nota
-                    </h2>
-                    <span className="text-[8px] font-bold text-slate-400">Qtd: {data.items?.length || 0}</span>
-                </div>
-                <div className="h-1 w-full bg-orange-500 mb-1 rounded-none" style={{ backgroundColor: '#f97316' }} />
+            {/* Orange Divider Bar */}
+            <div style={{
+                height: '6px',
+                width: '100%',
+                backgroundColor: orange
+            }} />
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="border-b-2 border-orange-500">
-                                <th className="px-2 py-2 text-[9px] font-black text-slate-500 uppercase tracking-widest">Código</th>
-                                <th className="px-2 py-2 text-[9px] font-black text-slate-500 uppercase tracking-widest">Descrição</th>
-                                <th className="px-2 py-2 text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">Quantidade</th>
-                                <th className="px-2 py-2 text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">Preço Unit.</th>
-                                <th className="px-2 py-2 text-[9px] font-black text-slate-500 uppercase tracking-widest text-right">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-orange-200">
-                            {(data?.items || []).map((item, index) => (
-                                <tr key={item.id || index} className="hover:bg-orange-50/50 transition-all duration-200 group">
-                                    <td className="px-2 py-1.5 text-[10px] font-bold text-slate-400 font-mono tracking-tighter group-hover:text-orange-500">{item.code || '---'}</td>
-                                    <td className="px-2 py-1.5 text-[10px] font-extrabold text-slate-800 uppercase leading-snug tracking-tight max-w-md">{item.description}</td>
-                                    <td className="px-2 py-1.5 text-[10px] text-right text-slate-700 font-bold bg-slate-50/50">
-                                        {(item.quantity || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3 })} {item.unit || ''}
-                                    </td>
-                                    <td className="px-2 py-1.5 text-[10px] text-right text-slate-600 font-medium">
-                                        {formatCurrency(item.price || 0)}
-                                    </td>
-                                    <td className="px-2 py-1.5 text-[10px] text-right font-black text-slate-900 bg-orange-50/20">
-                                        {formatCurrency(item.total || 0)}
-                                    </td>
-                                </tr>
-                            ))}
-                            <tr className="border-t-2 bg-orange-50" style={{ borderTop: '2px solid #f97316' }}>
-                                <td colSpan={4} className="px-2 py-1 text-right text-[10px] font-black text-slate-800 uppercase tracking-wide">Total Geral:</td>
-                                <td className="px-2 py-1 text-right text-sm font-black text-green-600">
-                                    {formatCurrency((data?.items || []).reduce((sum, item) => sum + (item.total || 0), 0))}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            {/* Items Section Header */}
+            <div style={{
+                padding: '12px 16px 8px 16px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                backgroundColor: '#ffffff'
+            }}>
+                <h2 style={{
+                    fontSize: '14px',
+                    fontWeight: 900,
+                    color: darkBlue,
+                    textTransform: 'uppercase',
+                    margin: 0,
+                    letterSpacing: '0.5px'
+                }}>
+                    ITENS DA NOTA
+                </h2>
+                <span style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    color: '#64748b',
+                    backgroundColor: lightGray,
+                    padding: '2px 8px',
+                    borderRadius: '4px'
+                }}>
+                    Qtd: {data.items?.length || 0}
+                </span>
             </div>
 
-            <div className="p-4 flex justify-between items-center border-t border-slate-100 bg-slate-50/30">
-                <div className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Resumo Automatizado do Sistema</div>
-                {companyLogo && <img src={companyLogo} alt="Logo" className="h-8 w-auto opacity-40 grayscale hover:grayscale-0 transition-all" />}
+            {/* Items Table */}
+            <div style={{ padding: '0 16px' }}>
+                <table style={{
+                    width: '100%',
+                    borderCollapse: 'collapse',
+                    fontSize: '11px'
+                }}>
+                    <thead>
+                        <tr style={{
+                            backgroundColor: lightGray,
+                            borderBottom: `2px solid ${orange}`
+                        }}>
+                            <th style={{ padding: '10px 8px', textAlign: 'left', fontSize: '10px', fontWeight: 800, color: '#475569', textTransform: 'uppercase' }}>Código</th>
+                            <th style={{ padding: '10px 8px', textAlign: 'left', fontSize: '10px', fontWeight: 800, color: '#475569', textTransform: 'uppercase' }}>Descrição</th>
+                            <th style={{ padding: '10px 8px', textAlign: 'right', fontSize: '10px', fontWeight: 800, color: '#475569', textTransform: 'uppercase' }}>Quantidade</th>
+                            <th style={{ padding: '10px 8px', textAlign: 'right', fontSize: '10px', fontWeight: 800, color: '#475569', textTransform: 'uppercase' }}>Preço Unit.</th>
+                            <th style={{ padding: '10px 8px', textAlign: 'right', fontSize: '10px', fontWeight: 800, color: '#475569', textTransform: 'uppercase' }}>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {(data?.items || []).map((item, index) => (
+                            <tr
+                                key={item.id || index}
+                                style={{
+                                    backgroundColor: index % 2 === 0 ? '#ffffff' : mediumGray,
+                                    borderBottom: '1px solid #e2e8f0'
+                                }}
+                            >
+                                <td style={{
+                                    padding: '10px 8px',
+                                    color: '#64748b',
+                                    fontWeight: 600,
+                                    fontFamily: 'monospace',
+                                    fontSize: '10px'
+                                }}>
+                                    {item.code || '---'}
+                                </td>
+                                <td style={{
+                                    padding: '10px 8px',
+                                    color: darkBlue,
+                                    fontWeight: 800,
+                                    textTransform: 'uppercase',
+                                    fontSize: '11px'
+                                }}>
+                                    {item.description}
+                                </td>
+                                <td style={{
+                                    padding: '10px 8px',
+                                    textAlign: 'right',
+                                    color: '#334155',
+                                    fontWeight: 700,
+                                    fontSize: '11px'
+                                }}>
+                                    {(item.quantity || 0).toLocaleString('pt-BR', { minimumFractionDigits: 3 })} {item.unit || ''}
+                                </td>
+                                <td style={{
+                                    padding: '10px 8px',
+                                    textAlign: 'right',
+                                    color: '#64748b',
+                                    fontWeight: 600,
+                                    fontSize: '11px'
+                                }}>
+                                    {formatCurrency(item.price || 0)}
+                                </td>
+                                <td style={{
+                                    padding: '10px 8px',
+                                    textAlign: 'right',
+                                    fontWeight: 900,
+                                    color: darkBlue,
+                                    fontSize: '12px'
+                                }}>
+                                    {formatCurrency(item.total || 0)}
+                                </td>
+                            </tr>
+                        ))}
+                        {/* Total Row */}
+                        <tr style={{
+                            backgroundColor: lightGray,
+                            borderTop: `2px solid ${orange}`
+                        }}>
+                            <td colSpan={4} style={{
+                                padding: '12px 8px',
+                                textAlign: 'right',
+                                fontSize: '12px',
+                                fontWeight: 900,
+                                color: darkBlue,
+                                textTransform: 'uppercase'
+                            }}>
+                                Total Geral:
+                            </td>
+                            <td style={{
+                                padding: '12px 8px',
+                                textAlign: 'right',
+                                fontSize: '16px',
+                                fontWeight: 900,
+                                color: '#16a34a'
+                            }}>
+                                {formatCurrency((data?.items || []).reduce((sum, item) => sum + (item.total || 0), 0))}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Footer */}
+            <div style={{
+                padding: '16px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                borderTop: '1px solid #e2e8f0',
+                backgroundColor: lightGray,
+                marginTop: '8px'
+            }}>
+                <div style={{
+                    fontSize: '10px',
+                    color: '#64748b',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px'
+                }}>
+                    Resumo Automatizado do Sistema
+                </div>
+                {companyLogo && (
+                    <img
+                        src={companyLogo}
+                        alt="Logo"
+                        style={{
+                            height: '40px',
+                            width: 'auto',
+                            objectFit: 'contain'
+                        }}
+                    />
+                )}
             </div>
         </div>
     );

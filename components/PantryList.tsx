@@ -3,7 +3,7 @@ import type { InvoiceData, ItemAllocationConfig } from '../types';
 
 interface PantryListProps {
     items: any[];
-    employees: { name: string; isNonDrinker: boolean }[];
+    employees: { name: string; isNonDrinker: boolean; message?: string }[];
     motivationalMessages?: string[];
     sloganImage?: string | null;
     companyName: string;
@@ -25,13 +25,16 @@ export const PantryList: React.FC<PantryListProps> = ({
     appMode = 'BASIC'
 }) => {
     const formatQty = (qty: number) => qty.toLocaleString('pt-BR', { minimumFractionDigits: 3 });
+    const orange = '#f97316';
+    const darkBlue = '#1e293b';
+    const lightGray = '#f8fafc';
 
     const totalEmployees = (employees || []).length;
     const nonDrinkerCount = (employees || []).filter(e => e.isNonDrinker).length;
     const drinkerCount = totalEmployees - nonDrinkerCount;
 
     return (
-        <div className="space-y-8 print:space-y-4 print:grid print:grid-cols-2 print:gap-4">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {(employees || []).map((emp, index) => {
                 const { name, isNonDrinker } = emp;
 
@@ -47,114 +50,251 @@ export const PantryList: React.FC<PantryListProps> = ({
                 return (
                     <div
                         key={index}
-                        className="bg-white rounded-sm shadow-sm overflow-hidden font-sans text-[#444] print:shadow-none print:mb-2 print:break-inside-avoid flex flex-col relative christmas-card overflow-visible"
-                        style={{ border: '2px solid #f97316', minHeight: '120px' }}
+                        style={{
+                            backgroundColor: '#ffffff',
+                            border: `2px solid ${orange}`,
+                            fontFamily: 'system-ui, -apple-system, sans-serif',
+                            color: '#444',
+                            position: 'relative',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            WebkitPrintColorAdjust: 'exact',
+                            printColorAdjust: 'exact',
+                            pageBreakInside: 'avoid'
+                        } as React.CSSProperties}
                     >
-                        {appMode === 'CHRISTMAS' && (
-                            <div className="w-full text-center py-2 border-b border-red-200 hidden print:block">
-                                <span className="text-lg">🎄</span>
-                                <span className="ml-2 text-xs font-black text-red-600 uppercase tracking-tighter">
-                                    Boas Festas 2025-2026
-                                </span>
-                            </div>
-                        )}
-
-                        {/* Tag for special basket */}
-                        <div className={`absolute top-0 right-0 px-2 py-0.5 text-[7px] font-black uppercase text-white ${isNonDrinker ? 'bg-indigo-600' : 'bg-orange-500'} print:hidden`}>
-                            {isNonDrinker ? 'ABSTÊMIO' : 'CESTA PADRÃO'}
-                        </div>
-
-                        {/* Header */}
-                        <div className="p-1.5 border-b flex justify-between items-center" style={{ borderColor: '#f97316' }}>
-                            <div className="space-y-0.5 text-left flex items-center gap-2">
+                        {/* Header with Logo */}
+                        <div style={{
+                            padding: '12px 16px',
+                            borderBottom: `1px solid ${orange}`,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            backgroundColor: '#ffffff'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 {companyLogo && (
-                                    <img src={companyLogo} alt="Logo" className="h-12 w-auto object-contain" />
+                                    <img
+                                        src={companyLogo}
+                                        alt="Logo"
+                                        style={{
+                                            height: '40px',
+                                            width: 'auto',
+                                            objectFit: 'contain'
+                                        }}
+                                    />
                                 )}
                                 <div>
-                                    <h1 className="text-lg font-black uppercase text-slate-900 leading-none">{companyName}</h1>
-                                    <p className="text-[10px] text-slate-700 font-extrabold">CNPJ: {recipientCnpj || '---'}</p>
+                                    <h1 style={{
+                                        fontSize: '16px',
+                                        fontWeight: 900,
+                                        textTransform: 'uppercase',
+                                        color: darkBlue,
+                                        margin: 0,
+                                        lineHeight: 1.2
+                                    }}>
+                                        {companyName}
+                                    </h1>
+                                    <p style={{
+                                        fontSize: '10px',
+                                        color: '#64748b',
+                                        fontWeight: 700,
+                                        margin: '2px 0 0 0'
+                                    }}>
+                                        CNPJ: {recipientCnpj || '---'}
+                                    </p>
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-xs font-black text-slate-900 leading-none">Data: {new Date().toLocaleDateString('pt-BR')}</p>
+                            <div style={{ textAlign: 'right' }}>
+                                {/* Basket Type Badge */}
+                                <div style={{
+                                    backgroundColor: orange,
+                                    color: '#ffffff',
+                                    padding: '4px 10px',
+                                    borderRadius: '4px',
+                                    fontSize: '9px',
+                                    fontWeight: 900,
+                                    textTransform: 'uppercase',
+                                    marginBottom: '4px'
+                                }}>
+                                    {isNonDrinker ? '🥤 CESTA ESPECIAL' : '🍺 CESTA PADRÃO'}
+                                </div>
+                                <p style={{
+                                    fontSize: '11px',
+                                    fontWeight: 800,
+                                    color: darkBlue,
+                                    margin: 0
+                                }}>
+                                    Data: {new Date().toLocaleDateString('pt-BR')}
+                                </p>
                             </div>
                         </div>
 
-                        <div className="h-1 w-full" style={{ backgroundColor: '#f97316' }} />
+                        {/* Orange Divider */}
+                        <div style={{
+                            height: '4px',
+                            width: '100%',
+                            backgroundColor: orange
+                        }} />
 
                         {/* Motivational Message */}
-                        <div className="p-1 px-4 text-center">
-                            <p className="text-indigo-600 font-black italic text-[11px] leading-tight">
-                                "{emp.message || "Sua dedicação é a força que impulsiona nosso sucesso. Obrigado!"}"
+                        <div style={{
+                            padding: '10px 16px',
+                            textAlign: 'center',
+                            backgroundColor: '#ffffff'
+                        }}>
+                            <p style={{
+                                color: '#4f46e5',
+                                fontWeight: 800,
+                                fontStyle: 'italic',
+                                fontSize: '11px',
+                                lineHeight: 1.4,
+                                margin: 0
+                            }}>
+                                "{(emp as any).message || "Sua dedicação é a força que impulsiona nosso sucesso. Obrigado!"}"
                             </p>
                         </div>
 
-                        {/* Table */}
-                        <div className="flex-1 px-4 pb-4">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="border-b border-orange-500">
-                                        <th className="py-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest">DESCRIÇÃO DO PRODUTO</th>
-                                        <th className="py-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right">QUANTIDADE</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-orange-100">
-                                    {(visibleItems || []).map((item, idx) => {
-                                        const config = (itemAllocation || {})[item.id] || { mode: 'ALL' };
-                                        let qtyPerEmployee = 0;
+                        {/* Items Table */}
+                        <div style={{ flex: 1, padding: '0 16px 16px 16px' }}>
+                            {/* Table Header */}
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                padding: '8px 0',
+                                borderBottom: `1px solid ${orange}`,
+                                marginBottom: '4px'
+                            }}>
+                                <span style={{
+                                    fontSize: '10px',
+                                    fontWeight: 700,
+                                    color: '#64748b',
+                                    textTransform: 'uppercase'
+                                }}>
+                                    Descrição do Produto
+                                </span>
+                                <span style={{
+                                    fontSize: '10px',
+                                    fontWeight: 700,
+                                    color: '#64748b',
+                                    textTransform: 'uppercase'
+                                }}>
+                                    Quantidade
+                                </span>
+                            </div>
 
-                                        if (config.mode === 'CUSTOM') {
-                                            qtyPerEmployee = isNonDrinker
-                                                ? (config.customQtyNonDrinker || 0)
-                                                : (config.customQtyDrinker || 0);
-                                        } else if (config.mode === 'ALL') {
-                                            qtyPerEmployee = (item.quantity || 0) / (totalEmployees || 1);
-                                        } else if (config.mode === 'NON_DRINKER' && isNonDrinker) {
-                                            qtyPerEmployee = (item.quantity || 0) / (nonDrinkerCount || 1);
-                                        } else if (config.mode === 'DRINKER' && !isNonDrinker) {
-                                            qtyPerEmployee = (item.quantity || 0) / (drinkerCount || 1);
-                                        }
+                            {/* Table Body */}
+                            {(visibleItems || []).map((item, idx) => {
+                                const config = (itemAllocation || {})[item.id] || { mode: 'ALL' };
+                                let qtyPerEmployee = 0;
 
-                                        return (
-                                            <tr key={idx}>
-                                                <td className="py-0.5 text-[10px] font-bold text-slate-800 uppercase leading-snug">{item.description}</td>
-                                                <td className="py-0.5 text-[10px] text-right text-slate-600 font-bold">
-                                                    {formatQty(qtyPerEmployee)} {item.unit}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                    {(visibleItems || []).length === 0 && (
-                                        <tr>
-                                            <td colSpan={2} className="py-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Nenhum item alocado para este grupo</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                if (config.mode === 'CUSTOM') {
+                                    qtyPerEmployee = isNonDrinker
+                                        ? (config.customQtyNonDrinker || 0)
+                                        : (config.customQtyDrinker || 0);
+                                } else if (config.mode === 'ALL') {
+                                    qtyPerEmployee = (item.quantity || 0) / (totalEmployees || 1);
+                                } else if (config.mode === 'NON_DRINKER' && isNonDrinker) {
+                                    qtyPerEmployee = (item.quantity || 0) / (nonDrinkerCount || 1);
+                                } else if (config.mode === 'DRINKER' && !isNonDrinker) {
+                                    qtyPerEmployee = (item.quantity || 0) / (drinkerCount || 1);
+                                }
+
+                                return (
+                                    <div
+                                        key={idx}
+                                        style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            padding: '6px 0',
+                                            borderBottom: '1px solid #fed7aa'
+                                        }}
+                                    >
+                                        <span style={{
+                                            fontSize: '11px',
+                                            fontWeight: 700,
+                                            color: darkBlue,
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            {item.description}
+                                        </span>
+                                        <span style={{
+                                            fontSize: '11px',
+                                            fontWeight: 700,
+                                            color: '#475569',
+                                            textAlign: 'right'
+                                        }}>
+                                            {formatQty(qtyPerEmployee)} {item.unit}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+
+                            {(visibleItems || []).length === 0 && (
+                                <div style={{
+                                    padding: '24px',
+                                    textAlign: 'center',
+                                    fontSize: '11px',
+                                    fontWeight: 700,
+                                    color: '#94a3b8',
+                                    textTransform: 'uppercase'
+                                }}>
+                                    Nenhum item alocado para este grupo
+                                </div>
+                            )}
                         </div>
 
                         {/* Footer Divider */}
-                        <div className="h-0.5 w-full border-t-2 border-dashed border-orange-500 mt-auto" />
+                        <div style={{
+                            height: '2px',
+                            width: '100%',
+                            borderTop: `2px dashed ${orange}`,
+                            marginTop: 'auto'
+                        }} />
 
-                        {/* Dummy Duplicate Header for visual reference like in image */}
-                        <div className="p-1.5 px-3 bg-slate-50/50 flex justify-between items-center opacity-60">
-                            <div className="space-y-0.5 flex-1">
-                                <h1 className="text-[8px] font-bold uppercase text-slate-800">{companyName}</h1>
-                                <p className="text-[7px] text-slate-500 font-medium">
-                                    Portador: <span className="font-black underline">{name}</span>
+                        {/* Footer with employee name */}
+                        <div style={{
+                            padding: '10px 16px',
+                            backgroundColor: lightGray,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                        }}>
+                            <div>
+                                <p style={{
+                                    fontSize: '9px',
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                    color: darkBlue,
+                                    margin: 0
+                                }}>
+                                    {companyName}
+                                </p>
+                                <p style={{
+                                    fontSize: '10px',
+                                    color: '#475569',
+                                    fontWeight: 600,
+                                    margin: '2px 0 0 0'
+                                }}>
+                                    Portador: <span style={{
+                                        fontWeight: 900,
+                                        color: orange,
+                                        textDecoration: 'underline'
+                                    }}>{name}</span>
                                 </p>
                             </div>
-                            <div className="text-right">
-                                <p className="text-[8px] font-bold text-slate-700 flex items-center justify-end gap-1">
-                                    {isNonDrinker ? '🥤 CESTA ESPECIAL' : '🍺 CESTA PADRÃO'}
-                                </p>
+                            <div style={{
+                                fontSize: '10px',
+                                fontWeight: 700,
+                                color: '#64748b',
+                                textTransform: 'uppercase'
+                            }}>
+                                {isNonDrinker ? '🥤 CESTA ESPECIAL' : '🍺 CESTA PADRÃO'}
                             </div>
                         </div>
                     </div>
                 );
             })}
-
-
         </div>
     );
 };

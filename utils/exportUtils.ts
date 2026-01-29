@@ -3,29 +3,69 @@ import html2canvas from 'html2canvas';
 import html2pdf from 'html2pdf.js';
 
 /**
+ * Preload all images in an element to ensure they're ready for export
+ */
+const preloadImages = async (element: HTMLElement): Promise<void> => {
+    const images = element.querySelectorAll('img');
+    await Promise.all(
+        Array.from(images).map((img) => {
+            return new Promise<void>((resolve) => {
+                if (img.complete && img.naturalHeight !== 0) {
+                    resolve();
+                } else {
+                    img.onload = () => resolve();
+                    img.onerror = () => resolve();
+                    // Timeout fallback
+                    setTimeout(resolve, 2000);
+                }
+            });
+        })
+    );
+};
+
+/**
  * Exports an element to PDF directly using html2pdf.
  */
 export const exportToPdf = async (elementId: string, fileName: string, customOptions: any = {}) => {
     const element = document.getElementById(elementId);
     if (!element) return;
 
+    console.log('🔄 Preparing PDF export...');
+
+    // Preload all images and fonts
+    await Promise.all([
+        preloadImages(element),
+        document.fonts.ready
+    ]);
+
+    console.log('✅ Assets loaded, generating PDF...');
+
     const defaultOpt = {
-        margin: [2, 2] as [number, number],
+        margin: [5, 5] as [number, number],
         filename: `${fileName}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
+        image: { type: 'jpeg' as const, quality: 0.99 },
         html2canvas: {
-            scale: 2,
+            scale: 3,
             useCORS: true,
             allowTaint: true,
             letterRendering: true,
             logging: false,
+            backgroundColor: '#ffffff',
             onclone: (clonedDoc: any) => {
+                // Hide elements that should not appear in export
                 const hiddenElements = clonedDoc.querySelectorAll('.print\\:hidden, .hidden-in-export');
                 hiddenElements.forEach((hiddenEl: any) => {
                     hiddenEl.style.display = 'none';
                     hiddenEl.style.visibility = 'hidden';
                     hiddenEl.style.opacity = '0';
                 });
+
+                // Ensure print color adjust is applied
+                const exportArea = clonedDoc.getElementById(elementId);
+                if (exportArea) {
+                    exportArea.style.WebkitPrintColorAdjust = 'exact';
+                    exportArea.style.printColorAdjust = 'exact';
+                }
             }
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' as const },
@@ -36,9 +76,9 @@ export const exportToPdf = async (elementId: string, fileName: string, customOpt
 
     try {
         await html2pdf().set(opt).from(element).save();
+        console.log('✅ PDF exported successfully!');
     } catch (error) {
-        console.error('PDF generation failed:', error);
-        // Fallback to print if library fails
+        console.error('❌ PDF generation failed:', error);
         window.print();
     }
 };
@@ -51,10 +91,16 @@ export const exportToPng = async (elementId: string, fileName: string) => {
     if (!element) return;
 
     try {
-        console.log('🔄 Sincronizando fontes para alta fidelidade...');
-        await checkFonts();
-        await document.fonts.ready;
-        console.log('✅ Fontes sincronizadas.');
+        console.log('🔄 Preparing PNG export...');
+
+        // Preload all images and wait for fonts
+        await Promise.all([
+            preloadImages(element),
+            checkFonts(),
+            document.fonts.ready
+        ]);
+
+        console.log('✅ Assets loaded, generating PNG...');
 
         const canvas = await html2canvas(element, {
             scale: 3, // Ultra-HD Resolution
@@ -62,16 +108,22 @@ export const exportToPng = async (elementId: string, fileName: string) => {
             allowTaint: true,
             backgroundColor: '#ffffff',
             logging: false,
+            imageTimeout: 5000,
             onclone: (clonedDoc) => {
                 const el = clonedDoc.getElementById(elementId);
                 if (el) {
+                    // Ensure visibility
                     el.style.visibility = 'visible';
                     el.style.opacity = '1';
                     el.style.position = 'relative';
                     el.style.left = '0';
                     el.style.display = 'block';
 
-                    // Explicitly hide elements marked for exclusion
+                    // Apply print color adjust
+                    (el.style as any).WebkitPrintColorAdjust = 'exact';
+                    (el.style as any).printColorAdjust = 'exact';
+
+                    // Hide elements marked for exclusion
                     const hiddenElements = clonedDoc.querySelectorAll('.print\\:hidden, .hidden-in-export');
                     hiddenElements.forEach((hiddenEl: any) => {
                         hiddenEl.style.display = 'none';
@@ -79,7 +131,7 @@ export const exportToPng = async (elementId: string, fileName: string) => {
                         hiddenEl.style.opacity = '0';
                     });
 
-                    // Remove scroll and ensure full width
+                    // Remove scroll containers
                     const scrollable = el.querySelector('.overflow-x-auto');
                     if (scrollable) (scrollable as HTMLElement).style.overflow = 'visible';
                 }
@@ -88,8 +140,10 @@ export const exportToPng = async (elementId: string, fileName: string) => {
 
         const link = document.createElement('a');
         link.download = `${fileName}.png`;
-        link.href = canvas.toDataURL('image/png');
+        link.href = canvas.toDataURL('image/png', 1.0);
         link.click();
+
+        console.log('✅ PNG exported successfully!');
     } catch (error) {
         console.error('❌ PNG export failed:', error);
     }
