@@ -20,13 +20,16 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ data, companyNam
 
     return (
         <div
+            className="avoid-page-break"
             style={{
                 backgroundColor: '#ffffff',
                 border: `4px solid ${orange}`,
                 fontFamily: 'system-ui, -apple-system, sans-serif',
                 color: '#444',
                 WebkitPrintColorAdjust: 'exact',
-                printColorAdjust: 'exact'
+                printColorAdjust: 'exact',
+                pageBreakInside: 'avoid',
+                breakInside: 'avoid'
             } as React.CSSProperties}
         >
             {/* Header - Dark Blue Background like APP */}
@@ -35,8 +38,10 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ data, companyNam
                 padding: '16px 20px',
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'flex-start'
-            }}>
+                alignItems: 'flex-start',
+                pageBreakAfter: 'avoid',
+                breakAfter: 'avoid'
+            } as React.CSSProperties}>
                 <div>
                     <h1 style={{
                         fontSize: '22px',
@@ -76,8 +81,10 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ data, companyNam
                 flexWrap: 'wrap',
                 padding: '12px 16px',
                 backgroundColor: '#ffffff',
-                borderBottom: '1px solid #e2e8f0'
-            }}>
+                borderBottom: '1px solid #e2e8f0',
+                pageBreakAfter: 'avoid',
+                breakAfter: 'avoid'
+            } as React.CSSProperties}>
                 {[
                     { label: 'Emitente', value: data.issuerName || '---', width: '33%' },
                     { label: 'Destinatário', value: data.recipientName || '---', width: '33%' },
@@ -118,8 +125,10 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ data, companyNam
             <div style={{
                 height: '6px',
                 width: '100%',
-                backgroundColor: orange
-            }} />
+                backgroundColor: orange,
+                pageBreakAfter: 'avoid',
+                breakAfter: 'avoid'
+            } as React.CSSProperties} />
 
             {/* Items Section Header */}
             <div style={{
@@ -127,8 +136,10 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ data, companyNam
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                backgroundColor: '#ffffff'
-            }}>
+                backgroundColor: '#ffffff',
+                pageBreakAfter: 'avoid',
+                breakAfter: 'avoid'
+            } as React.CSSProperties}>
                 <h2 style={{
                     fontSize: '14px',
                     fontWeight: 900,
@@ -156,8 +167,9 @@ export const InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ data, companyNam
                 <table style={{
                     width: '100%',
                     borderCollapse: 'collapse',
-                    fontSize: '11px'
-                }}>
+                    fontSize: '11px',
+                    pageBreakBefore: 'avoid'
+                } as React.CSSProperties}>
                     <thead>
                         <tr style={{
                             backgroundColor: lightGray,

@@ -15,13 +15,16 @@ export const SignatureSheet: React.FC<SignatureSheetProps> = ({ employeeNames, c
 
     return (
         <div
+            className="avoid-page-break"
             style={{
                 backgroundColor: '#ffffff',
                 border: `4px solid ${orange}`,
                 fontFamily: 'system-ui, -apple-system, sans-serif',
                 color: '#444',
                 WebkitPrintColorAdjust: 'exact',
-                printColorAdjust: 'exact'
+                printColorAdjust: 'exact',
+                pageBreakInside: 'avoid',
+                breakInside: 'avoid'
             } as React.CSSProperties}
         >
             {/* Header - Dark Blue Background like APP */}
@@ -30,8 +33,10 @@ export const SignatureSheet: React.FC<SignatureSheetProps> = ({ employeeNames, c
                 padding: '16px 20px',
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'center'
-            }}>
+                alignItems: 'center',
+                pageBreakAfter: 'avoid',
+                breakAfter: 'avoid'
+            } as React.CSSProperties}>
                 <div>
                     <h1 style={{
                         fontSize: '22px',
@@ -69,11 +74,18 @@ export const SignatureSheet: React.FC<SignatureSheetProps> = ({ employeeNames, c
             <div style={{
                 height: '6px',
                 width: '100%',
-                backgroundColor: orange
-            }} />
+                backgroundColor: orange,
+                pageBreakAfter: 'avoid',
+                breakAfter: 'avoid'
+            } as React.CSSProperties} />
 
             {/* Signature Table */}
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                pageBreakBefore: 'avoid',
+                breakBefore: 'avoid'
+            } as React.CSSProperties}>
                 <thead>
                     <tr style={{ backgroundColor: lightGray }}>
                         <th style={{
@@ -109,7 +121,7 @@ export const SignatureSheet: React.FC<SignatureSheetProps> = ({ employeeNames, c
                             backgroundColor: '#ffffff'
                         }}>
                             <td style={{
-                                padding: '14px 16px',
+                                padding: '12px 16px',
                                 fontSize: '11px',
                                 fontWeight: 800,
                                 color: darkBlue,
@@ -120,13 +132,13 @@ export const SignatureSheet: React.FC<SignatureSheetProps> = ({ employeeNames, c
                                 {name}
                             </td>
                             <td style={{
-                                padding: '14px 16px',
+                                padding: '12px 16px',
                                 verticalAlign: 'bottom'
                             }}>
                                 {/* Signature line - empty space for signature */}
                                 <div style={{
                                     width: '100%',
-                                    height: '28px',
+                                    height: '24px',
                                     borderBottom: '1px solid #cbd5e1'
                                 }} />
                             </td>
