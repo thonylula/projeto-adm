@@ -1,6 +1,8 @@
 import html2canvas from 'html2canvas';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
+// @ts-ignore
+import jsPDF from 'jspdf';
 
 /**
  * Preload all images in an element to ensure they're ready for export
@@ -24,7 +26,7 @@ const preloadImages = async (element: HTMLElement): Promise<void> => {
 };
 
 /**
- * Exports an element to PDF directly using html2pdf.
+ * Exports an element to PDF using html2canvas + jsPDF for reliable rendering
  */
 export const exportToPdf = async (elementId: string, fileName: string, customOptions: any = {}) => {
     const element = document.getElementById(elementId);
@@ -40,46 +42,82 @@ export const exportToPdf = async (elementId: string, fileName: string, customOpt
 
     console.log('✅ Assets loaded, generating PDF...');
 
-    const defaultOpt = {
-        margin: [5, 5] as [number, number],
-        filename: `${fileName}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.99 },
-        html2canvas: {
-            scale: 3,
+    try {
+        // First, capture the element as a canvas using html2canvas
+        const canvas = await html2canvas(element, {
+            scale: 2,
             useCORS: true,
             allowTaint: true,
             letterRendering: true,
             logging: false,
             backgroundColor: '#ffffff',
             onclone: (clonedDoc: any) => {
+                // Remove margins and padding from the cloned element
+                const clonedElement = clonedDoc.getElementById(elementId);
+                if (clonedElement) {
+                    clonedElement.style.margin = '0';
+                    clonedElement.style.marginTop = '0';
+                    clonedElement.style.paddingBottom = '0';
+                    clonedElement.style.WebkitPrintColorAdjust = 'exact';
+                    clonedElement.style.printColorAdjust = 'exact';
+                }
+
                 // Hide elements that should not appear in export
                 const hiddenElements = clonedDoc.querySelectorAll('.print\\:hidden, .hidden-in-export');
                 hiddenElements.forEach((hiddenEl: any) => {
                     hiddenEl.style.display = 'none';
-                    hiddenEl.style.visibility = 'hidden';
-                    hiddenEl.style.opacity = '0';
                 });
-
-                // Ensure print color adjust is applied
-                const exportArea = clonedDoc.getElementById(elementId);
-                if (exportArea) {
-                    exportArea.style.WebkitPrintColorAdjust = 'exact';
-                    exportArea.style.printColorAdjust = 'exact';
-                }
             }
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' as const },
-        pagebreak: { mode: 'css', before: '.break-before-page', after: '.break-after-page', avoid: '.avoid-page-break' }
-    };
+        });
 
-    const opt = { ...defaultOpt, ...customOptions, pagebreak: customOptions.pagebreak || defaultOpt.pagebreak };
+        // Get canvas dimensions
+        const imgWidth = 287; // A4 landscape width in mm (with small margin)
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const pageHeight = 200; // A4 landscape height in mm
 
-    try {
-        await html2pdf().set(opt).from(element).save();
+        // Create PDF
+        const pdf = new jsPDF({
+            orientation: 'landscape',
+            unit: 'mm',
+            format: 'a4'
+        });
+
+        // Convert canvas to image data
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+
+        // If content fits on one page, add it directly
+        if (imgHeight <= pageHeight) {
+            pdf.addImage(imgData, 'JPEG', 5, 5, imgWidth, imgHeight);
+        } else {
+            // Multi-page: split the image across pages
+            let heightLeft = imgHeight;
+            let position = 5;
+            let page = 0;
+
+            while (heightLeft > 0) {
+                if (page > 0) {
+                    pdf.addPage();
+                }
+
+                pdf.addImage(imgData, 'JPEG', 5, position - (page * pageHeight), imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                page++;
+            }
+        }
+
+        pdf.save(`${fileName}.pdf`);
         console.log('✅ PDF exported successfully!');
     } catch (error) {
         console.error('❌ PDF generation failed:', error);
-        window.print();
+        // Fallback to html2pdf
+        const fallbackOpt = {
+            margin: [5, 5],
+            filename: `${fileName}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        };
+        await html2pdf().set(fallbackOpt).from(element).save();
     }
 };
 
