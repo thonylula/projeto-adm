@@ -69,7 +69,7 @@ export const exportToPdf = async (elementId: string, fileName: string, customOpt
             }
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' as const },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] as const }
+        pagebreak: { mode: 'css', before: '.break-before-page', after: '.break-after-page', avoid: '.avoid-page-break' }
     };
 
     const opt = { ...defaultOpt, ...customOptions, pagebreak: customOptions.pagebreak || defaultOpt.pagebreak };
