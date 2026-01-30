@@ -881,57 +881,91 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     // --- EXPORTAÇÃO ---
     const exportPDF = () => {
         if (!dashboardRef.current) return;
-        showToast('Gerando PDF Inteligente...');
+        showToast('Gerando PDF de Alta Fidelidade...');
 
-        dashboardRef.current.classList.add('printing');
+        const el = dashboardRef.current;
+        const originalStyle = el.style.width;
+
+        // Force desktop width for PDF consistency
+        el.style.width = '1200px';
+        el.classList.add('printing');
         document.body.classList.add('printing');
 
         const opt = {
-            margin: [5, 5, 5, 5] as [number, number, number, number],
-            filename: `Relatorio_Bio_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`,
-            image: { type: 'jpeg' as const, quality: 0.98 },
+            margin: 0,
+            filename: `Relatorio_Biometria_${biometryDate}.pdf`,
+            image: { type: 'jpeg', quality: 1.0 },
             html2canvas: {
                 scale: 2,
                 useCORS: true,
-                backgroundColor: '#ffffff',
-                ignoreElements: (element: Element) => {
-                    const hasIgnoreClass = element.classList.contains('no-print');
-                    return hasIgnoreClass;
+                letterRendering: true,
+                backgroundColor: isDarkMode ? '#0B0F1A' : '#ffffff',
+                width: 1200,
+                onclone: (clonedDoc) => {
+                    const clonedEl = clonedDoc.getElementById('dashboard-content');
+                    if (clonedEl) {
+                        clonedEl.style.width = '1200px';
+                        clonedEl.style.margin = '0 auto';
+                    }
                 }
             },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
+            jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait', compress: true },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
         };
 
-        html2pdf().set(opt).from(dashboardRef.current).save().then(() => {
-            dashboardRef.current?.classList.remove('printing');
+        html2pdf().set(opt).from(el).toPdf().get('pdf').then((pdf: any) => {
+            // Se houver mais de uma página, tentamos forçar em uma ou apenas salvar
+            // html2pdf já deve respeitar avoid-all, mas o scale vs format é a chave
+            pdf.save(`Biometria_${biometryDate}.pdf`);
+        }).finally(() => {
+            el.style.width = originalStyle;
+            el.classList.remove('printing');
             document.body.classList.remove('printing');
-            showToast('PDF Gerado!');
+            showToast('PDF Exportado!');
         });
     };
 
     const exportPNG = () => {
         if (!dashboardRef.current) return;
-        showToast('Gerando Imagem...');
+        showToast('Gerando Imagem Profissional...');
+
+        const el = dashboardRef.current;
+        const originalStyle = el.style.width;
+
+        // Force desktop width for high-fidelity export
+        el.style.width = '1200px';
         dashboardRef.current.classList.add('printing');
         document.body.classList.add('printing');
 
-        html2canvas(dashboardRef.current, {
-            scale: 3,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            ignoreElements: (element: Element) => {
-                const hasIgnoreClass = element.classList.contains('no-print');
-                return hasIgnoreClass;
-            }
-        }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = `Relatorio_Bio_${new Date().toLocaleDateString('pt-BR')}.png`;
-            link.href = canvas.toDataURL('image/png', 1.0);
-            link.click();
-            dashboardRef.current?.classList.remove('printing');
-            document.body.classList.remove('printing');
-            showToast('Imagem Gerada!');
-        });
+        setTimeout(() => {
+            html2canvas(el, {
+                scale: 3,
+                useCORS: true,
+                backgroundColor: isDarkMode ? '#0B0F1A' : '#ffffff',
+                logging: false,
+                onclone: (clonedDoc) => {
+                    const clonedEl = clonedDoc.getElementById('dashboard-content');
+                    if (clonedEl) {
+                        clonedEl.style.width = '1200px';
+                        clonedEl.style.borderRadius = '32px';
+                    }
+                },
+                ignoreElements: (element: Element) => {
+                    return element.classList.contains('no-print');
+                }
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Biometria_${biometryDate}.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+
+                // Restaura estado original
+                el.style.width = originalStyle;
+                dashboardRef.current?.classList.remove('printing');
+                document.body.classList.remove('printing');
+                showToast('Imagem Exportada!');
+            });
+        }, 100);
     };
 
     const copyHTML = () => {
@@ -1304,26 +1338,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     {/* Right: Metadata & Theme Toggle */}
                     <div className="flex-1 flex flex-col items-center md:items-end gap-3">
                         <div className="flex items-center gap-3">
-                            {/* Theme Toggle Button - Only show if NOT public */}
-                            {!isPublic && (
-                                <button
-                                    onClick={() => setIsDarkMode(!isDarkMode)}
-                                    className={`p-2 rounded-xl border transition-all duration-300 ${isDarkMode
-                                        ? 'bg-slate-800 border-slate-700 text-yellow-400 hover:bg-slate-700'
-                                        : 'bg-orange-50 border-orange-100 text-orange-600 hover:bg-orange-100'}`}
-                                    title={isDarkMode ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
-                                >
-                                    {isDarkMode ? (
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                                            <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 011.06 0l1.591 1.591a.75.75 0 11-1.06 1.061l-1.591-1.591a.75.75 0 010-1.061zM21.75 12a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5a.75.75 0 01.75-.75zM18.894 17.834a.75.75 0 010 1.061l-1.591 1.591a.75.75 0 11-1.06-1.06l1.591-1.591a.75.75 0 011.06 0zM12 18.75a.75.75 0 01.75.75V21.75a.75.75 0 01-1.5 0V19.5a.75.75 0 01.75-.75zM5.106 17.834a.75.75 0 011.06 0l1.591 1.591a.75.75 0 11-1.061 1.06l-1.591-1.591a.75.75 0 010-1.061zM2.25 12a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5H3a.75.75 0 01-.75-.75zM5.106 6.166a.75.75 0 010 1.061L3.515 8.818a.75.75 0 11-1.06-1.06l1.591-1.591a.75.75 0 011.06 0z" />
-                                        </svg>
-                                    ) : (
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                                            <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
-                                        </svg>
-                                    )}
-                                </button>
-                            )}
+                            {/* Theme Toggle Removed by User Request */}
                         </div>
 
                         {/* Unified Technical Seal Block */}
