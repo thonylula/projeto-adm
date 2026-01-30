@@ -894,7 +894,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
         // Delay to allow layout recalc
         setTimeout(() => {
             const opt = {
-                margin: [10, 10, 10, 10], // 10mm margins
+                margin: [5, 5, 5, 5], // 5mm margins (Compact)
                 filename: `Biometria_${biometryDate}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: {
@@ -1149,15 +1149,15 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     flex-direction: row !important; 
     align-items: center !important; 
     justify-content: space-between !important;
-    padding: 0.25rem 1rem !important;
+    padding: 0 1rem !important;
     border-bottom: 2px solid #f8fafc !important;
-    margin-bottom: 0.25rem !important;
-    gap: 0.5rem !important;
+    margin-bottom: 0 !important;
+    gap: 0.25rem !important;
 }
 .printing #dashboard-content { 
     width: 800px !important; 
     max-width: none !important; 
-    padding: 0.5rem !important;
+    padding: 0 !important;
     background: #ffffff !important;
     border: none !important;
     box-shadow: none !important;
