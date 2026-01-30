@@ -830,7 +830,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                 dataPovoamento: dataPov,
                 diasCultivo: doc,
                 diasCultivoDisplay: doc ?? '-',
-                pesoTotal: parseFloat(pesoTotal.replace(',', '.')) / 1000, // Convert to kg
+                pesoTotal: (parseFloat(pesoTotal.replace(',', '.')) / 1000).toFixed(3), // Convert to kg and fix to 3 decimals
                 incSemanalStr,
                 gpdDisplay,
                 analysisStatus,
