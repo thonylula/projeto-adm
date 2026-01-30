@@ -1302,8 +1302,8 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     </div>
 
                     {/* Right: Metadata & Theme Toggle */}
-                    <div className="flex-1 flex flex-col items-center md:items-end text-center md:text-right gap-1 font-sans">
-                        <div className="flex items-center gap-3 mb-2">
+                    <div className="flex-1 flex flex-col items-center md:items-end gap-3">
+                        <div className="flex items-center gap-3">
                             {/* Theme Toggle Button - Only show if NOT public */}
                             {!isPublic && (
                                 <button
@@ -1324,20 +1324,35 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                     )}
                                 </button>
                             )}
-
-                            <div className={`text-[9px] md:text-[10px] items-center gap-2 font-black uppercase tracking-[0.2em] flex px-3 py-1.5 rounded-full border ${isDarkMode ? 'text-slate-400 border-slate-700 bg-slate-900/50' : 'text-gray-500 border-orange-100 bg-orange-50/30'}`}>
-                                Relatório Técnico <span className={`w-1 h-1 rounded-full ${isDarkMode ? 'bg-orange-500/50' : 'bg-orange-400'}`}></span> {new Date(biometryDate + 'T12:00:00').toLocaleDateString('pt-BR')}
-                            </div>
                         </div>
 
-                        <div className="flex flex-col gap-1.5 mt-1">
-                            <div className={`flex items-center gap-2 px-3 py-1 rounded-lg border text-[9px] md:text-[10px] transition-all ${isDarkMode ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-100'}`}>
-                                <span className={`font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Gerente:</span>
-                                <span className={`font-black ${isDarkMode ? 'text-orange-400' : 'text-slate-900'}`}>CLEITON MANOEL DE LIMA</span>
-                            </div>
-                            <div className={`flex items-center gap-2 px-3 py-1 rounded-lg border text-[9px] md:text-[10px] transition-all ${isDarkMode ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-100'}`}>
-                                <span className={`font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Analista Adm:</span>
-                                <span className={`font-black ${isDarkMode ? 'text-orange-400' : 'text-slate-900'}`}>LUANTHONY L. OLIVEIRA</span>
+                        {/* Unified Technical Seal Block */}
+                        <div className={`p-4 md:p-5 rounded-[28px] border transition-all duration-700 min-w-[240px] ${isDarkMode
+                            ? 'bg-slate-900/40 border-slate-800/80'
+                            : 'bg-white border-orange-100/40 shadow-xl shadow-orange-500/[0.03]'}`}>
+
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center justify-between gap-4 border-b border-dashed border-orange-500/10 pb-2">
+                                    <span className="text-[8px] font-black uppercase tracking-[0.3em] text-orange-500 opacity-80">Registro Técnico</span>
+                                    <span className={`text-[10px] font-black ${isDarkMode ? 'text-slate-400' : 'text-slate-900'}`}>{new Date(biometryDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                                </div>
+
+                                <div className="flex flex-col gap-3">
+                                    <div className="flex flex-col">
+                                        <span className={`text-[7px] font-black uppercase tracking-widest leading-none mb-1 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>Responsável Técnico</span>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-orange-500/20"></div>
+                                            <span className={`text-[10px] font-black uppercase tracking-tight ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>Cleiton Manoel de Lima</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className={`text-[7px] font-black uppercase tracking-widest leading-none mb-1 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>Auditoria Administrativa</span>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-orange-500/20"></div>
+                                            <span className={`text-[10px] font-black uppercase tracking-tight ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>Luanthony L. Oliveira</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
