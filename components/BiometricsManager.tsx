@@ -881,7 +881,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     // --- EXPORTAÇÃO ---
     const exportPDF = () => {
         if (!dashboardRef.current) return;
-        showToast('Gerando PDF de Alta Fidelidade...');
+        showToast('Gerando Relatório (Página Única)...');
 
         const el = dashboardRef.current;
         const originalStyle = el.style.width;
@@ -891,38 +891,30 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
         el.classList.add('printing');
         document.body.classList.add('printing');
 
-        const opt = {
-            margin: 0,
-            filename: `Relatorio_Biometria_${biometryDate}.pdf`,
-            image: { type: 'jpeg', quality: 1.0 },
-            html2canvas: {
-                scale: 2,
-                useCORS: true,
-                letterRendering: true,
-                backgroundColor: isDarkMode ? '#0B0F1A' : '#ffffff',
-                width: 1200,
-                onclone: (clonedDoc) => {
-                    const clonedEl = clonedDoc.getElementById('dashboard-content');
-                    if (clonedEl) {
-                        clonedEl.style.width = '1200px';
-                        clonedEl.style.margin = '0 auto';
-                    }
-                }
-            },
-            jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait', compress: true },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-        };
+        // Delay to allow layout recalc
+        setTimeout(() => {
+            const opt = {
+                margin: [10, 10, 10, 10], // 10mm margins
+                filename: `Biometria_${biometryDate}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true,
+                    backgroundColor: isDarkMode ? '#0B0F1A' : '#ffffff',
+                    width: 1200
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
 
-        html2pdf().set(opt).from(el).toPdf().get('pdf').then((pdf: any) => {
-            // Se houver mais de uma página, tentamos forçar em uma ou apenas salvar
-            // html2pdf já deve respeitar avoid-all, mas o scale vs format é a chave
-            pdf.save(`Biometria_${biometryDate}.pdf`);
-        }).finally(() => {
-            el.style.width = originalStyle;
-            el.classList.remove('printing');
-            document.body.classList.remove('printing');
-            showToast('PDF Exportado!');
-        });
+            html2pdf().set(opt).from(el).save().finally(() => {
+                el.style.width = originalStyle;
+                el.classList.remove('printing');
+                document.body.classList.remove('printing');
+                showToast('PDF Exportado!');
+            });
+        }, 300);
     };
 
     const exportPNG = () => {
@@ -1157,14 +1149,14 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     flex-direction: row !important; 
     align-items: center !important; 
     justify-content: space-between !important;
-    padding-bottom: 2rem !important;
+    padding-bottom: 1rem !important;
     border-bottom: 2px solid #f8fafc !important;
-    margin-bottom: 2rem !important;
+    margin-bottom: 1rem !important;
 }
 .printing #dashboard-content { 
     width: 1200px !important; 
     max-width: none !important; 
-    padding: 3rem !important;
+    padding: 1.5rem !important;
     background: #ffffff !important;
     border: none !important;
     box-shadow: none !important;
