@@ -1339,14 +1339,14 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
                                 <div className="flex flex-col gap-3">
                                     <div className="flex flex-col">
-                                        <span className={`text-[7px] font-black uppercase tracking-widest leading-none mb-1 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>Responsável Técnico</span>
+                                        <span className={`text-[7px] font-black uppercase tracking-widest leading-none mb-1 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>Gerente</span>
                                         <div className="flex items-center gap-2">
                                             <div className="w-1.5 h-1.5 rounded-full bg-orange-500/20"></div>
                                             <span className={`text-[10px] font-black uppercase tracking-tight ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>Cleiton Manoel de Lima</span>
                                         </div>
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className={`text-[7px] font-black uppercase tracking-widest leading-none mb-1 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>Auditoria Administrativa</span>
+                                        <span className={`text-[7px] font-black uppercase tracking-widest leading-none mb-1 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>Analista Adm</span>
                                         <div className="flex items-center gap-2">
                                             <div className="w-1.5 h-1.5 rounded-full bg-orange-500/20"></div>
                                             <span className={`text-[10px] font-black uppercase tracking-tight ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>Luanthony L. Oliveira</span>
