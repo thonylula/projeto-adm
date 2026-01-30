@@ -887,7 +887,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
         const originalStyle = el.style.width;
 
         // Force desktop width for PDF consistency
-        el.style.width = '1200px';
+        el.style.width = '800px';
         el.classList.add('printing');
         document.body.classList.add('printing');
 
@@ -902,7 +902,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     useCORS: true,
                     letterRendering: true,
                     backgroundColor: isDarkMode ? '#0B0F1A' : '#ffffff',
-                    width: 1200
+                    width: 800
                 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -925,7 +925,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
         const originalStyle = el.style.width;
 
         // Force desktop width for high-fidelity export
-        el.style.width = '1200px';
+        el.style.width = '800px';
         dashboardRef.current.classList.add('printing');
         document.body.classList.add('printing');
 
@@ -938,7 +938,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                 onclone: (clonedDoc) => {
                     const clonedEl = clonedDoc.getElementById('dashboard-content');
                     if (clonedEl) {
-                        clonedEl.style.width = '1200px';
+                        clonedEl.style.width = '800px';
                         clonedEl.style.borderRadius = '32px';
                     }
                 },
@@ -1154,7 +1154,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     margin-bottom: 1rem !important;
 }
 .printing #dashboard-content { 
-    width: 1200px !important; 
+    width: 800px !important; 
     max-width: none !important; 
     padding: 1.5rem !important;
     background: #ffffff !important;
