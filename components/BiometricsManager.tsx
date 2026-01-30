@@ -1506,14 +1506,14 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
                                         <td className="px-2 py-3 text-center">
                                             {/* Impressão */}
-                                            <span className="print-visible font-black text-sm text-slate-900">
+                                            <span className="print-visible font-black text-[10px] text-slate-900">
                                                 {item.pMedInputValue}g
                                             </span>
 
                                             {/* UI */}
                                             <div className="print-hidden">
                                                 {isPublic ? (
-                                                    <span className={`font-black text-sm transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.pMedInputValue}g</span>
+                                                    <span className={`font-black text-[10px] transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.pMedInputValue}g</span>
                                                 ) : (
                                                     <div className="relative inline-block group/input">
                                                         <input
@@ -1521,7 +1521,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                                             value={item.pMedInputValue}
                                                             placeholder="0.00"
                                                             onChange={(e) => handleUpdateRow(item.viveiro, 'pMedStr', e.target.value)}
-                                                            className={`w-12 text-center bg-transparent border-b outline-none transition-all font-black text-sm pb-0.5 ${isDarkMode
+                                                            className={`w-12 text-center bg-transparent border-b outline-none transition-all font-black text-[10px] pb-0.5 ${isDarkMode
                                                                 ? 'text-white border-slate-700 focus:border-orange-500'
                                                                 : 'text-slate-900 border-slate-200 focus:border-orange-500'}`}
                                                         />
@@ -1557,7 +1557,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
                                         <td
                                             onClick={() => handleCopy(item.pesoTotal, 'Peso Total')}
-                                            className={`px-2 py-3 text-center font-black text-sm cursor-copy transition-all duration-300 hover:scale-110 active:scale-95 ${isDarkMode
+                                            className={`px-2 py-3 text-center font-black text-[10px] cursor-copy transition-all duration-300 hover:scale-110 active:scale-95 ${isDarkMode
                                                 ? 'text-slate-100 hover:text-orange-400'
                                                 : 'text-slate-900 hover:text-orange-600'}`}
                                         >
@@ -1574,7 +1574,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                                         value={item.pAntDisplay}
                                                         placeholder="-"
                                                         onChange={(e) => handleUpdateRow(item.viveiro, 'pAntStr', e.target.value)}
-                                                        className={`w-10 text-center bg-transparent border-b border-dashed outline-none transition-all font-black text-[11px] ${isDarkMode
+                                                        className={`w-10 text-center bg-transparent border-b border-dashed outline-none transition-all font-black text-[10px] ${isDarkMode
                                                             ? 'text-slate-500 border-slate-700 focus:border-orange-500/50 focus:text-slate-300'
                                                             : 'text-slate-400 border-slate-200 focus:border-orange-500 focus:text-slate-700'}`}
                                                     />
@@ -1583,7 +1583,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                             )}
                                         </td>
 
-                                        <td className={`px-1 py-3 text-center font-black text-xs transition-colors duration-500 ${item.incSemanalStr.includes('+') ? 'text-emerald-500' : (isDarkMode ? 'text-slate-700' : 'text-slate-300')}`}>
+                                        <td className={`px-1 py-3 text-center font-black text-[10px] transition-colors duration-500 ${item.incSemanalStr.includes('+') ? 'text-emerald-500' : (isDarkMode ? 'text-slate-700' : 'text-slate-300')}`}>
                                             {item.incSemanalStr}
                                         </td>
 
