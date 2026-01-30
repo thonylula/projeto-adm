@@ -830,7 +830,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                 dataPovoamento: dataPov,
                 diasCultivo: doc,
                 diasCultivoDisplay: doc ?? '-',
-                pesoTotal,
+                pesoTotal: parseFloat(pesoTotal.replace(',', '.')) / 1000, // Convert to kg
                 incSemanalStr,
                 gpdDisplay,
                 analysisStatus,
@@ -1364,23 +1364,23 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     </div>
 
                     <div className={`rounded-[32px] border-2 overflow-x-auto mb-10 shadow-2xl transition-all duration-700 ${isDarkMode ? 'border-slate-800/80 bg-slate-900/40 backdrop-blur-xl' : 'border-slate-100/50 bg-white'}`}>
-                        <table className="w-full text-[11px] md:text-[13px] text-left min-w-[1100px] border-collapse">
+                        <table className="w-full text-[11px] md:text-[13px] text-left min-w-[1000px] border-collapse">
                             <thead className={`uppercase font-black tracking-[0.1em] border-b-2 transition-colors duration-500 ${isDarkMode
                                 ? 'bg-slate-800/80 text-orange-500 border-slate-700/50'
                                 : 'bg-slate-800 text-white border-slate-700'}`}>
                                 <tr>
-                                    <th className={`px-6 py-6 min-w-[100px] sticky left-0 z-10 text-center transition-colors duration-500 ${isDarkMode
+                                    <th className={`px-4 py-6 min-w-[90px] sticky left-0 z-10 text-center transition-colors duration-500 ${isDarkMode
                                         ? 'bg-slate-800/95 text-orange-500'
                                         : 'bg-slate-800 text-orange-400'}`}>VIV.</th>
-                                    <th className="px-5 py-6 text-center">D. Pov.</th>
-                                    <th className="px-5 py-6 text-center">Dias</th>
-                                    <th className="px-5 py-6 text-center">P.M (g)</th>
-                                    <th className="px-5 py-6 text-center">Quant. (mil)</th>
-                                    <th className="px-5 py-6 text-center">Peso Total (kg)</th>
-                                    <th className="px-5 py-6 text-center text-slate-400">P.M Ant.</th>
-                                    <th className="px-5 py-6 text-center">Inc. Sem.</th>
-                                    <th className="px-5 py-6 text-center">GPD</th>
-                                    <th className="px-8 py-6 text-center bg-orange-500/5">Status Performance</th>
+                                    <th className="px-3 py-6 text-center">D. Pov.</th>
+                                    <th className="px-3 py-6 text-center">Dias</th>
+                                    <th className="px-3 py-6 text-center">P.M (g)</th>
+                                    <th className="px-3 py-6 text-center">Quant. (und.)</th>
+                                    <th className="px-4 py-6 text-center">Peso Total (kg)</th>
+                                    <th className="px-3 py-6 text-center text-slate-400">P.M Ant.</th>
+                                    <th className="px-3 py-6 text-center">Inc. Sem.</th>
+                                    <th className="px-3 py-6 text-center">GPD</th>
+                                    <th className="px-6 py-6 text-center bg-orange-500/5">Status Performance</th>
                                 </tr>
                             </thead>
                             <tbody className={`divide-y transition-colors duration-500 ${isDarkMode ? 'divide-slate-800/50' : 'divide-slate-100'}`}>
@@ -1388,11 +1388,11 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                     <tr key={idx} className={`transition-colors border-b last:border-0 group ${isDarkMode
                                         ? 'hover:bg-slate-800/40 border-slate-800/50'
                                         : 'hover:bg-slate-50/50 border-gray-50'}`}>
-                                        <td className={`px-6 py-5 font-bold sticky left-0 z-10 whitespace-nowrap transition-colors duration-500 ${isDarkMode
+                                        <td className={`px-4 py-5 font-bold sticky left-0 z-10 whitespace-nowrap transition-colors duration-500 ${isDarkMode
                                             ? 'text-slate-100 bg-slate-900 group-hover:bg-slate-800'
                                             : 'text-slate-800 bg-white group-hover:bg-orange-50/30'}`}>
-                                            <div className="flex items-center gap-3">
-                                                <div className={`inline-flex items-center justify-center px-4 py-2 rounded-xl border-2 font-black tracking-tighter min-w-[90px] shadow-sm transition-all duration-300 group-hover:scale-105 ${isDarkMode
+                                            <div className="flex items-center gap-2">
+                                                <div className={`inline-flex items-center justify-center px-3 py-2 rounded-xl border-2 font-black tracking-tighter min-w-[85px] shadow-sm transition-all duration-300 group-hover:scale-105 ${isDarkMode
                                                     ? 'border-orange-500/20 bg-orange-500/10 text-orange-400'
                                                     : 'border-orange-100 bg-orange-50/50 text-orange-700'}`}>
                                                     {item.viveiro}
@@ -1400,10 +1400,10 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                                 {!isPublic && (
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleDeleteRow(item.viveiro); }}
-                                                        className="text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-full p-2 transition-all opacity-0 group-hover:opacity-100 transform hover:rotate-12"
+                                                        className="text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-full p-1.5 transition-all opacity-0 group-hover:opacity-100 transform hover:rotate-12"
                                                         title="Excluir viveiro"
                                                     >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                                                             <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                                                         </svg>
                                                     </button>
@@ -1411,9 +1411,9 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                             </div>
                                         </td>
 
-                                        <td className="px-5 py-5 text-center group/date relative">
+                                        <td className="px-3 py-5 text-center group/date relative">
                                             {isPublic ? (
-                                                <span className={`font-black px-4 py-2.5 rounded-xl text-[11px] w-[125px] inline-block transition-colors duration-500 shadow-sm ${isDarkMode
+                                                <span className={`font-black px-3 py-2.5 rounded-xl text-[11px] w-[115px] inline-block transition-colors duration-500 shadow-sm ${isDarkMode
                                                     ? 'bg-slate-800/50 text-slate-300'
                                                     : 'bg-slate-50 text-slate-600'}`}>
                                                     {item.dataPovoamento ? (item.dataPovoamento.includes('-') ? item.dataPovoamento.split('-').reverse().join('/') : item.dataPovoamento) : '-'}
@@ -1423,18 +1423,18 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                                     type="date"
                                                     value={item.dataPovoamento || ''}
                                                     onChange={(e) => handleUpdateRow(item.viveiro, 'dataPovoamento', e.target.value)}
-                                                    className={`font-black px-4 py-2.5 rounded-xl text-[11px] border-2 outline-none transition-all cursor-pointer w-[130px] shadow-sm active:scale-95 ${isDarkMode
+                                                    className={`font-black px-3 py-2.5 rounded-xl text-[11px] border-2 outline-none transition-all cursor-pointer w-[120px] shadow-sm active:scale-95 ${isDarkMode
                                                         ? 'bg-slate-800 text-slate-100 border-slate-700 hover:border-orange-500/50 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10'
                                                         : 'bg-white text-slate-800 border-slate-100 hover:border-orange-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-500/10'}`}
                                                 />
                                             )}
                                         </td>
 
-                                        <td className={`px-5 py-5 text-center font-black transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{item.diasCultivo}</td>
+                                        <td className={`px-3 py-5 text-center font-black transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{item.diasCultivo}</td>
 
-                                        <td className="px-5 py-5 text-center">
+                                        <td className="px-3 py-5 text-center">
                                             {isPublic ? (
-                                                <span className={`font-black text-lg transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.pMedInputValue}</span>
+                                                <span className={`font-black text-base transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.pMedInputValue}g</span>
                                             ) : (
                                                 <div className="relative inline-block group/input">
                                                     <input
@@ -1442,25 +1442,26 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                                         value={item.pMedInputValue}
                                                         placeholder="0.00"
                                                         onChange={(e) => handleUpdateRow(item.viveiro, 'pMedStr', e.target.value)}
-                                                        className={`w-20 text-center bg-transparent border-b-2 outline-none transition-all font-black text-lg pb-1 ${isDarkMode
+                                                        className={`w-16 text-center bg-transparent border-b-2 outline-none transition-all font-black text-base pb-1 ${isDarkMode
                                                             ? 'text-white border-slate-700 focus:border-orange-500'
                                                             : 'text-slate-900 border-slate-200 focus:border-orange-500'}`}
                                                     />
                                                     <div className="text-[9px] font-black text-orange-500/50 uppercase absolute -bottom-4 left-1/2 -translate-x-1/2 italic opacity-0 group-focus-within/input:opacity-100 transition-opacity">Gramas</div>
+                                                    <span className="ml-1 text-[11px] font-black text-slate-400">g</span>
                                                 </div>
                                             )}
                                         </td>
 
-                                        <td className="px-5 py-5 text-center">
+                                        <td className="px-3 py-5 text-center">
                                             {isPublic ? (
-                                                <span className={`font-black transition-colors duration-500 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{item.quatInputValue}k</span>
+                                                <span className={`font-black transition-colors duration-500 text-[11px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{item.quatInputValue}</span>
                                             ) : (
                                                 <input
                                                     type="text"
                                                     value={item.quatInputValue}
-                                                    placeholder="Mil"
+                                                    placeholder="Unid."
                                                     onChange={(e) => handleUpdateRow(item.viveiro, 'quat', e.target.value)}
-                                                    className={`w-20 px-3 py-2 rounded-xl text-center outline-none transition-all font-black border-2 shadow-sm ${isDarkMode
+                                                    className={`w-20 px-2 py-2 rounded-xl text-center outline-none transition-all font-black border-2 shadow-sm text-[12px] ${isDarkMode
                                                         ? 'bg-slate-800/80 text-orange-400 border-slate-700 focus:border-orange-500'
                                                         : 'bg-slate-50 text-orange-700 border-white focus:bg-white focus:border-orange-400'}`}
                                                 />
@@ -1469,38 +1470,41 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
                                         <td
                                             onClick={() => handleCopy(item.pesoTotal, 'Peso Total')}
-                                            className={`px-5 py-5 text-center font-black text-lg cursor-copy transition-all duration-300 hover:scale-110 active:scale-95 ${isDarkMode
+                                            className={`px-4 py-5 text-center font-black text-base cursor-copy transition-all duration-300 hover:scale-110 active:scale-95 ${isDarkMode
                                                 ? 'text-slate-100 hover:text-orange-400'
                                                 : 'text-slate-900 hover:text-orange-600'}`}
                                         >
                                             {item.pesoTotal}
                                         </td>
 
-                                        <td className={`px-5 py-5 text-center font-black transition-colors duration-500 opacity-60`}>
+                                        <td className={`px-3 py-5 text-center font-black transition-colors duration-500 opacity-60 text-[11px]`}>
                                             {isPublic ? (
-                                                <span className="text-[11px]">{item.pAntDisplay}g</span>
+                                                <span>{item.pAntDisplay}g</span>
                                             ) : (
-                                                <input
-                                                    type="text"
-                                                    value={item.pAntDisplay}
-                                                    placeholder="-"
-                                                    onChange={(e) => handleUpdateRow(item.viveiro, 'pAntStr', e.target.value)}
-                                                    className={`w-16 text-center bg-transparent border-b-2 border-dashed outline-none transition-all font-black text-[13px] ${isDarkMode
-                                                        ? 'text-slate-500 border-slate-700 focus:border-orange-500/50 focus:text-slate-300'
-                                                        : 'text-slate-400 border-slate-200 focus:border-orange-500 focus:text-slate-700'}`}
-                                                />
+                                                <div className="flex items-center justify-center">
+                                                    <input
+                                                        type="text"
+                                                        value={item.pAntDisplay}
+                                                        placeholder="-"
+                                                        onChange={(e) => handleUpdateRow(item.viveiro, 'pAntStr', e.target.value)}
+                                                        className={`w-12 text-center bg-transparent border-b-2 border-dashed outline-none transition-all font-black text-[12px] ${isDarkMode
+                                                            ? 'text-slate-500 border-slate-700 focus:border-orange-500/50 focus:text-slate-300'
+                                                            : 'text-slate-400 border-slate-200 focus:border-orange-500 focus:text-slate-700'}`}
+                                                    />
+                                                    <span className="ml-0.5 text-[10px]">g</span>
+                                                </div>
                                             )}
                                         </td>
 
-                                        <td className={`px-5 py-5 text-center font-black text-base transition-colors duration-500 ${item.incSemanalStr.includes('+') ? 'text-emerald-500' : (isDarkMode ? 'text-slate-700' : 'text-slate-300')}`}>
+                                        <td className={`px-3 py-5 text-center font-black text-sm transition-colors duration-500 ${item.incSemanalStr.includes('+') ? 'text-emerald-500' : (isDarkMode ? 'text-slate-700' : 'text-slate-300')}`}>
                                             {item.incSemanalStr}
                                         </td>
 
-                                        <td className={`px-5 py-5 text-center font-black transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                                        <td className={`px-3 py-5 text-center font-black transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'} text-[11px]`}>
                                             {item.gpdDisplay}
                                         </td>
 
-                                        <td className="px-8 py-5 text-center bg-orange-500/[0.02]">
+                                        <td className="px-6 py-5 text-center bg-orange-500/[0.02]">
                                             <div className="flex items-center justify-center">
                                                 {/* Logic for Status Badge based on analysisStatus */}
                                                 {(() => {
@@ -1531,12 +1535,12 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                                     }
 
                                                     return (
-                                                        <div className={`flex flex-col border rounded-2xl px-4 py-2 min-w-[140px] md:min-w-[170px] transition-all duration-500 transform hover:scale-105 group/badge cursor-default ${badgeClass}`}>
-                                                            <div className="flex items-center gap-2 justify-center font-black uppercase text-[10px] md:text-[11px] tracking-tight">
+                                                        <div className={`flex flex-col border rounded-2xl px-3 py-1.5 min-w-[130px] md:min-w-[150px] transition-all duration-500 transform hover:scale-105 group/badge cursor-default ${badgeClass}`}>
+                                                            <div className="flex items-center gap-1.5 justify-center font-black uppercase text-[9px] md:text-[10px] tracking-tight">
                                                                 {icon}
                                                                 {label}
                                                             </div>
-                                                            <div className="text-[9px] md:text-[10px] text-center font-black opacity-60 leading-none mt-1 group-hover/badge:opacity-100 transition-opacity">{subLabel.replace('(', '').replace(')', '')}</div>
+                                                            <div className="text-[8px] md:text-[9px] text-center font-black opacity-60 leading-none mt-1 group-hover/badge:opacity-100 transition-opacity">{subLabel.replace('(', '').replace(')', '')}</div>
                                                         </div>
                                                     );
                                                 })()}
