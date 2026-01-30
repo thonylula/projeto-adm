@@ -21,9 +21,9 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
     clients = []
 }) => {
     return (
-        <div className="overflow-x-auto border-t-2 border-gray-100 custom-scrollbar">
-            <table className="w-full text-xs text-left text-gray-500 border-collapse">
-                <thead className="text-[11px] font-black text-gray-400 uppercase tracking-widest bg-gray-50">
+        <div className="overflow-x-auto border-t-2 border-gray-100 dark:border-slate-700 custom-scrollbar">
+            <table className="w-full text-xs text-left text-gray-500 dark:text-gray-400 border-collapse">
+                <thead className="text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest bg-gray-50 dark:bg-slate-900">
                     <tr>
                         <th className="px-5 py-5">Origem</th>
                         <th className="px-5 py-5">Data</th>
@@ -42,22 +42,22 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
                     {data.map((item, index) => {
                         const isEditing = editingIndex === index;
                         return (
-                            <tr key={index} className={`transition-colors ${isEditing ? 'bg-[#F97316]/5' : 'bg-white hover:bg-slate-50'}`}>
+                            <tr key={index} className={`transition-colors ${isEditing ? 'bg-[#F97316]/5 dark:bg-[#F97316]/10' : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}>
                                 {isEditing ? (
                                     <>
-                                        <td className="px-5 py-5"><input type="text" defaultValue={item.local} onBlur={(e) => onEditSave?.(index, { local: e.target.value })} className="w-full p-2 border rounded font-black text-gray-900 text-[13px]" /></td>
-                                        <td className="px-5 py-5"><input type="text" defaultValue={item.data} onBlur={(e) => onEditSave?.(index, { data: e.target.value })} className="w-full p-2 border rounded text-gray-400" /></td>
-                                        <td className="px-5 py-5"><input type="text" defaultValue={item.dataPovoamento} onBlur={(e) => onEditSave?.(index, { dataPovoamento: e.target.value })} className="w-full p-2 border rounded text-gray-400" /></td>
-                                        <td className="px-5 py-5"><input type="number" defaultValue={item.estocagem} onBlur={(e) => onEditSave?.(index, { estocagem: Number(e.target.value) })} className="w-full p-2 border rounded text-right" /></td>
-                                        <td className="px-5 py-5"><input type="number" defaultValue={item.plPorGrama} onBlur={(e) => onEditSave?.(index, { plPorGrama: Number(e.target.value) })} className="w-full p-2 border rounded text-right" /></td>
+                                        <td className="px-5 py-5"><input type="text" defaultValue={item.local} onBlur={(e) => onEditSave?.(index, { local: e.target.value })} className="w-full p-2 border rounded font-black text-gray-900 dark:text-gray-100 text-[13px] dark:bg-slate-700 dark:border-slate-600" /></td>
+                                        <td className="px-5 py-5"><input type="text" defaultValue={item.data} onBlur={(e) => onEditSave?.(index, { data: e.target.value })} className="w-full p-2 border rounded text-gray-400 dark:bg-slate-700 dark:border-slate-600" /></td>
+                                        <td className="px-5 py-5"><input type="text" defaultValue={item.dataPovoamento} onBlur={(e) => onEditSave?.(index, { dataPovoamento: e.target.value })} className="w-full p-2 border rounded text-gray-400 dark:bg-slate-700 dark:border-slate-600" /></td>
+                                        <td className="px-5 py-5"><input type="number" defaultValue={item.estocagem} onBlur={(e) => onEditSave?.(index, { estocagem: Number(e.target.value) })} className="w-full p-2 border rounded text-right dark:bg-slate-700 dark:border-slate-600 dark:text-gray-100" /></td>
+                                        <td className="px-5 py-5"><input type="number" defaultValue={item.plPorGrama} onBlur={(e) => onEditSave?.(index, { plPorGrama: Number(e.target.value) })} className="w-full p-2 border rounded text-right dark:bg-slate-700 dark:border-slate-600 dark:text-gray-100" /></td>
                                         <td className="px-5 py-5 text-right font-medium text-gray-400">{(item.pesoMedioCalculado || 0).toFixed(4)}g</td>
-                                        <td className="px-5 py-5 text-right font-bold text-gray-700">{(item.pesoTotalCalculado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</td>
+                                        <td className="px-5 py-5 text-right font-bold text-gray-700 dark:text-gray-300">{(item.pesoTotalCalculado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</td>
                                         <td className="px-5 py-5">
                                             <input
                                                 type="text"
                                                 defaultValue={item.densidade}
                                                 onBlur={(e) => onEditSave?.(index, { densidade: e.target.value })}
-                                                className="w-full p-2 border rounded text-right text-gray-700"
+                                                className="w-full p-2 border rounded text-right text-gray-700 dark:text-gray-300 dark:bg-slate-700 dark:border-slate-600"
                                             />
                                         </td>
                                         <td className="px-5 py-5">
@@ -72,7 +72,7 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
                                                             viveiroDestino: client?.name || ''
                                                         });
                                                     }}
-                                                    className="w-full p-2 border rounded font-black text-gray-900 text-[13px] bg-white shadow-sm"
+                                                    className="w-full p-2 border rounded font-black text-gray-900 dark:text-gray-100 text-[13px] bg-white dark:bg-slate-700 shadow-sm dark:border-slate-600"
                                                 >
                                                     <option value="">Selecione...</option>
                                                     {clients.map(c => (
@@ -80,7 +80,7 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
                                                     ))}
                                                 </select>
                                             ) : (
-                                                <input type="text" defaultValue={item.viveiroDestino} onBlur={(e) => onEditSave?.(index, { viveiroDestino: e.target.value })} className="w-full p-2 border rounded font-black text-gray-900 text-[13px]" />
+                                                <input type="text" defaultValue={item.viveiroDestino} onBlur={(e) => onEditSave?.(index, { viveiroDestino: e.target.value })} className="w-full p-2 border rounded font-black text-gray-900 dark:text-gray-100 text-[13px] dark:bg-slate-700 dark:border-slate-600" />
                                             )}
                                         </td>
                                         <td className="px-5 py-5 text-center">
@@ -88,7 +88,7 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
                                                 <select
                                                     value={item.tipo || 'TRANSFERENCIA'}
                                                     onChange={(e) => onEditSave?.(index, { tipo: e.target.value as 'TRANSFERENCIA' | 'VENDA' })}
-                                                    className="text-[9px] font-black uppercase p-1 border rounded"
+                                                    className="text-[9px] font-black uppercase p-1 border rounded dark:bg-slate-700 dark:text-gray-200 dark:border-slate-600"
                                                 >
                                                     <option value="TRANSFERENCIA">Transf</option>
                                                     <option value="VENDA">Venda</option>
@@ -109,15 +109,15 @@ export const ResultsTable: React.FC<ResultsTableProps> = ({
                                     </>
                                 ) : (
                                     <>
-                                        <td className="px-5 py-5 font-black text-gray-900 text-[13px]">{item.local}</td>
+                                        <td className="px-5 py-5 font-black text-gray-900 dark:text-gray-100 text-[13px]">{item.local}</td>
                                         <td className="px-5 py-5 font-medium text-gray-400">{item.data || '-'}</td>
                                         <td className="px-5 py-5 font-medium text-gray-400">{item.dataPovoamento || '-'}</td>
                                         <td className="px-5 py-5 text-right font-medium text-gray-400">{(item.estocagem || 0).toLocaleString('pt-BR')}</td>
                                         <td className="px-5 py-5 text-right font-medium text-gray-400">{item.plPorGrama}</td>
                                         <td className="px-5 py-5 text-right font-medium text-gray-400">{(item.pesoMedioCalculado || 0).toFixed(4)}g</td>
-                                        <td className="px-5 py-5 text-right font-bold text-gray-700">{(item.pesoTotalCalculado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</td>
+                                        <td className="px-5 py-5 text-right font-bold text-gray-700 dark:text-gray-300">{(item.pesoTotalCalculado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} kg</td>
                                         <td className="px-5 py-5 text-right font-medium text-gray-400">{item.densidade || '-'}</td>
-                                        <td className="px-5 py-5 font-black text-gray-900 text-[13px]">
+                                        <td className="px-5 py-5 font-black text-gray-900 dark:text-gray-100 text-[13px]">
                                             {item.viveiroDestino}
                                             {item.tipo === 'VENDA' && item.clienteNome && (
                                                 <div className="text-[10px] text-[#F97316] uppercase font-black">Cliente: {item.clienteNome}</div>
