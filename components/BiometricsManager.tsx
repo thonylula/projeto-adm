@@ -307,11 +307,21 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     const viveiro = item.viveiro?.toUpperCase().trim().replace('OS-005', 'OC-005').replace('OS 005', 'OC-005') || item.viveiro;
                     const historyData = getPondDataFromHistory(viveiro);
 
+                    // IA extracted values rounding
+                    const quatRaw = item.quat || historyData.quat || null;
+                    const pMedRaw = item.pMed || null;
+                    let pesoTotalStr = item.pesoTotalStr || null;
+
+                    if (!pesoTotalStr && pMedRaw && quatRaw) {
+                        pesoTotalStr = ((pMedRaw * quatRaw) / 1000).toFixed(3);
+                    }
+
                     return {
                         ...item,
                         viveiro,
                         dataPovoamento: item.dataPovoamento || historyData.dataPovoamento || null,
-                        quat: item.quat || historyData.quat || null
+                        quat: quatRaw,
+                        pesoTotalStr
                     };
                 });
 
@@ -811,11 +821,13 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                 analysisStatus = "Sem leitura";
             }
 
-            let pesoTotal = "N/A";
+            let pesoTotal = "0.000";
             if (item.pesoTotalStr) {
-                pesoTotal = item.pesoTotalStr;
+                const pStr = typeof item.pesoTotalStr === 'string' ? item.pesoTotalStr.replace(',', '.') : String(item.pesoTotalStr);
+                const val = parseFloat(pStr);
+                pesoTotal = isNaN(val) ? "0.000" : val.toFixed(3);
             } else if (pMed !== null && quat !== null) {
-                pesoTotal = (pMed * quat).toFixed(2);
+                pesoTotal = ((pMed * quat) / 1000).toFixed(3);
             }
 
             const incSemanalStr = incSemanal !== 0 ? (incSemanal > 0 ? `+ ${incSemanal.toFixed(2)}` : incSemanal.toFixed(2)) : "-";
@@ -824,13 +836,13 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                 ...item,
                 pMedInputValue: item.pMedStr || '',
                 quatInputValue: item.quat || '',
-                pesoTotalInputValue: item.pesoTotalStr || pesoTotal,
+                pesoTotalInputValue: pesoTotal,
                 pMedDisplay: item.pMedStr || '-',
                 pAntDisplay: item.pAntStr || '-',
                 dataPovoamento: dataPov,
                 diasCultivo: doc,
                 diasCultivoDisplay: doc ?? '-',
-                pesoTotal: (parseFloat(pesoTotal.replace(',', '.')) / 1000).toFixed(3), // Convert to kg and fix to 3 decimals
+                pesoTotal: pesoTotal, // Already a string "0.000"
                 incSemanalStr,
                 gpdDisplay,
                 analysisStatus,
@@ -999,7 +1011,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                     <div className="flex flex-col border-t border-gray-200/50 pt-2 mt-1">
                                         <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Peso Total</span>
                                         <span className="text-base font-bold text-slate-700">
-                                            {item.pesoTotalInputValue} kg
+                                            {item.pesoTotal} kg
                                         </span>
                                     </div>
                                 </div>
