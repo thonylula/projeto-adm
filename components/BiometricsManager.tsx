@@ -1152,8 +1152,41 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 /* Ensure elements are visible during export (PNG and PDF) */
 .printing .print-visible { display: block!important; visibility: visible!important; opacity: 1!important; }
 .printing .print-hidden { display: none!important; }
-.printing .export-header-row { flex-direction: row !important; align-items: center !important; justify-content: space-between !important; }
-.printing #dashboard-content { width: 1200px !important; max-width: none !important; }
+.printing .no-export { display: none !important; }
+.printing .export-header-row { 
+    flex-direction: row !important; 
+    align-items: flex-start !important; 
+    justify-content: space-between !important;
+    padding-bottom: 2rem !important;
+    border-bottom: 2px solid #f8fafc !important;
+    margin-bottom: 2rem !important;
+}
+.printing #dashboard-content { 
+    width: 1200px !important; 
+    max-width: none !important; 
+    padding: 3rem !important;
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+.printing .export-title-block {
+    text-align: left !important;
+    align-items: flex-start !important;
+}
+.printing .export-seal-block {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    min-width: auto !important;
+}
+.printing input, .printing select {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
 .print-visible { display: none; }
 `}</style>
 
@@ -1296,91 +1329,66 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     ? 'bg-[#0B0F1A] border-slate-800'
                     : 'bg-white border-gray-50'}`}>
 
-                    {/* Left: Branding (Enlarged and text removed) */}
+                    {/* Left: Branding */}
                     <div className="flex-1 flex justify-start items-center">
                         <div
                             onClick={() => document.getElementById('logo-upload-input')?.click()}
-                            className={`w-24 h-24 md:w-32 md:h-32 rounded-2xl md:rounded-[40px] flex items-center justify-center flex-shrink-0 shadow-2xl border-2 overflow-hidden group cursor-pointer transition-all duration-700 hover:rotate-2 ${isDarkMode
-                                ? 'bg-[#1e293b]/50 border-slate-700 shadow-orange-950/20 hover:border-orange-500/50'
-                                : 'bg-white border-orange-50 shadow-orange-100/50 hover:border-orange-200'}`}
+                            className={`w-24 h-24 md:w-32 md:h-32 rounded-2xl md:rounded-[40px] flex items-center justify-center flex-shrink-0 shadow-2xl border-2 overflow-hidden group cursor-pointer transition-all duration-700 hover:rotate-2 no-print-bg-fix ${isDarkMode
+                                ? 'bg-[#1e293b]/50 border-slate-700 shadow-orange-950/20'
+                                : 'bg-white border-orange-50 shadow-orange-100/50'}`}
                         >
                             {logo ? (
-                                <img src={logo} alt="Logo" className="w-20 h-20 md:w-28 md:h-28 object-contain transition-all duration-700 group-hover:scale-110" />
+                                <img src={logo} alt="Logo" className="w-20 h-20 md:w-28 md:h-28 object-contain" />
                             ) : (
                                 <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center text-white font-black text-4xl shadow-inner">
                                     {companyName?.charAt(0) || 'C'}
                                 </div>
                             )}
-                            <input
-                                id="logo-upload-input"
-                                type="file"
-                                className="hidden"
-                                onChange={handleLogoUpload}
-                                accept="image/*"
-                            />
                         </div>
                     </div>
 
-                    {/* Center: Title Section with sophisticated typography */}
-                    <div className="flex-[2] flex flex-col items-center text-center order-first md:order-none relative">
-                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-32 h-32 bg-orange-500/10 blur-[60px] rounded-full pointer-events-none"></div>
-                        <h1 className={`text-4xl md:text-7xl font-black tracking-tighter leading-none mb-3 drop-shadow-sm transition-colors duration-500 ${isDarkMode
-                            ? 'text-white'
-                            : 'text-slate-900'}`}>
+                    {/* Center: Monumental Title */}
+                    <div className="flex-[2] flex flex-col items-center md:items-start text-center md:text-left order-first md:order-none export-title-block">
+                        <h1 className={`text-3xl md:text-6xl font-black tracking-tighter leading-none mb-1 transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                             BIOMETRIA
                         </h1>
-                        <div className="relative inline-block">
-                            <p className="text-[10px] md:text-sm font-black text-orange-500 uppercase tracking-[0.4em] font-sans">
-                                Análise de Performance
-                            </p>
-                            <div className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-30 rounded-full"></div>
-                        </div>
+                        <p className="text-[9px] md:text-xs font-black text-orange-500 uppercase tracking-[0.5em] font-sans opacity-90">
+                            Relatório de Performance
+                        </p>
                     </div>
 
-                    {/* Right: Metadata & Theme Toggle */}
-                    <div className="flex-1 flex flex-col items-center md:items-end gap-3">
-                        <div className="flex items-center gap-3">
-                            {/* Theme Toggle Removed by User Request */}
-                        </div>
-
-                        {/* Unified Technical Seal Block */}
-                        <div className={`p-4 md:p-5 rounded-[28px] border transition-all duration-700 min-w-[240px] ${isDarkMode
+                    {/* Right: Technical Seal */}
+                    <div className="flex-1 flex flex-col items-center md:items-end gap-3 export-seal-block">
+                        <div className={`p-4 md:p-5 rounded-[28px] border transition-all duration-700 min-w-[220px] ${isDarkMode
                             ? 'bg-slate-900/40 border-slate-800/80'
                             : 'bg-white border-orange-100/40 shadow-xl shadow-orange-500/[0.03]'}`}>
 
                             <div className="flex flex-col gap-3">
                                 <div className="flex items-center justify-between gap-4 border-b border-dashed border-orange-500/10 pb-2">
-                                    <span className="text-[8px] font-black uppercase tracking-[0.3em] text-orange-500 opacity-80">Registro Técnico</span>
-                                    <span className={`text-[10px] font-black ${isDarkMode ? 'text-slate-400' : 'text-slate-900'}`}>{new Date(biometryDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                                    <span className="text-[7px] font-black uppercase tracking-[0.3em] text-orange-500 opacity-80">Registro</span>
+                                    <span className={`text-[9px] font-black ${isDarkMode ? 'text-slate-400' : 'text-slate-900'}`}>{new Date(biometryDate + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                                 </div>
 
-                                <div className="flex flex-col gap-3">
+                                <div className="flex flex-col gap-2.5">
                                     <div className="flex flex-col">
-                                        <span className={`text-[7px] font-black uppercase tracking-widest leading-none mb-1 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>Gerente</span>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-orange-500/20"></div>
-                                            <span className={`text-[10px] font-black uppercase tracking-tight ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>Cleiton Manoel de Lima</span>
-                                        </div>
+                                        <span className={`text-[6px] font-black uppercase tracking-widest leading-none mb-1 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>Gerência Técnica</span>
+                                        <span className={`text-[9px] font-black uppercase tracking-tight ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>Cleiton Manoel de Lima</span>
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className={`text-[7px] font-black uppercase tracking-widest leading-none mb-1 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>Analista Adm</span>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-orange-500/20"></div>
-                                            <span className={`text-[10px] font-black uppercase tracking-tight ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>Luanthony L. Oliveira</span>
-                                        </div>
+                                        <span className={`text-[6px] font-black uppercase tracking-widest leading-none mb-1 ${isDarkMode ? 'text-slate-600' : 'text-slate-400'}`}>Analista Administrativo</span>
+                                        <span className={`text-[9px] font-black uppercase tracking-tight ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>Luanthony L. Oliveira</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
                 </header>
 
                 {/* Tabela Principal */}
                 <main className={`px-4 md:px-6 pb-6 transition-colors duration-500 ${isDarkMode ? 'bg-[#0B0F1A]' : 'bg-white'}`}>
 
-                    {/* BARRA DE FILTRO E ADICIONAR (RESTAURADO) */}
-                    <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-6">
+                    {/* BARRA DE FILTRO E ADICIONAR (OCULTOS NA EXPORTAÇÃO) */}
+                    <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-6 no-export">
                         <div className="relative w-full max-w-lg group">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-colors duration-300 ${isDarkMode ? 'text-slate-500 group-focus-within:text-orange-500' : 'text-slate-400 group-focus-within:text-orange-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
