@@ -1149,14 +1149,15 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     flex-direction: row !important; 
     align-items: center !important; 
     justify-content: space-between !important;
-    padding-bottom: 0.5rem !important;
+    padding: 0.25rem 1rem !important;
     border-bottom: 2px solid #f8fafc !important;
-    margin-bottom: 0 !important;
+    margin-bottom: 0.25rem !important;
+    gap: 0.5rem !important;
 }
 .printing #dashboard-content { 
     width: 800px !important; 
     max-width: none !important; 
-    padding: 1.5rem !important;
+    padding: 0.5rem !important;
     background: #ffffff !important;
     border: none !important;
     box-shadow: none !important;
