@@ -1252,14 +1252,16 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     <div className="flex-1 flex justify-start items-center">
                         <div
                             onClick={() => document.getElementById('logo-upload-input')?.click()}
-                            className={`w-24 h-24 md:w-32 md:h-32 rounded-2xl md:rounded-[32px] flex items-center justify-center flex-shrink-0 shadow-xl border overflow-hidden group cursor-pointer transition-all duration-500 ${isDarkMode
-                                ? 'bg-[#0F172A] border-slate-700 shadow-blue-900/10 hover:border-emerald-500/30'
-                                : 'bg-white border-gray-50/50 shadow-gray-200/50 hover:border-orange-200'}`}
+                            className={`w-24 h-24 md:w-32 md:h-32 rounded-2xl md:rounded-[40px] flex items-center justify-center flex-shrink-0 shadow-2xl border-2 overflow-hidden group cursor-pointer transition-all duration-700 hover:rotate-2 ${isDarkMode
+                                ? 'bg-[#1e293b]/50 border-slate-700 shadow-orange-950/20 hover:border-orange-500/50'
+                                : 'bg-white border-orange-50 shadow-orange-100/50 hover:border-orange-200'}`}
                         >
                             {logo ? (
-                                <img src={logo} alt="Logo" className="w-20 h-20 md:w-28 md:h-28 object-contain hover:scale-110 transition-transform duration-500" />
+                                <img src={logo} alt="Logo" className="w-20 h-20 md:w-28 md:h-28 object-contain transition-all duration-700 group-hover:scale-110" />
                             ) : (
-                                <div className="w-20 h-20 bg-orange-500 rounded-lg flex items-center justify-center text-white font-black text-3xl">C</div>
+                                <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center text-white font-black text-4xl shadow-inner">
+                                    {companyName?.charAt(0) || 'C'}
+                                </div>
                             )}
                             <input
                                 id="logo-upload-input"
@@ -1271,16 +1273,20 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                         </div>
                     </div>
 
-                    {/* Center: Title Section */}
-                    <div className="flex-[2] flex flex-col items-center text-center order-first md:order-none">
-                        <h1 className={`text-3xl md:text-5xl font-black tracking-tighter leading-none mb-2 transition-colors duration-500 ${isDarkMode
-                            ? 'text-slate-100'
-                            : 'text-slate-800'}`}>
+                    {/* Center: Title Section with sophisticated typography */}
+                    <div className="flex-[2] flex flex-col items-center text-center order-first md:order-none relative">
+                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-32 h-32 bg-orange-500/10 blur-[60px] rounded-full pointer-events-none"></div>
+                        <h1 className={`text-4xl md:text-7xl font-black tracking-tighter leading-none mb-3 drop-shadow-sm transition-colors duration-500 ${isDarkMode
+                            ? 'text-white'
+                            : 'text-slate-900'}`}>
                             BIOMETRIA
                         </h1>
-                        <p className="text-[10px] md:text-sm font-bold text-orange-500 uppercase tracking-[0.3em] font-sans">
-                            Análise de Performance
-                        </p>
+                        <div className="relative inline-block">
+                            <p className="text-[10px] md:text-sm font-black text-orange-500 uppercase tracking-[0.4em] font-sans">
+                                Análise de Performance
+                            </p>
+                            <div className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-30 rounded-full"></div>
+                        </div>
                     </div>
 
                     {/* Right: Metadata & Theme Toggle */}
@@ -1325,78 +1331,79 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                 <main className={`px-4 md:px-6 pb-6 transition-colors duration-500 ${isDarkMode ? 'bg-[#0B0F1A]' : 'bg-white'}`}>
 
                     {/* BARRA DE FILTRO E ADICIONAR (RESTAURADO) */}
-                    <div className="flex justify-between items-center mb-4 gap-4">
-                        <div className="relative w-full max-w-md">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-6">
+                        <div className="relative w-full max-w-lg group">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transition-colors duration-300 ${isDarkMode ? 'text-slate-500 group-focus-within:text-orange-500' : 'text-slate-400 group-focus-within:text-orange-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </div>
                             <input
                                 type="text"
-                                placeholder="Filtrar viveiro..."
+                                placeholder="Procurar por viveiro específico... (OC-001, VP-002)"
                                 value={filterText}
                                 onChange={(e) => setFilterText(e.target.value)}
-                                className={`pl-10 pr-4 py-2.5 rounded-xl border w-full transition-all text-sm font-bold outline-none focus:ring-2 focus:ring-orange-500/20 ${isDarkMode
-                                    ? 'bg-slate-900 border-slate-700 text-slate-200 placeholder-slate-500 focus:border-orange-500/50'
-                                    : 'bg-white border-gray-200 text-slate-700 placeholder-gray-400 focus:border-orange-500'}`}
+                                className={`pl-12 pr-4 py-3.5 rounded-[20px] border-2 w-full transition-all text-sm font-bold outline-none shadow-sm ${isDarkMode
+                                    ? 'bg-slate-900/50 border-slate-800 text-slate-100 placeholder-slate-600 focus:border-orange-500/80 focus:ring-4 focus:ring-orange-500/5'
+                                    : 'bg-slate-50 border-white text-slate-800 placeholder-slate-400 focus:border-orange-400 focus:bg-white focus:ring-4 focus:ring-orange-500/10'}`}
                             />
                         </div>
 
                         {!isPublic && (
                             <button
                                 onClick={() => setShowAddTankModal(true)}
-                                className="flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md active:scale-95"
+                                className="group relative flex items-center gap-3 bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-8 py-4 rounded-[20px] text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-orange-500/20 active:scale-95 overflow-hidden"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transform group-hover:rotate-90 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
                                 </svg>
-                                <span className="hidden leading-none sm:inline">Adicionar</span>
+                                <span className="relative z-10 leading-none">Novo Viveiro</span>
                             </button>
                         )}
                     </div>
 
-                    <div className={`rounded-2xl border overflow-x-auto mb-8 scrollbar-thin scrollbar-thumb-gray-200 transition-colors duration-500 ${isDarkMode ? 'border-slate-800 bg-slate-900/50' : 'border-gray-100 bg-white'}`}>
-                        <table className="w-full text-[10px] md:text-xs text-left min-w-[1000px] md:min-w-0">
-                            <thead className={`uppercase font-black tracking-widest border-b transition-colors duration-500 ${isDarkMode
-                                ? 'bg-[#111827] text-slate-400 border-slate-800'
-                                : 'bg-[#F8FAFC] text-slate-500 border-gray-100'}`}>
+                    <div className={`rounded-[32px] border-2 overflow-x-auto mb-10 shadow-2xl transition-all duration-700 ${isDarkMode ? 'border-slate-800/80 bg-slate-900/40 backdrop-blur-xl' : 'border-slate-100/50 bg-white'}`}>
+                        <table className="w-full text-[11px] md:text-[13px] text-left min-w-[1100px] border-collapse">
+                            <thead className={`uppercase font-black tracking-[0.1em] border-b-2 transition-colors duration-500 ${isDarkMode
+                                ? 'bg-slate-800/80 text-orange-500 border-slate-700/50'
+                                : 'bg-slate-800 text-white border-slate-700'}`}>
                                 <tr>
-                                    <th className={`px-5 py-4 min-w-[80px] sticky left-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] text-center transition-colors duration-500 ${isDarkMode
-                                        ? 'bg-[#111827]'
-                                        : 'bg-[#F8FAFC]'}`}>VIV.</th>
-                                    <th className="px-4 py-4 text-center">D. POV.</th>
-                                    <th className="px-4 py-4 text-center">DIAS</th>
-                                    <th className="px-4 py-4 text-center">P.M (G)</th>
-                                    <th className="px-4 py-4 text-center">QUANT. (MIL)</th>
-                                    <th className="px-4 py-4 text-center">PESO TOTAL (KG)</th>
-                                    <th className="px-4 py-4 text-center">P.M ANT.</th>
-                                    <th className="px-4 py-4 text-center">INC. SEM.</th>
-                                    <th className="px-4 py-4 text-center">GPD</th>
-                                    <th className="px-6 py-4 text-center">STATUS ANALYSIS</th>
+                                    <th className={`px-6 py-6 min-w-[100px] sticky left-0 z-10 text-center transition-colors duration-500 ${isDarkMode
+                                        ? 'bg-slate-800/95 text-orange-500'
+                                        : 'bg-slate-800 text-orange-400'}`}>VIV.</th>
+                                    <th className="px-5 py-6 text-center">D. Pov.</th>
+                                    <th className="px-5 py-6 text-center">Dias</th>
+                                    <th className="px-5 py-6 text-center">P.M (g)</th>
+                                    <th className="px-5 py-6 text-center">Quant. (mil)</th>
+                                    <th className="px-5 py-6 text-center">Peso Total (kg)</th>
+                                    <th className="px-5 py-6 text-center text-slate-400">P.M Ant.</th>
+                                    <th className="px-5 py-6 text-center">Inc. Sem.</th>
+                                    <th className="px-5 py-6 text-center">GPD</th>
+                                    <th className="px-8 py-6 text-center bg-orange-500/5">Status Performance</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-50">
+                            <tbody className={`divide-y transition-colors duration-500 ${isDarkMode ? 'divide-slate-800/50' : 'divide-slate-100'}`}>
                                 {processedData.map((item, idx) => (
                                     <tr key={idx} className={`transition-colors border-b last:border-0 group ${isDarkMode
                                         ? 'hover:bg-slate-800/40 border-slate-800/50'
                                         : 'hover:bg-slate-50/50 border-gray-50'}`}>
-                                        <td className={`px-5 py-4 font-bold sticky left-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] whitespace-nowrap transition-colors duration-500 ${isDarkMode
-                                            ? 'text-slate-100 bg-[#0B0F1A] group-hover:bg-slate-800/40'
-                                            : 'text-slate-800 bg-white group-hover:bg-slate-50'}`}>
-                                            <div className="flex items-center gap-2">
-                                                <div className={`inline-flex items-center justify-center px-3 py-1.5 rounded-lg border font-extrabold tracking-tight min-w-[80px] transition-colors duration-500 ${isDarkMode
-                                                    ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
-                                                    : 'border-emerald-100 bg-emerald-50/50 text-emerald-700'}`}>
+                                        <td className={`px-6 py-5 font-bold sticky left-0 z-10 whitespace-nowrap transition-colors duration-500 ${isDarkMode
+                                            ? 'text-slate-100 bg-slate-900 group-hover:bg-slate-800'
+                                            : 'text-slate-800 bg-white group-hover:bg-orange-50/30'}`}>
+                                            <div className="flex items-center gap-3">
+                                                <div className={`inline-flex items-center justify-center px-4 py-2 rounded-xl border-2 font-black tracking-tighter min-w-[90px] shadow-sm transition-all duration-300 group-hover:scale-105 ${isDarkMode
+                                                    ? 'border-orange-500/20 bg-orange-500/10 text-orange-400'
+                                                    : 'border-orange-100 bg-orange-50/50 text-orange-700'}`}>
                                                     {item.viveiro}
                                                 </div>
                                                 {!isPublic && (
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); handleDeleteRow(item.viveiro); }}
-                                                        className="text-gray-300 hover:text-red-500 bg-gray-50 hover:bg-red-50 rounded-full p-1.5 transition-all opacity-0 group-hover:opacity-100"
+                                                        className="text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-full p-2 transition-all opacity-0 group-hover:opacity-100 transform hover:rotate-12"
                                                         title="Excluir viveiro"
                                                     >
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                                             <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                                                         </svg>
                                                     </button>
@@ -1404,11 +1411,11 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                             </div>
                                         </td>
 
-                                        <td className="px-4 py-4 text-center group/date relative">
+                                        <td className="px-5 py-5 text-center group/date relative">
                                             {isPublic ? (
-                                                <span className={`font-bold px-3 py-1.5 rounded-lg text-[10px] w-[110px] inline-block transition-colors duration-500 ${isDarkMode
-                                                    ? 'bg-slate-800 text-slate-300'
-                                                    : 'bg-gray-100 text-slate-500'}`}>
+                                                <span className={`font-black px-4 py-2.5 rounded-xl text-[11px] w-[125px] inline-block transition-colors duration-500 shadow-sm ${isDarkMode
+                                                    ? 'bg-slate-800/50 text-slate-300'
+                                                    : 'bg-slate-50 text-slate-600'}`}>
                                                     {item.dataPovoamento ? (item.dataPovoamento.includes('-') ? item.dataPovoamento.split('-').reverse().join('/') : item.dataPovoamento) : '-'}
                                                 </span>
                                             ) : (
@@ -1416,82 +1423,85 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                                     type="date"
                                                     value={item.dataPovoamento || ''}
                                                     onChange={(e) => handleUpdateRow(item.viveiro, 'dataPovoamento', e.target.value)}
-                                                    className={`font-bold px-3 py-1.5 rounded-lg text-[10px] border outline-none focus:ring-2 focus:ring-orange-500/20 transition-all cursor-pointer w-[115px] ${isDarkMode
-                                                        ? 'bg-slate-800 text-slate-300 border-slate-700 hover:border-orange-500/50'
-                                                        : 'bg-white text-slate-800 border-gray-200 hover:border-orange-300'}`}
+                                                    className={`font-black px-4 py-2.5 rounded-xl text-[11px] border-2 outline-none transition-all cursor-pointer w-[130px] shadow-sm active:scale-95 ${isDarkMode
+                                                        ? 'bg-slate-800 text-slate-100 border-slate-700 hover:border-orange-500/50 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10'
+                                                        : 'bg-white text-slate-800 border-slate-100 hover:border-orange-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-500/10'}`}
                                                 />
                                             )}
                                         </td>
 
-                                        <td className={`px-4 py-4 text-center font-bold transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{item.diasCultivo}</td>
+                                        <td className={`px-5 py-5 text-center font-black transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{item.diasCultivo}</td>
 
-                                        <td className="px-4 py-4 text-center">
+                                        <td className="px-5 py-5 text-center">
                                             {isPublic ? (
-                                                <span className={`font-bold transition-colors duration-500 ${isDarkMode ? 'text-slate-300' : 'text-slate-400'}`}>{item.pMedInputValue}</span>
+                                                <span className={`font-black text-lg transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.pMedInputValue}</span>
                                             ) : (
-                                                <input
-                                                    type="text"
-                                                    value={item.pMedInputValue}
-                                                    placeholder="0.00"
-                                                    onChange={(e) => handleUpdateRow(item.viveiro, 'pMedStr', e.target.value)}
-                                                    className={`w-16 text-center bg-transparent border-b outline-none transition-all font-bold ${isDarkMode
-                                                        ? 'text-slate-300 border-slate-700 focus:border-orange-500'
-                                                        : 'text-slate-800 border-gray-300 focus:border-orange-500'}`}
-                                                />
+                                                <div className="relative inline-block group/input">
+                                                    <input
+                                                        type="text"
+                                                        value={item.pMedInputValue}
+                                                        placeholder="0.00"
+                                                        onChange={(e) => handleUpdateRow(item.viveiro, 'pMedStr', e.target.value)}
+                                                        className={`w-20 text-center bg-transparent border-b-2 outline-none transition-all font-black text-lg pb-1 ${isDarkMode
+                                                            ? 'text-white border-slate-700 focus:border-orange-500'
+                                                            : 'text-slate-900 border-slate-200 focus:border-orange-500'}`}
+                                                    />
+                                                    <div className="text-[9px] font-black text-orange-500/50 uppercase absolute -bottom-4 left-1/2 -translate-x-1/2 italic opacity-0 group-focus-within/input:opacity-100 transition-opacity">Gramas</div>
+                                                </div>
                                             )}
                                         </td>
 
-                                        <td className="px-4 py-4 text-center">
+                                        <td className="px-5 py-5 text-center">
                                             {isPublic ? (
-                                                <span className={`font-bold transition-colors duration-500 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{item.quatInputValue}</span>
+                                                <span className={`font-black transition-colors duration-500 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{item.quatInputValue}k</span>
                                             ) : (
                                                 <input
                                                     type="text"
                                                     value={item.quatInputValue}
                                                     placeholder="Mil"
                                                     onChange={(e) => handleUpdateRow(item.viveiro, 'quat', e.target.value)}
-                                                    className={`w-18 px-2 py-1 rounded-md text-center outline-none transition-all font-bold border ${isDarkMode
-                                                        ? 'bg-slate-800/50 text-slate-300 border-slate-700 focus:border-orange-500'
-                                                        : 'bg-white text-slate-800 border-gray-200 focus:border-orange-400 shadow-sm'}`}
+                                                    className={`w-20 px-3 py-2 rounded-xl text-center outline-none transition-all font-black border-2 shadow-sm ${isDarkMode
+                                                        ? 'bg-slate-800/80 text-orange-400 border-slate-700 focus:border-orange-500'
+                                                        : 'bg-slate-50 text-orange-700 border-white focus:bg-white focus:border-orange-400'}`}
                                                 />
                                             )}
                                         </td>
 
                                         <td
                                             onClick={() => handleCopy(item.pesoTotal, 'Peso Total')}
-                                            className={`px-4 py-4 text-center font-black cursor-copy transition-colors duration-500 ${isDarkMode
-                                                ? 'text-slate-200 hover:text-white'
-                                                : 'text-slate-800 hover:text-slate-900'}`}
+                                            className={`px-5 py-5 text-center font-black text-lg cursor-copy transition-all duration-300 hover:scale-110 active:scale-95 ${isDarkMode
+                                                ? 'text-slate-100 hover:text-orange-400'
+                                                : 'text-slate-900 hover:text-orange-600'}`}
                                         >
                                             {item.pesoTotal}
                                         </td>
 
-                                        <td className={`px-4 py-4 text-center font-bold transition-colors duration-500 ${isDarkMode ? 'text-slate-600' : 'text-slate-300'}`}>
+                                        <td className={`px-5 py-5 text-center font-black transition-colors duration-500 opacity-60`}>
                                             {isPublic ? (
-                                                <span className={`font-bold transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{item.pAntDisplay}</span>
+                                                <span className="text-[11px]">{item.pAntDisplay}g</span>
                                             ) : (
                                                 <input
                                                     type="text"
                                                     value={item.pAntDisplay}
                                                     placeholder="-"
                                                     onChange={(e) => handleUpdateRow(item.viveiro, 'pAntStr', e.target.value)}
-                                                    className={`w-16 text-center bg-transparent border-b outline-none transition-all font-bold ${isDarkMode
-                                                        ? 'text-slate-500 border-slate-700 focus:border-orange-500 focus:text-slate-300'
-                                                        : 'text-slate-500 border-gray-200 focus:border-orange-500 focus:text-slate-700'}`}
+                                                    className={`w-16 text-center bg-transparent border-b-2 border-dashed outline-none transition-all font-black text-[13px] ${isDarkMode
+                                                        ? 'text-slate-500 border-slate-700 focus:border-orange-500/50 focus:text-slate-300'
+                                                        : 'text-slate-400 border-slate-200 focus:border-orange-500 focus:text-slate-700'}`}
                                                 />
                                             )}
                                         </td>
 
-                                        <td className={`px-4 py-4 text-center font-black transition-colors duration-500 ${item.incSemanalStr.includes('+') ? 'text-emerald-500' : (isDarkMode ? 'text-slate-600' : 'text-slate-400')}`}>
+                                        <td className={`px-5 py-5 text-center font-black text-base transition-colors duration-500 ${item.incSemanalStr.includes('+') ? 'text-emerald-500' : (isDarkMode ? 'text-slate-700' : 'text-slate-300')}`}>
                                             {item.incSemanalStr}
                                         </td>
 
-                                        <td className={`px-4 py-4 text-center font-bold transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                                        <td className={`px-5 py-5 text-center font-black transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
                                             {item.gpdDisplay}
                                         </td>
 
-                                        <td className="px-6 py-4 text-center">
-                                            <div className="flex items-center gap-2">
+                                        <td className="px-8 py-5 text-center bg-orange-500/[0.02]">
+                                            <div className="flex items-center justify-center">
                                                 {/* Logic for Status Badge based on analysisStatus */}
                                                 {(() => {
                                                     const status = item.analysisStatus.split(':')[0].toUpperCase();
@@ -1501,27 +1511,32 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                                     let badgeClass = "";
                                                     let icon = null;
 
-                                                    if (status.includes('ESPETACULAR') || status.includes('ÓTIMO')) {
-                                                        badgeClass = isDarkMode ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-emerald-50 text-emerald-600 border-emerald-100";
-                                                        icon = <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM14 11a1 1 0 011 1v1h1a1 1 0 110 2h-1v1a1 1 0 11-2 0v-1h-1a1 1 0 110-2h1v-1a1 1 0 011-1z" /></svg>;
-                                                    } else if (status.includes('REGULAR') || status.includes('BOM')) {
-                                                        badgeClass = isDarkMode ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-blue-50 text-blue-600 border-blue-100";
-                                                        icon = <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" /></svg>;
+                                                    if (status.includes('ESPETACULAR')) {
+                                                        badgeClass = isDarkMode ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20" : "bg-orange-600 text-white shadow-xl shadow-orange-600/30 ring-2 ring-orange-200";
+                                                        icon = <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>;
+                                                    } else if (status.includes('ÓTIMO')) {
+                                                        badgeClass = isDarkMode ? "bg-orange-500/20 text-orange-400 border-orange-500/40" : "bg-orange-50 text-orange-700 border-orange-200";
+                                                        icon = <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.342l-7.106 5.33a1 1 0 00-.138 1.542l4.21 4.21c.394.394 1.027.394 1.42 0l6.395-6.395a1 1 0 00-.342-1.45l-3-1.895z" clipRule="evenodd" /><path d="M12.395 2.553l3 1.895-6.395 6.395-4.21-4.21L12.395 2.553z" /></svg>;
+                                                    } else if (status.includes('BOM')) {
+                                                        badgeClass = isDarkMode ? "bg-slate-800 text-slate-300 border-slate-700" : "bg-slate-100 text-slate-700 border-slate-200";
+                                                        icon = <svg className="w-3.5 h-3.5 text-orange-500/50" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
+                                                    } else if (status.includes('REGULAR')) {
+                                                        badgeClass = isDarkMode ? "bg-slate-800/50 text-slate-500 border-slate-700/50" : "bg-white text-slate-400 border-slate-100";
                                                     } else if (status.includes('RUIM')) {
-                                                        badgeClass = isDarkMode ? "bg-orange-500/10 text-orange-400 border-orange-500/20" : "bg-orange-50 text-orange-600 border-orange-100";
-                                                        icon = <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>;
+                                                        badgeClass = isDarkMode ? "bg-amber-900/20 text-amber-500 border-amber-900/30" : "bg-amber-50 text-amber-600 border-amber-100";
+                                                        icon = <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>;
                                                     } else {
-                                                        badgeClass = isDarkMode ? "bg-rose-500/10 text-rose-400 border-rose-500/20" : "bg-rose-50 text-rose-600 border-rose-100";
-                                                        icon = <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>;
+                                                        badgeClass = isDarkMode ? "bg-rose-900/20 text-rose-400 border-rose-900/30" : "bg-rose-50 text-rose-600 border-rose-100";
+                                                        icon = <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>;
                                                     }
 
                                                     return (
-                                                        <div className={`flex flex-col border rounded-xl px-2 md:px-3 py-1 md:py-1.5 min-w-[120px] md:min-w-[140px] shadow-sm transition-all duration-500 ${badgeClass}`}>
-                                                            <div className="flex items-center gap-1.5 justify-center font-black uppercase text-[9px] md:text-[10px]">
+                                                        <div className={`flex flex-col border rounded-2xl px-4 py-2 min-w-[140px] md:min-w-[170px] transition-all duration-500 transform hover:scale-105 group/badge cursor-default ${badgeClass}`}>
+                                                            <div className="flex items-center gap-2 justify-center font-black uppercase text-[10px] md:text-[11px] tracking-tight">
                                                                 {icon}
                                                                 {label}
                                                             </div>
-                                                            <div className="text-[8px] md:text-[9px] text-center font-bold opacity-80 leading-none mt-0.5">{subLabel.replace('(', '').replace(')', '')}</div>
+                                                            <div className="text-[9px] md:text-[10px] text-center font-black opacity-60 leading-none mt-1 group-hover/badge:opacity-100 transition-opacity">{subLabel.replace('(', '').replace(')', '')}</div>
                                                         </div>
                                                     );
                                                 })()}
@@ -1535,22 +1550,25 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
 
                     {/* Status Legend */}
-                    <div className="mt-8 flex flex-col md:flex-row justify-between items-center gap-6 no-print">
-                        <div className={`flex flex-wrap justify-center items-center gap-x-6 gap-y-3 text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
-                            <span className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> Ótimo</span>
-                            <span className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div> Regular / Bom</span>
-                            <span className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div> Ruim</span>
-                            <span className="flex items-center gap-2"><div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div> Crítico</span>
+                    <div className="mt-12 flex flex-col md:flex-row justify-between items-center gap-8 no-print p-8 rounded-[32px] bg-slate-500/5 border border-orange-500/10">
+                        <div className={`flex flex-wrap justify-center items-center gap-x-8 gap-y-4 text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
+                            <span className="flex items-center gap-3 group/legend cursor-default"><div className="w-3 h-3 rounded-full bg-orange-500 shadow-lg shadow-orange-500/50 group-hover/legend:scale-125 transition-transform"></div> Espetacular / Ótimo</span>
+                            <span className="flex items-center gap-3 group/legend cursor-default"><div className="w-3 h-3 rounded-full bg-slate-400 shadow-lg shadow-slate-400/50 group-hover/legend:scale-125 transition-transform"></div> Bom / Regular</span>
+                            <span className="flex items-center gap-3 group/legend cursor-default"><div className="w-3 h-3 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50 group-hover/legend:scale-125 transition-transform"></div> Ruim</span>
+                            <span className="flex items-center gap-3 group/legend cursor-default"><div className="w-3 h-3 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50 group-hover/legend:scale-125 transition-transform"></div> Crítico</span>
                         </div>
 
                         <button
                             onClick={() => setShowReferenceTable(!showReferenceTable)}
-                            className={`flex items-center gap-2 text-xs font-black uppercase tracking-widest transition-all group ${isDarkMode
-                                ? 'text-slate-400 hover:text-slate-200'
-                                : 'text-slate-400 hover:text-slate-800'}`}
+                            className={`flex items-center gap-3 px-6 py-3 rounded-2xl border-2 text-[11px] font-black uppercase tracking-widest transition-all group ${isDarkMode
+                                ? 'border-slate-800 text-slate-400 hover:border-orange-500/30 hover:text-orange-400'
+                                : 'border-slate-100 text-slate-400 hover:border-orange-200 hover:text-slate-800'}`}
                         >
-                            {showReferenceTable ? 'Ocultar Tabela de Metas' : 'Ver Tabela de Metas'}
-                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform ${showReferenceTable ? 'rotate-90' : 'group-hover:translate-x-1'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                            <span className="relative">
+                                {showReferenceTable ? 'Ocultar Parâmetros' : 'Ver Parâmetros de Metas'}
+                                <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-orange-500 transition-all group-hover:w-full"></div>
+                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-500 ${showReferenceTable ? 'rotate-180 text-orange-500' : 'group-hover:rotate-12'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
                         </button>
                     </div>
 
