@@ -1304,37 +1304,42 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     {/* Right: Metadata & Theme Toggle */}
                     <div className="flex-1 flex flex-col items-center md:items-end text-center md:text-right gap-1 font-sans">
                         <div className="flex items-center gap-3 mb-2">
-                            {/* Theme Toggle Button */}
-                            <button
-                                onClick={() => setIsDarkMode(!isDarkMode)}
-                                className={`p-2 rounded-xl border transition-all duration-300 ${isDarkMode
-                                    ? 'bg-slate-800 border-slate-700 text-yellow-400 hover:bg-slate-700'
-                                    : 'bg-orange-50 border-orange-100 text-orange-600 hover:bg-orange-100'}`}
-                                title={isDarkMode ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
-                            >
-                                {isDarkMode ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                                        <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 011.06 0l1.591 1.591a.75.75 0 11-1.06 1.061l-1.591-1.591a.75.75 0 010-1.061zM21.75 12a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5a.75.75 0 01.75-.75zM18.894 17.834a.75.75 0 010 1.061l-1.591 1.591a.75.75 0 11-1.06-1.06l1.591-1.591a.75.75 0 011.06 0zM12 18.75a.75.75 0 01.75.75V21.75a.75.75 0 01-1.5 0V19.5a.75.75 0 01.75-.75zM5.106 17.834a.75.75 0 011.06 0l1.591 1.591a.75.75 0 11-1.061 1.06l-1.591-1.591a.75.75 0 010-1.061zM2.25 12a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5H3a.75.75 0 01-.75-.75zM5.106 6.166a.75.75 0 010 1.061L3.515 8.818a.75.75 0 11-1.06-1.06l1.591-1.591a.75.75 0 011.06 0z" />
-                                    </svg>
-                                ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                                        <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
-                                    </svg>
-                                )}
-                            </button>
+                            {/* Theme Toggle Button - Only show if NOT public */}
+                            {!isPublic && (
+                                <button
+                                    onClick={() => setIsDarkMode(!isDarkMode)}
+                                    className={`p-2 rounded-xl border transition-all duration-300 ${isDarkMode
+                                        ? 'bg-slate-800 border-slate-700 text-yellow-400 hover:bg-slate-700'
+                                        : 'bg-orange-50 border-orange-100 text-orange-600 hover:bg-orange-100'}`}
+                                    title={isDarkMode ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
+                                >
+                                    {isDarkMode ? (
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                            <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 011.06 0l1.591 1.591a.75.75 0 11-1.06 1.061l-1.591-1.591a.75.75 0 010-1.061zM21.75 12a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5a.75.75 0 01.75-.75zM18.894 17.834a.75.75 0 010 1.061l-1.591 1.591a.75.75 0 11-1.06-1.06l1.591-1.591a.75.75 0 011.06 0zM12 18.75a.75.75 0 01.75.75V21.75a.75.75 0 01-1.5 0V19.5a.75.75 0 01.75-.75zM5.106 17.834a.75.75 0 011.06 0l1.591 1.591a.75.75 0 11-1.061 1.06l-1.591-1.591a.75.75 0 010-1.061zM2.25 12a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5H3a.75.75 0 01-.75-.75zM5.106 6.166a.75.75 0 010 1.061L3.515 8.818a.75.75 0 11-1.06-1.06l1.591-1.591a.75.75 0 011.06 0z" />
+                                        </svg>
+                                    ) : (
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+                                            <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clipRule="evenodd" />
+                                        </svg>
+                                    )}
+                                </button>
+                            )}
 
-                            <div className={`text-[10px] items-center gap-2 font-bold uppercase tracking-widest flex ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>
-                                Relatório Técnico <span className={`w-1 h-1 rounded-full ${isDarkMode ? 'bg-slate-700' : 'bg-gray-300'}`}></span> {new Date(biometryDate + 'T12:00:00').toLocaleDateString('pt-BR')}
+                            <div className={`text-[9px] md:text-[10px] items-center gap-2 font-black uppercase tracking-[0.2em] flex px-3 py-1.5 rounded-full border ${isDarkMode ? 'text-slate-400 border-slate-700 bg-slate-900/50' : 'text-gray-500 border-orange-100 bg-orange-50/30'}`}>
+                                Relatório Técnico <span className={`w-1 h-1 rounded-full ${isDarkMode ? 'bg-orange-500/50' : 'bg-orange-400'}`}></span> {new Date(biometryDate + 'T12:00:00').toLocaleDateString('pt-BR')}
                             </div>
                         </div>
-                        <p className="text-[10px] md:text-xs leading-none">
-                            <span className={`font-medium ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Gerente:</span>
-                            <span className={`font-bold ml-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>Cleiton Manoel de Lima</span>
-                        </p>
-                        <p className="text-[10px] md:text-xs leading-none">
-                            <span className={`font-medium ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Analista Adm:</span>
-                            <span className={`font-bold ml-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-800'}`}>Luanthony L. Oliveira</span>
-                        </p>
+
+                        <div className="flex flex-col gap-1.5 mt-1">
+                            <div className={`flex items-center gap-2 px-3 py-1 rounded-lg border text-[9px] md:text-[10px] transition-all ${isDarkMode ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-100'}`}>
+                                <span className={`font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Gerente:</span>
+                                <span className={`font-black ${isDarkMode ? 'text-orange-400' : 'text-slate-900'}`}>CLEITON MANOEL DE LIMA</span>
+                            </div>
+                            <div className={`flex items-center gap-2 px-3 py-1 rounded-lg border text-[9px] md:text-[10px] transition-all ${isDarkMode ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-50 border-slate-100'}`}>
+                                <span className={`font-black uppercase tracking-widest ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Analista Adm:</span>
+                                <span className={`font-black ${isDarkMode ? 'text-orange-400' : 'text-slate-900'}`}>LUANTHONY L. OLIVEIRA</span>
+                            </div>
+                        </div>
                     </div>
 
                 </header>
