@@ -905,7 +905,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     width: 800
                 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+                pagebreak: { mode: ['css', 'legacy'] }
             };
 
             html2pdf().set(opt).from(el).save().finally(() => {
@@ -1186,6 +1186,13 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 .printing .status-badge-container {
     justify-content: center !important;
     align-items: center !important;
+}
+.printing table {
+    min-width: 0 !important;
+    width: 100% !important;
+}
+.printing tr, .printing td, .printing th {
+    page-break-inside: avoid !important;
 }
 .print-visible { display: none; }
 `}</style>
