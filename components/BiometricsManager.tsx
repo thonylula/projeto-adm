@@ -1564,23 +1564,31 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                             {item.pesoTotal}
                                         </td>
 
-                                        <td className={`px-1 py-3 text-center font-black transition-colors duration-500 opacity-60 text-[10px]`}>
-                                            {isPublic ? (
-                                                <span>{item.pAntDisplay}g</span>
-                                            ) : (
-                                                <div className="flex items-center justify-center">
-                                                    <input
-                                                        type="text"
-                                                        value={item.pAntDisplay}
-                                                        placeholder="-"
-                                                        onChange={(e) => handleUpdateRow(item.viveiro, 'pAntStr', e.target.value)}
-                                                        className={`w-10 text-center bg-transparent border-b border-dashed outline-none transition-all font-black text-[10px] ${isDarkMode
-                                                            ? 'text-slate-500 border-slate-700 focus:border-orange-500/50 focus:text-slate-300'
-                                                            : 'text-slate-400 border-slate-200 focus:border-orange-500 focus:text-slate-700'}`}
-                                                    />
-                                                    <span className="ml-0.5 text-[9px]">g</span>
-                                                </div>
-                                            )}
+                                        <td className={`px-1 py-3 text-center font-black transition-colors duration-500 text-[10px]`}>
+                                            {/* Impressão: Texto Estático Visível */}
+                                            <span className="print-visible text-slate-500">
+                                                {item.pAntDisplay}g
+                                            </span>
+
+                                            {/* UI: Input Interativo */}
+                                            <div className={`print-hidden ${isPublic ? '' : 'opacity-60'}`}>
+                                                {isPublic ? (
+                                                    <span>{item.pAntDisplay}g</span>
+                                                ) : (
+                                                    <div className="flex items-center justify-center">
+                                                        <input
+                                                            type="text"
+                                                            value={item.pAntDisplay}
+                                                            placeholder="-"
+                                                            onChange={(e) => handleUpdateRow(item.viveiro, 'pAntStr', e.target.value)}
+                                                            className={`w-10 text-center bg-transparent border-b border-dashed outline-none transition-all font-black text-[10px] ${isDarkMode
+                                                                ? 'text-slate-500 border-slate-700 focus:border-orange-500/50 focus:text-slate-300'
+                                                                : 'text-slate-400 border-slate-200 focus:border-orange-500 focus:text-slate-700'}`}
+                                                        />
+                                                        <span className="ml-0.5 text-[9px]">g</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </td>
 
                                         <td className={`px-1 py-3 text-center font-black text-[10px] transition-colors duration-500 ${item.incSemanalStr.includes('+') ? 'text-emerald-500' : (isDarkMode ? 'text-slate-700' : 'text-slate-300')}`}>
