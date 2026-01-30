@@ -1196,6 +1196,13 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     page-break-inside: avoid !important;
 }
 .print-visible { display: none; }
+.printing .status-legend-footer {
+    margin-top: 1rem !important;
+    padding: 0.5rem !important;
+    gap: 0.5rem !important;
+    border: none !important;
+    background: transparent !important;
+}
 `}</style>
 
             {!isPublic && (
@@ -1650,7 +1657,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
 
                     {/* Status Legend */}
-                    <div className="mt-12 flex flex-col md:flex-row justify-between items-center gap-8 no-print p-8 rounded-[32px] bg-slate-500/5 border border-orange-500/10">
+                    <div className="status-legend-footer mt-12 flex flex-col md:flex-row justify-between items-center gap-8 no-print p-8 rounded-[32px] bg-slate-500/5 border border-orange-500/10">
                         <div className={`flex flex-wrap justify-center items-center gap-x-8 gap-y-4 text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>
                             <span className="flex items-center gap-3 group/legend cursor-default"><div className="w-3 h-3 rounded-full bg-orange-500 shadow-lg shadow-orange-500/50 group-hover/legend:scale-125 transition-transform"></div> Espetacular / Ótimo</span>
                             <span className="flex items-center gap-3 group/legend cursor-default"><div className="w-3 h-3 rounded-full bg-slate-400 shadow-lg shadow-slate-400/50 group-hover/legend:scale-125 transition-transform"></div> Bom / Regular</span>
