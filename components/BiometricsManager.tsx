@@ -1152,6 +1152,8 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 /* Ensure elements are visible during export (PNG and PDF) */
 .printing .print-visible { display: block!important; visibility: visible!important; opacity: 1!important; }
 .printing .print-hidden { display: none!important; }
+.printing .export-header-row { flex-direction: row !important; align-items: center !important; justify-content: space-between !important; }
+.printing #dashboard-content { width: 1200px !important; max-width: none !important; }
 .print-visible { display: none; }
 `}</style>
 
@@ -1290,7 +1292,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                 : 'bg-white border-gray-100 shadow-blue-900/5'} overflow-hidden relative`}>
 
                 {/* --- PREMIUM HEADER --- */}
-                <header className={`px-6 py-8 md:px-10 md:py-10 flex flex-col md:flex-row items-center justify-between gap-6 border-b transition-colors duration-500 ${isDarkMode
+                <header className={`px-6 py-8 md:px-10 md:py-10 flex flex-col md:flex-row items-center justify-between gap-6 border-b transition-colors duration-500 export-header-row ${isDarkMode
                     ? 'bg-[#0B0F1A] border-slate-800'
                     : 'bg-white border-gray-50'}`}>
 
