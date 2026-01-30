@@ -1155,7 +1155,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 .printing .no-export { display: none !important; }
 .printing .export-header-row { 
     flex-direction: row !important; 
-    align-items: flex-start !important; 
+    align-items: center !important; 
     justify-content: space-between !important;
     padding-bottom: 2rem !important;
     border-bottom: 2px solid #f8fafc !important;
@@ -1170,8 +1170,9 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     box-shadow: none !important;
 }
 .printing .export-title-block {
-    text-align: left !important;
-    align-items: flex-start !important;
+    text-align: center !important;
+    align-items: center !important;
+    flex: 2 !important;
 }
 .printing .export-seal-block {
     background: transparent !important;
@@ -1179,13 +1180,20 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     padding: 0 !important;
     box-shadow: none !important;
     min-width: auto !important;
+    flex: 1 !important;
+    align-items: flex-end !important;
 }
 .printing input, .printing select {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    line-height: 1 !important;
+}
+.printing .status-badge-container {
+    justify-content: center !important;
+    align-items: center !important;
 }
 .print-visible { display: none; }
 `}</style>
@@ -1333,12 +1341,12 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     <div className="flex-1 flex justify-start items-center">
                         <div
                             onClick={() => document.getElementById('logo-upload-input')?.click()}
-                            className={`w-24 h-24 md:w-32 md:h-32 rounded-2xl md:rounded-[40px] flex items-center justify-center flex-shrink-0 shadow-2xl border-2 overflow-hidden group cursor-pointer transition-all duration-700 hover:rotate-2 no-print-bg-fix ${isDarkMode
+                            className={`w-32 h-20 md:w-48 md:h-28 rounded-xl md:rounded-[32px] flex items-center justify-center flex-shrink-0 shadow-2xl border-2 overflow-hidden group cursor-pointer transition-all duration-700 hover:rotate-2 no-print-bg-fix ${isDarkMode
                                 ? 'bg-[#1e293b]/50 border-slate-700 shadow-orange-950/20'
                                 : 'bg-white border-orange-50 shadow-orange-100/50'}`}
                         >
                             {logo ? (
-                                <img src={logo} alt="Logo" className="w-20 h-20 md:w-28 md:h-28 object-contain" />
+                                <img src={logo} alt="Logo" className="w-24 h-16 md:w-40 md:h-24 object-contain" />
                             ) : (
                                 <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center text-white font-black text-4xl shadow-inner">
                                     {companyName?.charAt(0) || 'C'}
@@ -1348,12 +1356,12 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     </div>
 
                     {/* Center: Monumental Title */}
-                    <div className="flex-[2] flex flex-col items-center md:items-start text-center md:text-left order-first md:order-none export-title-block">
+                    <div className="flex-[2] flex flex-col items-center text-center order-first md:order-none export-title-block">
                         <h1 className={`text-3xl md:text-6xl font-black tracking-tighter leading-none mb-1 transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                             BIOMETRIA
                         </h1>
                         <p className="text-[9px] md:text-xs font-black text-orange-500 uppercase tracking-[0.5em] font-sans opacity-90">
-                            Relatório de Performance
+                            RELATÓRIO DE PERFORMANCE
                         </p>
                     </div>
 
@@ -1469,59 +1477,83 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                         </td>
 
                                         <td className="px-2 py-3 text-center group/date relative">
-                                            {isPublic ? (
-                                                <span className={`font-black px-2 py-1.5 rounded-lg text-[10px] w-[95px] inline-block transition-colors duration-500 shadow-sm ${isDarkMode
-                                                    ? 'bg-slate-800/50 text-slate-300'
-                                                    : 'bg-slate-50 text-slate-600'}`}>
-                                                    {item.dataPovoamento ? (item.dataPovoamento.includes('-') ? item.dataPovoamento.split('-').reverse().join('/') : item.dataPovoamento) : '-'}
-                                                </span>
-                                            ) : (
-                                                <input
-                                                    type="date"
-                                                    value={item.dataPovoamento || ''}
-                                                    onChange={(e) => handleUpdateRow(item.viveiro, 'dataPovoamento', e.target.value)}
-                                                    className={`font-black px-2 py-1.5 rounded-lg text-[10px] border outline-none transition-all cursor-pointer w-[105px] shadow-sm active:scale-95 ${isDarkMode
-                                                        ? 'bg-slate-800 text-slate-100 border-slate-700 hover:border-orange-500/50 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10'
-                                                        : 'bg-white text-slate-800 border-slate-100 hover:border-orange-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-500/10'}`}
-                                                />
-                                            )}
+                                            {/* Impressão: Texto Estático */}
+                                            <span className="print-visible font-black px-2 py-1.5 rounded-lg text-[10px] w-full inline-block text-slate-900">
+                                                {item.dataPovoamento ? (new Date(item.dataPovoamento + 'T12:00:00').toLocaleDateString('pt-BR')) : '-'}
+                                            </span>
+
+                                            {/* UI: Input/Display interativo */}
+                                            <div className="print-hidden">
+                                                {isPublic ? (
+                                                    <span className={`font-black px-2 py-1.5 rounded-lg text-[10px] w-[95px] inline-block transition-colors duration-500 shadow-sm ${isDarkMode
+                                                        ? 'bg-slate-800/50 text-slate-300'
+                                                        : 'bg-slate-50 text-slate-600'}`}>
+                                                        {item.dataPovoamento ? (new Date(item.dataPovoamento + 'T12:00:00').toLocaleDateString('pt-BR')) : '-'}
+                                                    </span>
+                                                ) : (
+                                                    <input
+                                                        type="date"
+                                                        value={item.dataPovoamento || ''}
+                                                        onChange={(e) => handleUpdateRow(item.viveiro, 'dataPovoamento', e.target.value)}
+                                                        className={`font-black px-2 py-1.5 rounded-lg text-[10px] border outline-none transition-all cursor-pointer w-[105px] shadow-sm active:scale-95 ${isDarkMode
+                                                            ? 'bg-slate-800 text-slate-100 border-slate-700 hover:border-orange-500/50 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10'
+                                                            : 'bg-white text-slate-800 border-slate-100 hover:border-orange-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-500/10'}`}
+                                                    />
+                                                )}
+                                            </div>
                                         </td>
 
                                         <td className={`px-1 py-3 text-center font-black transition-colors duration-500 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>{item.diasCultivo}</td>
 
                                         <td className="px-2 py-3 text-center">
-                                            {isPublic ? (
-                                                <span className={`font-black text-sm transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.pMedInputValue}g</span>
-                                            ) : (
-                                                <div className="relative inline-block group/input">
-                                                    <input
-                                                        type="text"
-                                                        value={item.pMedInputValue}
-                                                        placeholder="0.00"
-                                                        onChange={(e) => handleUpdateRow(item.viveiro, 'pMedStr', e.target.value)}
-                                                        className={`w-12 text-center bg-transparent border-b outline-none transition-all font-black text-sm pb-0.5 ${isDarkMode
-                                                            ? 'text-white border-slate-700 focus:border-orange-500'
-                                                            : 'text-slate-900 border-slate-200 focus:border-orange-500'}`}
-                                                    />
-                                                    <span className="ml-0.5 text-[9px] font-black text-slate-400">g</span>
-                                                </div>
-                                            )}
+                                            {/* Impressão */}
+                                            <span className="print-visible font-black text-sm text-slate-900">
+                                                {item.pMedInputValue}g
+                                            </span>
+
+                                            {/* UI */}
+                                            <div className="print-hidden">
+                                                {isPublic ? (
+                                                    <span className={`font-black text-sm transition-colors duration-500 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{item.pMedInputValue}g</span>
+                                                ) : (
+                                                    <div className="relative inline-block group/input">
+                                                        <input
+                                                            type="text"
+                                                            value={item.pMedInputValue}
+                                                            placeholder="0.00"
+                                                            onChange={(e) => handleUpdateRow(item.viveiro, 'pMedStr', e.target.value)}
+                                                            className={`w-12 text-center bg-transparent border-b outline-none transition-all font-black text-sm pb-0.5 ${isDarkMode
+                                                                ? 'text-white border-slate-700 focus:border-orange-500'
+                                                                : 'text-slate-900 border-slate-200 focus:border-orange-500'}`}
+                                                        />
+                                                        <span className="ml-0.5 text-[9px] font-black text-slate-400">g</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </td>
 
                                         <td className="px-1 py-3 text-center">
-                                            {isPublic ? (
-                                                <span className={`font-black transition-colors duration-500 text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{item.quatInputValue}</span>
-                                            ) : (
-                                                <input
-                                                    type="text"
-                                                    value={item.quatInputValue}
-                                                    placeholder="Unid."
-                                                    onChange={(e) => handleUpdateRow(item.viveiro, 'quat', e.target.value)}
-                                                    className={`w-16 px-1.5 py-1.5 rounded-lg text-center outline-none transition-all font-black border shadow-sm text-[10px] ${isDarkMode
-                                                        ? 'bg-slate-800/80 text-orange-400 border-slate-700 focus:border-orange-500'
-                                                        : 'bg-slate-50 text-orange-700 border-white focus:bg-white focus:border-orange-400'}`}
-                                                />
-                                            )}
+                                            {/* Impressão */}
+                                            <span className="print-visible font-black text-[10px] text-orange-700">
+                                                {item.quatInputValue}
+                                            </span>
+
+                                            {/* UI */}
+                                            <div className="print-hidden">
+                                                {isPublic ? (
+                                                    <span className={`font-black transition-colors duration-500 text-[10px] ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{item.quatInputValue}</span>
+                                                ) : (
+                                                    <input
+                                                        type="text"
+                                                        value={item.quatInputValue}
+                                                        placeholder="Unid."
+                                                        onChange={(e) => handleUpdateRow(item.viveiro, 'quat', e.target.value)}
+                                                        className={`w-16 px-1.5 py-1.5 rounded-lg text-center outline-none transition-all font-black border shadow-sm text-[10px] ${isDarkMode
+                                                            ? 'bg-slate-800/80 text-orange-400 border-slate-700 focus:border-orange-500'
+                                                            : 'bg-slate-50 text-orange-700 border-white focus:bg-white focus:border-orange-400'}`}
+                                                    />
+                                                )}
+                                            </div>
                                         </td>
 
                                         <td
@@ -1591,7 +1623,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                                     }
 
                                                     return (
-                                                        <div className={`flex flex-col border rounded-xl px-2 py-1 min-w-[110px] md:min-w-[130px] transition-all duration-500 transform hover:scale-105 group/badge cursor-default ${badgeClass}`}>
+                                                        <div className={`flex flex-col border rounded-xl px-2 py-1 min-w-[110px] md:min-w-[130px] transition-all duration-500 transform hover:scale-105 group/badge cursor-default status-badge-container ${badgeClass}`}>
                                                             <div className="flex items-center gap-1.5 justify-center font-black uppercase text-[8px] md:text-[9px] tracking-tight">
                                                                 {icon}
                                                                 {label}
