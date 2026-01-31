@@ -1203,6 +1203,16 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     border: none !important;
     background: transparent !important;
 }
+.printing thead th {
+    color: #000000 !important;
+    background: transparent !important;
+    padding: 2px !important;
+    font-size: 8px !important;
+    -webkit-print-color-adjust: exact !important;
+}
+.printing td {
+    padding: 2px !important;
+}
 `}</style>
 
             {!isPublic && (
@@ -1437,24 +1447,8 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
                     <div className={`rounded-[32px] border-2 overflow-x-auto mb-10 shadow-2xl transition-all duration-700 ${isDarkMode ? 'border-slate-800/80 bg-slate-900/40 backdrop-blur-xl' : 'border-slate-100/50 bg-white'}`}>
                         <table className="w-full text-[10px] md:text-[12px] text-left min-w-[900px] border-collapse">
-                            <thead className={`uppercase font-black tracking-[0.05em] border-b-2 transition-colors duration-500 ${isDarkMode
-                                ? 'bg-slate-800/80 text-orange-500 border-slate-700/50'
-                                : 'bg-slate-800 text-white border-slate-700'}`}>
-                                <tr>
-                                    <th className={`px-2 py-4 min-w-[80px] sticky left-0 z-10 text-center transition-colors duration-500 ${isDarkMode
-                                        ? 'bg-slate-800/95 text-orange-500'
-                                        : 'bg-slate-800 text-orange-400'}`}>VIV.</th>
-                                    <th className="px-1 py-4 text-center">D. Pov.</th>
-                                    <th className="px-1 py-4 text-center">Dias</th>
-                                    <th className="px-2 py-4 text-center">P.M (g)</th>
-                                    <th className="px-1 py-4 text-center">Quant. (und.)</th>
-                                    <th className="px-2 py-4 text-center">Peso Total (kg)</th>
-                                    <th className="px-1 py-4 text-center text-slate-400">P.M Ant.</th>
-                                    <th className="px-1 py-4 text-center">Inc. Sem.</th>
-                                    <th className="px-1 py-4 text-center">GPD</th>
-                                    <th className="px-4 py-4 text-center bg-orange-500/5">Status Performance</th>
-                                </tr>
-                            </thead>
+                        </thead>
+                        <tbody className={`divide-y transition-colors duration-500 ${isDarkMode ? 'divide-slate-800/50' : 'divide-slate-100'}`}>
                             <tbody className={`divide-y transition-colors duration-500 ${isDarkMode ? 'divide-slate-800/50' : 'divide-slate-100'}`}>
                                 {processedData.map((item, idx) => (
                                     <tr key={idx} className={`transition-colors border-b last:border-0 group ${isDarkMode
