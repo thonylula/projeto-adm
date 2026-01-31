@@ -1667,7 +1667,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
                         <button
                             onClick={() => setShowReferenceTable(!showReferenceTable)}
-                            className={`flex items-center gap-3 px-6 py-3 rounded-2xl border-2 text-[11px] font-black uppercase tracking-widest transition-all group ${isDarkMode
+                            className={`print-hidden flex items-center gap-3 px-6 py-3 rounded-2xl border-2 text-[11px] font-black uppercase tracking-widest transition-all group ${isDarkMode
                                 ? 'border-slate-800 text-slate-400 hover:border-orange-500/30 hover:text-orange-400'
                                 : 'border-slate-100 text-slate-400 hover:border-orange-200 hover:text-slate-800'}`}
                         >
