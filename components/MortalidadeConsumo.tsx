@@ -678,6 +678,56 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                 {!isPublic && (
                     <button onClick={() => performExport('html')} className="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-800 transition-all shadow-lg active:scale-95">HTML</button>
                 )}
+
+                {isPublic && (
+                    <>
+                        <div className="w-px h-8 bg-slate-200 mx-2" />
+                        <button
+                            onClick={() => {
+                                const now = new Date();
+                                const currentM = now.getMonth() + 1;
+                                const currentY = now.getFullYear();
+
+                                let targetM, targetY;
+
+                                // If currently showing current month, go to previous
+                                if (month === currentM && year === currentY) {
+                                    const prevDate = new Date(currentY, currentM - 2, 1);
+                                    targetM = prevDate.getMonth() + 1;
+                                    targetY = prevDate.getFullYear();
+                                } else {
+                                    // Go back to current
+                                    targetM = currentM;
+                                    targetY = currentY;
+                                }
+
+                                window.dispatchEvent(new CustomEvent('app-navigation', {
+                                    detail: { tab: 'mortalidade', year: targetY, month: targetM }
+                                }));
+                            }}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-lg active:scale-95 flex items-center gap-2 ${(month === new Date().getMonth() + 1 && year === new Date().getFullYear())
+                                    ? 'bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50'
+                                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                }`}
+                        >
+                            {(month === new Date().getMonth() + 1 && year === new Date().getFullYear()) ? (
+                                <>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                                    </svg>
+                                    Ver {new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toLocaleString('pt-BR', { month: 'long' })}
+                                </>
+                            ) : (
+                                <>
+                                    Ver {new Date().toLocaleString('pt-BR', { month: 'long' })}
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                    </svg>
+                                </>
+                            )}
+                        </button>
+                    </>
+                )}
                 {!isPublic && (
                     <>
                         <div className={`w-px h-8 mx-2 ${isDarkMode ? 'bg-slate-800' : 'bg-slate-200'}`} />
