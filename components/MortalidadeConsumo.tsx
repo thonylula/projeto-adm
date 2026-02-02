@@ -706,8 +706,8 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                                 }));
                             }}
                             className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-lg active:scale-95 flex items-center gap-2 ${(month === new Date().getMonth() + 1 && year === new Date().getFullYear())
-                                    ? 'bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50'
-                                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                ? 'bg-white border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50'
+                                : 'bg-indigo-600 text-white hover:bg-indigo-700'
                                 }`}
                         >
                             {(month === new Date().getMonth() + 1 && year === new Date().getFullYear()) ? (
@@ -954,7 +954,7 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
     return (
         <div className="flex flex-col space-y-6 w-full max-w-full overflow-x-hidden min-w-0" id="mortality-view">
-            {!isPublic && <ActionBar />}
+            <ActionBar />
 
             {message && (
                 <div className={`p-4 rounded-xl text-sm font-bold transition-colors duration-500 ${message.type === 'success'
