@@ -674,14 +674,17 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
                         PDF
                     </button>
                 )}
-                <button onClick={() => performExport('png')} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition-all shadow-lg active:scale-95">PNG</button>
+                {!isPublic && (
+                    <button onClick={() => performExport('png')} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition-all shadow-lg active:scale-95">PNG</button>
+                    /* PNG button moved inside !isPublic check or removed logic */
+                )}
                 {!isPublic && (
                     <button onClick={() => performExport('html')} className="bg-slate-700 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-slate-800 transition-all shadow-lg active:scale-95">HTML</button>
                 )}
 
                 {isPublic && (
                     <>
-                        <div className="w-px h-8 bg-slate-200 mx-2" />
+                        {/* Separator removed as it would be the first element */}
                         <button
                             onClick={() => {
                                 const now = new Date();
@@ -802,27 +805,24 @@ export const MortalidadeConsumo: React.FC<MortalidadeConsumoProps> = ({ activeCo
 
                 <div className="w-px h-8 bg-slate-200 mx-2" />
                 <div className="relative">
-                    <button
-                        onClick={() => setShowLayoutSettings(!showLayoutSettings)}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-lg active:scale-95 flex items-center gap-2 ${showLayoutSettings
-                            ? (isDarkMode ? 'bg-orange-600 text-white' : 'bg-indigo-600 text-white')
-                            : (isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200')}`}
-                    >
-                        <span>⚙️</span> Ajustar Layout
-                    </button>
+                    {!isPublic && (
+                        <button
+                            onClick={() => setShowLayoutSettings(!showLayoutSettings)}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase transition-all shadow-lg active:scale-95 flex items-center gap-2 ${showLayoutSettings
+                                ? (isDarkMode ? 'bg-orange-600 text-white' : 'bg-indigo-600 text-white')
+                                : (isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200')}`}
+                        >
+                            <span>⚙️</span> Ajustar Layout
+                        </button>
+                    )}
 
                     {/* Visitor Zoom Controls */}
-                    {isPublic && (
+                    {/* Visitor Zoom Controls - HIDDEN FOR PUBLIC NOW */}
+                    {/* {isPublic && (
                         <div className={`flex items-center gap-1 p-1 rounded-lg border shadow-sm transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-                            <span className={`text-[9px] font-black uppercase px-2 tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Zoom</span>
-                            <div className={`flex items-center rounded-md ${isDarkMode ? 'bg-slate-900' : 'bg-slate-100'}`}>
-                                <button onClick={() => setZoomLevel(z => Math.max(0.5, z - 0.1))} className={`w-7 h-7 flex items-center justify-center rounded-md transition-all font-bold text-lg active:scale-90 ${isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-orange-400' : 'text-slate-500 hover:bg-white hover:text-indigo-600'}`}>-</button>
-                                <span className={`text-[10px] font-black w-10 text-center ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>{(zoomLevel * 100).toFixed(0)}%</span>
-                                <button onClick={() => setZoomLevel(z => Math.min(1.5, z + 0.1))} className={`w-7 h-7 flex items-center justify-center rounded-md transition-all font-bold text-lg active:scale-90 ${isDarkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-orange-400' : 'text-slate-500 hover:bg-white hover:text-indigo-600'}`}>+</button>
-                            </div>
-                            <button onClick={() => setZoomLevel(1.0)} className={`px-2 text-[9px] font-bold uppercase transition-colors ${isDarkMode ? 'text-slate-500 hover:text-orange-400' : 'text-slate-400 hover:text-indigo-600'}`}>Reset</button>
+                           ...
                         </div>
-                    )}
+                    )} */}
 
                     {showLayoutSettings && (
                         <div className={`absolute top-full mt-2 right-0 w-64 rounded-xl shadow-2xl border p-4 z-[100] animate-in fade-in slide-in-from-top-2 duration-200 transition-colors ${isDarkMode ? 'bg-[#1E293B] border-slate-700' : 'bg-white border-slate-200'}`}>
