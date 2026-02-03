@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { MainLayout } from './components/MainLayout';
 import { DashboardLayout } from './components/DashboardLayout';
@@ -21,7 +22,6 @@ import { TransferenciaProcessing } from './components/TransferenciaProcessing';
 import { Company, PayrollHistoryItem } from './types';
 import { SupabaseService } from './services/supabaseService';
 import { isSupabaseConfigured } from './supabaseClient';
-import { showToast, ErrorBoundary } from './components/shared';
 
 // Helper for ID generation
 const generateId = () => {
@@ -113,7 +113,6 @@ export default function App() {
         }
       } catch (e) {
         console.error("Failed to load companies from Supabase", e);
-        showToast.error('Erro ao carregar empresas', 'Verifique sua conexão com o banco de dados');
       }
     };
 
@@ -212,17 +211,9 @@ export default function App() {
   };
 
   const handleAddCompany = async (name: string, cnpj: string | undefined, logoUrl: string | null) => {
-    try {
-      const newComp = await SupabaseService.addCompany(name, cnpj, logoUrl);
-      if (newComp) {
-        setCompanies([...companies, newComp]);
-        showToast.success(`Empresa "${name}" criada com sucesso!`);
-      } else {
-        showToast.error('Erro ao criar empresa', 'Tente novamente');
-      }
-    } catch (e) {
-      console.error('Error adding company:', e);
-      showToast.error('Erro ao criar empresa', (e as Error).message);
+    const newComp = await SupabaseService.addCompany(name, cnpj, logoUrl);
+    if (newComp) {
+      setCompanies([...companies, newComp]);
     }
   };
 
@@ -231,35 +222,18 @@ export default function App() {
   };
 
   const handleUpdateCompany = async (updatedCompany: Company) => {
-    try {
-      const success = await SupabaseService.updateCompany(updatedCompany);
-      if (success) {
-        setCompanies(prev => prev.map(c => c.id === updatedCompany.id ? updatedCompany : c));
-        showToast.success('Empresa atualizada!');
-      } else {
-        showToast.error('Erro ao atualizar empresa');
-      }
-    } catch (e) {
-      console.error('Error updating company:', e);
-      showToast.error('Erro ao atualizar empresa', (e as Error).message);
+    const success = await SupabaseService.updateCompany(updatedCompany);
+    if (success) {
+      setCompanies(prev => prev.map(c => c.id === updatedCompany.id ? updatedCompany : c));
     }
   };
 
   const handleDeleteCompany = async (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir esta empresa? Todos os dados da folha serão perdidos.')) {
-      try {
-        const companyName = companies.find(c => c.id === id)?.name || 'Empresa';
-        const success = await SupabaseService.deleteCompany(id);
-        if (success) {
-          setCompanies(prev => prev.filter(c => c.id !== id));
-          if (activeCompanyId === id) setActiveCompanyId(null);
-          showToast.success(`"${companyName}" excluída com sucesso`);
-        } else {
-          showToast.error('Erro ao excluir empresa');
-        }
-      } catch (e) {
-        console.error('Error deleting company:', e);
-        showToast.error('Erro ao excluir empresa', (e as Error).message);
+      const success = await SupabaseService.deleteCompany(id);
+      if (success) {
+        setCompanies(prev => prev.filter(c => c.id !== id));
+        if (activeCompanyId === id) setActiveCompanyId(null);
       }
     }
   };
@@ -280,77 +254,53 @@ export default function App() {
   const handleAddEmployee = async (newItem: PayrollHistoryItem) => {
     if (!activeCompanyId) return;
 
-    try {
-      const success = await SupabaseService.addPayrollItem(activeCompanyId, newItem);
-      if (success) {
-        setCompanies(prev => prev.map(company => {
-          if (company.id === activeCompanyId) {
-            return {
-              ...company,
-              employees: [newItem, ...(company.employees || [])]
-            };
-          }
-          return company;
-        }));
-        showToast.success(`Funcionário "${newItem.input.employeeName}" adicionado!`);
-      } else {
-        showToast.error('Erro ao adicionar funcionário');
-      }
-    } catch (e) {
-      console.error('Error adding employee:', e);
-      showToast.error('Erro ao adicionar funcionário', (e as Error).message);
+    const success = await SupabaseService.addPayrollItem(activeCompanyId, newItem);
+    if (success) {
+      setCompanies(prev => prev.map(company => {
+        if (company.id === activeCompanyId) {
+          return {
+            ...company,
+            employees: [newItem, ...(company.employees || [])]
+          };
+        }
+        return company;
+      }));
     }
   };
 
   const handleUpdateEmployee = async (updatedItem: PayrollHistoryItem) => {
     if (!activeCompanyId) return;
 
-    try {
-      const success = await SupabaseService.updatePayrollItem(updatedItem);
-      if (success) {
-        setCompanies(prev => prev.map(company => {
-          if (company.id === activeCompanyId) {
-            return {
-              ...company,
-              employees: (company.employees || []).map(emp =>
-                emp.id === updatedItem.id ? updatedItem : emp
-              )
-            };
-          }
-          return company;
-        }));
-        showToast.success('Dados atualizados!');
-      } else {
-        showToast.error('Erro ao atualizar dados');
-      }
-    } catch (e) {
-      console.error('Error updating employee:', e);
-      showToast.error('Erro ao atualizar dados', (e as Error).message);
+    const success = await SupabaseService.updatePayrollItem(updatedItem);
+    if (success) {
+      setCompanies(prev => prev.map(company => {
+        if (company.id === activeCompanyId) {
+          return {
+            ...company,
+            employees: (company.employees || []).map(emp =>
+              emp.id === updatedItem.id ? updatedItem : emp
+            )
+          };
+        }
+        return company;
+      }));
     }
   };
 
   const handleDeleteEmployee = async (itemId: string) => {
     if (!activeCompanyId) return;
 
-    try {
-      const success = await SupabaseService.deletePayrollItem(itemId);
-      if (success) {
-        setCompanies(prev => prev.map(company => {
-          if (company.id === activeCompanyId) {
-            return {
-              ...company,
-              employees: (company.employees || []).filter(emp => emp.id !== itemId)
-            };
-          }
-          return company;
-        }));
-        showToast.success('Registro excluído');
-      } else {
-        showToast.error('Erro ao excluir registro');
-      }
-    } catch (e) {
-      console.error('Error deleting employee:', e);
-      showToast.error('Erro ao excluir registro', (e as Error).message);
+    const success = await SupabaseService.deletePayrollItem(itemId);
+    if (success) {
+      setCompanies(prev => prev.map(company => {
+        if (company.id === activeCompanyId) {
+          return {
+            ...company,
+            employees: (company.employees || []).filter(emp => emp.id !== itemId)
+          };
+        }
+        return company;
+      }));
     }
   };
 
@@ -366,23 +316,12 @@ export default function App() {
 
   const handleSaveBulkEmployees = async (newEmployees: PayrollHistoryItem[]) => {
     if (!activeCompanyId) return;
-    
-    const loadingToast = showToast.loading('Salvando folha...');
-    
-    try {
-      const success = await SupabaseService.saveBulkPayrollItems(activeCompanyId, newEmployees);
-      showToast.dismiss(loadingToast);
-      
-      if (success) {
-        showToast.success(`Folha salva com sucesso! (${newEmployees.length} registros)`);
-        handleBulkUpdateEmployees(newEmployees);
-      } else {
-        showToast.error('Erro ao salvar a folha');
-      }
-    } catch (e) {
-      showToast.dismiss(loadingToast);
-      console.error('Error saving bulk employees:', e);
-      showToast.error('Erro ao salvar a folha', (e as Error).message);
+    const success = await SupabaseService.saveBulkPayrollItems(activeCompanyId, newEmployees);
+    if (success) {
+      alert("Folha salva com sucesso no banco de dados!");
+      handleBulkUpdateEmployees(newEmployees);
+    } else {
+      alert("Erro ao salvar a folha no banco de dados.");
     }
   };
 
@@ -482,7 +421,7 @@ export default function App() {
         setIsDarkMode={setIsDarkMode}
       >
         {activeTab === 'payroll' && (
-          <ErrorBoundary section="Folha Salarial" inline>
+          <>
             {activeCompany ? (
               <PayrollCard
                 activeCompany={activeCompany}
@@ -504,13 +443,11 @@ export default function App() {
                 onSelectCompany={handleSelectCompany}
               />
             )}
-          </ErrorBoundary>
+          </>
         )}
 
         {activeTab === 'biometrics' && (
-          <ErrorBoundary section="Biometrias" inline>
-            <BiometricsManager isDarkMode={isDarkMode} />
-          </ErrorBoundary>
+          <BiometricsManager isDarkMode={isDarkMode} />
         )}
 
         {activeTab === 'fiscal' && (
@@ -558,7 +495,7 @@ export default function App() {
         )}
 
         {activeTab === 'mortalidade' && (
-          <ErrorBoundary section="Mortalidade e Consumo" inline>
+          <>
             {activeCompany ? (
               <MortalidadeConsumo
                 activeCompany={activeCompany}
@@ -578,7 +515,7 @@ export default function App() {
                 buttonText="Gerenciar Mortalidade"
               />
             )}
-          </ErrorBoundary>
+          </>
         )}
 
         {activeTab === 'comparator' && (
@@ -608,7 +545,7 @@ export default function App() {
         )}
 
         {activeTab === 'campo' && (
-          <ErrorBoundary section="Campo/Viveiros" inline>
+          <>
             {activeCompany ? (
               <CampoViveiros activeCompany={activeCompany} isDarkMode={isDarkMode} />
             ) : (
@@ -623,7 +560,7 @@ export default function App() {
                 buttonText="Gerenciar Viveiros"
               />
             )}
-          </ErrorBoundary>
+          </>
         )}
 
         {activeTab === 'plans' && (
