@@ -112,6 +112,23 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
 
                     if (success) {
                         showToast('✅ Biometria salva com sucesso!');
+
+                        // --- SINCRONIZAÇÃO COM MORTALIDADE ---
+                        try {
+                            const bioDate = new Date(biometryDate + 'T12:00:00');
+                            const syncMonth = bioDate.getMonth() + 1;
+                            const syncYear = bioDate.getFullYear();
+                            const activeCompanyId = localStorage.getItem('activeCompanyId');
+
+                            if (activeCompanyId) {
+                                await SupabaseService.syncBiometryToMortality(activeCompanyId, syncMonth, syncYear);
+                                // Notificar outros componentes (ex: Mortalidade) para recarregar
+                                window.dispatchEvent(new CustomEvent('app-data-updated'));
+                            }
+                        } catch (syncErr) {
+                            console.error("Sync error", syncErr);
+                        }
+
                         // Recarregar histórico usando o agente
                         const updatedHistory = await orchestrator.routeToAgent('biometry-storage', { operation: 'list' });
                         setBiometricsHistory(updatedHistory);
