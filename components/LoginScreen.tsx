@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SupabaseService } from '../services/supabaseService';
+import { AuthService } from '../services/authService';
 
 interface LoginScreenProps {
   onLogin: (username: string) => void;
@@ -20,20 +21,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   const [successMsg, setSuccessMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize default user if DB is empty
+  // No longer needed to check custom users on mount
   useEffect(() => {
-    const checkUsers = async () => {
-      try {
-        const users = await SupabaseService.getUsers();
-        if (users.length === 0) {
-          // Initialize default admin if no users in cloud
-          await SupabaseService.saveUser('admin', '1234');
-        }
-      } catch (e) {
-        console.error("Erro ao acessar Supabase", e);
-      }
-    };
-    checkUsers();
+    // Optional: check if already logged in or redirection logic
   }, []);
 
   const resetForm = () => {
@@ -56,16 +46,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
     const performAuth = async () => {
       try {
-        const users = await SupabaseService.getUsers();
-
         if (mode === 'LOGIN') {
-          const user = users.find((u: any) => u.username === username && u.password === password);
-          if (user) {
-            onLogin(user.username);
-          } else {
-            setError('Usuário ou senha incorretos.');
-            setIsLoading(false);
-          }
+          // Supabase expects email. If they enter a plain username, we might need to handle it.
+          // For now, let's assume they enter an email or we append a dummy domain if not email-like.
+          const email = username.includes('@') ? username : `${username}@projeto.adm`;
+
+          await AuthService.login(email, password);
+          // AppContext will detect the session change and trigger onLogin indirectly
+          // But we call onLogin to maintain compatibility with existing state if needed
+          onLogin(username);
         }
         else if (mode === 'REGISTER') {
           if (!username || !password) {
@@ -78,36 +67,25 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             setIsLoading(false);
             return;
           }
-          if (users.find((u: any) => u.username === username)) {
-            setError('Este usuário já existe.');
-            setIsLoading(false);
-            return;
-          }
 
-          const success = await SupabaseService.saveUser(username, password);
-          if (success) {
-            setSuccessMsg('Conta criada com sucesso!');
-            setTimeout(() => {
-              switchMode('LOGIN');
-              setPassword('');
-            }, 1500);
-          } else {
-            setError('Erro ao salvar usuário na nuvem.');
-          }
+          const email = username.includes('@') ? username : `${username}@projeto.adm`;
+          await AuthService.register(email, password);
+
+          setSuccessMsg('Conta criada com sucesso! Verifique seu e-mail se necessário.');
+          setTimeout(() => {
+            switchMode('LOGIN');
+            setPassword('');
+          }, 1500);
           setIsLoading(false);
         }
         else if (mode === 'FORGOT') {
-          const user = users.find((u: any) => u.username === username);
+          const email = username.includes('@') ? username : `${username}@projeto.adm`;
+          await AuthService.resetPassword(email);
+          setSuccessMsg('E-mail de recuperação enviado!');
           setIsLoading(false);
-
-          if (user) {
-            setSuccessMsg(`Recuperação: Sua senha é "${user.password}"`);
-          } else {
-            setError('Usuário não encontrado.');
-          }
         }
-      } catch (err) {
-        setError('Erro interno ao processar dados.');
+      } catch (err: any) {
+        setError(err.message || 'Erro ao processar autenticação.');
         setIsLoading(false);
       }
     };
@@ -204,7 +182,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="block w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-gray-50 text-gray-900 text-sm transition-colors placeholder-gray-400"
-                placeholder={mode === 'FORGOT' ? "Digite seu usuário" : "Seu nome de usuário"}
+                placeholder={mode === 'FORGOT' ? "Digite seu e-mail/usuário" : "Seu e-mail ou usuário"}
               />
             </div>
 
@@ -268,12 +246,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
               type="submit"
               disabled={isLoading}
               className={`w-full py-2.5 px-4 rounded-xl text-white text-sm font-bold shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2 transition-all duration-300 ${isLoading
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : mode === 'REGISTER'
-                    ? 'bg-orange-600 hover:bg-orange-700 hover:shadow-orange-500/40 hover:-translate-y-0.5'
-                    : mode === 'FORGOT'
-                      ? 'bg-slate-600 hover:bg-slate-700 hover:-translate-y-0.5'
-                      : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 hover:shadow-orange-500/40 hover:-translate-y-0.5'
+                ? 'bg-gray-400 cursor-not-allowed'
+                : mode === 'REGISTER'
+                  ? 'bg-orange-600 hover:bg-orange-700 hover:shadow-orange-500/40 hover:-translate-y-0.5'
+                  : mode === 'FORGOT'
+                    ? 'bg-slate-600 hover:bg-slate-700 hover:-translate-y-0.5'
+                    : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 hover:shadow-orange-500/40 hover:-translate-y-0.5'
                 }`}
             >
               {isLoading ? (
@@ -333,7 +311,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
       {mode === 'LOGIN' && (
         <div className="mt-4 text-center">
           <p className="text-[10px] text-orange-400/80 mt-2 inline-block px-3 py-1 bg-orange-50/50 rounded-full border border-orange-100/50">
-            Padrão: admin / 1234
+            Dica: Use seu e-mail cadastrado
           </p>
         </div>
       )}

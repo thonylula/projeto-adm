@@ -111,6 +111,7 @@ export const RegistrationManager: React.FC = () => {
     const [activeType, setActiveType] = useState<RegistryType>('EMPLOYEE');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     // --- EXPORT STATE ---
     const [exportingId, setExportingId] = useState<string | null>(null);
@@ -205,44 +206,49 @@ export const RegistrationManager: React.FC = () => {
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         const orchestrator = getOrchestrator();
+        setIsSaving(true);
 
-        if (activeType === 'EMPLOYEE') {
-            const id = editingId || generateId();
-            const newEmployee = { id, ...empForm };
-            await orchestrator.routeToAgent('registration-storage', { operation: 'save', type: 'EMPLOYEE', data: newEmployee });
+        try {
+            if (activeType === 'EMPLOYEE') {
+                const id = editingId || generateId();
+                const newEmployee = { id, ...empForm };
+                await orchestrator.routeToAgent('registration-storage', { operation: 'save', type: 'EMPLOYEE', data: newEmployee });
 
-            if (editingId) {
-                setEmployees(prev => prev.map(item => item.id === editingId ? newEmployee as RegistryEmployee : item));
-            } else {
-                setEmployees(prev => [newEmployee as RegistryEmployee, ...prev]);
+                if (editingId) {
+                    setEmployees(prev => prev.map(item => item.id === editingId ? newEmployee as RegistryEmployee : item));
+                } else {
+                    setEmployees(prev => [newEmployee as RegistryEmployee, ...prev]);
+                }
+                setEmpForm(INITIAL_EMPLOYEE);
+            } else if (activeType === 'SUPPLIER') {
+                const id = editingId || generateId();
+                const newSupplier = { id, ...supForm };
+                await orchestrator.routeToAgent('registration-storage', { operation: 'save', type: 'SUPPLIER', data: newSupplier });
+
+                if (editingId) {
+                    setSuppliers(prev => prev.map(item => item.id === editingId ? newSupplier as RegistrySupplier : item));
+                } else {
+                    setSuppliers(prev => [newSupplier as RegistrySupplier, ...prev]);
+                }
+                setSupForm(INITIAL_SUPPLIER);
+            } else if (activeType === 'CLIENT') {
+                const id = editingId || generateId();
+                const newClient = { id, ...cliForm };
+                await orchestrator.routeToAgent('registration-storage', { operation: 'save', type: 'CLIENT', data: newClient });
+
+                if (editingId) {
+                    setClients(prev => prev.map(item => item.id === editingId ? newClient as RegistryClient : item));
+                } else {
+                    setClients(prev => [newClient as RegistryClient, ...prev]);
+                }
+                setCliForm(INITIAL_CLIENT);
             }
-            setEmpForm(INITIAL_EMPLOYEE);
-        } else if (activeType === 'SUPPLIER') {
-            const id = editingId || generateId();
-            const newSupplier = { id, ...supForm };
-            await orchestrator.routeToAgent('registration-storage', { operation: 'save', type: 'SUPPLIER', data: newSupplier });
 
-            if (editingId) {
-                setSuppliers(prev => prev.map(item => item.id === editingId ? newSupplier as RegistrySupplier : item));
-            } else {
-                setSuppliers(prev => [newSupplier as RegistrySupplier, ...prev]);
-            }
-            setSupForm(INITIAL_SUPPLIER);
-        } else if (activeType === 'CLIENT') {
-            const id = editingId || generateId();
-            const newClient = { id, ...cliForm };
-            await orchestrator.routeToAgent('registration-storage', { operation: 'save', type: 'CLIENT', data: newClient });
-
-            if (editingId) {
-                setClients(prev => prev.map(item => item.id === editingId ? newClient as RegistryClient : item));
-            } else {
-                setClients(prev => [newClient as RegistryClient, ...prev]);
-            }
-            setCliForm(INITIAL_CLIENT);
+            setIsFormOpen(false);
+            setEditingId(null);
+        } finally {
+            setIsSaving(false);
         }
-
-        setIsFormOpen(false);
-        setEditingId(null);
     };
 
     const handleEdit = (id: string) => {
@@ -597,10 +603,16 @@ export const RegistrationManager: React.FC = () => {
 
                         <div className="pt-4 flex gap-3 justify-end">
                             <button type="button" onClick={toggleForm} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-bold">Cancelar</button>
-                            <button type="submit" className={`px-6 py-2 text-white font-bold rounded-lg shadow-md ${activeType === 'EMPLOYEE' ? 'bg-indigo-600 hover:bg-indigo-700' :
+                            <button type="submit" disabled={isSaving} className={`px-6 py-2 text-white font-bold rounded-lg shadow-md disabled:opacity-50 flex items-center justify-center gap-2 ${activeType === 'EMPLOYEE' ? 'bg-indigo-600 hover:bg-indigo-700' :
                                 activeType === 'SUPPLIER' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-emerald-600 hover:bg-emerald-700'
                                 }`}>
-                                Salvar Registro
+                                {isSaving && (
+                                    <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                )}
+                                {isSaving ? 'Salvando...' : 'Salvar Registro'}
                             </button>
                         </div>
                     </form>

@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient';
+import { StorageService } from './storageService';
 import { Company, PayrollHistoryItem, RegistryEmployee, RegistrySupplier, RegistryClient, ItemConfiguration, Viveiro } from '../types';
 
 /**
@@ -35,9 +36,18 @@ export const SupabaseService = {
     },
 
     async addCompany(name: string, cnpj?: string, logoUrl?: string | null): Promise<Company | null> {
+        let finalLogoUrl = logoUrl;
+
+        // If it's a new logo (base64 from UI), upload it
+        if (logoUrl && logoUrl.startsWith('data:')) {
+            const fileName = `logo_${Date.now()}.png`;
+            const uploadedUrl = await StorageService.uploadFile('logos', fileName, logoUrl);
+            if (uploadedUrl) finalLogoUrl = uploadedUrl;
+        }
+
         const { data, error } = await supabase
             .from('companies')
-            .insert([{ name, cnpj, logo_url: logoUrl }])
+            .insert([{ name, cnpj, logo_url: finalLogoUrl }])
             .select()
             .single();
 
@@ -54,12 +64,21 @@ export const SupabaseService = {
     },
 
     async updateCompany(company: Company): Promise<boolean> {
+        let finalLogoUrl = company.logoUrl;
+
+        // Handle logo upload if it's base64
+        if (company.logoUrl && company.logoUrl.startsWith('data:')) {
+            const fileName = `logo_${company.id}_${Date.now()}.png`;
+            const uploadedUrl = await StorageService.uploadFile('logos', fileName, company.logoUrl);
+            if (uploadedUrl) finalLogoUrl = uploadedUrl;
+        }
+
         const { error } = await supabase
             .from('companies')
             .update({
                 name: company.name,
                 cnpj: company.cnpj,
-                logo_url: company.logoUrl
+                logo_url: finalLogoUrl
             })
             .eq('id', company.id);
 
@@ -104,10 +123,19 @@ export const SupabaseService = {
     },
 
     async saveEmployee(employee: RegistryEmployee): Promise<boolean> {
+        let finalPhotoUrl = employee.photoUrl;
+
+        // Handle photo upload if it's base64
+        if (employee.photoUrl && employee.photoUrl.startsWith('data:')) {
+            const fileName = `photo_${employee.id || Date.now()}.png`;
+            const uploadedUrl = await StorageService.uploadFile('employees', fileName, employee.photoUrl);
+            if (uploadedUrl) finalPhotoUrl = uploadedUrl;
+        }
+
         const { error } = await supabase.from('employees').upsert({
             id: employee.id,
             name: employee.name,
-            photo_url: employee.photoUrl,
+            photo_url: finalPhotoUrl,
             cpf: employee.cpf,
             role: employee.role,
             admission_date: employee.admissionDate,
@@ -394,17 +422,8 @@ export const SupabaseService = {
         return !error;
     },
 
-    // --- USERS ---
-    async getUsers(): Promise<any[]> {
-        const { data, error } = await supabase.from('app_users').select('*');
-        if (error) return [];
-        return data;
-    },
-
-    async saveUser(username: string, password: string): Promise<boolean> {
-        const { error } = await supabase.from('app_users').upsert([{ username, password }]);
-        return !error;
-    },
+    // --- USERS (Now managed by Supabase Auth) ---
+    // getUsers and saveUser for custom app_users table are now deprecated.
 
     // --- GLOBAL CONFIGS ---
     async getConfig(id: string): Promise<any | null> {

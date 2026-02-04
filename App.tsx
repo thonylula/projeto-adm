@@ -22,6 +22,7 @@ import { Company, PayrollHistoryItem } from './types';
 import { SupabaseService } from './services/supabaseService';
 import { isSupabaseConfigured } from './supabaseClient';
 import { showToast, ErrorBoundary } from './components/shared';
+import { useAppContext } from './store/AppContext';
 
 // Helper for ID generation
 const generateId = () => {
@@ -34,91 +35,14 @@ const generateId = () => {
 };
 
 export default function App() {
-  // Authentication State
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('currentUser'));
-  const [currentUser, setCurrentUser] = useState(localStorage.getItem('currentUser') || 'admin');
+  const {
+    isAuthenticated, currentUser, activeTab, activeYear, activeMonth, companies, activeCompanyId, activeCompany, isDarkMode, isPublicShowcase,
+    setIsAuthenticated, setCurrentUser, setActiveTab, setActiveYear, setActiveMonth, setCompanies, setActiveCompanyId, setIsDarkMode,
+    handleLogin, handleLogout, handleAddCompany, handleUpdateCompany, handleDeleteCompany, handleAddEmployee, handleUpdateEmployee, handleDeleteEmployee, handleBulkUpdateEmployees, handleSaveBulkEmployees, loadFromSupabase
+  } = useAppContext();
 
-  // Showcase Mode (Public access)
-  const isPublicShowcase = new URLSearchParams(window.location.search).get('showcase') === 'true';
-
-  // Navigation State
-  // Navigation State
-  const [activeTab, setActiveTab] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    const sharedTabs = params.get('tabs')?.split(',') || [];
-    return params.get('tab') || (sharedTabs.length > 0 ? sharedTabs[0] : (localStorage.getItem('activeTab') || 'payroll'));
-  });
-
-  // Year/Month with persistence (Bypass cache for Showcases to ensure fresh view)
-  const [activeYear, setActiveYear] = useState<number | null>(() => {
-    const isShowcase = new URLSearchParams(window.location.search).get('showcase') === 'true';
-    if (isShowcase) return new Date().getFullYear();
-
-    const saved = localStorage.getItem('activeYear');
-    return saved ? parseInt(saved) : new Date().getFullYear();
-  });
-
-  const [activeMonth, setActiveMonth] = useState<number | null>(() => {
-    const isShowcase = new URLSearchParams(window.location.search).get('showcase') === 'true';
-    if (isShowcase) return new Date().getMonth() + 1;
-
-    const saved = localStorage.getItem('activeMonth');
-    return saved ? parseInt(saved) : new Date().getMonth() + 1;
-  });
-
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(localStorage.getItem('activeCompanyId'));
-  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('isDarkMode') === 'true');
-
-  // Persistence Effects
+  // Load initial agents
   useEffect(() => {
-    if (isAuthenticated) {
-      localStorage.setItem('currentUser', currentUser);
-    } else {
-      localStorage.removeItem('currentUser');
-    }
-  }, [isAuthenticated, currentUser]);
-
-  useEffect(() => {
-    localStorage.setItem('activeTab', activeTab);
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (activeYear) localStorage.setItem('activeYear', activeYear.toString());
-  }, [activeYear]);
-
-  useEffect(() => {
-    if (activeMonth) localStorage.setItem('activeMonth', activeMonth.toString());
-  }, [activeMonth]);
-
-  useEffect(() => {
-    if (activeCompanyId) {
-      localStorage.setItem('activeCompanyId', activeCompanyId);
-    } else {
-      localStorage.removeItem('activeCompanyId');
-    }
-  }, [activeCompanyId]);
-
-  useEffect(() => {
-    localStorage.setItem('isDarkMode', isDarkMode.toString());
-  }, [isDarkMode]);
-
-  // Load initial state from Supabase on mount
-  useEffect(() => {
-    const loadFromSupabase = async () => {
-      try {
-        const data = await SupabaseService.getCompanies();
-        if (data && data.length > 0) {
-          setCompanies(data);
-        }
-      } catch (e) {
-        console.error("Failed to load companies from Supabase", e);
-        showToast.error('Erro ao carregar empresas', 'Verifique sua conexão com o banco de dados');
-      }
-    };
-
-    loadFromSupabase();
-
     // Initialize Multi-Agent System
     const initAgents = async () => {
       try {
@@ -131,9 +55,6 @@ export default function App() {
     };
     initAgents();
 
-    // Listen for data updates (from AI Assistant or other components)
-    window.addEventListener('app-data-updated', loadFromSupabase);
-
     // Listen for direct navigation requests from the AI Assistant
     const handleNavigation = (e: any) => {
       const { tab, companyId, year, month } = e.detail;
@@ -145,123 +66,12 @@ export default function App() {
     window.addEventListener('app-navigation', handleNavigation);
 
     return () => {
-      window.removeEventListener('app-data-updated', loadFromSupabase);
       window.removeEventListener('app-navigation', handleNavigation);
     };
   }, []);
 
-  // Auto-select first company for Public Showcase if none selected
-  useEffect(() => {
-    if (isPublicShowcase && companies.length > 0 && !activeCompanyId) {
-      console.log("Public Showcase: Auto-selecting first company", companies[0].name);
-      setActiveCompanyId(companies[0].id);
-    }
-  }, [isPublicShowcase, companies, activeCompanyId]);
-
-  // Mesclar empresas CARAPITANGA para mostrar efetivados e diaristas juntos
-  const activeCompany = useMemo(() => {
-    const selected = companies.find(c => c.id === activeCompanyId);
-    if (!selected) return undefined;
-
-    // Se for uma empresa CARAPITANGA, mesclar com a outra CARAPITANGA
-    if (selected.name.toUpperCase().includes('CARAPITANGA')) {
-      const carapitangaCompanies = companies.filter(c =>
-        c.name.toUpperCase().includes('CARAPITANGA')
-      );
-
-      if (carapitangaCompanies.length > 1) {
-        // Ordenar por número de funcionários (menor primeiro = efetivados, maior = diaristas)
-        const sorted = [...carapitangaCompanies].sort((a, b) => {
-          const lenDiff = (a.employees?.length || 0) - (b.employees?.length || 0);
-          if (lenDiff !== 0) return lenDiff;
-          // Stable tie-breaker: ID to ensure consistent selection on refresh
-          return (a.id || '').localeCompare(b.id || '');
-        });
-
-        const efetivadosCompany = sorted[0]; // Empresa com menos funcionários (4)
-        const diaristasCompany = sorted[1]; // Empresa com mais funcionários (11)
-
-        // Mesclar funcionários
-        const mergedEmployees = [
-          ...(efetivadosCompany.employees || []),
-          ...(diaristasCompany.employees || [])
-        ];
-
-        // Retornar empresa mesclada
-        return {
-          ...diaristasCompany, // Usar dados da empresa de diaristas como base
-          employees: mergedEmployees
-        };
-      }
-    }
-
-    return selected;
-  }, [companies, activeCompanyId]);
-
-  // --- Handlers ---
-
-  const handleLogin = (username: string) => {
-    setCurrentUser(username);
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setActiveCompanyId(null);
-    setActiveTab('payroll');
-  };
-
-  const handleAddCompany = async (name: string, cnpj: string | undefined, logoUrl: string | null) => {
-    try {
-      const newComp = await SupabaseService.addCompany(name, cnpj, logoUrl);
-      if (newComp) {
-        setCompanies([...companies, newComp]);
-        showToast.success(`Empresa "${name}" criada com sucesso!`);
-      } else {
-        showToast.error('Erro ao criar empresa', 'Tente novamente');
-      }
-    } catch (e) {
-      console.error('Error adding company:', e);
-      showToast.error('Erro ao criar empresa', (e as Error).message);
-    }
-  };
-
   const handleSelectCompany = (id: string) => {
     setActiveCompanyId(id);
-  };
-
-  const handleUpdateCompany = async (updatedCompany: Company) => {
-    try {
-      const success = await SupabaseService.updateCompany(updatedCompany);
-      if (success) {
-        setCompanies(prev => prev.map(c => c.id === updatedCompany.id ? updatedCompany : c));
-        showToast.success('Empresa atualizada!');
-      } else {
-        showToast.error('Erro ao atualizar empresa');
-      }
-    } catch (e) {
-      console.error('Error updating company:', e);
-      showToast.error('Erro ao atualizar empresa', (e as Error).message);
-    }
-  };
-
-  const handleDeleteCompany = async (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir esta empresa? Todos os dados da folha serão perdidos.')) {
-      try {
-        const companyName = companies.find(c => c.id === id)?.name || 'Empresa';
-        const success = await SupabaseService.deleteCompany(id);
-        if (success) {
-          setCompanies(prev => prev.filter(c => c.id !== id));
-          if (activeCompanyId === id) setActiveCompanyId(null);
-          showToast.success(`"${companyName}" excluída com sucesso`);
-        } else {
-          showToast.error('Erro ao excluir empresa');
-        }
-      } catch (e) {
-        console.error('Error deleting company:', e);
-        showToast.error('Erro ao excluir empresa', (e as Error).message);
-      }
-    }
   };
 
   const handleBackToSelection = () => {
@@ -272,117 +82,6 @@ export default function App() {
     setActiveTab(tab);
     if (tab === 'payroll') {
       setActiveCompanyId(null);
-    }
-  };
-
-  // --- Employee CRUD Handlers ---
-
-  const handleAddEmployee = async (newItem: PayrollHistoryItem) => {
-    if (!activeCompanyId) return;
-
-    try {
-      const success = await SupabaseService.addPayrollItem(activeCompanyId, newItem);
-      if (success) {
-        setCompanies(prev => prev.map(company => {
-          if (company.id === activeCompanyId) {
-            return {
-              ...company,
-              employees: [newItem, ...(company.employees || [])]
-            };
-          }
-          return company;
-        }));
-        showToast.success(`Funcionário "${newItem.input.employeeName}" adicionado!`);
-      } else {
-        showToast.error('Erro ao adicionar funcionário');
-      }
-    } catch (e) {
-      console.error('Error adding employee:', e);
-      showToast.error('Erro ao adicionar funcionário', (e as Error).message);
-    }
-  };
-
-  const handleUpdateEmployee = async (updatedItem: PayrollHistoryItem) => {
-    if (!activeCompanyId) return;
-
-    try {
-      const success = await SupabaseService.updatePayrollItem(updatedItem);
-      if (success) {
-        setCompanies(prev => prev.map(company => {
-          if (company.id === activeCompanyId) {
-            return {
-              ...company,
-              employees: (company.employees || []).map(emp =>
-                emp.id === updatedItem.id ? updatedItem : emp
-              )
-            };
-          }
-          return company;
-        }));
-        showToast.success('Dados atualizados!');
-      } else {
-        showToast.error('Erro ao atualizar dados');
-      }
-    } catch (e) {
-      console.error('Error updating employee:', e);
-      showToast.error('Erro ao atualizar dados', (e as Error).message);
-    }
-  };
-
-  const handleDeleteEmployee = async (itemId: string) => {
-    if (!activeCompanyId) return;
-
-    try {
-      const success = await SupabaseService.deletePayrollItem(itemId);
-      if (success) {
-        setCompanies(prev => prev.map(company => {
-          if (company.id === activeCompanyId) {
-            return {
-              ...company,
-              employees: (company.employees || []).filter(emp => emp.id !== itemId)
-            };
-          }
-          return company;
-        }));
-        showToast.success('Registro excluído');
-      } else {
-        showToast.error('Erro ao excluir registro');
-      }
-    } catch (e) {
-      console.error('Error deleting employee:', e);
-      showToast.error('Erro ao excluir registro', (e as Error).message);
-    }
-  };
-
-  const handleBulkUpdateEmployees = (newEmployees: PayrollHistoryItem[]) => {
-    if (!activeCompanyId) return;
-    setCompanies(prev => prev.map(company => {
-      if (company.id === activeCompanyId) {
-        return { ...company, employees: newEmployees };
-      }
-      return company;
-    }));
-  };
-
-  const handleSaveBulkEmployees = async (newEmployees: PayrollHistoryItem[]) => {
-    if (!activeCompanyId) return;
-
-    const loadingToast = showToast.loading('Salvando folha...');
-
-    try {
-      const success = await SupabaseService.saveBulkPayrollItems(activeCompanyId, newEmployees);
-      showToast.dismiss(loadingToast);
-
-      if (success) {
-        showToast.success(`Folha salva com sucesso! (${newEmployees.length} registros)`);
-        handleBulkUpdateEmployees(newEmployees);
-      } else {
-        showToast.error('Erro ao salvar a folha');
-      }
-    } catch (e) {
-      showToast.dismiss(loadingToast);
-      console.error('Error saving bulk employees:', e);
-      showToast.error('Erro ao salvar a folha', (e as Error).message);
     }
   };
 

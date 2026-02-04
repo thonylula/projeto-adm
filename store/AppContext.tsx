@@ -2,11 +2,15 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import { Company, PayrollHistoryItem } from '../types';
 import { SupabaseService } from '../services/supabaseService';
+import { AuthService } from '../services/authService';
+import { supabase } from '../supabaseClient';
+import { Session } from '@supabase/supabase-js';
 import { showToast } from '../components/shared';
 
 interface AppContextType {
     isAuthenticated: boolean;
     currentUser: string;
+    session: Session | null;
     activeTab: string;
     activeYear: number | null;
     activeMonth: number | null;
@@ -18,6 +22,7 @@ interface AppContextType {
 
     setIsAuthenticated: (val: boolean) => void;
     setCurrentUser: (user: string) => void;
+    setSession: (session: Session | null) => void;
     setActiveTab: (tab: string) => void;
     setActiveYear: (year: number | null) => void;
     setActiveMonth: (month: number | null) => void;
@@ -42,8 +47,27 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
     // Authentication State
-    const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('currentUser'));
-    const [currentUser, setCurrentUser] = useState(localStorage.getItem('currentUser') || 'admin');
+    const [session, setSession] = useState<Session | null>(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [currentUser, setCurrentUser] = useState('admin');
+
+    // Subscribe to Auth Changes
+    useEffect(() => {
+        // Initial session check
+        AuthService.getSession().then(session => {
+            setSession(session);
+            setIsAuthenticated(!!session);
+            if (session?.user?.email) setCurrentUser(session.user.email);
+        });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session);
+            setIsAuthenticated(!!session);
+            if (session?.user?.email) setCurrentUser(session.user.email);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
 
     // Showcase Mode
     const isPublicShowcase = new URLSearchParams(window.location.search).get('showcase') === 'true';
@@ -71,13 +95,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [activeCompanyId, setActiveCompanyId] = useState<string | null>(localStorage.getItem('activeCompanyId'));
     const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('isDarkMode') === 'true');
 
-    // Persistence
+    // Persistence (Simplified since Supabase handles this)
     useEffect(() => {
-        if (isAuthenticated) localStorage.setItem('currentUser', currentUser);
-        else localStorage.removeItem('currentUser');
-    }, [isAuthenticated, currentUser]);
-
-    useEffect(() => localStorage.setItem('activeTab', activeTab), [activeTab]);
+        localStorage.setItem('activeTab', activeTab);
+    }, [activeTab]);
     useEffect(() => { if (activeYear) localStorage.setItem('activeYear', activeYear.toString()); }, [activeYear]);
     useEffect(() => { if (activeMonth) localStorage.setItem('activeMonth', activeMonth.toString()); }, [activeMonth]);
     useEffect(() => {
@@ -116,8 +137,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return selected;
     }, [companies, activeCompanyId]);
 
-    const handleLogin = (username: string) => { setCurrentUser(username); setIsAuthenticated(true); };
-    const handleLogout = () => { setIsAuthenticated(false); setActiveCompanyId(null); setActiveTab('payroll'); };
+    const handleLogin = (username: string) => {
+        // Note: Actual login logic is now in LoginScreen using AuthService
+        setCurrentUser(username);
+        setIsAuthenticated(true);
+    };
+
+    const handleLogout = async () => {
+        await AuthService.logout();
+        setIsAuthenticated(false);
+        setActiveCompanyId(null);
+        setActiveTab('payroll');
+    };
 
     const handleAddCompany = async (name: string, cnpj: string | undefined, logoUrl: string | null) => {
         try {
@@ -197,8 +228,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     const value = {
-        isAuthenticated, currentUser, activeTab, activeYear, activeMonth, companies, activeCompanyId, activeCompany, isDarkMode, isPublicShowcase,
-        setIsAuthenticated, setCurrentUser, setActiveTab, setActiveYear, setActiveMonth, setCompanies, setActiveCompanyId, setIsDarkMode,
+        isAuthenticated, currentUser, session, activeTab, activeYear, activeMonth, companies, activeCompanyId, activeCompany, isDarkMode, isPublicShowcase,
+        setIsAuthenticated, setCurrentUser, setSession, setActiveTab, setActiveYear, setActiveMonth, setCompanies, setActiveCompanyId, setIsDarkMode,
         handleLogin, handleLogout, handleAddCompany, handleUpdateCompany, handleDeleteCompany, handleAddEmployee, handleUpdateEmployee, handleDeleteEmployee, handleBulkUpdateEmployees, handleSaveBulkEmployees, loadFromSupabase
     };
 
