@@ -1284,8 +1284,9 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
         .pdf-export-active th, .pdf-export-active td { padding: 3px 1px !important; word-break: break-word !important; }
         .pdf-export-active .export-ignore { display: none !important; visibility: hidden !important; opacity: 0 !important; height: 0 !important; width: 0 !important; margin: 0 !important; padding: 0 !important; }
         .pdf-export-active { width: 1120px !important; max-width: 1120px !important; overflow: visible !important; }
-        /* Ajuste específico para a coluna de salário (verde) */
-        .pdf-export-active td:last-child, .pdf-export-active th:last-child { width: 90px !important; }
+        /* Ajuste rigoroso para alinhamento do rodapé e colunas financeiras */
+        .pdf-export-active td:last-child, .pdf-export-active th:last-child { width: 85px !important; }
+        .pdf-export-active tfoot td { font-size: 10px !important; padding: 6px 2px !important; white-space: nowrap !important; }
       `;
       document.head.appendChild(style);
 
@@ -2183,12 +2184,10 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                 </tbody>
                 <tfoot className="bg-slate-900 text-white print:bg-slate-800">
                   <tr>
-                    <td colSpan={10} className="px-4 py-4 text-right font-bold uppercase text-xs">Total Geral</td>
+                    <td colSpan={11} className="px-4 py-4 text-right font-bold uppercase text-xs">Total Geral</td>
                     <td className="px-3 py-4 text-right font-bold text-base text-emerald-400 bg-slate-800 tabular-nums print:text-black print:bg-slate-300">
                       {formatCurrency(totalCompanyCost)}
                     </td>
-                    <td></td>
-
                     <td></td>
                   </tr>
                 </tfoot>
