@@ -1252,27 +1252,40 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     setShowExportMenu(false);
     if (!reportRef.current) return;
 
-    // Configurações do html2pdf seguindo moldes profissionais do pdf-formatter
+    const element = reportRef.current;
+
+    // Configurações profissionais seguindo rigidamente o pdf-formatter
     const opt = {
-      margin: [10, 5, 10, 5], // top, left, bottom, right (em mm)
+      margin: [15, 10, 15, 10], // Margens profissionais (top, left, bottom, right)
       filename: `Folha_${activeCompany.name}_${activeMonth}_${activeYear}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
         scale: 2,
         useCORS: true,
         letterRendering: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        scrollY: 0,
+        scrollX: 0,
+        windowWidth: 1400 // Largura fixa para garantir renderização da tabela larga
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     try {
+      // Temporariamente remove overflow-hidden para garantir que o html2pdf veja tudo
+      const originalOverflow = element.style.overflow;
+      element.style.overflow = 'visible';
+
       // @ts-ignore
-      await html2pdf().set(opt).from(reportRef.current).save();
+      await html2pdf().set(opt).from(element).toPdf().get('pdf').then((pdf) => {
+        const totalPages = pdf.internal.getNumberOfPages();
+        // Opcional: Adicionar numeração de página aqui se necessário
+      }).save();
+
+      element.style.overflow = originalOverflow;
     } catch (e) {
       console.error("PDF Export Error", e);
-      alert("Erro ao exportar PDF. Tente novamente.");
     }
   };
 
