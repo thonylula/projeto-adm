@@ -1,9 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || localStorage.getItem('SUPABASE_CONFIG_URL');
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || localStorage.getItem('SUPABASE_CONFIG_KEY');
 
-const isConfigured = Boolean(SUPABASE_URL && SUPABASE_KEY && SUPABASE_URL.includes('supabase.co'));
+// Verify if the config is valid
+const isConfigured = Boolean(
+    SUPABASE_URL &&
+    SUPABASE_KEY &&
+    (SUPABASE_URL.includes('supabase.co') || SUPABASE_URL.includes('localhost'))
+);
 
 if (!isConfigured) {
     console.error("CRITICAL: Supabase URL or Anon Key is missing or invalid.");
@@ -16,5 +21,12 @@ export const isSupabaseConfigured = isConfigured;
 export const supabase = isConfigured
     ? createClient(SUPABASE_URL, SUPABASE_KEY)
     : null as any;
-// We cast to any for the 'null' case to avoid breaking existing imports,
-// but services should check isSupabaseConfigured.
+
+/**
+ * Helper to update configuration at runtime (e.g. from a Setup UI)
+ */
+export const updateSupabaseConfig = (url: string, key: string) => {
+    localStorage.setItem('SUPABASE_CONFIG_URL', url);
+    localStorage.setItem('SUPABASE_CONFIG_KEY', key);
+    window.location.reload(); // Reload to re-initialize client
+};
