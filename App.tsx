@@ -142,66 +142,7 @@ export default function App() {
   if (!isAuthenticated) {
     return (
       <MainLayout>
-        {!isSupabaseConfigured && (
-          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] w-[90%] max-w-lg">
-            <div className="bg-white border-2 border-amber-400 p-6 rounded-2xl shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500">
-              <div className="flex flex-col gap-4 text-left">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-amber-100 rounded-lg">
-                    <svg className="h-6 w-6 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 17c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-800 font-black uppercase tracking-tight">
-                      Configuração do Banco de Dados Necessária
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      As chaves VITE_SUPABASE não foram encontradas. Insira-as abaixo para conectar.
-                    </p>
-                  </div>
-                </div>
 
-                <div className="grid grid-cols-1 gap-3 mt-2">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Supabase URL</label>
-                    <input
-                      id="setup-url"
-                      type="text"
-                      placeholder="https://xxx.supabase.co"
-                      className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Anon Key / Service Role</label>
-                    <input
-                      id="setup-key"
-                      type="password"
-                      placeholder="eyJhbG..."
-                      className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    const url = (document.getElementById('setup-url') as HTMLInputElement).value;
-                    const key = (document.getElementById('setup-key') as HTMLInputElement).value;
-                    if (url && key) {
-                      import('./supabaseClient').then(m => m.updateSupabaseConfig(url, key));
-                    } else {
-                      alert('Por favor, preencha ambos os campos.');
-                    }
-                  }}
-                  className="w-full py-3 bg-slate-900 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-black transition-all shadow-lg active:scale-[0.98]"
-                >
-                  Conectar ao Banco de Dados
-                </button>
-                <p className="text-[9px] text-slate-400 italic text-center">Essas chaves ficarão salvas apenas no seu navegador atual.</p>
-              </div>
-            </div>
-          </div>
-        )}
         <LoginScreen onLogin={(user) => handleLogin(user)} />
       </MainLayout>
     );
