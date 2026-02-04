@@ -9,7 +9,7 @@
 Antigravity Kit is a modular system consisting of:
 
 - **20 Specialist Agents** - Role-based AI personas
-- **36 Skills** - Domain-specific knowledge modules
+- **37 Skills** - Domain-specific knowledge modules
 - **11 Workflows** - Slash command procedures
 
 ---
@@ -46,18 +46,18 @@ Specialist AI personas for different domains.
 | `penetration-tester` | Offensive security | red-team-tactics |
 | `test-engineer` | Testing strategies | testing-patterns, tdd-workflow, webapp-testing |
 | `debugger` | Root cause analysis | systematic-debugging |
-| `performance-optimizer` | Speed, Web Vitals | performance-profiling |
+| `performance-optimizer` | Speed, Web Vitals | performance-profiling, code-optimizer-agent |
 | `seo-specialist` | Ranking, visibility | seo-fundamentals, geo-fundamentals |
 | `documentation-writer` | Manuals, docs | documentation-templates |
 | `product-manager` | Requirements, user stories | plan-writing, brainstorming |
 | `product-owner` | Strategy, backlog, MVP | plan-writing, brainstorming |
 | `qa-automation-engineer` | E2E testing, CI pipelines | webapp-testing, testing-patterns |
-| `code-archaeologist` | Legacy code, refactoring | clean-code, code-review-checklist |
+| `code-archaeologist` | Legacy code, refactoring | clean-code, code-review-checklist, code-optimizer-agent |
 | `explorer-agent` | Codebase analysis | - |
 
 ---
 
-## 🧩 Skills (36)
+## 🧩 Skills (37)
 
 Modular knowledge domains that agents can load on-demand. based on task context.
 
@@ -110,6 +110,7 @@ Modular knowledge domains that agents can load on-demand. based on task context.
 | `tdd-workflow` | Test-driven development |
 | `code-review-checklist` | Code review standards |
 | `lint-and-validate` | Linting, validation |
+| `code-optimizer-agent` | Code optimization and refactoring |
 
 ### Security
 
@@ -268,7 +269,7 @@ For details, see [scripts/README.md](scripts/README.md)
 | Metric | Value |
 | ------ | ----- |
 | **Total Agents** | 20 |
-| **Total Skills** | 36 |
+| **Total Skills** | 37 |
 | **Total Workflows** | 11 |
 | **Total Scripts** | 2 (master) + 18 (skill-level) |
 | **Coverage** | ~90% web/mobile development |

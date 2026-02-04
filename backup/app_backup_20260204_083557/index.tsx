@@ -12,22 +12,22 @@ const RootErrorFallback = (
   <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-red-50 to-orange-50 p-8 text-center font-sans">
     <div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg w-full border border-red-100">
       <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-orange-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-10 h-10 text-red-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          className="w-10 h-10 text-red-600" 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor" 
           strokeWidth={2}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
           />
         </svg>
       </div>
-
+      
       <h1 className="text-2xl font-bold text-gray-900 mb-3">
         Sistema Indisponível
       </h1>
@@ -44,7 +44,7 @@ const RootErrorFallback = (
         >
           🔄 Recarregar Sistema
         </button>
-
+        
         <button
           onClick={() => {
             localStorage.clear();
@@ -69,13 +69,13 @@ const RootErrorFallback = (
  */
 window.addEventListener('unhandledrejection', (event) => {
   console.error('[Unhandled Promise Rejection]', event.reason);
-
+  
   // Show user-friendly toast
   showToast.error(
     'Erro de conexão',
     event.reason?.message || 'Falha ao processar requisição'
   );
-
+  
   // Prevent default browser behavior
   event.preventDefault();
 });
@@ -89,16 +89,14 @@ window.addEventListener('error', (event) => {
     event.preventDefault();
     return;
   }
-
+  
   console.error('[Uncaught Error]', event.error);
-
+  
   showToast.error(
     'Erro inesperado',
     event.message || 'Ocorreu um erro no sistema'
   );
 });
-
-import { AppProvider } from './store/AppContext';
 
 // Mount the app
 const rootElement = document.getElementById('root');
@@ -111,9 +109,7 @@ root.render(
   <React.StrictMode>
     <ErrorBoundary section="Sistema ADM" fallback={RootErrorFallback}>
       <ToastProvider>
-        <AppProvider>
-          <App />
-        </AppProvider>
+        <App />
       </ToastProvider>
     </ErrorBoundary>
   </React.StrictMode>
