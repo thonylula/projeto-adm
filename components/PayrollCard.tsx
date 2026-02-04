@@ -1252,11 +1252,14 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
     setShowExportMenu(false);
     if (!reportRef.current) return;
 
+    // Reset de Scroll para evitar 1ª página em branco (Crucial)
+    window.scrollTo(0, 0);
+
     const element = reportRef.current;
 
-    // Configurações profissionais seguindo rigidamente o pdf-formatter
+    // Configurações Técnicas - Normas pdf-formatter (A4 Landscape optimized)
     const opt = {
-      margin: [10, 5, 10, 5], // Margens otimizadas para maximizar espaço útil
+      margin: [10, 5, 10, 5],
       filename: `Folha_${activeCompany.name}_${activeMonth}_${activeYear}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: {
@@ -1266,40 +1269,38 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
         backgroundColor: '#ffffff',
         scrollY: 0,
         scrollX: 0,
-        windowWidth: 1280 // Largura ideal para A4 Paisagem sem cortes
+        windowWidth: 1120 // Largura ideal para encaixar todas as colunas sem corte
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      pagebreak: { mode: ['css', 'legacy'], avoid: '.break-inside-avoid' }
     };
 
     try {
-      // Cria e injeta estilos temporários para o PDF (Normas pdf-formatter)
+      // Injeção de Estilos Rigorosa (CSS-over-Export)
       const style = document.createElement('style');
-      style.id = 'pdf-export-styles';
+      style.id = 'pdf-export-ultimate';
       style.innerHTML = `
-        .pdf-export-active table { font-size: 9.5px !important; }
-        .pdf-export-active th, .pdf-export-active td { padding: 4px 2px !important; }
-        .pdf-export-active .export-ignore { display: none !important; height: 0 !important; margin: 0 !important; padding: 0 !important; visibility: hidden !important; }
-        .pdf-export-active { width: 1280px !important; overflow: visible !important; }
+        .pdf-export-active table { font-size: 8.5px !important; width: 100% !important; table-layout: fixed !important; }
+        .pdf-export-active th, .pdf-export-active td { padding: 3px 1px !important; word-break: break-word !important; }
+        .pdf-export-active .export-ignore { display: none !important; visibility: hidden !important; opacity: 0 !important; height: 0 !important; width: 0 !important; margin: 0 !important; padding: 0 !important; }
+        .pdf-export-active { width: 1120px !important; max-width: 1120px !important; overflow: visible !important; }
+        /* Ajuste específico para a coluna de salário (verde) */
+        .pdf-export-active td:last-child, .pdf-export-active th:last-child { width: 90px !important; }
       `;
       document.head.appendChild(style);
 
-      // Prepara o elemento
-      const originalWidth = element.style.width;
       const originalOverflow = element.style.overflow;
       element.classList.add('pdf-export-active');
 
       // @ts-ignore
       await html2pdf().set(opt).from(element).save();
 
-      // Limpa após exportação
       element.classList.remove('pdf-export-active');
-      element.style.width = originalWidth;
       element.style.overflow = originalOverflow;
       style.remove();
 
     } catch (e) {
-      console.error("PDF Export Error", e);
+      console.error("PDF Export Ultimate Error", e);
     }
   };
 
