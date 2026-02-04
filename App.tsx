@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MainLayout } from './components/MainLayout';
 import { DashboardLayout } from './components/DashboardLayout';
 import { CompanySelection } from './components/CompanySelection';
@@ -18,22 +18,108 @@ import { ShowcaseManager } from './components/ShowcaseManager';
 import { PlansPrices } from './components/PlansPrices';
 import { ReceiptManager } from './components/ReceiptManager';
 import { TransferenciaProcessing } from './components/TransferenciaProcessing';
+import { Company, PayrollHistoryItem } from './types';
+import { SupabaseService } from './services/supabaseService';
 import { isSupabaseConfigured } from './supabaseClient';
-import { ErrorBoundary } from './components/shared';
-import { useAppContext } from './store/AppContext';
+import { showToast, ErrorBoundary } from './components/shared';
+
+// Helper for ID generation
+const generateId = () => {
+  try {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+  } catch (e) { }
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+};
 
 export default function App() {
-  const {
-    isAuthenticated, currentUser, activeTab, activeYear, activeMonth, companies,
-    activeCompany, isDarkMode, isPublicShowcase, setActiveTab, setActiveCompanyId,
-    setActiveYear, setActiveMonth, setIsAuthenticated, setIsDarkMode,
-    handleLogin, handleLogout, handleAddCompany, handleUpdateCompany, handleDeleteCompany,
-    handleAddEmployee, handleUpdateEmployee, handleDeleteEmployee, handleBulkUpdateEmployees,
-    handleSaveBulkEmployees, loadFromSupabase
-  } = useAppContext();
+  // Authentication State
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('currentUser'));
+  const [currentUser, setCurrentUser] = useState(localStorage.getItem('currentUser') || 'admin');
 
-  // Initialize Multi-Agent System and Navigation Listeners
+  // Showcase Mode (Public access)
+  const isPublicShowcase = new URLSearchParams(window.location.search).get('showcase') === 'true';
+
+  // Navigation State
+  // Navigation State
+  const [activeTab, setActiveTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sharedTabs = params.get('tabs')?.split(',') || [];
+    return params.get('tab') || (sharedTabs.length > 0 ? sharedTabs[0] : (localStorage.getItem('activeTab') || 'payroll'));
+  });
+
+  // Year/Month with persistence (Bypass cache for Showcases to ensure fresh view)
+  const [activeYear, setActiveYear] = useState<number | null>(() => {
+    const isShowcase = new URLSearchParams(window.location.search).get('showcase') === 'true';
+    if (isShowcase) return new Date().getFullYear();
+
+    const saved = localStorage.getItem('activeYear');
+    return saved ? parseInt(saved) : new Date().getFullYear();
+  });
+
+  const [activeMonth, setActiveMonth] = useState<number | null>(() => {
+    const isShowcase = new URLSearchParams(window.location.search).get('showcase') === 'true';
+    if (isShowcase) return new Date().getMonth() + 1;
+
+    const saved = localStorage.getItem('activeMonth');
+    return saved ? parseInt(saved) : new Date().getMonth() + 1;
+  });
+
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(localStorage.getItem('activeCompanyId'));
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('isDarkMode') === 'true');
+
+  // Persistence Effects
   useEffect(() => {
+    if (isAuthenticated) {
+      localStorage.setItem('currentUser', currentUser);
+    } else {
+      localStorage.removeItem('currentUser');
+    }
+  }, [isAuthenticated, currentUser]);
+
+  useEffect(() => {
+    localStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeYear) localStorage.setItem('activeYear', activeYear.toString());
+  }, [activeYear]);
+
+  useEffect(() => {
+    if (activeMonth) localStorage.setItem('activeMonth', activeMonth.toString());
+  }, [activeMonth]);
+
+  useEffect(() => {
+    if (activeCompanyId) {
+      localStorage.setItem('activeCompanyId', activeCompanyId);
+    } else {
+      localStorage.removeItem('activeCompanyId');
+    }
+  }, [activeCompanyId]);
+
+  useEffect(() => {
+    localStorage.setItem('isDarkMode', isDarkMode.toString());
+  }, [isDarkMode]);
+
+  // Load initial state from Supabase on mount
+  useEffect(() => {
+    const loadFromSupabase = async () => {
+      try {
+        const data = await SupabaseService.getCompanies();
+        if (data && data.length > 0) {
+          setCompanies(data);
+        }
+      } catch (e) {
+        console.error("Failed to load companies from Supabase", e);
+        showToast.error('Erro ao carregar empresas', 'Verifique sua conexão com o banco de dados');
+      }
+    };
+
+    loadFromSupabase();
+
+    // Initialize Multi-Agent System
     const initAgents = async () => {
       try {
         const { initializeAgents } = await import('./services/agentService');
@@ -45,6 +131,10 @@ export default function App() {
     };
     initAgents();
 
+    // Listen for data updates (from AI Assistant or other components)
+    window.addEventListener('app-data-updated', loadFromSupabase);
+
+    // Listen for direct navigation requests from the AI Assistant
     const handleNavigation = (e: any) => {
       const { tab, companyId, year, month } = e.detail;
       if (tab) setActiveTab(tab);
@@ -52,21 +142,267 @@ export default function App() {
       if (year) setActiveYear(year);
       if (month) setActiveMonth(month);
     };
-
     window.addEventListener('app-navigation', handleNavigation);
-    return () => window.removeEventListener('app-navigation', handleNavigation);
-  }, [setActiveTab, setActiveCompanyId, setActiveYear, setActiveMonth]);
 
-  // --- Public Showcase View ---
+    return () => {
+      window.removeEventListener('app-data-updated', loadFromSupabase);
+      window.removeEventListener('app-navigation', handleNavigation);
+    };
+  }, []);
+
+  // Auto-select first company for Public Showcase if none selected
+  useEffect(() => {
+    if (isPublicShowcase && companies.length > 0 && !activeCompanyId) {
+      console.log("Public Showcase: Auto-selecting first company", companies[0].name);
+      setActiveCompanyId(companies[0].id);
+    }
+  }, [isPublicShowcase, companies, activeCompanyId]);
+
+  // Mesclar empresas CARAPITANGA para mostrar efetivados e diaristas juntos
+  const activeCompany = useMemo(() => {
+    const selected = companies.find(c => c.id === activeCompanyId);
+    if (!selected) return undefined;
+
+    // Se for uma empresa CARAPITANGA, mesclar com a outra CARAPITANGA
+    if (selected.name.toUpperCase().includes('CARAPITANGA')) {
+      const carapitangaCompanies = companies.filter(c =>
+        c.name.toUpperCase().includes('CARAPITANGA')
+      );
+
+      if (carapitangaCompanies.length > 1) {
+        // Ordenar por número de funcionários (menor primeiro = efetivados, maior = diaristas)
+        const sorted = [...carapitangaCompanies].sort((a, b) => {
+          const lenDiff = (a.employees?.length || 0) - (b.employees?.length || 0);
+          if (lenDiff !== 0) return lenDiff;
+          // Stable tie-breaker: ID to ensure consistent selection on refresh
+          return (a.id || '').localeCompare(b.id || '');
+        });
+
+        const efetivadosCompany = sorted[0]; // Empresa com menos funcionários (4)
+        const diaristasCompany = sorted[1]; // Empresa com mais funcionários (11)
+
+        // Mesclar funcionários
+        const mergedEmployees = [
+          ...(efetivadosCompany.employees || []),
+          ...(diaristasCompany.employees || [])
+        ];
+
+        // Retornar empresa mesclada
+        return {
+          ...diaristasCompany, // Usar dados da empresa de diaristas como base
+          employees: mergedEmployees
+        };
+      }
+    }
+
+    return selected;
+  }, [companies, activeCompanyId]);
+
+  // --- Handlers ---
+
+  const handleLogin = (username: string) => {
+    setCurrentUser(username);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setActiveCompanyId(null);
+    setActiveTab('payroll');
+  };
+
+  const handleAddCompany = async (name: string, cnpj: string | undefined, logoUrl: string | null) => {
+    try {
+      const newComp = await SupabaseService.addCompany(name, cnpj, logoUrl);
+      if (newComp) {
+        setCompanies([...companies, newComp]);
+        showToast.success(`Empresa "${name}" criada com sucesso!`);
+      } else {
+        showToast.error('Erro ao criar empresa', 'Tente novamente');
+      }
+    } catch (e) {
+      console.error('Error adding company:', e);
+      showToast.error('Erro ao criar empresa', (e as Error).message);
+    }
+  };
+
+  const handleSelectCompany = (id: string) => {
+    setActiveCompanyId(id);
+  };
+
+  const handleUpdateCompany = async (updatedCompany: Company) => {
+    try {
+      const success = await SupabaseService.updateCompany(updatedCompany);
+      if (success) {
+        setCompanies(prev => prev.map(c => c.id === updatedCompany.id ? updatedCompany : c));
+        showToast.success('Empresa atualizada!');
+      } else {
+        showToast.error('Erro ao atualizar empresa');
+      }
+    } catch (e) {
+      console.error('Error updating company:', e);
+      showToast.error('Erro ao atualizar empresa', (e as Error).message);
+    }
+  };
+
+  const handleDeleteCompany = async (id: string) => {
+    if (window.confirm('Tem certeza que deseja excluir esta empresa? Todos os dados da folha serão perdidos.')) {
+      try {
+        const companyName = companies.find(c => c.id === id)?.name || 'Empresa';
+        const success = await SupabaseService.deleteCompany(id);
+        if (success) {
+          setCompanies(prev => prev.filter(c => c.id !== id));
+          if (activeCompanyId === id) setActiveCompanyId(null);
+          showToast.success(`"${companyName}" excluída com sucesso`);
+        } else {
+          showToast.error('Erro ao excluir empresa');
+        }
+      } catch (e) {
+        console.error('Error deleting company:', e);
+        showToast.error('Erro ao excluir empresa', (e as Error).message);
+      }
+    }
+  };
+
+  const handleBackToSelection = () => {
+    setActiveCompanyId(null);
+  };
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === 'payroll') {
+      setActiveCompanyId(null);
+    }
+  };
+
+  // --- Employee CRUD Handlers ---
+
+  const handleAddEmployee = async (newItem: PayrollHistoryItem) => {
+    if (!activeCompanyId) return;
+
+    try {
+      const success = await SupabaseService.addPayrollItem(activeCompanyId, newItem);
+      if (success) {
+        setCompanies(prev => prev.map(company => {
+          if (company.id === activeCompanyId) {
+            return {
+              ...company,
+              employees: [newItem, ...(company.employees || [])]
+            };
+          }
+          return company;
+        }));
+        showToast.success(`Funcionário "${newItem.input.employeeName}" adicionado!`);
+      } else {
+        showToast.error('Erro ao adicionar funcionário');
+      }
+    } catch (e) {
+      console.error('Error adding employee:', e);
+      showToast.error('Erro ao adicionar funcionário', (e as Error).message);
+    }
+  };
+
+  const handleUpdateEmployee = async (updatedItem: PayrollHistoryItem) => {
+    if (!activeCompanyId) return;
+
+    try {
+      const success = await SupabaseService.updatePayrollItem(updatedItem);
+      if (success) {
+        setCompanies(prev => prev.map(company => {
+          if (company.id === activeCompanyId) {
+            return {
+              ...company,
+              employees: (company.employees || []).map(emp =>
+                emp.id === updatedItem.id ? updatedItem : emp
+              )
+            };
+          }
+          return company;
+        }));
+        showToast.success('Dados atualizados!');
+      } else {
+        showToast.error('Erro ao atualizar dados');
+      }
+    } catch (e) {
+      console.error('Error updating employee:', e);
+      showToast.error('Erro ao atualizar dados', (e as Error).message);
+    }
+  };
+
+  const handleDeleteEmployee = async (itemId: string) => {
+    if (!activeCompanyId) return;
+
+    try {
+      const success = await SupabaseService.deletePayrollItem(itemId);
+      if (success) {
+        setCompanies(prev => prev.map(company => {
+          if (company.id === activeCompanyId) {
+            return {
+              ...company,
+              employees: (company.employees || []).filter(emp => emp.id !== itemId)
+            };
+          }
+          return company;
+        }));
+        showToast.success('Registro excluído');
+      } else {
+        showToast.error('Erro ao excluir registro');
+      }
+    } catch (e) {
+      console.error('Error deleting employee:', e);
+      showToast.error('Erro ao excluir registro', (e as Error).message);
+    }
+  };
+
+  const handleBulkUpdateEmployees = (newEmployees: PayrollHistoryItem[]) => {
+    if (!activeCompanyId) return;
+    setCompanies(prev => prev.map(company => {
+      if (company.id === activeCompanyId) {
+        return { ...company, employees: newEmployees };
+      }
+      return company;
+    }));
+  };
+
+  const handleSaveBulkEmployees = async (newEmployees: PayrollHistoryItem[]) => {
+    if (!activeCompanyId) return;
+    
+    const loadingToast = showToast.loading('Salvando folha...');
+    
+    try {
+      const success = await SupabaseService.saveBulkPayrollItems(activeCompanyId, newEmployees);
+      showToast.dismiss(loadingToast);
+      
+      if (success) {
+        showToast.success(`Folha salva com sucesso! (${newEmployees.length} registros)`);
+        handleBulkUpdateEmployees(newEmployees);
+      } else {
+        showToast.error('Erro ao salvar a folha');
+      }
+    } catch (e) {
+      showToast.dismiss(loadingToast);
+      console.error('Error saving bulk employees:', e);
+      showToast.error('Erro ao salvar a folha', (e as Error).message);
+    }
+  };
+
+  // --- Public Showcase View (No login required) ---
   if (isPublicShowcase) {
     const params = new URLSearchParams(window.location.search);
     const sharedTabs = params.get('tabs')?.split(',') || [];
+
+    // Ensure activeTab is one of the shared tabs, or default to first
     const effectiveTab = (sharedTabs.includes(activeTab)) ? activeTab : (sharedTabs[0] || 'showcase');
 
     return (
       <DashboardLayout
         activeTab={effectiveTab}
-        onTabChange={(tab) => sharedTabs.includes(tab) && setActiveTab(tab)}
+        onTabChange={(tab) => {
+          // Allow switching only between shared tabs
+          if (sharedTabs.includes(tab)) {
+            setActiveTab(tab);
+          }
+        }}
         onLogout={() => { window.location.href = window.location.origin + window.location.pathname; }}
         currentUser="Visitante"
         isPublic={true}
@@ -93,6 +429,7 @@ export default function App() {
         {effectiveTab === 'campo' && activeCompany && <CampoViveiros activeCompany={activeCompany} isPublic={true} isDarkMode={isDarkMode} />}
         {effectiveTab === 'transferencias' && <TransferenciaProcessing />}
 
+        {/* Fallback if no company is selected but needed (Public view usually expects a default or selected company from context) */}
         {((effectiveTab === 'mortalidade' || effectiveTab === 'campo') && !activeCompany) && (
           <div className="text-center p-20">
             <h3 className="text-xl font-bold text-slate-400">Dados não disponíveis no momento.</h3>
@@ -102,7 +439,7 @@ export default function App() {
     );
   }
 
-  // Render Login Screen
+  // Render Login Screen (Wrapped in MainLayout for aesthetics)
   if (!isAuthenticated) {
     return (
       <MainLayout>
@@ -116,27 +453,29 @@ export default function App() {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-amber-700 font-bold">Conexão Supabase Necessária</p>
-                  <p className="text-xs text-amber-600">O app está rodando sem banco de dados. Configure as chaves VITE_SUPABASE.</p>
+                  <p className="text-sm text-amber-700 font-bold">
+                    Conexão Supabase Necessária
+                  </p>
+                  <p className="text-xs text-amber-600">
+                    O app está rodando sem banco de dados. Configure as chaves VITE_SUPABASE em seu .env.local ou Vercel.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         )}
-        <LoginScreen onLogin={handleLogin} />
+        <LoginScreen onLogin={(user) => handleLogin(user)} />
       </MainLayout>
     );
   }
 
-  // Main Dashboard
+
+  // Error Boundary for rendering content
   try {
     return (
       <DashboardLayout
         activeTab={activeTab}
-        onTabChange={(tab) => {
-          setActiveTab(tab);
-          if (tab === 'payroll') setActiveCompanyId(null);
-        }}
+        onTabChange={handleTabChange}
         onLogout={handleLogout}
         currentUser={currentUser}
         isDarkMode={isDarkMode}
@@ -149,7 +488,7 @@ export default function App() {
                 activeCompany={activeCompany}
                 activeYear={activeYear}
                 activeMonth={activeMonth}
-                onBack={() => setActiveCompanyId(null)}
+                onBack={handleBackToSelection}
                 onAddEmployee={handleAddEmployee}
                 onUpdateEmployee={handleUpdateEmployee}
                 onDeleteEmployee={handleDeleteEmployee}
@@ -162,7 +501,7 @@ export default function App() {
                 onAddCompany={handleAddCompany}
                 onUpdateCompany={handleUpdateCompany}
                 onDeleteCompany={handleDeleteCompany}
-                onSelectCompany={setActiveCompanyId}
+                onSelectCompany={handleSelectCompany}
               />
             )}
           </ErrorBoundary>
@@ -174,26 +513,48 @@ export default function App() {
           </ErrorBoundary>
         )}
 
-        {activeTab === 'fiscal' && <OpeNatIdentifier />}
-        {activeTab === 'registrations' && <RegistrationManager />}
-        {activeTab === 'delivery-order' && <DeliveryOrder isDarkMode={isDarkMode} />}
-        {activeTab === 'pantry' && <CestasBasicas />}
-        {activeTab === 'showcase' && <ShowcaseManager />}
-        {activeTab === 'showcase-faturamento' && <DeliveryOrder initialView="SHOWCASE" isDarkMode={isDarkMode} />}
+        {activeTab === 'fiscal' && (
+          <OpeNatIdentifier />
+        )}
+
+        {activeTab === 'registrations' && (
+          <RegistrationManager />
+        )}
+
+        {activeTab === 'delivery-order' && (
+          <DeliveryOrder isDarkMode={isDarkMode} />
+        )}
+
+        {activeTab === 'pantry' && (
+          <CestasBasicas />
+        )}
+
+        {activeTab === 'showcase' && (
+          <ShowcaseManager />
+        )}
+
+        {/* Legacy/Direct support for Faturamento view inside Manager if needed */}
+        {activeTab === 'showcase-faturamento' && (
+          <DeliveryOrder initialView="SHOWCASE" isDarkMode={isDarkMode} />
+        )}
 
         {activeTab === 'budget' && (
-          activeCompany ? <BudgetPage activeCompany={activeCompany} /> : (
-            <CompanySelection
-              companies={companies}
-              onAddCompany={handleAddCompany}
-              onUpdateCompany={handleUpdateCompany}
-              onDeleteCompany={handleDeleteCompany}
-              onSelectCompany={setActiveCompanyId}
-              title="Orçamentos e Cestas Básicas"
-              description="Selecione uma empresa para gerenciar orçamentos e cestas."
-              buttonText="Gerenciar Orçamentos"
-            />
-          )
+          <>
+            {activeCompany ? (
+              <BudgetPage activeCompany={activeCompany} />
+            ) : (
+              <CompanySelection
+                companies={companies}
+                onAddCompany={handleAddCompany}
+                onUpdateCompany={handleUpdateCompany}
+                onDeleteCompany={handleDeleteCompany}
+                onSelectCompany={handleSelectCompany}
+                title="Orçamentos e Cestas Básicas"
+                description="Selecione uma empresa para gerenciar orçamentos e cestas."
+                buttonText="Gerenciar Orçamentos"
+              />
+            )}
+          </>
         )}
 
         {activeTab === 'mortalidade' && (
@@ -211,7 +572,7 @@ export default function App() {
                 onAddCompany={handleAddCompany}
                 onUpdateCompany={handleUpdateCompany}
                 onDeleteCompany={handleDeleteCompany}
-                onSelectCompany={setActiveCompanyId}
+                onSelectCompany={handleSelectCompany}
                 title="Mortalidade e Consumo"
                 description="Selecione uma empresa para gerenciar o controle de mortalidade."
                 buttonText="Gerenciar Mortalidade"
@@ -220,21 +581,30 @@ export default function App() {
           </ErrorBoundary>
         )}
 
-        {activeTab === 'comparator' && <Comparator />}
+        {activeTab === 'comparator' && (
+          <Comparator />
+        )}
 
         {activeTab === 'receipts' && (
-          activeCompany ? <ReceiptManager activeCompany={activeCompany} onBack={() => setActiveTab('payroll')} /> : (
-            <CompanySelection
-              companies={companies}
-              onAddCompany={handleAddCompany}
-              onUpdateCompany={handleUpdateCompany}
-              onDeleteCompany={handleDeleteCompany}
-              onSelectCompany={setActiveCompanyId}
-              title="Recibos Avulsos"
-              description="Selecione uma empresa para gerar recibos avulsos."
-              buttonText="Gerenciar Recibos"
-            />
-          )
+          <>
+            {activeCompany ? (
+              <ReceiptManager
+                activeCompany={activeCompany}
+                onBack={() => setActiveTab('payroll')}
+              />
+            ) : (
+              <CompanySelection
+                companies={companies}
+                onAddCompany={handleAddCompany}
+                onUpdateCompany={handleUpdateCompany}
+                onDeleteCompany={handleDeleteCompany}
+                onSelectCompany={handleSelectCompany}
+                title="Recibos Avulsos"
+                description="Selecione uma empresa para gerar recibos avulsos."
+                buttonText="Gerenciar Recibos"
+              />
+            )}
+          </>
         )}
 
         {activeTab === 'campo' && (
@@ -247,7 +617,7 @@ export default function App() {
                 onAddCompany={handleAddCompany}
                 onUpdateCompany={handleUpdateCompany}
                 onDeleteCompany={handleDeleteCompany}
-                onSelectCompany={setActiveCompanyId}
+                onSelectCompany={handleSelectCompany}
                 title="Campo/Viveiros"
                 description="Selecione uma empresa para gerenciar os viveiros."
                 buttonText="Gerenciar Viveiros"
@@ -256,8 +626,13 @@ export default function App() {
           </ErrorBoundary>
         )}
 
-        {activeTab === 'plans' && <PlansPrices />}
-        {activeTab === 'transferencias' && <TransferenciaProcessing />}
+        {activeTab === 'plans' && (
+          <PlansPrices />
+        )}
+
+        {activeTab === 'transferencias' && (
+          <TransferenciaProcessing />
+        )}
       </DashboardLayout>
     );
   } catch (error) {
@@ -265,7 +640,7 @@ export default function App() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-8">
         <h1 className="text-2xl font-bold text-red-600 mb-4">Ocorreu um erro inesperado</h1>
-        <p className="text-gray-700 mb-4">Tente fechar e abrir o navegador novamente.</p>
+        <p className="text-gray-700 mb-4">Tente recarregar a página ou limpar os dados do navegador.</p>
         <button
           onClick={() => { localStorage.clear(); window.location.reload(); }}
           className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
