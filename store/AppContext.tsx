@@ -53,6 +53,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Subscribe to Auth Changes
     useEffect(() => {
+        if (!supabase) return;
+
         // Initial session check
         AuthService.getSession().then(session => {
             setSession(session);
@@ -66,7 +68,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
             if (session?.user?.email) setCurrentUser(session.user.email);
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            if (subscription) subscription.unsubscribe();
+        };
     }, []);
 
     // Showcase Mode
@@ -108,12 +112,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     useEffect(() => localStorage.setItem('isDarkMode', isDarkMode.toString()), [isDarkMode]);
 
     const loadFromSupabase = async () => {
+        if (!supabase) return;
         try {
             const data = await SupabaseService.getCompanies();
-            if (data && data.length > 0) setCompanies(data);
+            if (data && data.length > 0) {
+                setCompanies(data);
+            }
         } catch (e) {
-            console.error("Failed to load companies", e);
-            showToast.error('Erro ao carregar empresas', 'Verifique a conexão');
+            console.error("Failed to load companies from Supabase", e);
+            showToast.error('Erro ao carregar empresas', 'Verifique sua conexão com o banco de dados');
         }
     };
 
