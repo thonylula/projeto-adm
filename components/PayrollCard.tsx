@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { PayrollInput, PayrollResult, PayrollHistoryItem, Company, RegistryEmployee } from '../types';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import html2pdf from 'html2pdf.js';
 import { useGeminiParser } from '../hooks/useGeminiParser';
 import { numberToWordsBRL } from '../utils';
 import { SupabaseService } from '../services/supabaseService';
@@ -1250,20 +1251,28 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const handleExportPDF = async () => {
     setShowExportMenu(false);
     if (!reportRef.current) return;
-    try {
-      const canvas = await html2canvas(reportRef.current, {
+
+    // Configurações do html2pdf seguindo moldes profissionais do pdf-formatter
+    const opt = {
+      margin: [10, 5, 10, 5], // top, left, bottom, right (em mm)
+      filename: `Folha_${activeCompany.name}_${activeMonth}_${activeYear}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
         scale: 2,
-        backgroundColor: '#ffffff',
-        ignoreElements: (node) => node.classList.contains('export-ignore')
-      });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('l', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Folha_${activeCompany.name}.pdf`);
+        useCORS: true,
+        letterRendering: true,
+        backgroundColor: '#ffffff'
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    try {
+      // @ts-ignore
+      await html2pdf().set(opt).from(reportRef.current).save();
     } catch (e) {
       console.error("PDF Export Error", e);
+      alert("Erro ao exportar PDF. Tente novamente.");
     }
   };
 
@@ -2036,7 +2045,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
                   {history.map((item) => (
-                    <tr key={item.id} className={`hover:bg-blue-50 transition-colors group print:hover:bg-transparent ${item.input.calculationMode === '13TH' ? 'bg-red-50/30' : ''}`}>
+                    <tr key={item.id} className={`hover:bg-blue-50 transition-colors group print:hover:bg-transparent break-inside-avoid ${item.input.calculationMode === '13TH' ? 'bg-red-50/30' : ''}`}>
                       <td className="px-3 py-2 font-medium text-slate-900">
                         {item.input.employeeName}
                         <span className="block text-[10px] text-slate-400 font-normal">
