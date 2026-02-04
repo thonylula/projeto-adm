@@ -443,7 +443,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
         nonBusinessDays: nonBusiness
       }));
     }
-  }, []);
+  }, [formState.referenceMonth, formState.referenceYear, formState.selectedState, editingId]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -1372,6 +1372,47 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                 {activeCompany.name}
               </h1>
               <p className="text-orange-500 text-[10px] font-black uppercase tracking-[0.3em]">Folha de Pagamento Inteligente</p>
+
+              <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-4 no-print">
+                <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Navegação por Período:</span>
+                <div className="flex bg-white/5 p-1 rounded-2xl border border-white/10 backdrop-blur-sm gap-2">
+                  <select
+                    value={activeMonth || new Date().getMonth() + 1}
+                    onChange={(e) => {
+                      window.dispatchEvent(new CustomEvent('app-navigation', {
+                        detail: { month: parseInt(e.target.value), year: activeYear || new Date().getFullYear() }
+                      }));
+                    }}
+                    className="bg-transparent text-white text-xs font-bold px-4 py-2 border-0 focus:ring-0 cursor-pointer appearance-none hover:text-orange-500 transition-colors"
+                  >
+                    {months.map((m, idx) => <option key={idx} value={idx + 1} className="bg-slate-900 text-white">{m}</option>)}
+                  </select>
+                  <div className="w-px h-6 bg-white/10 self-center"></div>
+                  <select
+                    value={activeYear || new Date().getFullYear()}
+                    onChange={(e) => {
+                      window.dispatchEvent(new CustomEvent('app-navigation', {
+                        detail: { year: parseInt(e.target.value), month: activeMonth || new Date().getMonth() + 1 }
+                      }));
+                    }}
+                    className="bg-transparent text-white text-xs font-bold px-4 py-2 border-0 focus:ring-0 cursor-pointer appearance-none hover:text-orange-500 transition-colors"
+                  >
+                    {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} className="bg-slate-900 text-white">{y}</option>)}
+                  </select>
+                </div>
+
+                <button
+                  onClick={() => {
+                    const now = new Date();
+                    window.dispatchEvent(new CustomEvent('app-navigation', {
+                      detail: { month: now.getMonth() + 1, year: now.getFullYear() }
+                    }));
+                  }}
+                  className="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white text-[10px] font-black rounded-xl transition-all border border-emerald-600/30 uppercase tracking-widest"
+                >
+                  Mês Atual
+                </button>
+              </div>
             </div>
           </header>
 
@@ -1967,7 +2008,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-bold text-slate-900 uppercase">{activeCompany.name}</h2>
-                    <p className="text-slate-500 text-[10px] mt-1 uppercase tracking-[0.2em]">Folha Analítica</p>
+                    <p className="text-slate-500 text-[10px] mt-1 uppercase tracking-[0.2em]">Folha Analítica - {months[(activeMonth || new Date().getMonth() + 1) - 1]} / {activeYear || new Date().getFullYear()}</p>
                   </div>
                 </div>
               </div>
