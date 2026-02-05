@@ -41,6 +41,13 @@ export default function App() {
     handleLogin, handleLogout, handleAddCompany, handleUpdateCompany, handleDeleteCompany, handleAddEmployee, handleUpdateEmployee, handleDeleteEmployee, handleBulkUpdateEmployees, handleSaveBulkEmployees, loadFromSupabase
   } = useAppContext();
 
+  // --- SHOWCASE: Ensure company is loaded before modules ---
+  useEffect(() => {
+    if (isPublicShowcase && !activeCompanyId && companies.length > 0) {
+      setActiveCompanyId('02ac338d-28e0-4e81-9aff-c18a7f9cbabb');
+    }
+  }, [isPublicShowcase, activeCompanyId, companies]);
+
   // Load initial agents
   useEffect(() => {
     // Initialize Multi-Agent System
@@ -126,7 +133,7 @@ export default function App() {
         )}
         {effectiveTab === 'mortalidade' && activeCompany && <MortalidadeConsumo activeCompany={activeCompany} activeYear={activeYear || new Date().getFullYear()} activeMonth={activeMonth || new Date().getMonth() + 1} isPublic={true} isDarkMode={isDarkMode} />}
         {effectiveTab === 'campo' && activeCompany && <CampoViveiros activeCompany={activeCompany} isPublic={true} isDarkMode={isDarkMode} />}
-        {effectiveTab === 'transferencias' && <TransferenciaProcessing />}
+        {effectiveTab === 'transferencias' && <TransferenciaProcessing isPublic={true} />}
 
         {/* Fallback if no company is selected but needed (Public view usually expects a default or selected company from context) */}
         {((effectiveTab === 'mortalidade' || effectiveTab === 'campo') && !activeCompany) && (

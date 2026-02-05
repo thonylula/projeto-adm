@@ -87,16 +87,19 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
             const latest = await SupabaseService.getLatestBiometry();
             if (latest && latest.data) {
                 setCurrentData(latest.data);
+                // Ensure we go to dashboard in showcase
+                setStep('DASHBOARD');
+            } else if (isPublic) {
+                // If no data in public mode, at least stay in dashboard to show empty state/message
                 setStep('DASHBOARD');
             }
         };
         load();
     }, []);
 
-    // Auto-save quando needsSave é true
     useEffect(() => {
         const performSave = async () => {
-            if (needsSave && currentData.length > 0) {
+            if (needsSave && currentData.length > 0 && !isPublic) {
                 const label = `Biometria ${new Date(biometryDate + 'T12:00:00').toLocaleDateString('pt-BR')}`;
                 const orchestrator = getOrchestrator();
 
@@ -141,10 +144,13 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     showToast('❌ Erro ao salvar biometria.');
                     setNeedsSave(false);
                 }
+            } else if (needsSave && isPublic) {
+                setNeedsSave(false);
+                showToast('⚠️ Modo Mostruário: Não é possível salvar alterações.');
             }
         };
         performSave();
-    }, [needsSave, currentData, biometryDate]);
+    }, [needsSave, currentData, biometryDate, isPublic]);
 
 
     // --- RE-CALCULAR DIAS QUANDO MUDA DATA DA BIOMETRIA ---
