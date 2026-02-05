@@ -738,9 +738,9 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                 onChange={e => setEditingTipo(e.target.value as ViveiroTipo)}
                                 className={`w-full mt-1 px-4 py-2.5 rounded-xl border transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-200'}`}
                             >
-                                <option value="bercario">Berçário</option>
-                                <option value="pos_bercario">Pós-Berçário</option>
-                                <option value="engorda">Engorda</option>
+                                <option value="bercario">🐣 BERÇÁRIO</option>
+                                <option value="pos_bercario">🦐 PÓS-BERÇÁRIO</option>
+                                <option value="engorda">🍽️ ENGORDA</option>
                             </select>
                         </label>
 
@@ -1053,9 +1053,9 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                         ? 'text-slate-200 bg-slate-900/50 border-slate-700 focus:border-indigo-500'
                                         : 'text-slate-700 bg-gray-50 border-gray-200 focus:border-indigo-500'}`}
                                 >
-                                    <option value="bercario">Berçário</option>
-                                    <option value="pos_bercario">Pós-Berçário</option>
-                                    <option value="engorda">Engorda</option>
+                                    <option value="bercario">🐣 BERÇÁRIO</option>
+                                    <option value="pos_bercario">🦐 PÓS-BERÇÁRIO</option>
+                                    <option value="engorda">🍽️ ENGORDA</option>
                                 </select>
                             </label>
 
@@ -1128,7 +1128,7 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
 
                         <button
                             onClick={handleConfirmCreate}
-                            className="w-full mt-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                            className={`w-full mt-8 py-4 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] ${isDarkMode ? 'bg-gradient-to-r from-indigo-600 to-blue-600 shadow-indigo-500/20' : 'bg-indigo-600 shadow-indigo-200'}`}
                         >
                             Confirmar Cadastro
                         </button>
