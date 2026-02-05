@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Company, Viveiro, ViveiroStatus } from '../types';
+import { Company, Viveiro, ViveiroStatus, ViveiroTipo } from '../types';
 import { SupabaseService } from '../services/supabaseService';
 import { BiometricsManager } from './BiometricsManager';
 import { InsumosWidget } from './InsumosWidget';
@@ -18,7 +18,25 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
     const [editingName, setEditingName] = useState('');
     const [editingNotes, setEditingNotes] = useState('');
     const [editingArea, setEditingArea] = useState('');
+    const [editingTipo, setEditingTipo] = useState<ViveiroTipo>('engorda');
+    const [editingPopInicial, setEditingPopInicial] = useState('');
+    const [editingDensidade, setEditingDensidade] = useState('');
+    const [editingLaboratorio, setEditingLaboratorio] = useState('');
+    const [editingDataPovoamento, setEditingDataPovoamento] = useState('');
     const [editingStatus, setEditingStatus] = useState<ViveiroStatus>('VAZIO');
+
+    // --- Creation Modal State ---
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [createCoords, setCreateCoords] = useState<{ lat: number, lng: number } | null>(null);
+    const [newViveiroData, setNewViveiroData] = useState({
+        name: '',
+        tipo: 'engorda' as ViveiroTipo,
+        area: '',
+        popInicial: '',
+        densidade: '',
+        laboratorio: '',
+        dataPovoamento: new Date().toISOString().split('T')[0]
+    });
 
     // --- Drag & Drop State ---
     const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -177,33 +195,48 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
     };
 
 
-    const handleImageClick = async (e: React.MouseEvent<HTMLImageElement>) => {
-        if (!activeCompany || isPublic || draggingId || isLayoutLocked) return; // Don't create if dragging or locked
+    const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
+        if (!activeCompany || isPublic || draggingId || isLayoutLocked) return;
 
         const img = e.currentTarget;
         const rect = img.getBoundingClientRect();
         const x = ((e.clientX - rect.left) / rect.width) * 100;
         const y = ((e.clientY - rect.top) / rect.height) * 100;
 
-        const name = prompt('Nome do viveiro:');
-        if (!name) return;
+        setCreateCoords({ lat: y, lng: x });
+        setNewViveiroData({
+            ...newViveiroData,
+            name: '',
+            dataPovoamento: new Date().toISOString().split('T')[0]
+        });
+        setShowCreateModal(true);
+    };
 
-        const areaInput = prompt('Área do viveiro (em hectares):', '1');
-        if (!areaInput) return;
+    const handleConfirmCreate = async () => {
+        if (!activeCompany || !createCoords) return;
+        if (!newViveiroData.name) {
+            alert("O nome do viveiro é obrigatório.");
+            return;
+        }
 
-        const area = parseFloat(areaInput);
-
-        const newViveiro = {
+        const newViveiro: Partial<Viveiro> = {
             company_id: activeCompany.id,
-            name,
-            coordinates: [{ lat: y, lng: x }],
-            area_m2: area,
+            name: newViveiroData.name,
+            tipo: newViveiroData.tipo,
+            coordinates: [createCoords],
+            area_m2: parseFloat(newViveiroData.area) || 0,
+            populacao_inicial: parseInt(newViveiroData.popInicial) || 0,
+            densidade: parseFloat(newViveiroData.densidade) || 0,
+            laboratorio: newViveiroData.laboratorio,
+            data_povoamento: newViveiroData.dataPovoamento,
             status: 'VAZIO' as ViveiroStatus
         };
 
-        const added = await SupabaseService.addViveiro(newViveiro);
+        const added = await SupabaseService.saveViveiro(newViveiro);
         if (added) {
             await loadViveiros();
+            setShowCreateModal(false);
+            setCreateCoords(null);
         }
     };
 
@@ -258,6 +291,11 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                 setEditingName(v.name);
                 setEditingNotes(v.notes || '');
                 setEditingArea(v.area_m2.toString());
+                setEditingTipo(v.tipo || 'engorda');
+                setEditingPopInicial(v.populacao_inicial?.toString() || '');
+                setEditingDensidade(v.densidade?.toString() || '');
+                setEditingLaboratorio(v.laboratorio || '');
+                setEditingDataPovoamento(v.data_povoamento || '');
                 setEditingStatus(v.status || 'VAZIO');
                 break;
             case 'preparacao':
@@ -423,10 +461,17 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
     const handleSaveViveiro = async () => {
         if (!selectedViveiro) return;
 
-        const success = await SupabaseService.updateViveiro(selectedViveiro.id, {
+        const success = await SupabaseService.saveViveiro({
+            id: selectedViveiro.id,
+            company_id: selectedViveiro.company_id,
             name: editingName,
             notes: editingNotes,
-            area_m2: parseFloat(editingArea),
+            tipo: editingTipo,
+            area_m2: parseFloat(editingArea) || 0,
+            populacao_inicial: parseInt(editingPopInicial) || 0,
+            densidade: parseFloat(editingDensidade) || 0,
+            laboratorio: editingLaboratorio,
+            data_povoamento: editingDataPovoamento,
             status: editingStatus
         });
 
@@ -675,62 +720,124 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                     </div>
 
                     {/* Editor Content */}
-                    <div className="border-t pt-4">
-                        <label className="block mb-2">
-                            <span className="text-sm text-slate-600">Nome:</span>
+                    <div className="border-t pt-4 space-y-4">
+                        <label className="block">
+                            <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Nome:</span>
                             <input
                                 type="text"
                                 value={editingName}
                                 onChange={e => setEditingName(e.target.value)}
-                                className="w-full mt-1 px-3 py-2 border rounded-lg"
+                                className={`w-full mt-1 px-4 py-2.5 rounded-xl border transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-200'}`}
                             />
                         </label>
 
-                        <label className="block mb-2">
-                            <span className="text-sm text-slate-600">Área (hectares):</span>
+                        <label className="block">
+                            <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Tipo de Viveiro:</span>
+                            <select
+                                value={editingTipo}
+                                onChange={e => setEditingTipo(e.target.value as ViveiroTipo)}
+                                className={`w-full mt-1 px-4 py-2.5 rounded-xl border transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-200'}`}
+                            >
+                                <option value="bercario">Berçário</option>
+                                <option value="pos_bercario">Pós-Berçário</option>
+                                <option value="engorda">Engorda</option>
+                            </select>
+                        </label>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <label className="block">
+                                <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Área (ha):</span>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    value={editingArea}
+                                    onChange={e => setEditingArea(e.target.value)}
+                                    className={`w-full mt-1 px-4 py-2.5 rounded-xl border transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-200'}`}
+                                />
+                            </label>
+
+                            <label className="block">
+                                <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Pop. Inicial:</span>
+                                <input
+                                    type="number"
+                                    value={editingPopInicial}
+                                    onChange={e => setEditingPopInicial(e.target.value)}
+                                    placeholder="Milheiros"
+                                    className={`w-full mt-1 px-4 py-2.5 rounded-xl border transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-200'}`}
+                                />
+                            </label>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <label className="block">
+                                <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Densidade:</span>
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    value={editingDensidade}
+                                    onChange={e => setEditingDensidade(e.target.value)}
+                                    placeholder="anim/m²"
+                                    className={`w-full mt-1 px-4 py-2.5 rounded-xl border transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-200'}`}
+                                />
+                            </label>
+
+                            <label className="block">
+                                <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Laboratório:</span>
+                                <input
+                                    type="text"
+                                    value={editingLaboratorio}
+                                    onChange={e => setEditingLaboratorio(e.target.value)}
+                                    className={`w-full mt-1 px-4 py-2.5 rounded-xl border transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-200'}`}
+                                />
+                            </label>
+                        </div>
+
+                        <label className="block">
+                            <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Data Povoamento:</span>
                             <input
-                                type="number"
-                                value={editingArea}
-                                onChange={e => setEditingArea(e.target.value)}
-                                className="w-full mt-1 px-3 py-2 border rounded-lg"
+                                type="date"
+                                value={editingDataPovoamento}
+                                onChange={e => setEditingDataPovoamento(e.target.value)}
+                                className={`w-full mt-1 px-4 py-2.5 rounded-xl border transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-200'}`}
                             />
                         </label>
 
-                        <label className="block mb-4">
-                            <span className="text-sm text-slate-600">Notas:</span>
+                        <label className="block">
+                            <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Status:</span>
+                            <select
+                                value={editingStatus}
+                                onChange={e => setEditingStatus(e.target.value as ViveiroStatus)}
+                                className={`w-full mt-1 px-4 py-2.5 rounded-xl border transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-200'}`}
+                            >
+                                <option value="VAZIO">⚪ Vazio</option>
+                                <option value="PREPARACAO">🛠️ Em Preparação</option>
+                                <option value="PREPARADO">✅ Preparado</option>
+                                <option value="POVOADO">💎 Povoado</option>
+                                <option value="DESPESCA">🔵 Em Despesca</option>
+                            </select>
+                        </label>
+
+                        <label className="block">
+                            <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Notas:</span>
                             <textarea
                                 value={editingNotes}
                                 onChange={e => setEditingNotes(e.target.value)}
-                                className="w-full mt-1 px-3 py-2 border rounded-lg"
+                                className={`w-full mt-1 px-4 py-2.5 rounded-xl border transition-all resize-none ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-200'}`}
                                 rows={3}
                             />
                         </label>
 
-                        <label className="block mb-4">
-                            <span className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>Status:</span>
-                            <select
-                                value={editingStatus}
-                                onChange={e => setEditingStatus(e.target.value as ViveiroStatus)}
-                                className={`w-full mt-1 px-3 py-2 border rounded-lg transition-colors ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200'}`}
-                            >
-                                <option value="VAZIO" className={isDarkMode ? 'bg-slate-800' : ''}>⚪ Vazio</option>
-                                <option value="PREPARACAO" className={isDarkMode ? 'bg-slate-800' : ''}>🛠️ Em Preparação</option>
-                                <option value="PREPARADO" className={isDarkMode ? 'bg-slate-800' : ''}>✅ Preparado</option>
-                                <option value="POVOADO" className={isDarkMode ? 'bg-slate-800' : ''}>💎 Povoado</option>
-                                <option value="DESPESCA" className={isDarkMode ? 'bg-slate-800' : ''}>🔵 Em Despesca</option>
-                            </select>
-                        </label>
-
-                        <div className="flex gap-2">
+                        <div className="flex gap-3 pt-2">
                             <button
                                 onClick={handleSaveViveiro}
-                                className="flex-1 bg-indigo-600 text-white py-2 rounded-lg font-bold hover:bg-indigo-700"
+                                className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2"
                             >
-                                ✅ Salvar
+                                <span>✅</span> Salvar Alterações
                             </button>
                             <button
                                 onClick={handleDeleteViveiro}
-                                className="px-4 bg-red-500 text-white py-2 rounded-lg font-bold hover:bg-red-600"
+                                className="px-4 bg-red-500/10 text-red-500 border border-red-500/20 py-3 rounded-xl font-bold hover:bg-red-500 hover:text-white transition-all"
+                                title="Excluir Viveiro"
                             >
                                 🗑️
                             </button>
@@ -900,6 +1007,131 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                 onSuccess={() => loadViveiros()}
                             />
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- MODAL DE CADASTRO DE VIVEIRO --- */}
+            {showCreateModal && (
+                <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300 no-print">
+                    <div className={`w-full max-w-lg rounded-[32px] shadow-2xl border p-8 animate-in zoom-in-95 duration-300 transition-colors duration-500 ${isDarkMode
+                        ? 'bg-[#0F172A] border-slate-800'
+                        : 'bg-white border-gray-100'}`}>
+                        <div className="flex justify-between items-center mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl">
+                                    🏗️
+                                </div>
+                                <div>
+                                    <h3 className={`text-xl font-black tracking-tight ${isDarkMode ? 'text-slate-100' : 'text-slate-800'}`}>Cadastrar Viveiro</h3>
+                                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Novo Tanque na Fazenda</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-slate-600 p-2">✕</button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <label className="block md:col-span-2">
+                                <span className={`text-[10px] font-black uppercase tracking-widest px-1 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Nome do Viveiro:</span>
+                                <input
+                                    type="text"
+                                    placeholder="Ex: OC-001"
+                                    value={newViveiroData.name}
+                                    onChange={e => setNewViveiroData({ ...newViveiroData, name: e.target.value })}
+                                    className={`w-full mt-1.5 px-4 py-3 rounded-2xl border outline-none transition-all font-bold ${isDarkMode
+                                        ? 'text-slate-200 bg-slate-900/50 border-slate-700 focus:border-indigo-500'
+                                        : 'text-slate-700 bg-gray-50 border-gray-200 focus:border-indigo-500'}`}
+                                />
+                            </label>
+
+                            <label className="block">
+                                <span className={`text-[10px] font-black uppercase tracking-widest px-1 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Tipo:</span>
+                                <select
+                                    value={newViveiroData.tipo}
+                                    onChange={e => setNewViveiroData({ ...newViveiroData, tipo: e.target.value as ViveiroTipo })}
+                                    className={`w-full mt-1.5 px-4 py-3 rounded-2xl border outline-none transition-all font-bold ${isDarkMode
+                                        ? 'text-slate-200 bg-slate-900/50 border-slate-700 focus:border-indigo-500'
+                                        : 'text-slate-700 bg-gray-50 border-gray-200 focus:border-indigo-500'}`}
+                                >
+                                    <option value="bercario">Berçário</option>
+                                    <option value="pos_bercario">Pós-Berçário</option>
+                                    <option value="engorda">Engorda</option>
+                                </select>
+                            </label>
+
+                            <label className="block">
+                                <span className={`text-[10px] font-black uppercase tracking-widest px-1 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Área (ha):</span>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    placeholder="Ex: 1.50"
+                                    value={newViveiroData.area}
+                                    onChange={e => setNewViveiroData({ ...newViveiroData, area: e.target.value })}
+                                    className={`w-full mt-1.5 px-4 py-3 rounded-2xl border outline-none transition-all font-bold ${isDarkMode
+                                        ? 'text-slate-200 bg-slate-900/50 border-slate-700 focus:border-indigo-500'
+                                        : 'text-slate-700 bg-gray-50 border-gray-200 focus:border-indigo-500'}`}
+                                />
+                            </label>
+
+                            <label className="block">
+                                <span className={`text-[10px] font-black uppercase tracking-widest px-1 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>População Inicial:</span>
+                                <input
+                                    type="number"
+                                    placeholder="Milheiros"
+                                    value={newViveiroData.popInicial}
+                                    onChange={e => setNewViveiroData({ ...newViveiroData, popInicial: e.target.value })}
+                                    className={`w-full mt-1.5 px-4 py-3 rounded-2xl border outline-none transition-all font-bold ${isDarkMode
+                                        ? 'text-slate-200 bg-slate-900/50 border-slate-700 focus:border-indigo-500'
+                                        : 'text-slate-700 bg-gray-50 border-gray-200 focus:border-indigo-500'}`}
+                                />
+                            </label>
+
+                            <label className="block">
+                                <span className={`text-[10px] font-black uppercase tracking-widest px-1 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Densidade (m²):</span>
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    placeholder="anim/m²"
+                                    value={newViveiroData.densidade}
+                                    onChange={e => setNewViveiroData({ ...newViveiroData, densidade: e.target.value })}
+                                    className={`w-full mt-1.5 px-4 py-3 rounded-2xl border outline-none transition-all font-bold ${isDarkMode
+                                        ? 'text-slate-200 bg-slate-900/50 border-slate-700 focus:border-indigo-500'
+                                        : 'text-slate-700 bg-gray-50 border-gray-200 focus:border-indigo-500'}`}
+                                />
+                            </label>
+
+                            <label className="block">
+                                <span className={`text-[10px] font-black uppercase tracking-widest px-1 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Laboratório:</span>
+                                <input
+                                    type="text"
+                                    placeholder="Nome do Lab"
+                                    value={newViveiroData.laboratorio}
+                                    onChange={e => setNewViveiroData({ ...newViveiroData, laboratorio: e.target.value })}
+                                    className={`w-full mt-1.5 px-4 py-3 rounded-2xl border outline-none transition-all font-bold ${isDarkMode
+                                        ? 'text-slate-200 bg-slate-900/50 border-slate-700 focus:border-indigo-500'
+                                        : 'text-slate-700 bg-gray-50 border-gray-200 focus:border-indigo-500'}`}
+                                />
+                            </label>
+
+                            <label className="block">
+                                <span className={`text-[10px] font-black uppercase tracking-widest px-1 ${isDarkMode ? 'text-slate-500' : 'text-gray-400'}`}>Data Povoamento:</span>
+                                <input
+                                    type="date"
+                                    value={newViveiroData.dataPovoamento}
+                                    onChange={e => setNewViveiroData({ ...newViveiroData, dataPovoamento: e.target.value })}
+                                    className={`w-full mt-1.5 px-4 py-3 rounded-2xl border outline-none transition-all font-bold ${isDarkMode
+                                        ? 'text-slate-200 bg-slate-900/50 border-slate-700 focus:border-indigo-500'
+                                        : 'text-slate-700 bg-gray-50 border-gray-200 focus:border-indigo-500'}`}
+                                />
+                            </label>
+                        </div>
+
+                        <button
+                            onClick={handleConfirmCreate}
+                            className="w-full mt-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-indigo-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        >
+                            Confirmar Cadastro
+                        </button>
                     </div>
                 </div>
             )}

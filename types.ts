@@ -145,16 +145,23 @@ export interface Company {
 }
 
 export type ViveiroStatus = 'VAZIO' | 'PREPARACAO' | 'PREPARADO' | 'POVOADO' | 'DESPESCA';
+export type ViveiroTipo = 'bercario' | 'pos_bercario' | 'engorda';
 
 export interface Viveiro {
   id: string;
   company_id: string;
   name: string;
+  tipo: ViveiroTipo;
   coordinates: { lat: number; lng: number }[];
   area_m2: number;
+  populacao_inicial?: number;
+  densidade?: number;
+  laboratorio?: string;
+  data_povoamento?: string;
   status?: ViveiroStatus;
   notes?: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export type ViewMode = 'SELECTION' | 'CALCULATOR' | 'COMPARATOR';

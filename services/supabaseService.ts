@@ -438,6 +438,46 @@ export const SupabaseService = {
         return !error;
     },
 
+    // --- VIVEIROS ---
+    async getViveiros(companyId: string): Promise<Viveiro[]> {
+        const { data, error } = await supabase
+            .from('viveiros')
+            .select('*')
+            .eq('company_id', companyId)
+            .order('name', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching viveiros:', error);
+            return [];
+        }
+        return data || [];
+    },
+
+    async saveViveiro(viveiro: Partial<Viveiro>): Promise<boolean> {
+        const { error } = await supabase
+            .from('viveiros')
+            .upsert([viveiro]);
+
+        if (error) {
+            console.error('Error saving viveiro:', error);
+            return false;
+        }
+        return true;
+    },
+
+    async deleteViveiro(id: string): Promise<boolean> {
+        const { error } = await supabase
+            .from('viveiros')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error deleting viveiro:', error);
+            return false;
+        }
+        return true;
+    },
+
     // --- USERS (Now managed by Supabase Auth) ---
     // getUsers and saveUser for custom app_users table are now deprecated.
 
