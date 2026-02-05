@@ -189,6 +189,26 @@ CREATE TABLE IF NOT EXISTS delivery_orders (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 12. CONFIGURAÇÕES DE ITENS DE CESTA
+CREATE TABLE IF NOT EXISTS basket_item_configs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    description TEXT UNIQUE NOT NULL,
+    config JSONB NOT NULL,
+    user_id UUID REFERENCES auth.users(id) DEFAULT auth.uid(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 13. USUÁRIOS DO APP (DEPRECATED - USAR AUTH.USERS)
+-- Esta tabela é mantida para compatibilidade com dados legados
+CREATE TABLE IF NOT EXISTS app_users (
+    username TEXT PRIMARY KEY,
+    password TEXT NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    user_id UUID REFERENCES auth.users(id) DEFAULT auth.uid()
+);
+
+
 -- ==========================================
 -- ÍNDICES PARA PERFORMANCE
 -- ==========================================

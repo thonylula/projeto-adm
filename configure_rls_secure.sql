@@ -12,6 +12,8 @@ ALTER TABLE IF EXISTS suppliers ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES
 ALTER TABLE IF EXISTS clients ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) DEFAULT auth.uid();
 ALTER TABLE IF EXISTS delivery_orders ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) DEFAULT auth.uid();
 ALTER TABLE IF EXISTS ai_comparisons ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) DEFAULT auth.uid();
+ALTER TABLE IF EXISTS basket_item_configs ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) DEFAULT auth.uid();
+ALTER TABLE IF EXISTS app_users ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) DEFAULT auth.uid();
 
 -- 2. HABILITAR RLS EM TODAS AS TABELAS
 ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
@@ -26,6 +28,9 @@ ALTER TABLE ai_comparisons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transferencias ENABLE ROW LEVEL SECURITY;
 ALTER TABLE viveiros ENABLE ROW LEVEL SECURITY;
 ALTER TABLE receipts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE basket_item_configs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app_users ENABLE ROW LEVEL SECURITY;
+
 
 -- 3. CRIAR POLÍTICAS DE ACESSO
 
@@ -82,6 +87,13 @@ CREATE POLICY "Users can manage their own delivery_orders" ON delivery_orders FO
 
 DROP POLICY IF EXISTS "Users can manage their own comparisons" ON ai_comparisons;
 CREATE POLICY "Users can manage their own comparisons" ON ai_comparisons FOR ALL USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can manage their own basket configs" ON basket_item_configs;
+CREATE POLICY "Users can manage their own basket configs" ON basket_item_configs FOR ALL USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can manage their own legacy app_users" ON app_users;
+CREATE POLICY "Users can manage their own legacy app_users" ON app_users FOR ALL USING (auth.uid() = user_id);
+
 
 -- 4. LIMPEZA DE PERMISSÕES PÚBLICAS (ANON)
 REVOKE ALL ON TABLE companies FROM anon;
