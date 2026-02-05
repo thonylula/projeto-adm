@@ -393,6 +393,22 @@ export const SupabaseService = {
         return true;
     },
 
+    async deleteBiometriesBulk(ids: string[]): Promise<{ success: boolean; count: number }> {
+        if (!ids || ids.length === 0) return { success: true, count: 0 };
+
+        const { error, count } = await supabase
+            .from('biometrics')
+            .delete()
+            .in('id', ids);
+
+        if (error) {
+            console.error('Error bulk deleting biometrics:', error);
+            return { success: false, count: 0 };
+        }
+        return { success: true, count: count || ids.length };
+    },
+
+
     // Legacy methods for backward compatibility (deprecated)
     async getBiometrics(): Promise<any[]> {
         const latest = await this.getLatestBiometry();

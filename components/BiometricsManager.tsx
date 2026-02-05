@@ -62,6 +62,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     const [showHistory, setShowHistory] = useState(false);
     const [showAddTankModal, setShowAddTankModal] = useState(false);
     const [newTankData, setNewTankData] = useState({ viveiro: '', dataPovoamento: '', quat: '' });
+    const [selectedHistoryIds, setSelectedHistoryIds] = useState<string[]>([]);
 
     // --- NEWS ROTATION STATE ---
     const [newsList, setNewsList] = useState<string[]>(NEWS_HEADLINES_SOURCE);
@@ -522,18 +523,49 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
     const handleDeleteAllHistory = async () => {
         if (biometricsHistory.length === 0) return;
         if (window.confirm('CUIDADO! Isso irá excluir TODO o histórico de biometrias para sempre. Deseja prosseguir?')) {
-            // No SupabaseService, deleteBiometry apaga por ID. Precisamos de um delete all ou loop.
-            // Para segurança e performance, usaremos um loop aqui mas seria ideal um RPC no Postgres.
-            let count = 0;
-            for (const item of biometricsHistory) {
-                const ok = await SupabaseService.deleteBiometry(item.id);
-                if (ok) count++;
+            const allIds = biometricsHistory.map(item => item.id);
+            const result = await SupabaseService.deleteBiometriesBulk(allIds);
+            if (result.success) {
                 setBiometricsHistory([]);
                 setLoadedRecordId(null);
-                showToast(`✅ ${count} registros removidos do histórico.`);
+                setSelectedHistoryIds([]);
+                showToast(`✅ ${result.count} registros removidos do histórico.`);
             }
         }
     };
+
+    const handleDeleteSelectedHistory = async () => {
+        if (selectedHistoryIds.length === 0) {
+            showToast('⚠️ Selecione pelo menos um registro para excluir.');
+            return;
+        }
+        if (window.confirm(`Deseja excluir ${selectedHistoryIds.length} registro(s) selecionado(s)?`)) {
+            const result = await SupabaseService.deleteBiometriesBulk(selectedHistoryIds);
+            if (result.success) {
+                setBiometricsHistory(prev => prev.filter(item => !selectedHistoryIds.includes(item.id)));
+                if (selectedHistoryIds.includes(loadedRecordId || '')) setLoadedRecordId(null);
+                setSelectedHistoryIds([]);
+                showToast(`✅ ${result.count} registro(s) excluído(s)!`);
+            } else {
+                showToast('❌ Erro ao excluir registros.');
+            }
+        }
+    };
+
+    const toggleHistorySelection = (id: string) => {
+        setSelectedHistoryIds(prev =>
+            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        );
+    };
+
+    const toggleAllHistorySelection = () => {
+        if (selectedHistoryIds.length === biometricsHistory.length) {
+            setSelectedHistoryIds([]);
+        } else {
+            setSelectedHistoryIds(biometricsHistory.map(item => item.id));
+        }
+    };
+
 
     const handleDeleteRow = (viveiro: string) => {
         if (window.confirm(`Tem certeza que deseja remover o viveiro ${viveiro}?`)) {
@@ -1814,12 +1846,48 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                 </svg>
                                 Histórico de Biometrias
                             </h3>
-                            <button onClick={() => setShowHistory(false)} className="text-white/80 hover:text-white transition-colors">
+                            <button onClick={() => { setShowHistory(false); setSelectedHistoryIds([]); }} className="text-white/80 hover:text-white transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
                         </div>
+
+                        {/* Bulk Delete Controls */}
+                        {biometricsHistory.length > 0 && (
+                            <div className="px-6 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between gap-4">
+                                <label className="flex items-center gap-3 cursor-pointer group">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedHistoryIds.length === biometricsHistory.length && biometricsHistory.length > 0}
+                                        onChange={toggleAllHistorySelection}
+                                        className="w-5 h-5 rounded-md border-2 border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                    />
+                                    <span className="text-sm font-semibold text-gray-600 group-hover:text-gray-800 transition-colors">
+                                        {selectedHistoryIds.length === biometricsHistory.length ? 'Desmarcar Todos' : 'Selecionar Todos'}
+                                    </span>
+                                </label>
+                                <div className="flex items-center gap-2">
+                                    {selectedHistoryIds.length > 0 && (
+                                        <span className="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
+                                            {selectedHistoryIds.length} selecionado(s)
+                                        </span>
+                                    )}
+                                    <button
+                                        onClick={handleDeleteSelectedHistory}
+                                        disabled={selectedHistoryIds.length === 0}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${selectedHistoryIds.length > 0
+                                            ? 'bg-red-500 text-white hover:bg-red-600 shadow-sm'
+                                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        Excluir Selecionados
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="max-h-[60vh] overflow-y-auto p-6">
                             {biometricsHistory.length === 0 ? (
@@ -1831,10 +1899,18 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                     {biometricsHistory.map((item) => (
                                         <div
                                             key={item.id}
-                                            onClick={() => handleLoadHistory(item)}
-                                            className="group flex items-center justify-between p-4 rounded-2xl border border-gray-100 bg-gray-50 hover:bg-blue-50 hover:border-blue-100 transition-all cursor-pointer"
+                                            className={`group flex items-center justify-between p-4 rounded-2xl border transition-all ${selectedHistoryIds.includes(item.id)
+                                                ? 'bg-blue-50 border-blue-200'
+                                                : 'border-gray-100 bg-gray-50 hover:bg-blue-50 hover:border-blue-100'}`}
                                         >
                                             <div className="flex items-center gap-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedHistoryIds.includes(item.id)}
+                                                    onChange={() => toggleHistorySelection(item.id)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="w-5 h-5 rounded-md border-2 border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                />
                                                 <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs uppercase">
                                                     {new Date(item.timestamp).toLocaleDateString('pt-BR', { month: 'short' })}
                                                 </div>
@@ -1857,15 +1933,19 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                     </svg>
                                                 </button>
-                                                <div className="bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full group-hover:scale-105 transition-transform">
+                                                <button
+                                                    onClick={() => handleLoadHistory(item)}
+                                                    className="bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-full hover:bg-blue-700 transition-all"
+                                                >
                                                     CARREGAR
-                                                </div>
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             )}
                         </div>
+
 
                         <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
                             {biometricsHistory.length > 0 ? (
