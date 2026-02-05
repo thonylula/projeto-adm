@@ -107,6 +107,31 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
         setViveiros(data);
     };
 
+    // --- Automatic Density Calculation ---
+    useEffect(() => {
+        const area = parseFloat(editingArea) || 0;
+        const pop = parseInt(editingPopInicial) || 0;
+        if (area > 0 && pop > 0) {
+            const dens = pop / (area * 10000);
+            setEditingDensidade(dens.toFixed(2));
+        } else {
+            setEditingDensidade('');
+        }
+    }, [editingArea, editingPopInicial]);
+
+    useEffect(() => {
+        const area = parseFloat(newViveiroData.area) || 0;
+        const pop = parseInt(newViveiroData.popInicial) || 0;
+        if (area > 0 && pop > 0) {
+            const dens = pop / (area * 10000);
+            if (newViveiroData.densidade !== dens.toFixed(2)) {
+                setNewViveiroData(prev => ({ ...prev, densidade: dens.toFixed(2) }));
+            }
+        } else if (newViveiroData.densidade !== '') {
+            setNewViveiroData(prev => ({ ...prev, densidade: '' }));
+        }
+    }, [newViveiroData.area, newViveiroData.popInicial, newViveiroData.densidade]);
+
     // --- Drag & Drop Logic ---
 
     const handleMouseDown = (e: React.MouseEvent, v: Viveiro) => {
@@ -775,9 +800,9 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                     type="number"
                                     step="0.1"
                                     value={editingDensidade}
-                                    onChange={e => setEditingDensidade(e.target.value)}
-                                    placeholder="anim/m²"
-                                    className={`w-full mt-1 px-4 py-2.5 rounded-xl border transition-all ${isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-200'}`}
+                                    readOnly
+                                    placeholder="Calculado"
+                                    className={`w-full mt-1 px-4 py-2.5 rounded-xl border transition-all cursor-not-allowed opacity-75 ${isDarkMode ? 'bg-slate-900 border-slate-700 text-slate-400' : 'bg-gray-100 border-gray-200 text-gray-500'}`}
                                 />
                             </label>
 
@@ -1091,12 +1116,12 @@ export const CampoViveiros: React.FC<CampoViveirosProps> = ({ activeCompany, isP
                                 <input
                                     type="number"
                                     step="0.1"
-                                    placeholder="anim/m²"
+                                    placeholder="Calculado"
                                     value={newViveiroData.densidade}
-                                    onChange={e => setNewViveiroData({ ...newViveiroData, densidade: e.target.value })}
-                                    className={`w-full mt-1.5 px-4 py-3 rounded-2xl border outline-none transition-all font-bold ${isDarkMode
-                                        ? 'text-slate-200 bg-slate-900/50 border-slate-700 focus:border-indigo-500'
-                                        : 'text-slate-700 bg-gray-50 border-gray-200 focus:border-indigo-500'}`}
+                                    readOnly
+                                    className={`w-full mt-1.5 px-4 py-3 rounded-2xl border outline-none transition-all font-bold cursor-not-allowed opacity-75 ${isDarkMode
+                                        ? 'text-slate-400 bg-slate-900 border-slate-700'
+                                        : 'text-slate-500 bg-gray-100 border-gray-200'}`}
                                 />
                             </label>
 
