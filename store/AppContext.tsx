@@ -96,7 +96,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
 
     const [companies, setCompanies] = useState<Company[]>([]);
-    const [activeCompanyId, setActiveCompanyId] = useState<string | null>(localStorage.getItem('activeCompanyId'));
+    const [activeCompanyId, setActiveCompanyId] = useState<string | null>(() => {
+        const saved = localStorage.getItem('activeCompanyId');
+        if (!saved && isPublicShowcase) return '02ac338d-28e0-4e81-9aff-c18a7f9cbabb'; // CARAPITANGA default for showcase
+        return saved;
+    });
     const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('isDarkMode') === 'true');
 
     // Persistence (Simplified since Supabase handles this)
