@@ -145,7 +145,20 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
     const reportRef = useRef<HTMLDivElement>(null);
 
     // Derived state for summary logic
-    const activeData = data.filter(d => d.visible);
+    const parseDateInput = (dStr: string) => {
+        const [day, month, year] = dStr.split('/');
+        return new Date(Number(year), Number(month) - 1, Number(day));
+    };
+
+    const sortedData = useMemo(() => {
+        return [...data].sort((a, b) => {
+            const dateA = parseDateInput(a.data);
+            const dateB = parseDateInput(b.data);
+            return dateA.getTime() - dateB.getTime();
+        });
+    }, [data]);
+
+    const activeData = sortedData.filter(d => d.visible);
 
     // Modal State
     const [modalOpen, setModalOpen] = useState(false);
@@ -905,7 +918,7 @@ export const DeliveryOrder: React.FC<DeliveryOrderProps> = ({ isPublic = false, 
                                     </tr>
                                 </thead>
                                 <tbody className={`divide-y transition-colors duration-500 ${isDarkMode ? 'divide-slate-700' : 'divide-orange-50'}`}>
-                                    {data.filter(row => view === 'SHOWCASE' ? row.visible : true).map((row) => (
+                                    {sortedData.filter(row => view === 'SHOWCASE' ? row.visible : true).map((row) => (
                                         <tr key={row.id} className={`transition-colors h-10 ${row.visible
                                             ? (isDarkMode ? 'bg-slate-800 hover:bg-slate-700/50' : 'bg-white hover:bg-orange-50/30')
                                             : (isDarkMode ? 'bg-slate-900/50 opacity-40' : 'bg-gray-50/50 opacity-50')}`}>
@@ -1204,8 +1217,29 @@ const HistoryCard = ({ title, data, color, isDarkMode }: { title: string, data: 
 
     const c = colorClasses[color] || colorClasses.blue;
     const entries = Object.entries(data).sort((a, b) => {
-        // Custom sort for periods if needed, currently alphabetical/lexicographical
-        return a[0].localeCompare(b[0]);
+        // Custom sort for periods (MM/YYYY or Quarter/Year or Year)
+        const parsePeriod = (p: string) => {
+            if (p.includes('/')) {
+                const parts = p.split('/');
+                if (parts.length === 2) {
+                    // MM/YYYY or Year
+                    if (parts[1].length === 4) {
+                        return new Date(Number(parts[1]), Number(parts[0]) - 1).getTime();
+                    }
+                }
+                if (p.includes('Trim')) {
+                    const qMatch = p.match(/(\d+)º Trim\/(\d+)/);
+                    if (qMatch) return new Date(Number(qMatch[2]), (Number(qMatch[1]) - 1) * 3).getTime();
+                }
+                if (p.includes('Sem')) {
+                    const sMatch = p.match(/(\d+)º Sem\/(\d+)/);
+                    if (sMatch) return new Date(Number(sMatch[2]), (Number(sMatch[1]) - 1) * 6).getTime();
+                }
+            }
+            if (/^\d{4}$/.test(p)) return new Date(Number(p), 0).getTime();
+            return 0;
+        };
+        return parsePeriod(a[0]) - parsePeriod(b[0]);
     });
 
     return (
