@@ -80,7 +80,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [activeTab, setActiveTab] = useState(() => {
         const params = new URLSearchParams(window.location.search);
         const sharedTabs = params.get('tabs')?.split(',') || [];
-        return params.get('tab') || (sharedTabs.length > 0 ? sharedTabs[0] : (localStorage.getItem('activeTab') || 'payroll'));
+        const tabParam = params.get('tab');
+        if (tabParam) return tabParam;
+        if (sharedTabs.length > 0) {
+            const savedTab = localStorage.getItem('activeTab');
+            if (savedTab && sharedTabs.includes(savedTab)) return savedTab;
+            return sharedTabs[0];
+        }
+        return localStorage.getItem('activeTab') || 'payroll';
     });
 
     const [activeYear, setActiveYear] = useState<number | null>(() => {

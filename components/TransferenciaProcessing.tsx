@@ -103,21 +103,6 @@ export const TransferenciaProcessing: React.FC = () => {
             const dbHistory = await SupabaseService.getAquacultureHistory();
             if (dbHistory && dbHistory.length > 0) {
                 setHistory(dbHistory);
-
-                // --- AUTO-LOAD LATEST FOR SHOWCASE ---
-                if (isPublic && currentStep === 1) {
-                    const sorted = [...dbHistory].sort((a, b) => {
-                        const dateA = a.timestamp.includes('/') ? new Date(a.timestamp.split(',')[0].split('/').reverse().join('-')).getTime() : 0;
-                        const dateB = b.timestamp.includes('/') ? new Date(b.timestamp.split(',')[0].split('/').reverse().join('-')).getTime() : 0;
-                        return dateB - dateA;
-                    });
-
-                    if (sorted[0]) {
-                        setProcessedData(sorted[0].data);
-                        setViewingHistoryId(sorted[0].id);
-                        setCurrentStep(2);
-                    }
-                }
             } else {
                 // Fallback to localStorage if Supabase is empty
                 try {
