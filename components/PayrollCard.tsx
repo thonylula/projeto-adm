@@ -1763,7 +1763,7 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
                     <div className="relative">
                       <select onChange={handleImportEmployee} className="block w-40 px-3 py-2 text-xs border border-indigo-200 bg-indigo-50 text-indigo-700 font-bold rounded-lg cursor-pointer hover:bg-indigo-100" defaultValue="">
                         <option value="" disabled>Importar</option>
-                        {registeredEmployees.map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
+                        {registeredEmployees.filter(emp => emp.active).map(emp => <option key={emp.id} value={emp.id}>{emp.name}</option>)}
                       </select>
                     </div>
                   )}

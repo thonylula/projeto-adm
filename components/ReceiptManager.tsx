@@ -449,7 +449,7 @@ export const ReceiptManager: React.FC<ReceiptManagerProps> = ({ activeCompany, o
                                     >
                                         <option value="">Selecione para auto-preencher...</option>
                                         <optgroup label="Funcionários">
-                                            {employees.map(e => <option key={e.id} value={`EMP:${e.id}`}>{e.name}</option>)}
+                                            {employees.filter(e => e.active).map(e => <option key={e.id} value={`EMP:${e.id}`}>{e.name}</option>)}
                                         </optgroup>
                                         <optgroup label="Fornecedores">
                                             {suppliers.map(s => <option key={s.id} value={`SUP:${s.id}`}>{s.tradeName || s.companyName}</option>)}

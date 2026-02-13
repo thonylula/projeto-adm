@@ -186,7 +186,8 @@ export const CestasBasicas: React.FC = () => {
 
             // 1. Load employees from registry
             try {
-                const registered = await SupabaseService.getEmployees() || [];
+                const allRegistered = await SupabaseService.getEmployees() || [];
+                const registered = allRegistered.filter(r => r.active);
                 if (registered.length > 0) {
                     names = registered.map(r => r.name) || [];
                     setActualEmployees(names);
