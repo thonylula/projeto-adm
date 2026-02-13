@@ -210,22 +210,30 @@ export const TransferenciaProcessing: React.FC = () => {
     const generalSurvival = useMemo(() => {
         if (history.length === 0) return 0;
 
-        let totalFinal = 0;
-        let totalInitial = 0;
-        const processedPonds = new Set<string>();
+        let totalPercentage = 0;
+        let count = 0;
 
         history.forEach(entry => {
+            // Group by nursery within this entry (same logic as Details view)
+            const nurseryGroups: Record<string, number> = {};
+
             entry.data.forEach(item => {
-                totalFinal += (item.estocagem || 0);
-                const pondName = getNurseryGroupName(item.local);
-                if (!processedPonds.has(pondName)) {
-                    totalInitial += (initialStockings[pondName] || 0);
-                    processedPonds.add(pondName);
+                const groupName = getNurseryGroupName(item.local);
+                nurseryGroups[groupName] = (nurseryGroups[groupName] || 0) + (item.estocagem || 0);
+            });
+
+            // Calculate percentage for each nursery in this entry
+            Object.entries(nurseryGroups).forEach(([groupName, totalOut]) => {
+                const initial = initialStockings[groupName] || 0;
+                if (initial > 0) {
+                    const percentage = (totalOut / initial) * 100;
+                    totalPercentage += percentage;
+                    count++;
                 }
             });
         });
 
-        return totalInitial > 0 ? (totalFinal / totalInitial) * 100 : 0;
+        return count > 0 ? totalPercentage / count : 0;
     }, [history, initialStockings]);
 
     useEffect(() => {
