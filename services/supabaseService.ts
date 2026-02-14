@@ -563,21 +563,10 @@ export const SupabaseService = {
     },
 
     // --- VIVEIROS (FISH PONDS) ---
-    async getViveiros(companyId: string): Promise<any[]> {
-        const { data, error } = await supabase
-            .from('viveiros')
-            .select('*')
-            .eq('company_id', companyId)
-            .order('created_at', { ascending: true });
+    // getViveiros duplicate removed
 
-        if (error) {
-            console.error('Error fetching viveiros:', error);
-            return [];
-        }
-        return data || [];
-    },
 
-    async addViveiro(viveiro: { company_id: string; name: string; coordinates: any[]; area_m2: number; status?: string; notes?: string }): Promise<any | null> {
+    async addViveiro(viveiro: { company_id: string; name: string; tipo: string; coordinates: any[]; area_m2: number; unit_area?: string; status?: string; notes?: string }): Promise<any | null> {
         const { data, error } = await supabase
             .from('viveiros')
             .insert([viveiro])
@@ -591,7 +580,7 @@ export const SupabaseService = {
         return data;
     },
 
-    async updateViveiro(id: string, updates: { name?: string; coordinates?: any[]; area_m2?: number; status?: string; notes?: string }): Promise<boolean> {
+    async updateViveiro(id: string, updates: { name?: string; tipo?: string; coordinates?: any[]; area_m2?: number; unit_area?: string; status?: string; notes?: string }): Promise<boolean> {
         const { error } = await supabase
             .from('viveiros')
             .update(updates)
@@ -604,18 +593,8 @@ export const SupabaseService = {
         return true;
     },
 
-    async deleteViveiro(id: string): Promise<boolean> {
-        const { error } = await supabase
-            .from('viveiros')
-            .delete()
-            .eq('id', id);
+    // deleteViveiro duplicate removed
 
-        if (error) {
-            console.error('Error deleting viveiro:', error);
-            return false;
-        }
-        return true;
-    },
 
     // --- TRANSFERÊNCIAS ---
     async getTransferencias(companyId: string): Promise<any[]> {
