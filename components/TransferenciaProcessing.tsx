@@ -159,8 +159,10 @@ export const TransferenciaProcessing: React.FC = () => {
         loadClients();
 
         const loadNurseries = async () => {
-            // Assuming default company ID '1' or fetching all for now as implemented in modal
-            const data = await SupabaseService.getViveiros('1');
+            // Get valid company ID to load dynamic nurseries
+            const companies = await SupabaseService.getCompanies();
+            const validCompanyId = companies.length > 0 ? companies[0].id : '1';
+            const data = await SupabaseService.getViveiros(validCompanyId);
             setDynamicNurseries(data || []);
         };
         loadNurseries();
@@ -998,7 +1000,10 @@ export const TransferenciaProcessing: React.FC = () => {
                 onClose={() => setIsNurseryModalOpen(false)}
                 onUpdate={() => {
                     // Force reload list
-                    SupabaseService.getViveiros('1').then(data => setDynamicNurseries(data || []));
+                    SupabaseService.getCompanies().then(companies => {
+                        const validCompanyId = companies.length > 0 ? companies[0].id : '1';
+                        SupabaseService.getViveiros(validCompanyId).then(data => setDynamicNurseries(data || []));
+                    });
                 }}
             />
         </>

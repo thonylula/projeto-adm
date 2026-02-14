@@ -145,7 +145,7 @@ export interface Company {
 }
 
 export type ViveiroStatus = 'VAZIO' | 'PREPARACAO' | 'PREPARADO' | 'POVOADO' | 'DESPESCA';
-export type ViveiroTipo = 'bercario' | 'pos_bercario' | 'engorda';
+export type ViveiroTipo = 'bercario' | 'viveiro_mae' | 'engorda';
 
 export interface Viveiro {
   id: string;

@@ -11,6 +11,7 @@ interface NurseryRegistrationModalProps {
 export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> = ({ isOpen, onClose, onUpdate }) => {
     const [nurseries, setNurseries] = useState<Viveiro[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [companyId, setCompanyId] = useState<string>('');
     const [formData, setFormData] = useState({
         name: '',
         area: '',
@@ -20,21 +21,30 @@ export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> =
 
     useEffect(() => {
         if (isOpen) {
-            loadNurseries();
+            initialize();
         }
     }, [isOpen]);
 
-    const loadNurseries = async () => {
+    const initialize = async () => {
         setIsLoading(true);
-        // Assuming a default company ID or fetching from context/auth if available. 
-        // For now, we'll try to list all or use a placeholder ID if needed by the service.
-        // The service uses 'company_id' in fetching. Let's assume a static ID or get it from config if possible.
-        // Looking at SupabaseService, it requires companyId. Let's use a constant for now or try to get it.
-        // Ideally this should come from AuthContext. For this specific app structure, I'll use a placeholder '1' 
-        // or consistent string as used elsewhere if visible.
-        // Actually, let's fetch all and filter client-side if needed, but getViveiros requires filtering by ID.
-        // I will use '1' as default company_id for this feature as seen in other parts or generally used.
-        const data = await SupabaseService.getViveiros('1');
+        try {
+            // Get valid company ID
+            const companies = await SupabaseService.getCompanies();
+            const validCompanyId = companies.length > 0 ? companies[0].id : '1';
+            setCompanyId(validCompanyId);
+
+            const data = await SupabaseService.getViveiros(validCompanyId);
+            setNurseries(data);
+        } catch (error) {
+            console.error("Error initializing nursery modal:", error);
+        }
+        setIsLoading(false);
+    };
+
+    const loadNurseries = async () => {
+        if (!companyId) return;
+        setIsLoading(true);
+        const data = await SupabaseService.getViveiros(companyId);
         setNurseries(data);
         setIsLoading(false);
     };
@@ -50,7 +60,7 @@ export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> =
 
         setIsLoading(true);
         const nurseryData: Partial<Viveiro> = {
-            company_id: '1', // Default
+            company_id: companyId,
             name: formData.name,
             tipo: formData.type,
             area_m2: areaInHectares * 10000, // Convert hectares to m2 for storage if the model uses m2. 
@@ -150,7 +160,7 @@ export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> =
                             >
                                 <option value="engorda">Engorda</option>
                                 <option value="bercario">Berçário</option>
-                                <option value="pos_bercario">Pré-Berçário</option>
+                                <option value="viveiro_mae">Viveiro Mãe</option>
                             </select>
                         </div>
                         <div className="md:col-span-1 flex items-end">
