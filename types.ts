@@ -152,7 +152,7 @@ export interface Viveiro {
   company_id: string;
   name: string;
   tipo: ViveiroTipo;
-  coordinates: { lat: number; lng: number }[];
+  coordinates?: { lat: number; lng: number }[];
   area_m2: number;
   populacao_inicial?: number;
   densidade?: number;

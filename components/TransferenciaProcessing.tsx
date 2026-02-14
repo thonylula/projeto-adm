@@ -12,7 +12,9 @@ import { DownloadModal } from './Transferencias/DownloadModal';
 import { DownloadIcon } from './Transferencias/icons';
 import { HtmlViewModal } from './Transferencias/HtmlViewModal';
 import { HistoryLog } from './Transferencias/HistoryLog';
+import { NurseryRegistrationModal } from './Transferencias/NurseryRegistrationModal';
 import { SupabaseService } from '../services/supabaseService';
+import { Viveiro } from '../types';
 
 declare const html2canvas: any;
 declare const jspdf: any;
@@ -25,7 +27,7 @@ const getNurseryGroupName = (nurseryName: string): string => {
     return upperCaseName;
 };
 
-const calculateProcessedItem = (data: ExtractedData): ProcessedData => {
+const calculateProcessedItem = (data: ExtractedData, nurseryMap: Record<string, number>): ProcessedData => {
     const plPorGrama = (data.plPorGrama && data.plPorGrama > 0) ? data.plPorGrama : 1;
     const estocagem = data.estocagem || 0;
     const pesoMedioCalculado = 1 / plPorGrama;
@@ -34,11 +36,14 @@ const calculateProcessedItem = (data: ExtractedData): ProcessedData => {
         : (pesoMedioCalculado * estocagem) / 1000;
 
     const viveiroDestinoCleaned = (data.viveiroDestino || '').replace(/\s+/g, '').toUpperCase();
-    let viveiroDestinoArea = VIVEIROS_DATA[viveiroDestinoCleaned];
 
+    // Check nurseryMap first (dynamic + static merged)
+    let viveiroDestinoArea = nurseryMap[viveiroDestinoCleaned];
+
+    // Fallback logic for prefixed lookup if exact match fails
     if (viveiroDestinoArea === undefined && !viveiroDestinoCleaned.startsWith('OC-') && viveiroDestinoCleaned !== '') {
         const prefixedKey = `OC-${viveiroDestinoCleaned}`;
-        viveiroDestinoArea = VIVEIROS_DATA[prefixedKey];
+        viveiroDestinoArea = nurseryMap[prefixedKey];
     }
 
     let densidadeFinal = data.densidade;
@@ -92,7 +97,19 @@ export const TransferenciaProcessing: React.FC = () => {
     const [clients, setClients] = useState<any[]>([]);
     const [selectedClient, setSelectedClient] = useState<string | null>(null);
     const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
+    const [isNurseryModalOpen, setIsNurseryModalOpen] = useState(false);
+    const [dynamicNurseries, setDynamicNurseries] = useState<Viveiro[]>([]);
     const isPublic = new URLSearchParams(window.location.search).get('showcase') === 'true';
+
+    // Memoize the merged map of nursery areas
+    const mergedNurseryMap = useMemo(() => {
+        const map = { ...VIVEIROS_DATA };
+        dynamicNurseries.forEach(nursery => {
+            map[nursery.name.toUpperCase()] = nursery.area_m2 / 10000; // Convert m2 to ha for map
+            map[nursery.name] = nursery.area_m2 / 10000;
+        });
+        return map;
+    }, [dynamicNurseries]);
 
     useEffect(() => {
         const loadInitialConfig = async () => {
@@ -140,6 +157,14 @@ export const TransferenciaProcessing: React.FC = () => {
             setClients(data || []);
         };
         loadClients();
+
+        const loadNurseries = async () => {
+            // Assuming default company ID '1' or fetching all for now as implemented in modal
+            const data = await SupabaseService.getViveiros('1');
+            setDynamicNurseries(data || []);
+        };
+        loadNurseries();
+
     }, []);
 
     useEffect(() => {
@@ -386,7 +411,7 @@ export const TransferenciaProcessing: React.FC = () => {
                 setIsLoading(false);
                 return;
             }
-            const newData = extractedDataArray.map(calculateProcessedItem);
+            const newData = extractedDataArray.map(item => calculateProcessedItem(item, mergedNurseryMap));
             setCurrentProcessingItems(newData);
             setProcessedData((prevData) => [...prevData, ...newData]);
 
@@ -413,7 +438,7 @@ export const TransferenciaProcessing: React.FC = () => {
         setProcessedData(prev => {
             const newProcessed = [...prev];
             const mergedExtracted: ExtractedData = { ...newProcessed[index], ...updatedData };
-            newProcessed[index] = calculateProcessedItem(mergedExtracted);
+            newProcessed[index] = calculateProcessedItem(mergedExtracted, mergedNurseryMap);
 
             // Sync with history if viewing a history entry
             if (viewingHistoryId) {
@@ -702,8 +727,17 @@ export const TransferenciaProcessing: React.FC = () => {
                                                 <h2 className="text-2xl font-black text-gray-900">Entrada de Informações</h2>
                                                 <p className="text-gray-400 text-sm mt-1 font-medium">Cole o texto do log ou faça upload da imagem do biometria/transferência</p>
                                             </div>
-                                            <div className="px-4 py-1.5 bg-[#F97316]/10 text-[#F97316] rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
-                                                Inteligência Artificial
+                                            <div className="flex items-center gap-3">
+                                                <button
+                                                    onClick={() => setIsNurseryModalOpen(true)}
+                                                    className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all font-bold text-xs uppercase tracking-wide flex items-center gap-2 shadow-sm"
+                                                    title="Gerenciar Viveiros"
+                                                >
+                                                    <span>🏞️</span> Viveiros
+                                                </button>
+                                                <div className="px-4 py-1.5 bg-[#F97316]/10 text-[#F97316] rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
+                                                    Inteligência Artificial
+                                                </div>
                                             </div>
                                         </div>
                                         <InputArea
@@ -959,6 +993,14 @@ export const TransferenciaProcessing: React.FC = () => {
                     <p className="text-center text-[10px] font-bold text-gray-300 uppercase tracking-[0.4em]">Documento Oficial de Monitoramento Técnico</p>
                 </footer>
             </div>
+            <NurseryRegistrationModal
+                isOpen={isNurseryModalOpen}
+                onClose={() => setIsNurseryModalOpen(false)}
+                onUpdate={() => {
+                    // Force reload list
+                    SupabaseService.getViveiros('1').then(data => setDynamicNurseries(data || []));
+                }}
+            />
         </>
     );
 };
