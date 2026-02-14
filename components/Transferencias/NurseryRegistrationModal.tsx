@@ -67,28 +67,46 @@ export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> =
         // For m3, area_m2 acts as volume.
 
         setIsLoading(true);
-        const nurseryData: Partial<Viveiro> = {
-            company_id: companyId,
-            name: formData.name,
-            tipo: formData.type,
-            area_m2: areaInM2,
-            unit_area: formData.unit
-        };
 
-        if (editingId) {
-            await SupabaseService.updateViveiro(editingId, nurseryData);
-        } else {
-            await SupabaseService.addViveiro({
-                ...nurseryData,
-                coordinates: [], // Optional now
-            } as any);
+        try {
+            if (editingId) {
+                // Update: Do NOT send company_id to avoid RLS issues if unchanged
+                const updateData = {
+                    name: formData.name,
+                    tipo: formData.type,
+                    area_m2: areaInM2,
+                    unit_area: formData.unit
+                };
+                const success = await SupabaseService.updateViveiro(editingId, updateData);
+                if (!success) {
+                    throw new Error('Falha na atualização');
+                }
+            } else {
+                // Create: Must include company_id
+                const createData = {
+                    company_id: companyId,
+                    name: formData.name,
+                    tipo: formData.type,
+                    area_m2: areaInM2,
+                    unit_area: formData.unit,
+                    coordinates: []
+                };
+                const result = await SupabaseService.addViveiro(createData as any);
+                if (!result) {
+                    throw new Error('Falha na criação');
+                }
+            }
+
+            setFormData({ name: '', area: '', unit: 'ha', type: 'engorda' });
+            setEditingId(null);
+            await loadNurseries();
+            onUpdate();
+        } catch (err) {
+            console.error("Erro ao salvar viveiro:", err);
+            alert("Erro ao salvar viveiro. Verifique o console.");
+        } finally {
+            setIsLoading(false);
         }
-
-        setFormData({ name: '', area: '', unit: 'ha', type: 'engorda' });
-        setEditingId(null);
-        await loadNurseries();
-        onUpdate();
-        setIsLoading(false);
     };
 
     const handleEdit = (nursery: Viveiro) => {
