@@ -15,6 +15,7 @@ export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> =
     const [formData, setFormData] = useState({
         name: '',
         area: '',
+        unit: 'ha' as 'ha' | 'm2' | 'm3',
         type: 'engorda' as ViveiroTipo
     });
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -52,34 +53,30 @@ export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> =
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const areaInHectares = parseFloat(formData.area.replace(',', '.'));
-        if (!formData.name || isNaN(areaInHectares)) {
+        const areaValue = parseFloat(formData.area.replace(',', '.'));
+        if (!formData.name || isNaN(areaValue)) {
             alert('Preencha os campos corretamente.');
             return;
         }
+
+        let areaInM2 = areaValue;
+        if (formData.unit === 'ha') {
+            areaInM2 = areaValue * 10000;
+        }
+        // m2 and m3 are stored as is in area_m2 for now, allowing simple density calc (items/area_m2).
+        // For m3, area_m2 acts as volume.
 
         setIsLoading(true);
         const nurseryData: Partial<Viveiro> = {
             company_id: companyId,
             name: formData.name,
             tipo: formData.type,
-            area_m2: areaInHectares * 10000, // Convert hectares to m2 for storage if the model uses m2. 
-            // Wait, previous VIVEIROS_DATA uses hectares directly as value.
-            // Let's check types.ts: area_m2: number. 
-            // The request says "TAMANHO". Usually aquaculture uses hectares.
-            // If I save as m2, I should convert back to ha for display.
-            // Let's standardise: Input is HA. Storage is HA (easier) OR Storage is m2.
-            // Type says `area_m2`. It implies Square Meters.
-            // Let's save as m2 (Height of standards) but input/output as HA.
-            // 1 ha = 10,000 m2.
+            area_m2: areaInM2,
+            unit_area: formData.unit
         };
 
         if (editingId) {
-            await SupabaseService.updateViveiro(editingId, {
-                name: formData.name,
-                area_m2: areaInHectares * 10000,
-                // status/notes could be preserved or updated
-            });
+            await SupabaseService.updateViveiro(editingId, nurseryData);
         } else {
             await SupabaseService.addViveiro({
                 ...nurseryData,
@@ -87,7 +84,7 @@ export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> =
             } as any);
         }
 
-        setFormData({ name: '', area: '', type: 'engorda' });
+        setFormData({ name: '', area: '', unit: 'ha', type: 'engorda' });
         setEditingId(null);
         await loadNurseries();
         onUpdate();
@@ -95,9 +92,17 @@ export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> =
     };
 
     const handleEdit = (nursery: Viveiro) => {
+        let displayArea = nursery.area_m2;
+        const unit = nursery.unit_area || 'ha';
+
+        if (unit === 'ha') {
+            displayArea = nursery.area_m2 / 10000;
+        }
+
         setFormData({
             name: nursery.name,
-            area: (nursery.area_m2 / 10000).toFixed(2), // Convert m2 to ha
+            area: displayArea.toFixed(2),
+            unit: unit,
             type: nursery.tipo
         });
         setEditingId(nursery.id);
@@ -128,7 +133,7 @@ export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> =
                 </div>
 
                 <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
-                    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 bg-gray-50 dark:bg-slate-700/30 p-4 rounded-2xl border border-gray-100 dark:border-slate-700">
+                    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8 bg-gray-50 dark:bg-slate-700/30 p-4 rounded-2xl border border-gray-100 dark:border-slate-700">
                         <div className="md:col-span-1">
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nome</label>
                             <input
@@ -141,7 +146,7 @@ export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> =
                             />
                         </div>
                         <div className="md:col-span-1">
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Área (ha)</label>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Área / Vol</label>
                             <input
                                 type="text" // text to allow comma
                                 value={formData.area}
@@ -150,6 +155,18 @@ export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> =
                                 placeholder="1.5"
                                 required
                             />
+                        </div>
+                        <div className="md:col-span-1">
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Unidade</label>
+                            <select
+                                value={formData.unit}
+                                onChange={e => setFormData({ ...formData, unit: e.target.value as any })}
+                                className="w-full bg-white dark:bg-slate-800 border-2 border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 text-sm font-bold focus:border-[#F97316] outline-none transition-colors"
+                            >
+                                <option value="ha">he (Hectare)</option>
+                                <option value="m2">m² (Metro Quad)</option>
+                                <option value="m3">m³ (Metro Cúb)</option>
+                            </select>
                         </div>
                         <div className="md:col-span-1">
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tipo</label>
@@ -173,10 +190,10 @@ export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> =
                             </button>
                         </div>
                         {editingId && (
-                            <div className="md:col-span-4 flex justify-end">
+                            <div className="md:col-span-5 flex justify-end">
                                 <button
                                     type="button"
-                                    onClick={() => { setEditingId(null); setFormData({ name: '', area: '', type: 'engorda' }); }}
+                                    onClick={() => { setEditingId(null); setFormData({ name: '', area: '', unit: 'ha', type: 'engorda' }); }}
                                     className="text-xs font-bold text-red-500 hover:underline"
                                 >
                                     Cancelar Edição
@@ -189,7 +206,7 @@ export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> =
                         <div className="flex justify-between items-center px-4 pb-2 border-b border-gray-100 dark:border-slate-700 text-xs font-bold text-gray-400 uppercase tracking-wider">
                             <div className="w-1/3">Viveiro</div>
                             <div className="w-1/3 text-center">Tipo</div>
-                            <div className="w-1/3 text-right">Área (ha)</div>
+                            <div className="w-1/3 text-right">Área / Vol</div>
                             <div className="w-16"></div>
                         </div>
                         {nurseries.length === 0 ? (
@@ -201,7 +218,14 @@ export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> =
                                 <div key={nursery.id} className="flex justify-between items-center bg-white dark:bg-slate-700/20 p-4 rounded-xl border border-gray-50 dark:border-slate-700 hover:border-[#F97316]/30 transition-colors group">
                                     <div className="w-1/3 font-black text-gray-800 dark:text-gray-200">{nursery.name}</div>
                                     <div className="w-1/3 text-center text-xs font-bold text-gray-500 uppercase">{nursery.tipo.replace('_', ' ')}</div>
-                                    <div className="w-1/3 text-right font-bold text-gray-800 dark:text-gray-200">{(nursery.area_m2 / 10000).toFixed(2)} ha</div>
+                                    <div className="w-1/3 text-right font-bold text-gray-800 dark:text-gray-200">
+                                        {nursery.unit_area === 'ha' || !nursery.unit_area
+                                            ? `${(nursery.area_m2 / 10000).toFixed(2)} ha`
+                                            : nursery.unit_area === 'm2'
+                                                ? `${nursery.area_m2.toFixed(2)} m²`
+                                                : `${nursery.area_m2.toFixed(2)} m³`
+                                        }
+                                    </div>
                                     <div className="w-16 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button onClick={() => handleEdit(nursery)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg">✎</button>
                                         <button onClick={() => handleDelete(nursery.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg">🗑️</button>

@@ -154,6 +154,7 @@ export interface Viveiro {
   tipo: ViveiroTipo;
   coordinates?: { lat: number; lng: number }[];
   area_m2: number;
+  unit_area?: 'ha' | 'm2' | 'm3';
   populacao_inicial?: number;
   densidade?: number;
   laboratorio?: string;
@@ -352,6 +353,7 @@ export interface ProcessedData extends ExtractedData {
   pesoMedioCalculado: number;
   pesoTotalCalculado: number;
   viveiroDestinoArea?: number;
+  viveiroDestinoUnit?: 'ha' | 'm2' | 'm3';
 }
 
 export interface NurserySurvivalData {

@@ -27,7 +27,7 @@ const getNurseryGroupName = (nurseryName: string): string => {
     return upperCaseName;
 };
 
-const calculateProcessedItem = (data: ExtractedData, nurseryMap: Record<string, number>): ProcessedData => {
+const calculateProcessedItem = (data: ExtractedData, nurseryMap: Record<string, { area: number, unit: 'ha' | 'm2' | 'm3' }>): ProcessedData => {
     const plPorGrama = (data.plPorGrama && data.plPorGrama > 0) ? data.plPorGrama : 1;
     const estocagem = data.estocagem || 0;
     const pesoMedioCalculado = 1 / plPorGrama;
@@ -38,18 +38,34 @@ const calculateProcessedItem = (data: ExtractedData, nurseryMap: Record<string, 
     const viveiroDestinoCleaned = (data.viveiroDestino || '').replace(/\s+/g, '').toUpperCase();
 
     // Check nurseryMap first (dynamic + static merged)
-    let viveiroDestinoArea = nurseryMap[viveiroDestinoCleaned];
+    let nurseryData = nurseryMap[viveiroDestinoCleaned];
 
     // Fallback logic for prefixed lookup if exact match fails
-    if (viveiroDestinoArea === undefined && !viveiroDestinoCleaned.startsWith('OC-') && viveiroDestinoCleaned !== '') {
+    if (!nurseryData && !viveiroDestinoCleaned.startsWith('OC-') && viveiroDestinoCleaned !== '') {
         const prefixedKey = `OC-${viveiroDestinoCleaned}`;
-        viveiroDestinoArea = nurseryMap[prefixedKey];
+        nurseryData = nurseryMap[prefixedKey];
     }
+
+    const viveiroDestinoArea = nurseryData?.area;
+    const viveiroDestinoUnit = nurseryData?.unit;
 
     let densidadeFinal = data.densidade;
     if ((!densidadeFinal || !parseFloat(densidadeFinal)) && viveiroDestinoArea && viveiroDestinoArea > 0 && estocagem > 0) {
-        const densidadeCalculada = estocagem / (viveiroDestinoArea * 10000);
-        densidadeFinal = `${densidadeCalculada.toFixed(2)} cam/m²`;
+        let densidadeCalculada = 0;
+        let suffix = 'cam/m²';
+
+        if (viveiroDestinoUnit === 'm3') {
+            densidadeCalculada = estocagem / viveiroDestinoArea;
+            suffix = 'cam/m³';
+        } else if (viveiroDestinoUnit === 'm2') {
+            densidadeCalculada = estocagem / viveiroDestinoArea;
+            suffix = 'cam/m²';
+        } else {
+            // ha (default)
+            densidadeCalculada = estocagem / (viveiroDestinoArea * 10000);
+            suffix = 'cam/m²';
+        }
+        densidadeFinal = `${densidadeCalculada.toFixed(2)} ${suffix}`;
     }
 
     return {
@@ -60,6 +76,7 @@ const calculateProcessedItem = (data: ExtractedData, nurseryMap: Record<string, 
         pesoMedioCalculado,
         pesoTotalCalculado,
         viveiroDestinoArea,
+        viveiroDestinoUnit,
         tipo: data.tipo || 'TRANSFERENCIA',
         dataPovoamento: data.dataPovoamento || ''
     };
@@ -103,10 +120,24 @@ export const TransferenciaProcessing: React.FC = () => {
 
     // Memoize the merged map of nursery areas
     const mergedNurseryMap = useMemo(() => {
-        const map = { ...VIVEIROS_DATA };
+        const map: Record<string, { area: number, unit: 'ha' | 'm2' | 'm3' }> = {};
+
+        // Static data (default to ha)
+        Object.entries(VIVEIROS_DATA).forEach(([name, area]) => {
+            map[name] = { area, unit: 'ha' };
+        });
+
+        // Dynamic data
         dynamicNurseries.forEach(nursery => {
-            map[nursery.name.toUpperCase()] = nursery.area_m2 / 10000; // Convert m2 to ha for map
-            map[nursery.name] = nursery.area_m2 / 10000;
+            const unit = nursery.unit_area || 'ha';
+            let area = nursery.area_m2;
+
+            if (unit === 'ha') {
+                area = area / 10000;
+            }
+
+            map[nursery.name.toUpperCase()] = { area, unit };
+            map[nursery.name] = { area, unit };
         });
         return map;
     }, [dynamicNurseries]);
