@@ -881,6 +881,21 @@ export const TransferenciaProcessing: React.FC = () => {
                                     onClearAll={() => setHistory([])}
                                     onConsolidateSave={handleConsolidateSave}
                                     currentViewId={viewingHistoryId}
+                                    onUpdate={async (id, newOrigin, newDestination) => {
+                                        const updatedHistory = history.map(entry => {
+                                            if (entry.id === id) {
+                                                const updatedData = entry.data.map(item => ({
+                                                    ...item,
+                                                    local: newOrigin,
+                                                    viveiroDestino: newDestination
+                                                }));
+                                                return { ...entry, data: updatedData };
+                                            }
+                                            return entry;
+                                        });
+                                        setHistory(updatedHistory);
+                                        await SupabaseService.saveAquacultureHistory(updatedHistory);
+                                    }}
                                 />
                             ) : isPublic && (
                                 <div className="bg-white p-12 rounded-3xl shadow-xl shadow-gray-100 border border-gray-100 text-center">

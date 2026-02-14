@@ -10,12 +10,46 @@ interface HistoryLogProps {
     isPublic?: boolean;
     generalSurvival?: number;
     onConsolidateSave?: (ids: string[]) => void;
+    onUpdate?: (id: string, newOrigin: string, newDestination: string) => void;
 }
 
 export const HistoryLog: React.FC<HistoryLogProps> = ({
-    history, onView, onDelete, onClearAll, currentViewId, isPublic = false, generalSurvival = 0, onConsolidateSave
+    history, onView, onDelete, onClearAll, currentViewId, isPublic = false, generalSurvival = 0, onConsolidateSave, onUpdate
 }) => {
     const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+    const [editingId, setEditingId] = React.useState<string | null>(null);
+    const [editOrigin, setEditOrigin] = React.useState('');
+    const [editDestination, setEditDestination] = React.useState('');
+    const [originalOrigin, setOriginalOrigin] = React.useState('');
+    const [originalDestination, setOriginalDestination] = React.useState('');
+
+    const startEditing = (entry: HistoryEntry) => {
+        // Extract raw values instead of formatted label
+        if (entry.data && entry.data.length > 0) {
+            const first = entry.data[0];
+            const origin = first.local;
+            const destination = first.tipo === 'VENDA' ? (first.clienteNome || first.viveiroDestino || '') : (first.viveiroDestino || '');
+
+            setEditOrigin(origin);
+            setEditDestination(destination);
+            setOriginalOrigin(origin);
+            setOriginalDestination(destination);
+            setEditingId(entry.id);
+        }
+    };
+
+    const cancelEditing = () => {
+        setEditingId(null);
+        setEditOrigin('');
+        setEditDestination('');
+    };
+
+    const saveEditing = (id: string) => {
+        if (onUpdate) {
+            onUpdate(id, editOrigin, editDestination);
+        }
+        setEditingId(null);
+    };
 
     const formatEntryLabel = (entry: HistoryEntry) => {
         if (!entry.data || entry.data.length === 0) return { title: entry.timestamp, subtitle: '', isSale: false };
@@ -111,6 +145,7 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({
                     const totalPLs = entry.data.reduce((acc, curr) => acc + (curr.estocagem || 0), 0);
                     const totalKg = entry.data.reduce((acc, curr) => acc + (curr.pesoTotalCalculado || 0), 0);
                     const isSelected = selectedIds.includes(entry.id);
+                    const isEditing = editingId === entry.id;
 
                     return (
                         <div
@@ -129,8 +164,64 @@ export const HistoryLog: React.FC<HistoryLogProps> = ({
                                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-sm ${label.isSale ? 'bg-[#F97316]/10 text-[#F97316]' : 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'}`}>
                                     {label.isSale ? '💰' : '🔄'}
                                 </div>
-                                <div>
-                                    <p className="font-black text-gray-900 dark:text-white text-lg leading-tight">{label.title}</p>
+                                <div className="flex-1">
+                                    {isEditing ? (
+                                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 animate-in fade-in">
+                                            <div className="flex items-center gap-2 w-full sm:w-auto">
+                                                <input
+                                                    type="text"
+                                                    value={editOrigin}
+                                                    onChange={(e) => setEditOrigin(e.target.value)}
+                                                    className="px-2 py-1 text-lg font-black text-gray-900 border-b-2 border-[#F97316] outline-none bg-transparent w-full sm:w-32 placeholder:text-gray-300"
+                                                    placeholder="Origem"
+                                                    autoFocus
+                                                />
+                                                <span className="text-gray-300 font-bold">→</span>
+                                                <input
+                                                    type="text"
+                                                    value={editDestination}
+                                                    onChange={(e) => setEditDestination(e.target.value)}
+                                                    className="px-2 py-1 text-lg font-black text-gray-900 border-b-2 border-[#F97316] outline-none bg-transparent w-full sm:w-32 placeholder:text-gray-300"
+                                                    placeholder="Destino"
+                                                />
+                                            </div>
+                                            <div className="flex items-center gap-1 mt-2 sm:mt-0">
+                                                <button
+                                                    onClick={() => saveEditing(entry.id)}
+                                                    className="p-1.5 bg-green-100 text-green-600 hover:bg-green-200 rounded-lg transition-colors"
+                                                    title="Salvar"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                                    </svg>
+                                                </button>
+                                                <button
+                                                    onClick={cancelEditing}
+                                                    className="p-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-colors"
+                                                    title="Cancelar"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2 group">
+                                            <p className="font-black text-gray-900 dark:text-white text-lg leading-tight group-hover:text-[#F97316] transition-colors cursor-default">{label.title}</p>
+                                            {!isPublic && onUpdate && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); startEditing(entry); }}
+                                                    className="opacity-0 group-hover:opacity-100 transition-all p-1.5 text-slate-300 hover:text-[#F97316] hover:bg-[#F97316]/10 rounded-lg"
+                                                    title="Editar Rótulo"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                                                    </svg>
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                     <div className="flex items-center gap-2 mt-1">
                                         <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${label.isSale ? 'bg-[#F97316]/10 text-[#F97316]' : 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'}`}>
                                             {label.subtitle}
