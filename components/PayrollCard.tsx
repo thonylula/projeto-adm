@@ -1308,18 +1308,32 @@ export const PayrollCard: React.FC<PayrollCardProps> = ({
   const handleExportPNG = async () => {
     setShowExportMenu(false);
     if (!reportRef.current) return;
+
+    // Reset de scroll para evitar offset no canvas (mesmo fix do PDF)
+    window.scrollTo(0, 0);
+
+    const element = reportRef.current;
+    element.classList.add('pdf-export-active');
+
     try {
-      const canvas = await html2canvas(reportRef.current, {
+      const canvas = await html2canvas(element, {
         scale: 2,
         backgroundColor: '#ffffff',
+        useCORS: true,
+        letterRendering: true,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 1120,
         ignoreElements: (node) => node.classList.contains('export-ignore')
       });
       const link = document.createElement('a');
-      link.download = `Folha_${activeCompany.name}.png`;
+      link.download = `Folha_${activeCompany.name}_${activeMonth}_${activeYear}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     } catch (e) {
       console.error("PNG Export Error", e);
+    } finally {
+      element.classList.remove('pdf-export-active');
     }
   };
 
