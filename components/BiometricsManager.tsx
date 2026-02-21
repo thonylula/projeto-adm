@@ -850,26 +850,32 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                     analysisStatus = `💥 ESPETACULAR: Topo de Linha!(> ${targets.espetacular.toFixed(2)}g)`;
                     rowBgColor = "bg-[#FFEDD5] hover:bg-[#FED7AA]"; // orange-100 -> orange-200
                     statusTextColor = "text-[#7C2D12] font-extrabold"; // orange-950
+                    (item as any).technicalReason = "Crescimento significativamente acima do topo da curva. Indica excelente conversão alimentar e condições ambientais ideais.";
                 } else if (pMed >= targets.otimo) {
                     analysisStatus = `🔥 ÓTIMO: Acima da meta(${targets.otimo.toFixed(2)}g)`;
                     rowBgColor = "bg-[#FFF7ED] hover:bg-[#FFEDD5]"; // orange-50 -> orange-100
                     statusTextColor = "text-[#9A3412] font-bold"; // orange-900
+                    (item as any).technicalReason = "Desempenho acima da média esperada para o período. Manejo eficiente e boa resposta biológica.";
                 } else if (pMed >= targets.bom) {
                     analysisStatus = `💪 BOM: Dentro do esperado.`;
                     rowBgColor = "bg-white hover:bg-[#FFF7ED]";
                     statusTextColor = "text-[#C2410C] font-bold"; // orange-700
+                    (item as any).technicalReason = "Desenvolvimento dentro dos parâmetros zootécnicos ideais. Estabilidade no cultivo.";
                 } else if (pMed >= targets.regular) {
                     analysisStatus = `⚡ REGULAR: Atenção(${targets.regular.toFixed(2)}g)`;
                     rowBgColor = "bg-white hover:bg-orange-50/50";
                     statusTextColor = "text-[#EA580C] font-bold"; // orange-600
+                    (item as any).technicalReason = "Crescimento no limite inferior da meta. Sugerido monitoramento rigoroso da qualidade da água.";
                 } else if (pMed >= targets.ruim) {
                     analysisStatus = `⚠️ RUIM: Abaixo da média(< ${targets.regular.toFixed(2)} g)`;
                     rowBgColor = "bg-white hover:bg-orange-50/30";
                     statusTextColor = "text-[#F97316] font-bold"; // orange-500
+                    (item as any).technicalReason = "Desempenho abaixo do potencial genético. Necessária revisão imediata da estratégia nutricional.";
                 } else {
                     analysisStatus = `🚨 PÉSSIMO: Crítico(< ${targets.ruim.toFixed(2)} g)`;
                     rowBgColor = "bg-[#FEF2F2] hover:bg-[#FEE2E2]"; // Mantém um tom de alerta leve
                     statusTextColor = "text-[#B91C1C] font-bold"; // Vermelho para crítico
+                    (item as any).technicalReason = "Nível crítico de crescimento. Risco de inviabilidade econômica. Intervenção técnica urgente recomendada.";
                 }
 
             } else if (pMed === null) {
@@ -903,6 +909,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                 analysisStatus,
                 rowBgColor,
                 statusTextColor,
+                technicalReason: (item as any).technicalReason || "Sem justificativa técnica disponível.",
                 hasBiometrics: pMed !== null && pMed > 0
             };
         });
@@ -1703,12 +1710,20 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                                     }
 
                                                     return (
-                                                        <div className={`flex flex-col border rounded-xl px-2 py-1 min-w-[110px] md:min-w-[130px] transition-all duration-500 transform hover:scale-105 group/badge cursor-default status-badge-container ${badgeClass}`}>
+                                                        <div className={`relative flex flex-col border rounded-xl px-2 py-1 min-w-[110px] md:min-w-[130px] transition-all duration-500 transform hover:scale-105 group/badge cursor-help status-badge-container ${badgeClass}`}>
                                                             <div className="flex items-center gap-1.5 justify-center font-black uppercase text-[8px] md:text-[9px] tracking-tight">
                                                                 {icon}
                                                                 {label}
                                                             </div>
                                                             <div className="text-[7px] md:text-[8px] text-center font-black opacity-60 leading-none mt-0.5 group-hover/badge:opacity-100 transition-opacity">{subLabel.replace('(', '').replace(')', '')}</div>
+
+                                                            {/* Tooltip Justificativa Técnica */}
+                                                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-gray-900 text-white text-[9px] font-medium rounded-lg opacity-0 invisible group-hover/badge:opacity-100 group-hover/badge:visible transition-all duration-300 z-[120] pointer-events-none shadow-xl border border-white/10 text-pretty text-center leading-relaxed">
+                                                                <div className="font-black text-[7px] uppercase tracking-widest text-orange-400 mb-1 border-b border-white/10 pb-1">Motivo Técnico</div>
+                                                                {item.technicalReason}
+                                                                {/* Seta do Tooltip */}
+                                                                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-8 border-transparent border-t-gray-900"></div>
+                                                            </div>
                                                         </div>
                                                     );
                                                 })()}

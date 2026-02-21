@@ -581,15 +581,22 @@ export const SupabaseService = {
     },
 
     async updateViveiro(id: string, updates: { name?: string; tipo?: string; coordinates?: any[]; area_m2?: number; unit_area?: string; status?: string; notes?: string }): Promise<boolean> {
-        const { error } = await supabase
+        const { error, data } = await supabase
             .from('viveiros')
             .update(updates)
-            .eq('id', id);
+            .eq('id', id)
+            .select();
 
         if (error) {
             console.error('Error updating viveiro:', error);
             return false;
         }
+
+        if (!data || data.length === 0) {
+            console.warn('Update succeeded but no rows returned. Check RLS or ID mismatch for ID:', id);
+            return false;
+        }
+
         return true;
     },
 

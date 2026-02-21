@@ -79,7 +79,7 @@ export const NurseryRegistrationModal: React.FC<NurseryRegistrationModalProps> =
                 };
                 const success = await SupabaseService.updateViveiro(editingId, updateData);
                 if (!success) {
-                    throw new Error('Falha na atualização');
+                    throw new Error('Falha na atualização. Verifique se você tem permissão ou se o registro ainda existe.');
                 }
             } else {
                 // Create: Must include company_id
