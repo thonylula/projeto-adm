@@ -26,7 +26,7 @@ function loadEnv() {
 loadEnv();
 
 async function run() {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY || process.env.GOOGLE_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
     if (!apiKey) {
         console.error("NO API KEY FOUND IN .env");
         process.exit(1);

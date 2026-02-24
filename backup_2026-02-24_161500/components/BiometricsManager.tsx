@@ -881,14 +881,13 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                 analysisStatus = "Sem leitura";
             }
 
-            let pesoTotal = "0";
+            let pesoTotal = "0.000";
             if (item.pesoTotalStr) {
                 const pStr = typeof item.pesoTotalStr === 'string' ? item.pesoTotalStr.replace(',', '.') : String(item.pesoTotalStr);
                 const val = parseFloat(pStr);
-                // Se o valor for < 10, assumimos que está em KG e convertemos para Gramas
-                pesoTotal = isNaN(val) ? "0" : (val < 10 ? (val * 1000).toFixed(0) : val.toFixed(0));
+                pesoTotal = isNaN(val) ? "0.000" : val.toFixed(3);
             } else if (pMed !== null && quat !== null) {
-                pesoTotal = (pMed * quat).toFixed(0);
+                pesoTotal = ((pMed * quat) / 1000).toFixed(3);
             }
 
             const incSemanalStr = incSemanal !== 0 ? (incSemanal > 0 ? `+ ${incSemanal.toFixed(2)}` : incSemanal.toFixed(2)) : "-";
@@ -1099,7 +1098,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                     <div className="flex flex-col border-t border-gray-200/50 pt-2 mt-1">
                                         <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Peso Total</span>
                                         <span className="text-base font-bold text-slate-700">
-                                            {item.pesoTotal} g
+                                            {item.pesoTotal} kg
                                         </span>
                                     </div>
                                 </div>
@@ -1520,7 +1519,7 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                                     <th className="px-0.5 py-2 text-center">Dias</th>
                                     <th className="px-0.5 py-2 text-center">P.M (g)</th>
                                     <th className="px-0.5 py-2 text-center">Quant. (und.)</th>
-                                    <th className="px-0.5 py-2 text-center">Peso Total (g)</th>
+                                    <th className="px-0.5 py-2 text-center">Peso Total (kg)</th>
                                     <th className="px-0.5 py-2 text-center text-slate-400">P.M Ant.</th>
                                     <th className="px-0.5 py-2 text-center">Inc. Sem.</th>
                                     <th className="px-0.5 py-2 text-center">GPD</th>

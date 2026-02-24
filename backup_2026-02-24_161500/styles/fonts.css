@@ -1,0 +1,15 @@
+/* Este arquivo deve conter as fontes embutidas em Base64 para garantir fidelidade total no export */
+
+@font-face {
+    font-family: 'Inter';
+    src: local('Inter'), url('https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZJhjp-Ek-_eeAmM.woff2') format('woff2');
+    font-weight: 400 900;
+    font-display: block;
+}
+
+@font-face {
+    font-family: 'Poppins';
+    src: local('Poppins'), url('https://fonts.gstatic.com/s/poppins/v21/pxiByp8kv8JHgFVrLCz7Z1xlFQ.woff2') format('woff2');
+    font-weight: 700;
+    font-display: block;
+}
