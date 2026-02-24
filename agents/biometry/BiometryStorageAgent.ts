@@ -34,7 +34,8 @@ Sua responsabilidade é garantir a integridade e segurança dos dados histórico
                     return await SupabaseService.saveBiometry(
                         request.data,
                         request.label || 'Biometria',
-                        request.timestamp || new Date().toISOString()
+                        request.timestamp || new Date().toISOString(),
+                        request.id
                     );
                 case 'load':
                     return await SupabaseService.getBiometricsHistory();

@@ -1,0 +1,166 @@
+[
+  {
+    "viveiro": "OC01",
+    "diasCultivo": 80,
+    "pMedStr": "6.58",
+    "quat": "100",
+    "pAntStr": "5.250",
+    "dataPovoamento": "2025-09-30"
+  },
+  {
+    "viveiro": "OC02",
+    "diasCultivo": 36,
+    "pMedStr": "9.76",
+    "quat": "100",
+    "pAntStr": "5.93",
+    "dataPovoamento": "2025-11-13"
+  },
+  {
+    "viveiro": "OC-03",
+    "diasCultivo": 0,
+    "pMedStr": "0",
+    "quat": 0,
+    "pAntStr": "0"
+  },
+  {
+    "viveiro": "OC-04",
+    "diasCultivo": 80,
+    "pMedStr": "5.00",
+    "quat": "100",
+    "pAntStr": "4.01",
+    "dataPovoamento": "2025-09-30"
+  },
+  {
+    "viveiro": "OC-05",
+    "diasCultivo": 28,
+    "pMedStr": "8.28",
+    "quat": "100",
+    "pAntStr": "4.77",
+    "dataPovoamento": "2025-11-21"
+  },
+  {
+    "viveiro": "OC-06",
+    "diasCultivo": 60,
+    "pMedStr": "7.46",
+    "quat": "100",
+    "pAntStr": "3.87",
+    "dataPovoamento": "2025-10-20"
+  },
+  {
+    "viveiro": "OC-07",
+    "diasCultivo": 60,
+    "pMedStr": "8.43",
+    "quat": "100",
+    "pAntStr": "6.05",
+    "dataPovoamento": "2025-10-20"
+  },
+  {
+    "viveiro": "OC-08",
+    "diasCultivo": 60,
+    "pMedStr": "7.35",
+    "quat": "100",
+    "pAntStr": "5.16",
+    "dataPovoamento": "2025-10-20"
+  },
+  {
+    "viveiro": "OC-09",
+    "diasCultivo": 60,
+    "pMedStr": "7.73",
+    "quat": "100",
+    "pAntStr": "5.21",
+    "dataPovoamento": "2025-10-20"
+  },
+  {
+    "viveiro": "OC-10",
+    "diasCultivo": 0,
+    "pMedStr": "0",
+    "quat": 0,
+    "pAntStr": "0"
+  },
+  {
+    "viveiro": "OC-11",
+    "diasCultivo": 43,
+    "pMedStr": "4.37",
+    "quat": "100",
+    "pAntStr": "1.95",
+    "dataPovoamento": "2025-11-06"
+  },
+  {
+    "viveiro": "OC-12",
+    "diasCultivo": 58,
+    "pMedStr": "7.17",
+    "quat": "100",
+    "pAntStr": "4.64",
+    "dataPovoamento": "2025-10-22"
+  },
+  {
+    "viveiro": "OC-13",
+    "diasCultivo": 36,
+    "pMedStr": "3.46",
+    "quat": "100",
+    "pAntStr": "1",
+    "dataPovoamento": "2025-11-13"
+  },
+  {
+    "viveiro": "OC-14",
+    "diasCultivo": 0,
+    "pMedStr": "0",
+    "quat": 0,
+    "pAntStr": "0"
+  },
+  {
+    "viveiro": "OC-15",
+    "diasCultivo": 0,
+    "pMedStr": "0",
+    "quat": 0,
+    "pAntStr": "0"
+  },
+  {
+    "viveiro": "OC-16",
+    "diasCultivo": 36,
+    "pMedStr": "3.28",
+    "quat": "100",
+    "pAntStr": "1",
+    "dataPovoamento": "2025-11-13"
+  },
+  {
+    "viveiro": "OC-17",
+    "diasCultivo": 58,
+    "pMedStr": "7.43",
+    "quat": "100",
+    "pAntStr": "4.77",
+    "dataPovoamento": "2025-10-22"
+  },
+  {
+    "viveiro": "OC-18",
+    "diasCultivo": 42,
+    "pMedStr": "10.60",
+    "quat": "100",
+    "pAntStr": "7.66",
+    "dataPovoamento": "2025-11-07"
+  },
+  {
+    "viveiro": "OC-19",
+    "diasCultivo": 42,
+    "pMedStr": "10.15",
+    "quat": "100",
+    "pAntStr": "6.85",
+    "dataPovoamento": "2025-11-07"
+  },
+  {
+    "viveiro": "OC-20",
+    "diasCultivo": 27,
+    "pMedStr": "9.77",
+    "quat": "100",
+    "pAntStr": "5.04",
+    "dataPovoamento": "2025-11-22"
+  },
+  {
+    "viveiro": "VP09",
+    "diasCultivo": 36,
+    "pMedStr": "1.31",
+    "quat": "100",
+    "pAntStr": "1",
+    "dataPovoamento": "2025-11-13"
+  }
+]

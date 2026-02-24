@@ -109,7 +109,8 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
                         operation: 'save',
                         data: currentData,
                         label: label,
-                        timestamp: new Date(biometryDate + 'T12:00:00').toISOString()
+                        timestamp: new Date(biometryDate + 'T12:00:00').toISOString(),
+                        id: loadedRecordId
                     });
 
                     setNeedsSave(false);
@@ -577,7 +578,6 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
         if (window.confirm(`Tem certeza que deseja remover o viveiro ${viveiro}?`)) {
             setCurrentData(prev => prev.filter(item => item.viveiro !== viveiro));
             showToast(`🗑️ Viveiro ${viveiro} removido.`);
-            setNeedsSave(true);
         }
     };
 
@@ -617,7 +617,6 @@ export const BiometricsManager: React.FC<{ isPublic?: boolean; initialFilter?: s
         setNewTankData({ viveiro: '', dataPovoamento: '', quat: '' });
         setShowAddTankModal(false);
         showToast(`✅ Viveiro ${newRecord.viveiro} adicionado!`);
-        setNeedsSave(true);
     };
     // --- LÓGICA DE EDIÇÃO E CÁLCULOS ---
 

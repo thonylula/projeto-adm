@@ -364,14 +364,18 @@ export const SupabaseService = {
         return data;
     },
 
-    async saveBiometry(biometryData: any[], label?: string, customTimestamp?: string): Promise<boolean> {
+    async saveBiometry(biometryData: any[], label?: string, customTimestamp?: string, id?: string): Promise<boolean> {
+        const payload: any = {
+            data: biometryData,
+            label: label || `Biometria ${new Date().toLocaleDateString('pt-BR')}`,
+            timestamp: customTimestamp || new Date().toISOString()
+        };
+
+        if (id) payload.id = id;
+
         const { error } = await supabase
             .from('biometrics')
-            .insert([{
-                data: biometryData,
-                label: label || `Biometria ${new Date().toLocaleDateString('pt-BR')}`,
-                timestamp: customTimestamp || new Date().toISOString()
-            }]);
+            .upsert([payload]);
 
         if (error) {
             console.error('Error saving biometry:', error);
