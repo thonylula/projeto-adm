@@ -23,7 +23,50 @@ const NavItem: React.FC<{
   isLocked: boolean;
   onToggleLock: (id: string) => void;
   isPublic?: boolean;
-}> = ({ item, activeTab, onTabChange, setIsMobileMenuOpen, isLocked, onToggleLock, isPublic }) => {
+  color?: string;
+}> = ({ item, activeTab, onTabChange, setIsMobileMenuOpen, isLocked, onToggleLock, isPublic, color = 'white' }) => {
+  const getColorClasses = (c: string) => {
+    switch (c) {
+      case 'cyan-400': return {
+        bgActive: 'bg-cyan-500/20',
+        textActive: 'text-cyan-400',
+        ringActive: 'ring-cyan-400/30',
+        shadowActive: 'shadow-cyan-500/20',
+        borderActive: 'border-cyan-400/50'
+      };
+      case 'amber-400': return {
+        bgActive: 'bg-amber-500/20',
+        textActive: 'text-amber-400',
+        ringActive: 'ring-amber-400/30',
+        shadowActive: 'shadow-amber-500/20',
+        borderActive: 'border-amber-400/50'
+      };
+      case 'emerald-400': return {
+        bgActive: 'bg-emerald-500/20',
+        textActive: 'text-emerald-400',
+        ringActive: 'ring-emerald-400/30',
+        shadowActive: 'shadow-emerald-500/20',
+        borderActive: 'border-emerald-400/50'
+      };
+      case 'indigo-400': return {
+        bgActive: 'bg-indigo-500/20',
+        textActive: 'text-indigo-400',
+        ringActive: 'ring-indigo-400/30',
+        shadowActive: 'shadow-indigo-500/20',
+        borderActive: 'border-indigo-400/50'
+      };
+      default: return {
+        bgActive: 'bg-white/20',
+        textActive: 'text-white',
+        ringActive: 'ring-white/30',
+        shadowActive: 'shadow-white/10',
+        borderActive: 'border-white/50'
+      };
+    }
+  };
+
+  const { bgActive, textActive, ringActive, shadowActive, borderActive } = getColorClasses(color);
+
   const isPayroll = item.id === 'payroll';
   const isPantry = item.id === 'pantry';
   const isShowcase = item.id === 'showcase';
@@ -69,15 +112,15 @@ const NavItem: React.FC<{
             setIsMobileMenuOpen(false);
           }
         }}
-        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group ${isActive
-          ? 'bg-white/10 text-white shadow-lg ring-1 ring-white/20'
-          : 'hover:bg-white/5 text-slate-400 hover:text-white'
+        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group border ${isActive
+          ? `${bgActive} ${textActive} ${shadowActive} ring-1 ${ringActive} ${borderActive}`
+          : 'hover:bg-white/5 text-slate-400 hover:text-white border-transparent'
           }`}
       >
         <div className={`text-lg filter transition-all duration-300 ${isActive ? 'grayscale-0 scale-110' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}>
           {item.icon}
         </div>
-        <span className={`flex-1 font-bold text-[11px] uppercase text-left leading-tight tracking-wide transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
+        <span className={`flex-1 font-bold text-[11px] uppercase text-left leading-tight tracking-wide transition-colors ${isActive ? textActive : 'text-slate-400 group-hover:text-white'}`}>
           {item.id === 'showcase' && isPublic ? 'Faturamento' : item.label}
         </span>
 
@@ -267,6 +310,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     {
       label: 'OPERACIONAL',
       icon: '🌊',
+      color: 'cyan-400',
       items: [
         { id: 'biometrics', label: 'Biometria', icon: '📊' },
         { id: 'campo', label: 'Campo/Viveiros', icon: '📍' },
@@ -277,6 +321,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     {
       label: 'ADMINISTRATIVO',
       icon: '🏢',
+      color: 'amber-400',
       items: [
         { id: 'payroll', label: 'Folha Salarial', icon: '💰' },
         { id: 'receipts', label: 'Recibos', icon: '📄' },
@@ -287,6 +332,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     {
       label: 'LOGÍSTICA',
       icon: '🚚',
+      color: 'emerald-400',
       items: [
         { id: 'delivery-order', label: 'Ordem de Entrega', icon: '📦' },
         { id: 'pantry', label: 'Cestas Básicas', icon: '🧺' },
@@ -297,6 +343,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     {
       label: 'SISTEMA',
       icon: '⚙️',
+      color: 'indigo-400',
       items: [
         { id: 'plans', label: 'Planos e Preços', icon: '💎' },
         { id: 'fiscal', label: 'Fiscal / Natureza', icon: '🏛️' },
@@ -374,14 +421,26 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             const isExpanded = expandedCategories.includes(category.label);
             const hasActiveItem = category.items.some(item => activeTab === item.id);
 
+            const getCategoryBg = (label: string, active: boolean) => {
+              if (!active) return 'text-slate-400 hover:text-white';
+              switch (label) {
+                case 'OPERACIONAL': return 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400';
+                case 'ADMINISTRATIVO': return 'bg-amber-500/10 border-amber-500/20 text-amber-400';
+                case 'LOGÍSTICA': return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
+                case 'SISTEMA': return 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400';
+                default: return 'bg-white/5 text-white';
+              }
+            };
+
+            const categoryStyle = getCategoryBg(category.label, hasActiveItem);
+
             return (
               <div key={category.label} className="space-y-1">
                 <button
                   onClick={() => toggleCategory(category.label)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-300 ${hasActiveItem ? 'bg-white/5 text-white' : 'text-slate-400 hover:text-white'
-                    }`}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-300 border ${categoryStyle}`}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className={`flex items-center gap-2 transition-colors duration-300`}>
                     <span className="text-lg">{category.icon}</span>
                     <span className="text-[10px] font-black tracking-[0.2em] uppercase">{category.label}</span>
                   </div>
@@ -409,6 +468,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                         isLocked={!!tabLocks[item.id]}
                         onToggleLock={toggleLock}
                         isPublic={isPublic}
+                        color={category.color}
                       />
                     ))}
                   </div>
