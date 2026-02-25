@@ -1,0 +1,188 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Reset and Variables - Premium Palette */
+:root {
+  --primary: #0F172A;
+  /* Deep Slate 900 - Returning to a Neutral Professional Base for safety & contrast */
+  --sidebar-bg: #064E3B;
+  /* Deep Emerald/Teal - Specific for Sidebar to match Logo Text */
+  --corporate-teal: #004D40;
+  /* Brand Match */
+  --accent: #F97316;
+  /* Vibrant Orange (Brand Match) */
+  --accent-dark: #EA580C;
+  /* Darker Orange */
+  --accent-light: #FFedd5;
+  /* Lightest Orange */
+  --success: #10B981;
+  /* Emerald 500 */
+  --warning: #F59E0B;
+  /* Amber 500 */
+  --danger: #EF4444;
+  /* Red 500 */
+  --ai: #6366F1;
+  /* Indigo 500 */
+  --bg-main: #F8FAFC;
+  /* Return to Slate 50 for clean professional backdrop */
+  --radius-xl: 24px;
+  --radius-lg: 16px;
+  --radius-md: 8px;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-main);
+  color: #1E293B;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Base Card Style */
+.premium-card {
+  background: white;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04), 0 4px 12px -2px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.08);
+}
+
+/* Premium Badges */
+.badge-premium {
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid currentColor;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 3mm;
+  }
+
+  /* Force print background colors and borders */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background-color: white !important;
+    visibility: hidden;
+  }
+
+  /* Reset the active view to be visible and positioned at top */
+  #active-view,
+  #export-target {
+    visibility: visible;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #active-view *,
+  #export-target * {
+    visibility: visible;
+  }
+
+  /* Specifically hide common non-essential elements */
+  button,
+  .print\:hidden,
+  .export-ignore,
+  header,
+  nav,
+  input,
+  label {
+    display: none !important;
+  }
+}
+
+@layer utilities {
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+}
+
+/* Ensure consistent layout during export for html2pdf */
+.html2pdf__page-break {
+  display: block;
+  page-break-before: always;
+}
+
+/* --- MORTALITY TABLE OPTIMIZATIONS --- */
+.mortality-table-cell {
+  border: 1px solid #e2e8f0;
+  text-align: center;
+  transition: background-color 0.2s;
+}
+
+.mortality-input {
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  text-align: center;
+  outline: none;
+  border: none;
+  font-weight: 500;
+}
+
+/* --- EXPORT FIXES --- */
+#export-container {
+  width: 100% !important;
+  overflow: visible !important;
+}
+
+#export-target {
+  background: white !important;
+  width: fit-content !important;
+  min-width: 1120px !important;
+  /* Approx width for A4 landscape at 96dpi */
+}
+
+#export-target table {
+  table-layout: auto !important;
+  min-width: 100% !important;
+  background: white !important;
+  border-collapse: collapse !important;
+}
+
+#export-target th,
+#export-target td {
+  white-space: nowrap !important;
+  padding: 4px 2px !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+#export-target header {
+  width: 100% !important;
+  margin-bottom: 20px !important;
+}

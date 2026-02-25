@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Faturamento</title>
+  <meta name="description" content="Gestão Inteligente de Faturamento e Despesca" />
+
+  <!-- Open Graph / Facebook / WhatsApp -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Faturamento" />
+  <meta property="og:description" content="Acompanhamento executivo de despescas e faturamento inteligente." />
+  <meta property="og:image" content="https://projeto-adm-five.vercel.app/logo.png" />
+  <meta property="og:site_name" content="Carapitanga Adm" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:title" content="Faturamento" />
+  <meta property="twitter:description" content="Acompanhamento executivo de despescas e faturamento inteligente." />
+  <!-- Tailwind CDN removed for local build -->
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@400;600;700&family=Poppins:wght@700&display=swap"
+    rel="stylesheet">
+  <style>
+    @media print {
+      @page {
+        margin: 0.5cm;
+        size: auto;
+      }
+
+      body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        background-color: white !important;
+        color: black !important;
+      }
+    }
+  </style>
+
+  <link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="/fonts_embedded.css">
+  <!-- Preload fonts to ensure they are available for export -->
+  <link rel="preload" href="/fonts_embedded.css" as="style">
+</head>
+
+<body class="bg-gray-50 text-slate-900 antialiased">
+  <div id="root"></div>
+  <!-- External Scripts for Report Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>
